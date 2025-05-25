@@ -59,16 +59,39 @@ async function sendMessageHistory(ws) {
             'SELECT id, username, content, timestamp, message_type, message_color, client_uuid FROM website.messages ORDER BY timestamp DESC LIMIT 50'
         );
         
-        const historyMessagesForClient = dbMessages.map(msg => ({
-            id: msg.id,
-            username: msg.username,
-            content: msg.content,
-            timestamp: msg.timestamp,
-            message_type: msg.message_type,
-            message_color: msg.message_color,
-            client_uuid: msg.client_uuid,
-            isHistorical: true
-        }));
+        const historyMessagesForClient = dbMessages.map(msg => {
+            let finalMessageColor = msg.message_color;
+
+            if (msg.message_type === 'Discord') {
+                if (typeof msg.message_color !== 'undefined' && msg.message_color !== null) {
+                    const colorValue = Number(msg.message_color);
+                    if (!isNaN(colorValue) && !String(msg.message_color).startsWith('#')) {
+                        if (colorValue !== 0) {
+                            finalMessageColor = '#' + colorValue.toString(16).padStart(6, '0');
+                        } else {
+                            finalMessageColor = '#8e9297';
+                        }
+                    } else if (String(msg.message_color).startsWith('#')) {
+                        finalMessageColor = msg.message_color;
+                    } else {
+                        finalMessageColor = '#ffffff';
+                    }
+                } else {
+                    finalMessageColor = '#ffffff';
+                }
+            }
+
+            return {
+                id: msg.id,
+                username: msg.username,
+                content: msg.content,
+                timestamp: msg.timestamp,
+                message_type: msg.message_type,
+                message_color: finalMessageColor, // Use the potentially transformed color
+                client_uuid: msg.client_uuid,
+                isHistorical: true
+            };
+        });
         
         ws.send(JSON.stringify({ type: 'history', data: historyMessagesForClient }));
     } catch (err) {
