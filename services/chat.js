@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
-import pool from '../db.js';
 import { WebSocketServer, WebSocket } from 'ws';
+import pool from '../db.js';
+import { jwtDecode } from 'jwt-decode';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import path from 'path';
@@ -25,22 +26,23 @@ function sanitizeServerMessage(text) {
         .trim();
 }
 
+let wssInstance = null;
 function isAdminFromJWT(jwtToken) {
     if (!jwtToken) return false;
     try {
-        const decoded = jwt.verify(jwtToken, process.env.JWT_SECRET);
-        return decoded && decoded.is_admin;
+        const decoded = jwtDecode(jwtToken);
+        return decoded && decoded.is_admin === true;
     } catch (e) {
+        console.error('[WSS Auth] JWT verification error:', e.message);
         return false;
     }
 }
 
 function broadcast(wss, data) {
-    const msg = JSON.stringify(data);
-    console.log(`[WSS Broadcast] Broadcasting message: ${msg} to ${wss.clients.size} clients`);
+    const message = JSON.stringify(data);
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
-            client.send(msg);
+            client.send(message);
         }
     });
 }
@@ -64,7 +66,7 @@ async function sendMessageHistory(ws) {
             timestamp: msg.timestamp,
             message_type: msg.message_type,
             message_color: msg.message_color,
-            userUUID: msg.client_uuid,
+            client_uuid: msg.client_uuid,
             isHistorical: true
         }));
         
@@ -77,7 +79,6 @@ async function sendMessageHistory(ws) {
 async function getChatAggregateStats() {
     try {
         const totalMessagesResult = await pool.query('SELECT COUNT(*) AS total_messages FROM website.messages');
-
         const uniquePostersResult = await pool.query(
             "SELECT COUNT(DISTINCT client_uuid) AS unique_posters FROM website.messages WHERE client_uuid IS NOT NULL AND client_uuid != '00000000-0000-0000-0000-000000000000'"
         );
@@ -86,6 +87,7 @@ async function getChatAggregateStats() {
             totalMessages: parseInt(totalMessagesResult.rows[0]?.total_messages, 10) || 0,
             uniquePosters: parseInt(uniquePostersResult.rows[0]?.unique_posters, 10) || 0,
         };
+        // console.log('[WSS getChatAggregateStats] Fetched stats:', stats);
         return stats;
     } catch (err) {
         console.error('[WSS getChatAggregateStats] Error fetching chat aggregate stats:', err);
@@ -97,42 +99,106 @@ async function getChatAggregateStats() {
 }
 
 async function broadcastAggregateStats(wss) {
-    const updatedAggStats = await getChatAggregateStats();
-    broadcast(wss, { type: 'chat_aggregate_stats', data: updatedAggStats });
+    console.log('[WSS broadcastAggregateStats] Attempting to broadcast aggregate stats...'); // Log entry
+    try {
+        const updatedAggStats = await getChatAggregateStats();
+        broadcast(wss, { type: 'chat_aggregate_stats', data: updatedAggStats });
+        console.log('[WSS broadcastAggregateStats] Successfully broadcasted aggregate stats.'); // Log success
+    } catch (error) {
+        console.error('[WSS broadcastAggregateStats] CRITICAL ERROR broadcasting aggregate stats:', error);
+    }
 }
 
 function setupWebSocket(server) {
     const wss = new WebSocketServer({ server, path: '/api/chat' });
+    wssInstance = wss;
     console.log('[WSS] WebSocket server setup on /api/chat');
 
     wss.on('connection', async (ws) => {
         console.log('[WSS Connection] Client connected.');
-        sendMessageHistory(ws);
-        broadcastClientCount(wss);
-        await broadcastAggregateStats(wss);
 
+        // SETUP MESSAGE HANDLER IMMEDIATELY
         ws.on('message', async (message) => {
+            console.log(`[WSS ws.on('message') RAW ENTRY] Message received. Type: ${typeof message}, Content: ${message.toString()}`);
+            let data;
             try {
-                const data = JSON.parse(message.toString());
+                console.log(`[WSS Message Received raw] From client: ${message.toString()}`);
+                data = JSON.parse(message.toString());
+                console.log(`[WSS Message Parsed] From client - Type: ${data.type}, Full Data:`, JSON.stringify(data, null, 2)); // Enhanced log
+
+                let messageToProcess = data;
+
+                if (data.type === 'message' && data.data && data.data.message_type === 'Discord') {
+                    
+                    let hexColor = '#ffffff';
+                    if (typeof data.data.message_color !== 'undefined' && data.data.message_color !== null) {
+                        const discordColorDecimal = Number(data.data.message_color);
+                        if (!isNaN(discordColorDecimal) && discordColorDecimal !== 0) {
+                            hexColor = '#' + discordColorDecimal.toString(16).padStart(6, '0');
+                        } else if (discordColorDecimal === 0) {
+                            hexColor = '#8e9297';
+                        }
+                    }
+                    
+                    messageToProcess = {
+                        content: data.data.content,
+                        username: data.data.username,
+                        userUUID: data.data.userUUID,      // This is the Discord User ID
+                        message_type: data.data.message_type, // Should be 'Discord'
+                        message_color: hexColor,          // Hex string
+                        isFromDiscordBot: true // Add a flag for clarity if needed later
+                    };
+                    console.log('[WSS Message Handler] Transformed Discord message for processing:', JSON.stringify(messageToProcess, null, 2));
+                }
+
+                // --- Start of message processing logic using messageToProcess ---
+
+                if (messageToProcess.type === 'get_discord_integration_status') {
+                    console.log('[WSS Message Handler] Matched type: get_discord_integration_status');
+                    if (isAdminFromJWT(messageToProcess.jwt)) {
+                        console.log('[WSS Message Handler get_discord_integration_status] Admin check PASSED.');
+                        try {
+                            const result = await pool.query(
+                                "SELECT setting_value FROM discord.settings WHERE setting_key = 'webchat_enabled'"
+                            );
+                            let isEnabled = false;
+                            if (result.rows.length > 0) {
+                                isEnabled = result.rows[0].setting_value;
+                            }
+                            console.log(`[WSS get_discord_integration_status] Sending status to client. DB isEnabled: ${isEnabled}`);
+                            ws.send(JSON.stringify({ type: 'discord_integration_status', enabled: isEnabled }));
+                        } catch (dbError) {
+                            console.error('[WSS DB Error] Failed to get Discord integration status:', dbError);
+                            ws.send(JSON.stringify({ type: 'error', message: 'Failed to retrieve Discord integration status.' }));
+                        }
+                    } else {
+                        console.log('[WSS Message Handler get_discord_integration_status] Admin check FAILED.');
+                        ws.send(JSON.stringify({ type: 'error', message: 'Unauthorized to get Discord status.' }));
+                    }
+                    return;
+                }
 
                 // Moderation: Delete message
-                if (data.type === 'delete_message' && isAdminFromJWT(data.jwt)) {
-                    await pool.query('DELETE FROM website.messages WHERE id = $1', [data.messageId]);
-                    broadcast(wss, { type: 'message_deleted', messageId: data.messageId });
+                if (messageToProcess.type === 'delete_message' && isAdminFromJWT(messageToProcess.jwt)) {
+                    console.log('[WSS Message Handler] Matched type: delete_message');
+                    await pool.query('DELETE FROM website.messages WHERE id = $1', [messageToProcess.messageId]);
+                    broadcast(wss, { type: 'message_deleted', messageId: messageToProcess.messageId });
                     await broadcastAggregateStats(wss);
                     return;
                 }
 
                 // Moderation: Change/remove username
-                if (data.type === 'change_username' && isAdminFromJWT(data.jwt)) {
-                    await pool.query('UPDATE website.messages SET username = $1 WHERE client_uuid = $2', [data.newUsername || 'Anonymous', data.userUUID]);
-                    broadcast(wss, { type: 'username_changed', userUUID: data.userUUID, newUsername: data.newUsername || 'Anonymous' });
+                if (messageToProcess.type === 'change_username' && isAdminFromJWT(messageToProcess.jwt)) {
+                    console.log('[WSS Message Handler] Matched type: change_username');
+                    await pool.query('UPDATE website.messages SET username = $1 WHERE client_uuid = $2', [messageToProcess.newUsername || 'Anonymous', messageToProcess.userUUID]);
+                    broadcast(wss, { type: 'username_changed', userUUID: messageToProcess.userUUID, newUsername: messageToProcess.newUsername || 'Anonymous' });
                     return;
                 }
 
                 // Moderation: Send admin message
-                if (data.type === 'admin_message' && isAdminFromJWT(data.jwt)) {
-                    const sanitizedContent = sanitizeServerMessage(data.content);
+                if (messageToProcess.type === 'admin_message' && isAdminFromJWT(messageToProcess.jwt)) {
+                    console.log('[WSS Message Handler] Matched type: admin_message');
+                    const sanitizedContent = sanitizeServerMessage(messageToProcess.content);
                     const ADMIN_UUID = '00000000-0000-0000-0000-000000000000';
                     const result = await pool.query(
                         `INSERT INTO website.messages (username, content, message_type, message_color, client_uuid)
@@ -156,10 +222,16 @@ function setupWebSocket(server) {
                     return;
                 }
 
-                // Normal user message
-                if (data.content && data.username && data.userUUID) {
-                    const sanitizedContent = sanitizeServerMessage(data.content);
-                    const sanitizedUsername = sanitizeServerMessage(data.username);
+                if (
+                    (typeof messageToProcess.type === 'undefined' || messageToProcess.isFromDiscordBot) &&
+                    messageToProcess.content && 
+                    messageToProcess.username && 
+                    messageToProcess.userUUID
+                ) {
+                    console.log(`[WSS Message Handler] Processing as normal/Discord message. User: ${messageToProcess.username}, Type: ${messageToProcess.message_type}`);
+                    
+                    const sanitizedContent = sanitizeServerMessage(messageToProcess.content);
+                    const sanitizedUsername = sanitizeServerMessage(messageToProcess.username);
 
                     const query = `
                         INSERT INTO website.messages (username, content, message_type, message_color, client_uuid)
@@ -167,12 +239,13 @@ function setupWebSocket(server) {
                         RETURNING id, username, content, timestamp, message_type, message_color, client_uuid
                     `;
                     const result = await pool.query(query, [
-                        sanitizedUsername, 
-                        sanitizedContent, 
-                        data.message_type || 'chat', 
-                        data.message_color || '#ffffff',
-                        data.userUUID
+                        sanitizedUsername,
+                        sanitizedContent,
+                        messageToProcess.message_type || 'chat', // 'Discord' for bot messages
+                        messageToProcess.message_color,          // Hex string from transformation or default
+                        messageToProcess.userUUID                // Discord User ID for bot messages, or web client UUID
                     ]);
+                    console.log('[WSS Message Handler] Message saved to DB. ID:', result.rows[0].id);
 
                     const newMsgData = {
                         id: result.rows[0].id,
@@ -184,11 +257,16 @@ function setupWebSocket(server) {
                         userUUID: result.rows[0].client_uuid,
                     };
                     broadcast(wss, { type: 'message', data: newMsgData });
+                    console.log('[WSS Message Handler] Broadcasted message:', JSON.stringify(newMsgData, null, 2));
+                    
                     await broadcastAggregateStats(wss);
+                    return; 
                 }
 
-            } catch (err) {
-                console.error('Error handling message:', err);
+                console.log('[WSS Message Handler] Message did not match any known handlers. Data:', JSON.stringify(messageToProcess, null, 2));
+
+            } catch (error) {
+                console.error('[WSS Message Error] Failed to process message. Raw message was:', message ? message.toString() : 'N/A', 'Parsed data (if available):', data, 'Error:', error);
             }
         });
 
@@ -200,7 +278,21 @@ function setupWebSocket(server) {
         ws.on('error', (error) => {
             console.error('[WSS Connection] WebSocket error on client:', error);
         });
+
+        sendMessageHistory(ws);
+        broadcastClientCount(wss);
+        await broadcastAggregateStats(wss);
+
     });
+}
+
+export function broadcastDiscordStatusUpdate(enabled) {
+    if (wssInstance) {
+        console.log(`[WSS Chat Service] Broadcasting discord_integration_status: ${enabled} to all clients.`);
+        broadcast(wssInstance, { type: 'discord_integration_status', enabled });
+    } else {
+        console.warn('[WSS Chat Service] wssInstance not available for broadcastDiscordStatusUpdate.');
+    }
 }
 
 export default setupWebSocket;

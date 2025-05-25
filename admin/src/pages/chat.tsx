@@ -3,19 +3,24 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import SendIcon from '@mui/icons-material/Send';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Box, Typography, Tooltip } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Box, Typography, Tooltip, Switch, FormControlLabel } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import MessageIcon from '@mui/icons-material/Message';
 import GroupIcon from '@mui/icons-material/Group';
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import AdminPanelSettings from '@mui/icons-material/AdminPanelSettings';
 import { FaDiscord } from "react-icons/fa";
+import axiosInstance from '../services/axios';
 
 const themeRed = '#e48f8f';
 const themeRedDark = '#ba7373';
-const themeBorderRed = '#a06060';
+const themeNeutralBorder = '#444';
+const themeNeutralBorderFocus = '#666';
 const themeCyan = '#7fd6ff';
 const discordBrandBlue = '#7289DA';
+const themeWhite = '#ffffff';
+const themeLightGray = '#aaaaaa';
+const themeInputBackground = '#232323';
 
 export const ChatModeration = () => {
     const [messages, setMessages] = useState<any[]>([]);
@@ -23,6 +28,7 @@ export const ChatModeration = () => {
     const [clientCount, setClientCount] = useState(0);
     const [totalMessages, setTotalMessages] = useState(0);
     const [uniquePosters, setUniquePosters] = useState(0);
+    const [isDiscordIntegrationEnabled, setIsDiscordIntegrationEnabled] = useState(false);
 
     const [dialogOpen, setDialogOpen] = useState(false);
     const [dialogUser, setDialogUser] = useState<{ userUUID: string, username: string } | null>(null);
@@ -36,7 +42,9 @@ export const ChatModeration = () => {
         );
         wsRef.current.onopen = () => {
             console.log('WebSocket connected');
+            sendWithAuth({ type: 'get_discord_integration_status' });
         };
+
         wsRef.current.onmessage = (event) => {
             const data = JSON.parse(event.data);
 
@@ -77,6 +85,8 @@ export const ChatModeration = () => {
             } else if (data.type === 'chat_aggregate_stats') {
                 setTotalMessages(data.data.totalMessages);
                 setUniquePosters(data.data.uniquePosters);
+            } else if (data.type === 'discord_integration_status') {
+                setIsDiscordIntegrationEnabled(data.enabled);
             }
         };
         wsRef.current.onerror = (err) => {
@@ -106,6 +116,16 @@ export const ChatModeration = () => {
 
     const sendAdminMessage = (content: string) => {
         sendWithAuth({ type: 'admin_message', content });
+    };
+
+    // Handler for the Discord integration toggle switch
+    const handleToggleDiscordIntegration = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newStatus = event.target.checked;
+        try {
+            await axiosInstance.post('/api/discord/integration/status', { enabled: newStatus });
+        } catch (error) {
+            console.error("Failed to update Discord integration status:", error);
+        }
     };
 
     const adminMsgRef = useRef<HTMLInputElement>(null);
@@ -199,11 +219,11 @@ export const ChatModeration = () => {
     const StatCard = ({ title, value, icon }: { title: string, value: number | string, icon: React.ReactNode }) => (
         <Box
             sx={{
-                background: '#232323',
-                color: '#fff',
+                background: themeInputBackground,
+                color: themeWhite,
                 padding: '15px',
                 borderRadius: 2,
-                border: `1px solid ${themeBorderRed}`,
+                border: `1px solid ${themeNeutralBorder}`,
                 boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
                 display: 'flex',
                 flexDirection: 'column',
@@ -214,11 +234,11 @@ export const ChatModeration = () => {
                 minWidth: '150px',
             }}
         >
-            {React.cloneElement(icon as React.ReactElement, { sx: { fontSize: 30, color: themeRed } })} {/* Use theme color for icon */}
-            <Typography variant="h6" sx={{ color: themeRed, fontWeight: 'bold', mt: 1 }}>
+            {React.cloneElement(icon as React.ReactElement, { sx: { fontSize: 30, color: themeRed } })} {/* Removed empty {} */}
+            <Typography variant="h6" sx={{ color: themeWhite, fontWeight: 'bold', mt: 1 }}> {/* Removed empty {} */}
                 {value}
             </Typography>
-            <Typography variant="caption" sx={{ color: '#aaa' }}>
+            <Typography variant="caption" sx={{ color: themeLightGray }}> {/* Removed empty {} */}
                 {title}
             </Typography>
         </Box>
@@ -237,16 +257,44 @@ export const ChatModeration = () => {
                 minHeight: 320,
                 display: 'flex',
                 flexDirection: 'column',
-                height: '60vh', // Consider using max-height or a different unit for better mobile adaptability
+                height: '60vh',
                 minWidth: 0,
                 position: 'relative',
             }}
         >
+            {/* Discord Integration Toggle */}
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 2, paddingRight: 1 }}>
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={isDiscordIntegrationEnabled}
+                            onChange={handleToggleDiscordIntegration}
+                            name="discordIntegration"
+                            sx={{
+                                '& .MuiSwitch-switchBase.Mui-checked': {
+                                    color: themeCyan, 
+                                },
+                                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                    backgroundColor: themeCyan,
+                                },
+                            }}
+                        />
+                    }
+                    labelPlacement="start"
+                    label={
+                        <Typography sx={{ color: themeWhite, fontFamily: 'monospace', mr: 1 }}>
+                            Discord Bot
+                        </Typography>
+                    }
+                    sx={{ color: themeWhite }}
+                />
+            </Box>
+
             {/* Stats Cards Row */}
             <Box sx={{ display: 'flex', gap: 2, marginBottom: 2, flexWrap: 'wrap' }}>
                 <StatCard title="Connected Users" value={clientCount} icon={<PeopleIcon />} />
                 <StatCard title="Total Messages" value={totalMessages} icon={<MessageIcon />} />
-                <StatCard title="Unique Posters" value={uniquePosters} icon={<GroupIcon />} />
+                <StatCard title="Unique Posters" value={uniquePosters} icon={<GroupIcon />} /> {/* Corrected title */}
             </Box>
 
             {/* New messages pill */}
@@ -259,7 +307,7 @@ export const ChatModeration = () => {
                         transform: 'translateX(-50%)',
                         zIndex: 20,
                         background: themeRed,
-                        color: '#fff',
+                        color: themeWhite,
                         borderRadius: 999,
                         boxShadow: '0 2px 8px #0007',
                         cursor: 'pointer',
@@ -270,7 +318,7 @@ export const ChatModeration = () => {
                         fontWeight: 600,
                         fontFamily: 'monospace',
                         fontSize: 16,
-                        border: '2px solid #fff',
+                        border: `2px solid ${themeWhite}`,
                         opacity: 0.97,
                         gap: 8,
                         userSelect: 'none',
@@ -289,7 +337,7 @@ export const ChatModeration = () => {
                 style={{
                     flex: 1,
                     overflowY: 'auto',
-                    border: `1px solid ${themeBorderRed}`,
+                    border: `1px solid ${themeNeutralBorder}`,
                     borderRadius: 6,
                     background: '#181818',
                     marginBottom: 16,
@@ -306,33 +354,33 @@ export const ChatModeration = () => {
                         borderCollapse: 'collapse',
                         fontFamily: 'monospace',
                         background: 'transparent',
-                        color: '#fff',
+                        color: themeWhite,
                         fontSize: 14,
                     }}
                 >
                     <thead>
-                        <tr style={{ background: '#232323', position: 'sticky', top: 0, zIndex: 10 }}>
-                            <th style={{ padding: '6px 8px', borderBottom: `1px solid ${themeBorderRed}`, textAlign: 'center' }}
+                        <tr style={{ background: themeInputBackground, position: 'sticky', top: 0, zIndex: 10 }}>
+                            <th style={{ padding: '6px 8px', borderBottom: `1px solid ${themeNeutralBorder}`, textAlign: 'center' }}
                                 sx={{
                                     width: { xs: '35px', sm: 'auto' },
                                     whiteSpace: 'nowrap'
                                 }}
                             >Type</th>
-                            <th style={{ padding: '6px 8px', borderBottom: `1px solid ${themeBorderRed}` }}
+                            <th style={{ padding: '6px 8px', borderBottom: `1px solid ${themeNeutralBorder}` }}
                                 sx={{
                                     width: { xs: '55px', sm: 'auto' },
                                     whiteSpace: { xs: 'normal', sm: 'nowrap' }
                                 }}
                             >Time</th>
-                            <th style={{ padding: '6px 8px', borderBottom: `1px solid ${themeBorderRed}` }}
+                            <th style={{ padding: '6px 8px', borderBottom: `1px solid ${themeNeutralBorder}` }}
                                 sx={{
                                     width: { xs: '70px', sm: 'auto' },
                                     maxWidth: { md: '150px' } 
                                 }}
                             >User</th>
-                            <th style={{ padding: '6px 8px', borderBottom: `1px solid ${themeBorderRed}` }}
+                            <th style={{ padding: '6px 8px', borderBottom: `1px solid ${themeNeutralBorder}` }}
                             >Message</th>
-                            <th style={{ padding: '6px 8px', borderBottom: `1px solid ${themeBorderRed}` }}
+                            <th style={{ padding: '6px 8px', borderBottom: `1px solid ${themeNeutralBorder}` }}
                                 sx={{
                                     width: { xs: '60px', sm: 'auto' },
                                     whiteSpace: 'nowrap'
@@ -344,19 +392,14 @@ export const ChatModeration = () => {
                         {messages.map(msg => {
                             let usernameColor = themeRed;
                             if (msg.message_type === 'Discord') {
-                                usernameColor = '#ffffff'; 
-                                if (typeof msg.message_color !== 'undefined' && msg.message_color !== null) {
-                                    const discordColorDecimal = Number(msg.message_color);
-                                    if (!isNaN(discordColorDecimal) && discordColorDecimal !== 0) { 
-                                        const hexColor = `#${discordColorDecimal.toString(16).padStart(6, '0')}`;
-                                        if (hexColor.toLowerCase() !== '#000000' && discordColorDecimal >= 1000000) {
-                                            usernameColor = hexColor;
-                                        }
-                                    }
+                                if (typeof msg.message_color === 'string' && msg.message_color.startsWith('#')) {
+                                    usernameColor = msg.message_color;
+                                } else {
+                                    usernameColor = themeWhite;
                                 }
                             }
 
-                            let typeIcon = <ChatBubbleIcon fontSize="small" sx={{ color: themeRed }} />;
+                            let typeIcon = <ChatBubbleIcon fontSize="small" sx={{ color: themeWhite }} />;
                             let typeTooltip = "Chat Message";
 
                             if (msg.message_type === 'Discord') {
@@ -368,7 +411,7 @@ export const ChatModeration = () => {
                             }
 
                             return (
-                                <tr key={msg.id} style={{ borderBottom: '1px solid #2a2a2a' }}>
+                                <tr key={msg.id} style={{ borderBottom: `1px solid ${themeNeutralBorder}` }}> {/* Use neutral border */}
                                     <td style={{ padding: '4px 8px', textAlign: 'center', verticalAlign: 'middle' }}>
                                         <Tooltip title={typeTooltip}>
                                             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
@@ -376,23 +419,22 @@ export const ChatModeration = () => {
                                             </Box>
                                         </Tooltip>
                                     </td>
-                                    <td style={{ padding: '4px 8px', color: '#aaa', wordBreak: 'break-word' }} // Ensure wordBreak for safety
-                                        sx={{ // Match header's whiteSpace behavior
+                                    <td style={{ padding: '4px 8px', color: themeLightGray, wordBreak: 'break-word' }}
+                                        sx={{ 
                                             whiteSpace: { xs: 'normal', sm: 'nowrap' }
                                         }}
                                     >
                                         {msg.timestamp ? formatTimestamp(msg.timestamp) : ''}
                                     </td>
                                     <td style={{ padding: '4px 8px', color: usernameColor, wordBreak: 'break-all' }}>
-                                        {/* On xs, this will break within the 70px width. On sm+, it will expand to content. */}
                                         {msg.username}
                                     </td>
                                     <td style={{ padding: '4px 8px', wordBreak: 'break-word' }}>
                                         {msg.content}
                                     </td>
                                     <td style={{ padding: '4px 8px', whiteSpace: 'nowrap', display: 'flex', justifyContent: 'center' }}
-                                        sx={{ // Responsive gap for actions
-                                            gap: { xs: 1, sm: 1, md: 2 } // e.g., 8px on xs/sm, 16px on md+
+                                        sx={{ 
+                                            gap: { xs: 1, sm: 1, md: 2 } 
                                         }}
                                     >
                                         <Tooltip title={msg.message_type === 'Discord' ? 'You cannot change Discord usernames' : 'Change username'}>
@@ -472,22 +514,22 @@ export const ChatModeration = () => {
                         minWidth: 0,
                         padding: '10px 14px',
                         fontFamily: 'monospace',
-                        background: '#232323',
-                        color: '#fff',
-                        border: `1.5px solid ${themeRed}`,
+                        background: themeInputBackground,
+                        color: themeWhite,
+                        border: `1.5px solid ${themeNeutralBorder}`,
                         borderRadius: 4,
                         fontSize: 16,
                         outline: 'none',
                         transition: 'border 0.2s',
                     }}
-                    onFocus={e => (e.target.style.border = `1.5px solid ${themeRed}`)}
-                    onBlur={e => (e.target.style.border = `1.5px solid ${themeRed}`)}
+                    onFocus={e => (e.target.style.border = `1.5px solid ${themeNeutralBorderFocus}`)}
+                    onBlur={e => (e.target.style.border = `1.5px solid ${themeNeutralBorder}`)}
                 />
-                <button
+                <button // Send button can keep red accent or be changed
                     type="submit"
                     style={{
                         background: `linear-gradient(90deg, ${themeRed} 0%, ${themeRedDark} 100%)`,
-                        color: '#fff',
+                        color: themeWhite,
                         border: 'none',
                         borderRadius: 4,
                         cursor: 'pointer',
@@ -514,21 +556,21 @@ export const ChatModeration = () => {
                 PaperProps={{
                     style: {
                         background: '#181818',
-                        color: '#fff',
+                        color: themeWhite,
                         borderRadius: 8,
                         minWidth: 320,
                         maxWidth: 400,
                         width: '100%',
-                        border: `1.5px solid ${themeRed}`
+                        border: `1.5px solid ${themeNeutralBorder}`
                     }
                 }}
             >
-                <DialogTitle sx={{ color: themeRed, fontWeight: 700, fontFamily: 'monospace' }}>
+                <DialogTitle sx={{ color: themeWhite, fontWeight: 700, fontFamily: 'monospace' }}> {/* Dialog title white */}
                     Change Username
                 </DialogTitle>
                 <DialogContent>
                     <Box sx={{ mb: 2 }}>
-                        <Typography variant="body2" sx={{ color: '#aaa', mb: 1 }}>
+                        <Typography variant="body2" sx={{ color: themeLightGray, mb: 1 }}>
                             Set a new username for this user or remove it to revert to <b>Anonymous</b>.
                         </Typography>
                         <TextField
@@ -540,18 +582,18 @@ export const ChatModeration = () => {
                             onChange={e => setNewUsername(e.target.value)}
                             sx={{
                                 input: {
-                                    color: '#fff',
-                                    background: '#232323'
+                                    color: themeWhite,
+                                    background: themeInputBackground
                                 },
-                                label: { color: themeRed },
+                                label: { color: themeLightGray },
                                 '& .MuiOutlinedInput-root': {
-                                    '& fieldset': { borderColor: themeRed },
-                                    '&:hover fieldset': { borderColor: themeRed },
-                                    '&.Mui-focused fieldset': { borderColor: themeRed }
+                                    '& fieldset': { borderColor: themeNeutralBorder },
+                                    '&:hover fieldset': { borderColor: themeNeutralBorderFocus },
+                                    '&.Mui-focused fieldset': { borderColor: themeNeutralBorderFocus }
                                 }
                             }}
                             InputLabelProps={{
-                                style: { color: themeRed }
+                                style: { color: themeLightGray }
                             }}
                         />
                     </Box>
@@ -577,18 +619,18 @@ export const ChatModeration = () => {
                         <Button
                             onClick={() => setDialogOpen(false)}
                             sx={{
-                                color: '#fff',
+                                color: themeWhite,
                                 fontFamily: 'monospace'
                             }}
                         >
                             Cancel
                         </Button>
-                        <Button
+                        <Button 
                             variant="contained"
                             onClick={handleDialogSave}
                             sx={{
                                 background: `linear-gradient(90deg, ${themeRed} 0%, ${themeRedDark} 100%)`,
-                                color: '#fff',
+                                color: themeWhite,
                                 fontWeight: 600,
                                 fontFamily: 'monospace',
                                 boxShadow: '0 2px 8px #0002',

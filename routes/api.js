@@ -10,6 +10,7 @@ import BlogController from '../controllers/blogController.js';
 import ProjectsController from '../controllers/projectsController.js';
 import UsersController from '../controllers/usersController.js';
 import StatsController from '../controllers/statsController.js';
+import DiscordController from '../controllers/discordController.js';
 
 const router = express.Router();
 const widgetsController = new WidgetsController();
@@ -18,6 +19,7 @@ const blogController = new BlogController();
 const projectsController = new ProjectsController();
 const usersController = new UsersController();
 const statsController = new StatsController();
+const discordController = new DiscordController();
 
 // =======================
 // WIDGET ROUTES 
@@ -90,5 +92,11 @@ router.delete('/projects/:projectId/tags/:tagId', authenticateToken, projectsCon
 // =======================
 router.get('/web-stats', statsController.getPublicStats.bind(statsController));
 router.get('/stats', authenticateToken, statsController.getStats.bind(statsController));
+
+// =======================
+// DISCORD SETTINGS ROUTES
+// =======================
+router.post('/discord/integration/status', authenticateToken, discordController.setIntegrationStatus.bind(discordController));
+
 
 export default router;

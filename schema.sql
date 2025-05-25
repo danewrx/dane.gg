@@ -57,7 +57,7 @@ CREATE TABLE website.messages (
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     message_type VARCHAR(50) NOT NULL,
     message_color VARCHAR(50),
-    client_uuid UUID,
+    client_uuid VARCHAR(50),
     CONSTRAINT content_not_empty CHECK (char_length(content) > 0)
 );
 

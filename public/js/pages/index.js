@@ -368,8 +368,8 @@ function addMessage({ id, username, content, timestamp, message_type, message_co
             <span class="text" style="color: ${color}">${content}</span>
         </div>`;
     } else {
-        const nickColor = message_type === 'Discord' ?
-            `style="color: #${Number(message_color).toString(16).padStart(6, '0')}"` : '';
+        const nickColor = message_type === 'Discord' && message_color ?
+            `style="color: ${message_color}"` : '';
 
         messageHTML = `
         <div class="message" data-id="${id || ''}" data-uuid="${msgUUID || ''}">
