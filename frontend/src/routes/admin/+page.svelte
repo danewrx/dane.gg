@@ -1,11 +1,11 @@
 <svelte:head>
-	<title>Dane.gg - Public Site</title>
+	<title>Admin Panel - Dane.gg</title>
 </svelte:head>
 
 <div class="container">
-	<h1>Welcome to Dane.gg</h1>
-	<p>This is the public website.</p>
-	<a href="/admin" class="admin-link">Go to Admin Panel</a>
+	<h1>Admin Panel</h1>
+	<p>This is the admin area.</p>
+	<a href="/" class="public-link">Back to Public Site</a>
 </div>
 
 <style>
@@ -28,9 +28,9 @@
 		margin-bottom: 2rem;
 	}
 
-	.admin-link {
+	.public-link {
 		display: inline-block;
-		background: #3b82f6;
+		background: #10b981;
 		color: white;
 		padding: 0.75rem 1.5rem;
 		border-radius: 0.5rem;
@@ -39,7 +39,7 @@
 		transition: background 0.2s;
 	}
 
-	.admin-link:hover {
-		background: #2563eb;
+	.public-link:hover {
+		background: #059669;
 	}
 </style>
