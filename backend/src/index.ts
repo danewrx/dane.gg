@@ -22,8 +22,8 @@ app.use((req, res, next) => {
 // Routes
 app.get('/api', (req, res) => {
   res.json({ 
-    message: 'Hello from Express API',
-    version: '1.0.0',
+    message: `Hello from the dane.gg API! ☆ ～('▽^人)`,
+    version: '2.0.0',
     endpoints: {
       health: '/api/health'
     }
@@ -39,7 +39,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // 404 handler for API routes
-app.use('/api/*', (req, res) => {
+app.use('/api', (req, res) => {
   res.status(404).json({ error: 'API route not found' });
 });
 
