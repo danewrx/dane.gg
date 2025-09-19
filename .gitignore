@@ -1,67 +1,45 @@
-# Node.js
+# Dependencies
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-package-lock.json
+bun.lockb
 
-# Environment
+# Build outputs
+frontend/build/
+backend/build/
+dist/
+
+# Environment variables
 .env
 .env.local
-.env.*.local
+.env.production
+
+# Database
+*.db
+*.sqlite
 
 # Logs
-logs/
 *.log
+logs/
 
-# Build/Distribution
-dist/
-build/
-public/assets/uploads/
-
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-
-# OS
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
-desktop.ini
 
-# Temp files
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+.dockerignore
+
+# Temporary files
 *.tmp
 *.temp
-.cache/
 
-# Coverage
-coverage/
-.nyc_output/
-
-# Vite/Admin specific
-admin/dist/
-admin/.vite/
-admin/dev-dist/
-admin/*.local
-admin/stats.html
-admin/coverage/
-admin/logs/
-admin/tmp/
-admin/.env*
-admin/pnpm-debug.log*
-
-# Testing
-admin/coverage/
-admin/cypress/videos/
-admin/cypress/screenshots/
-
-# Editor directories and files
-admin/.vscode/*
-admin/.idea/
-admin/*.suo
-admin/*.ntvs*
-admin/*.njsproj
-admin/*.sln
-admin/*.sw?
+old/

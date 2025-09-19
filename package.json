@@ -1,47 +1,26 @@
 {
-  "name": "dane.vc",
+  "name": "danegg",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "description": "SvelteKit frontend with Express backend",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "dev": "concurrently \"nodemon server.js\" \"cd admin && npm run dev\"",
-    "build:admin": "npm run build --prefix admin",
-    "build": "cd admin && npm run build"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "bcrypt": "^5.1.1",
-    "concurrently": "^7.0.0",
-    "cookie-parser": "^1.4.7",
-    "dompurify": "^3.2.3",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.1",
-    "express-handlebars": "^7.1.2",
-    "express-validator": "^7.2.0",
-    "feed": "^4.2.2",
-    "geoip-lite": "^1.4.7",
-    "http-proxy-middleware": "^3.0.3",
-    "isbot": "^3.7.1",
-    "jsdom": "^26.0.0",
-    "jsonwebtoken": "^9.0.2",
-    "marked": "^11.1.0",
-    "multer": "^1.4.5-lts.1",
-    "node-fetch": "^2.6.7",
-    "pg": "^8.11.3",
-    "qrcode": "^1.5.4",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "request-ip": "^3.3.0",
-    "speakeasy": "^2.0.0",
-    "ws": "^8.18.0"
+    "dev": "concurrently \"bun run frontend:dev\" \"bun run backend:dev\"",
+    "frontend:dev": "cd frontend && bun run dev",
+    "backend:dev": "cd backend && bun run dev",
+    "build": "bun run frontend:build",
+    "frontend:build": "cd frontend && bun run build",
+    "start": "bun server.ts",
+    "db:up": "docker-compose -f docker-compose.dev.yml up -d",
+    "db:down": "docker-compose -f docker-compose.dev.yml down",
+    "db:generate": "cd backend && bun run db:generate",
+    "db:push": "cd backend && bun run db:push",
+    "db:studio": "cd backend && bun run db:studio",
+    "setup": "bun install && cd frontend && bun install && cd ../backend && bun install"
   },
   "devDependencies": {
-    "nodemon": "^2.0.15",
-    "vite": "^4.0.0"
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
   }
 }
