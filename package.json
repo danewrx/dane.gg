@@ -18,6 +18,7 @@
     "db:reset": "cd backend && bun run db:push && cd backend && bun run db:seed",
     "db:studio": "cd backend && bun run db:studio",
     "db:adminer": "echo '🌐 Adminer: http://localhost:8080'",
+    "create:admin": "cd backend && bun run create:admin",
     "env:setup": "cp env.example .env && echo '✅ Created .env file from env.example'",
     "setup": "bun install && cd frontend && bun install && cd ../backend && bun install && bun run env:setup"
   },

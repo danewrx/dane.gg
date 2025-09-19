@@ -1,5 +1,6 @@
 import { handler } from './frontend/build/handler.js';
 import express from 'express';
+import { createDefaultAdmin } from './backend/src/utils/createDefaultAdmin';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -9,9 +10,23 @@ app.use(express.json());
 
 // CORS middleware (for development)
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'http://localhost:5173', // Vite dev server
+    'http://localhost:3000', // SvelteKit dev server
+    'http://localhost:4173', // Vite preview
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:4173'
+  ];
+
+  if (allowedOrigins.includes(origin || '')) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cookie');
   
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
@@ -100,4 +115,9 @@ app.listen(PORT, () => {
   console.log(`${colors.cyan}══════════════════════════════════════════════${colors.reset}`);
   console.log('');
   console.log(`${colors.bright}${colors.lightBlue}All services are running! (⌒▽⌒)☆${colors.reset}`);
+  
+  // Initialize default admin after server starts
+  createDefaultAdmin().catch(error => {
+    console.error('❌ Failed to initialize default admin:', error);
+  });
 });

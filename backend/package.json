@@ -9,13 +9,23 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "bun src/db/seed.ts",
-    "db:reset": "bun run db:push && bun run db:seed"
+    "db:reset": "bun run db:push && bun run db:seed",
+    "create:admin": "bun src/scripts/createAdmin.ts"
   },
   "dependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express-session": "^1.18.2",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.15.5",
+    "bcryptjs": "^3.0.2",
+    "connect-pg-simple": "^10.0.0",
     "dotenv": "^17.2.2",
     "drizzle-orm": "0.36.4",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "express-session": "^1.18.2",
+    "express-slow-down": "^3.0.0",
+    "jsonwebtoken": "^9.0.2",
     "postgres": "^3.4.7"
   },
   "devDependencies": {
