@@ -1,11 +1,15 @@
 <script lang="ts">
 	// Root layout - handles routing between (site) and (admin) sections
 	import { page } from '$app/stores';
+	import { fontMode } from '$lib/stores/font';
 	
 	// Determine which section we're in based on the current route
 	$: isAdminSection = $page.url.pathname.startsWith('/admin') || 
 	                   $page.url.pathname.startsWith('/login') || 
 	                   $page.url.pathname.startsWith('/logout');
+	
+	// Initialize font store
+	$: fontMode;
 </script>
 
 <slot />

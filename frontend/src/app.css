@@ -1,6 +1,16 @@
 /* Global styles for dane.gg */
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
 
+/* W95FA Font */
+@font-face {
+  font-family: 'W95FA';
+  src: url('/assets/fonts/w95fa.woff2') format('woff2'),
+       url('/assets/fonts/w95fa.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --bg-primary: #000000;
   --bg-secondary: #0a0a0a;
@@ -12,6 +22,10 @@
   --border-accent: #00ff00;
   --scanline-color: rgba(0, 255, 0, 0.1);
   --glow-color: rgba(0, 255, 0, 0.3);
+  
+  /* Font variables */
+  --global-font-family: 'W95FA', 'JetBrains Mono', 'Courier New', monospace;
+  --ascii-font-family: 'JetBrains Mono', 'Courier New', monospace;
 }
 
 * {
@@ -22,9 +36,20 @@
 
 html, body {
   height: 100%;
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-family: var(--global-font-family);
   color: var(--text-primary);
   overflow-x: hidden;
+}
+
+/* Apply global font to all elements by default */
+* {
+  font-family: var(--global-font-family);
+}
+
+/* Override for ASCII art - keep monospace */
+.ascii-box pre:first-child,
+.ascii-box pre:last-child {
+  font-family: var(--ascii-font-family) !important;
 }
 
 /* Background with starry dots pattern */

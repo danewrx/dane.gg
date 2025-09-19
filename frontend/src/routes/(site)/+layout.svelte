@@ -4,6 +4,7 @@
 	import { theme } from '$lib/stores/theme';
 	import SettingsIcon from '$lib/components/settings/SettingsIcon.svelte';
 	import SettingsPanel from '$lib/components/settings/SettingsPanel.svelte';
+	import Header from '$lib/components/Header.svelte';
 	import { onMount } from 'svelte';
 
 	let { children } = $props();
@@ -33,6 +34,9 @@
 <div class="main-container" class:light-theme={$theme === 'light'} class:dark-theme={$theme === 'dark'}>
 	<div class="content-window">
 		<div class="content-area">
+			<!-- Header -->
+			<Header />
+			
 			<!-- Page content -->
 			{@render children?.()}
 		</div>

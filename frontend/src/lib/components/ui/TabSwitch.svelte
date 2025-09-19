@@ -66,7 +66,7 @@
 		border: none;
 		border-radius: 6px;
 		color: var(--text-secondary);
-		font-family: 'Courier New', monospace;
+		font-family: inherit;
 		font-size: 0.875rem;
 		font-weight: 500;
 		cursor: pointer;

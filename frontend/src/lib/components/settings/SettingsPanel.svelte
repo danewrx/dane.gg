@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { theme } from '$lib/stores/theme';
-	import TabSwitch from '../ui/TabSwitch.svelte';
+	import FontSelector from './FontSelector.svelte';
 
 	export let isOpen: boolean = false;
 
@@ -12,32 +11,24 @@
 	function handleClose() {
 		dispatch('close');
 	}
-
-	function handleThemeChange(event: CustomEvent<{ value: string }>) {
-		const newTheme = event.detail.value.toLowerCase();
-		if (newTheme === 'light' || newTheme === 'dark') {
-			theme.setTheme(newTheme);
-		}
-	}
-
-	// Convert theme to display format
-	$: themeOptions = ['Dark', 'Light'];
-	$: currentTheme = $theme === 'dark' ? 'Dark' : 'Light';
 </script>
 
 <!-- Settings Panel -->
 {#if isOpen}
-	<div class="settings-backdrop" on:click={handleClose}></div>
+	<div 
+		class="settings-backdrop" 
+		onclick={handleClose}
+		onkeydown={(e) => e.key === 'Escape' && handleClose()}
+		role="button"
+		tabindex="-1"
+		aria-label="Close settings"
+	></div>
 {/if}
 <div class="settings-panel" class:open={isOpen}>
 	<div class="settings-content">
 		<div class="settings-section">
-			<h3>Theme</h3>
-			<TabSwitch 
-				options={themeOptions}
-				selected={currentTheme}
-				on:change={handleThemeChange}
-			/>
+			<h3>Appearance</h3>
+			<FontSelector />
 		</div>
 	</div>
 </div>
@@ -89,7 +80,6 @@
 	.settings-section h3 {
 		margin: 0 0 12px 0;
 		color: #ffffff;
-		font-family: Arial, sans-serif;
 		font-size: 12px;
 		font-weight: bold;
 		text-transform: uppercase;
