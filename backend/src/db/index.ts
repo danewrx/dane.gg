@@ -1,8 +1,12 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import { config } from 'dotenv';
 import * as schema from './schema';
 
-const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/danegg';
+// Load environment variables from root .env file
+config({ path: '../../.env' });
+
+const connectionString = process.env.DATABASE_URL || 'postgresql://dane_gg:daneGGPassword!@localhost:5432/dane.gg';
 
 // Create the connection
 const client = postgres(connectionString);

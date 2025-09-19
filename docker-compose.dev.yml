@@ -5,16 +5,20 @@ services:
     image: postgres:15-alpine
     container_name: danegg-postgres
     environment:
-      POSTGRES_DB: danegg
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: dane.gg
+      POSTGRES_USER: dane_gg
+      POSTGRES_PASSWORD: daneGGPassword!
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - danegg-network
+    command: >
+      postgres
+      -c log_statement=all
+      -c log_destination=stderr
+      -c log_min_messages=info
 
   adminer:
     image: adminer:4.8.1
@@ -22,7 +26,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DEFAULT_SERVER: dane.gg
     depends_on:
       - postgres
     networks:
