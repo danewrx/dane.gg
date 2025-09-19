@@ -67,7 +67,6 @@ export const handle: Handle = async ({ event, resolve }) => {
   // Skip auth check for public routes
   const publicRoutes = [
     '/',
-    '/login',
     '/api/health',
     '/favicon.ico',
     '/robots.txt'

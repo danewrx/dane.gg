@@ -115,9 +115,11 @@ class AuthService {
       return response;
     } catch (error) {
       console.error('Token refresh failed:', error);
-      // If refresh fails, logout user
-      auth.logout();
-      auth.clearPersisted();
+      // Only logout if we're actually authenticated
+      if (auth.get().isAuthenticated) {
+        auth.logout();
+        auth.clearPersisted();
+      }
       throw error;
     }
   }

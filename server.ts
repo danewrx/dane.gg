@@ -1,5 +1,6 @@
 import { handler } from './frontend/build/handler.js';
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import { createDefaultAdmin } from './backend/src/utils/createDefaultAdmin';
 
 const app = express();
@@ -7,6 +8,7 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
+app.use(cookieParser());
 
 // CORS middleware (for development)
 app.use((req, res, next) => {

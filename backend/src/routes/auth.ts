@@ -151,7 +151,8 @@ router.post('/logout', (req: Request, res: Response) => {
 // Refresh token route with rate limiting
 router.post('/refresh', tokenRefreshLimiter, async (req: Request, res: Response) => {
   try {
-    const { refreshToken } = req.body;
+    // Get refresh token from cookies
+    const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) {
       return res.status(400).json({
