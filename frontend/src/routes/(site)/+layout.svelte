@@ -118,11 +118,10 @@
 		background: var(--content-bg);
 		border: 1px solid var(--border-color);
 		border-radius: 0;
-		width: 100%;
-		max-width: 1200px;
+		width: 90%;
+		max-width: 900px;
 		height: 90vh;
-		min-height: 800px;
-		max-height: 1000px;
+		max-height: 1100px;
 		box-shadow: 0 4px 20px var(--shadow);
 		backdrop-filter: blur(10px);
 		transition: all 0.3s ease;

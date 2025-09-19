@@ -64,22 +64,27 @@ export const handle: Handle = async ({ event, resolve }) => {
   const { url, cookies } = event;
   const pathname = url.pathname;
 
-  // Skip auth check for public routes
-  const publicRoutes = [
-    '/',
+  // Skip auth check for system routes (assets, API, etc.)
+  const systemRoutes = [
     '/api/health',
     '/favicon.ico',
-    '/robots.txt'
+    '/robots.txt',
+    '/assets/',
+    '/static/',
+    '/_app/',
+    '/_svelte/'
   ];
 
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+  const isSystemRoute = systemRoutes.some(route => pathname.startsWith(route));
   
-  if (isPublicRoute) {
+  if (isSystemRoute) {
     return resolve(event);
   }
 
-  // Check if this is an admin route
-  const isAdminRoute = pathname.startsWith('/admin');
+  // Check if this is an admin route (anything starting with /admin, /login, /logout)
+  const isAdminRoute = pathname.startsWith('/admin') || 
+                      pathname.startsWith('/login') || 
+                      pathname.startsWith('/logout');
 
   if (isAdminRoute) {
     // Verify authentication for admin routes
@@ -94,6 +99,8 @@ export const handle: Handle = async ({ event, resolve }) => {
     event.locals.user = user;
     event.locals.isAuthenticated = true;
   }
+
+  // Everything else (including all (site) routes) is public and doesn't need auth
 
   // For other protected routes, you can add similar logic here
   // const isProtectedRoute = pathname.startsWith('/protected');

@@ -4,16 +4,25 @@ import { browser } from '$app/environment';
 import { page } from '$app/stores';
 
 // Helper function to check if current route is admin
+// Admin routes: /admin, /login, /logout
+// Everything else (including all (site) routes) is public
 function isAdminRoute(pathname: string): boolean {
-  return pathname.startsWith('/admin') || pathname.startsWith('/login') || pathname.startsWith('/logout');
+  return pathname.startsWith('/admin') || 
+         pathname.startsWith('/login') || 
+         pathname.startsWith('/logout');
 }
 
-// Initialize authentication when the app starts
+// Initialize authentication when the app starts - ONLY for admin routes
 if (browser) {
-  // Initialize auth service
-  authService.init().catch(error => {
-    console.error('Failed to initialize auth:', error);
-  });
+  // Check if we're on an admin route before initializing auth
+  const currentPath = window.location.pathname;
+  
+  if (isAdminRoute(currentPath)) {
+    // Initialize auth service only for admin routes
+    authService.init().catch(error => {
+      console.error('Failed to initialize auth:', error);
+    });
+  }
 
   // Set up periodic token refresh (every 30 minutes) - only for admin routes
   setInterval(async () => {
@@ -57,6 +66,23 @@ if (browser) {
           }
         }
       }
+    }
+  });
+
+  // Listen for route changes to initialize auth when navigating to admin routes
+  page.subscribe((pageData) => {
+    // Check if url exists before accessing it
+    if (!pageData?.url) {
+      return;
+    }
+    
+    const currentPath = pageData.url.pathname;
+    
+    if (isAdminRoute(currentPath)) {
+      // Initialize auth when navigating to admin routes
+      authService.init().catch(error => {
+        console.error('Failed to initialize auth on route change:', error);
+      });
     }
   });
 }
