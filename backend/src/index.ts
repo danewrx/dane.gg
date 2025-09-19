@@ -20,7 +20,7 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
   res.json({ 
     message: 'Hello from Express API',
     version: '1.0.0',
@@ -38,9 +38,9 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+// 404 handler for API routes
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API route not found' });
 });
 
 // Error handler
@@ -49,7 +49,15 @@ app.use((err: any, req: any, res: any, next: any) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Express API running at http://localhost:${PORT}`);
-  console.log(`📚 Health endpoint: http://localhost:${PORT}/api/health`);
-});
+// Only show console messages if running standalone
+const isStandalone = process.env.NODE_ENV !== 'production' && process.argv[1]?.includes('index.ts');
+
+if (isStandalone) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Express API running at http://localhost:${PORT}`);
+    console.log(`📚 Health endpoint: http://localhost:${PORT}/api/health`);
+  });
+} else {
+  // If imported, start the server without console output
+  app.listen(PORT);
+}

@@ -16,6 +16,7 @@
     "postgres": "^3.4.7"
   },
   "devDependencies": {
+    "@types/express": "^5.0.3",
     "bun-types": "latest",
     "drizzle-kit": "^0.31.4"
   },
