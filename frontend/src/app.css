@@ -1,0 +1,225 @@
+/* Global styles for dane.gg */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --bg-container: rgba(20, 20, 20, 0.9);
+  --text-primary: #ffffff;
+  --text-secondary: #00ff00;
+  --text-muted: #888888;
+  --border-primary: #333333;
+  --border-accent: #00ff00;
+  --scanline-color: rgba(0, 255, 0, 0.1);
+  --glow-color: rgba(0, 255, 0, 0.3);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  color: var(--text-primary);
+  overflow-x: hidden;
+}
+
+/* Background with starry dots pattern */
+html {
+  background: #1a1a1a !important;
+}
+
+body {
+  position: relative;
+  background: #1a1a1a !important;
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.8) 1px, transparent 0) !important;
+  background-size: 2px 2px !important;
+  background-position: 0 0 !important;
+  background-repeat: repeat !important;
+  background-attachment: fixed !important;
+}
+
+/* Main content container */
+.main-container {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+/* Content window - clean terminal style */
+.content-window {
+  background: #000000;
+  border: 1px solid #ffffff;
+  border-radius: 0px;
+  width: 100%;
+  max-width: 1000px;
+  height: 90vh;
+  min-height: 800px;
+  max-height: 1000px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* Content area */
+.content-area {
+  padding: 2rem;
+  flex: 1;
+  overflow-y: auto;
+  background: #000000;
+  height: 100%;
+}
+
+/* Scrollbar styling */
+.content-area::-webkit-scrollbar {
+  width: 8px;
+}
+
+.content-area::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+.content-area::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 4px;
+}
+
+.content-area::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .content-window {
+    max-width: 95%;
+    height: 92vh;
+    min-height: 700px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-container {
+    padding: 1rem 0.5rem;
+  }
+  
+  .content-window {
+    max-width: 100%;
+    height: 94vh;
+    min-height: 600px;
+  }
+  
+  .content-area {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-container {
+    padding: 0.5rem;
+  }
+  
+  .content-window {
+    height: 96vh;
+    min-height: 500px;
+  }
+  
+  .content-area {
+    padding: 0.75rem;
+  }
+}
+
+/* Text selection */
+::selection {
+  background: var(--text-secondary);
+  color: var(--bg-primary);
+}
+
+/* Focus styles */
+*:focus {
+  outline: 2px solid var(--border-accent);
+  outline-offset: 2px;
+}
+
+/* Link styles */
+a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  color: var(--text-primary);
+  text-shadow: 0 0 5px var(--glow-color);
+}
+
+/* Button styles */
+button {
+  font-family: inherit;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  background: var(--bg-container);
+  border-color: var(--border-accent);
+  box-shadow: 0 0 10px var(--glow-color);
+}
+
+/* Input styles */
+input, textarea, select {
+  font-family: inherit;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  padding: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--border-accent);
+  box-shadow: 0 0 5px var(--glow-color);
+}
+
+/* Utility classes */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-8 { margin-bottom: 2rem; }
+
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-4 { margin-top: 1rem; }
+.mt-8 { margin-top: 2rem; }
+
+.p-1 { padding: 0.25rem; }
+.p-2 { padding: 0.5rem; }
+.p-4 { padding: 1rem; }
+.p-8 { padding: 2rem; }
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 0.5rem; }
+.gap-4 { gap: 1rem; }
+.gap-8 { gap: 2rem; }
