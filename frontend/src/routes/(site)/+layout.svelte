@@ -32,6 +32,9 @@
 
 <!-- Public website layout -->
 <div class="main-container" class:light-theme={$theme === 'light'} class:dark-theme={$theme === 'dark'}>
+	<!-- Scanline Effect - behind content container -->
+	<div class="scanlines"></div>
+	
 	<div class="content-window">
 		<div class="content-area">
 			<!-- Header -->
@@ -116,6 +119,7 @@
 		justify-content: center;
 		padding: 20px;
 		transition: all 0.3s ease;
+		position: relative;
 	}
 
 	.content-window {
@@ -131,6 +135,7 @@
 		transition: all 0.3s ease;
 		position: relative;
 		overflow: hidden;
+		z-index: 1;
 	}
 
 	.content-area {
@@ -139,7 +144,33 @@
 		padding: 2rem;
 		overflow-y: auto;
 		transition: all 0.3s ease;
+		position: relative;
 	}
+
+	/* Scanline Effect - behind content container */
+	.scanlines {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100vw;
+		height: 100vh;
+		pointer-events: none;
+		z-index: 0;
+		background-image: repeating-linear-gradient(
+			0deg,
+			transparent,
+			transparent 2px,
+			rgba(255, 255, 255, 0.03) 2px,
+			rgba(255, 255, 255, 0.03) 4px
+		);
+		animation: scanline-move 0.1s linear infinite;
+	}
+
+	@keyframes scanline-move {
+		0% { transform: translateY(0); }
+		100% { transform: translateY(4px); }
+	}
+
 
 
 	/* Light theme specific adjustments */
