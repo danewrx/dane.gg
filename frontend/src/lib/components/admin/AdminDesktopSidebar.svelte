@@ -26,7 +26,7 @@
 	}
 </script>
 
-<aside class="sidebar" class:collapsed={isCollapsed}>
+<aside class="desktop-sidebar" class:collapsed={isCollapsed}>
 	<nav class="sidebar-nav">
 		<ul class="nav-list">
 			{#each navItems as item (item.id)}
@@ -52,7 +52,7 @@
 </aside>
 
 <style>
-	.sidebar {
+	.desktop-sidebar {
 		width: 240px;
 		background: #1a1a1a;
 		color: #ffffff;
@@ -66,7 +66,7 @@
 		border-right: 1px solid #2a2a2a;
 	}
 
-	.sidebar.collapsed {
+	.desktop-sidebar.collapsed {
 		width: 60px;
 	}
 
@@ -128,41 +128,21 @@
 		transition: opacity 0.3s ease;
 	}
 
-	.sidebar.collapsed .nav-label {
+	.desktop-sidebar.collapsed .nav-label {
 		opacity: 0;
 		width: 0;
 		overflow: hidden;
 	}
 
-	.sidebar.collapsed .nav-link {
+	.desktop-sidebar.collapsed .nav-link {
 		justify-content: center;
 		padding: 12px;
 	}
 
-	/* Responsive design */
+	/* Hide on mobile */
 	@media (max-width: 768px) {
-		.sidebar {
-			width: 100%;
-			height: auto;
-		}
-
-		.sidebar.collapsed {
-			width: 100%;
-		}
-
-		.nav-list {
-			display: flex;
-			overflow-x: auto;
-		}
-
-		.nav-item {
-			flex-shrink: 0;
-		}
-
-		.nav-link {
-			padding: 12px 16px;
-			min-width: 120px;
-			justify-content: center;
+		.desktop-sidebar {
+			display: none;
 		}
 	}
 </style>
