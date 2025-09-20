@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import FontSelector from './FontSelector.svelte';
+	import WeatherControls from './WeatherControls.svelte';
 
 	export let isOpen: boolean = false;
 
@@ -29,6 +30,11 @@
 		<div class="settings-section">
 			<h3>Appearance</h3>
 			<FontSelector />
+		</div>
+
+		<div class="settings-section">
+			<h3>Weather Effects</h3>
+			<WeatherControls />
 		</div>
 	</div>
 </div>
@@ -74,6 +80,10 @@
 	}
 
 	.settings-section {
+		margin-bottom: 20px;
+	}
+
+	.settings-section:last-child {
 		margin-bottom: 0;
 	}
 

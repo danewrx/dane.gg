@@ -1,0 +1,174 @@
+<script lang="ts">
+	import { weatherSettings, setWeatherType, setWeatherSpeed } from '$lib/stores/weather';
+
+	let { class: className = '' } = $props();
+
+	// Weather type options
+	const weatherOptions = [
+		{ value: 'none', label: 'Disable Weather' },
+		{ value: 'rain', label: 'Rain' },
+		{ value: 'snow', label: 'Snow' }
+	];
+
+	// Handle weather type change
+	function handleWeatherTypeChange(event: Event) {
+		const target = event.target as HTMLSelectElement;
+		if (target) {
+			setWeatherType(target.value as 'none' | 'rain' | 'snow');
+		}
+	}
+
+	// Handle speed change
+	function handleSpeedChange(event: Event) {
+		const target = event.target as HTMLInputElement;
+		if (target) {
+			setWeatherSpeed(parseFloat(target.value));
+		}
+	}
+</script>
+
+<div class="weather-controls" class:className>
+	<!-- Weather Type -->
+	<div class="control-group">
+		<label class="control-label" for="weather-type">
+			Weather Effects
+		</label>
+		<select
+			id="weather-type"
+			class="weather-select"
+			bind:value={$weatherSettings.type}
+			onchange={handleWeatherTypeChange}
+		>
+			{#each weatherOptions as option}
+				<option value={option.value}>
+					{option.label}
+				</option>
+			{/each}
+		</select>
+	</div>
+
+	{#if $weatherSettings.type !== 'none'}
+		<!-- Speed -->
+		<div class="control-group">
+			<label class="control-label" for="weather-speed">
+				Speed: {$weatherSettings.speed.toFixed(1)}x
+			</label>
+			<input
+				id="weather-speed"
+				type="range"
+				class="weather-slider"
+				min="0.5"
+				max="3.0"
+				step="0.1"
+				value={$weatherSettings.speed}
+				oninput={handleSpeedChange}
+			/>
+		</div>
+	{/if}
+</div>
+
+<style>
+	.weather-controls {
+		display: flex;
+		flex-direction: column;
+		gap: 15px;
+		width: 100%;
+	}
+
+	.control-group {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	.control-label {
+		font-size: 11px;
+		font-weight: bold;
+		color: var(--text-primary);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		margin: 0;
+	}
+
+	.weather-select,
+	.weather-slider {
+		background: #ffffff;
+		border: 2px inset #c0c0c0;
+		color: #000000;
+		padding: 4px 6px;
+		font-size: 12px;
+		height: 28px;
+		box-sizing: border-box;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		appearance: none;
+		cursor: pointer;
+		outline: none;
+		border-radius: 0;
+		font-family: inherit;
+	}
+
+	.weather-select:focus,
+	.weather-slider:focus {
+		border-color: #000080;
+		box-shadow: 0 0 0 1px #000080;
+	}
+
+	.weather-select:hover {
+		background: #e0e0e0;
+	}
+
+	.weather-select:active {
+		border: 2px inset #808080;
+	}
+
+	.weather-slider {
+		padding: 0;
+		height: 18px;
+		background: #c0c0c0;
+		border: 2px inset #808080;
+	}
+
+	.weather-slider::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 16px;
+		height: 16px;
+		background: #000080;
+		border: 1px outset #c0c0c0;
+		cursor: grab;
+		border-radius: 0;
+	}
+
+	.weather-slider::-moz-range-thumb {
+		width: 16px;
+		height: 16px;
+		background: #000080;
+		border: 1px outset #c0c0c0;
+		cursor: grab;
+		border-radius: 0;
+	}
+
+	.weather-slider::-webkit-slider-runnable-track {
+		background: transparent;
+		border: none;
+	}
+
+	.weather-slider::-moz-range-track {
+		background: transparent;
+		border: none;
+	}
+
+	/* Responsive design */
+	@media (max-width: 480px) {
+		.control-label {
+			font-size: 10px;
+		}
+
+		.weather-select,
+		.weather-slider {
+			font-size: 11px;
+			height: 26px;
+		}
+	}
+</style>

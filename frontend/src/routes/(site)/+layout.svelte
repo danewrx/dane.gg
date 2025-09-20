@@ -5,6 +5,7 @@
 	import SettingsIcon from '$lib/components/settings/SettingsIcon.svelte';
 	import SettingsPanel from '$lib/components/settings/SettingsPanel.svelte';
 	import Header from '$lib/components/Header.svelte';
+	import WeatherEffects from '$lib/components/WeatherEffects.svelte';
 	import { onMount } from 'svelte';
 
 	let { children } = $props();
@@ -32,6 +33,9 @@
 
 <!-- Public website layout -->
 <div class="main-container" class:light-theme={$theme === 'light'} class:dark-theme={$theme === 'dark'}>
+	<!-- Weather Effects -->
+	<WeatherEffects />
+	
 	<!-- Scanline Effect - behind content container -->
 	<div class="scanlines"></div>
 	
