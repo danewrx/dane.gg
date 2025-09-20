@@ -60,6 +60,7 @@ app.use((req, res, next) => {
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
 import statusRoutes from './routes/status';
+import configRoutes from './routes/config';
 import { generalLimiter } from './middleware/rateLimiting';
 
 // Routes
@@ -94,6 +95,9 @@ app.use('/api/users', userRoutes);
 
 // Status and monitoring routes
 app.use('/api/status', statusRoutes);
+
+// Site configuration routes
+app.use('/api/config', configRoutes);
 
 // 404 handler for API routes
 app.use('/api', (req, res) => {

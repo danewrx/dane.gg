@@ -116,6 +116,18 @@ export const postTags = websiteSchema.table('post_tags', {
   pk: primaryKey({ columns: [table.postId, table.tagId] })
 }));
 
+// Site configuration table
+export const siteConfig = websiteSchema.table('site_config', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  key: varchar('key', { length: 100 }).notNull().unique(),
+  value: text('value').notNull(),
+  description: text('description'),
+  dataType: varchar('data_type', { length: 20 }).notNull().default('string'), // string, number, boolean, json
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
+});
+
 // Relations
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   category: one(projectCategories, {
@@ -184,3 +196,5 @@ export type BlogTag = typeof blogTags.$inferSelect;
 export type NewBlogTag = typeof blogTags.$inferInsert;
 export type PostTag = typeof postTags.$inferSelect;
 export type NewPostTag = typeof postTags.$inferInsert;
+export type SiteConfig = typeof siteConfig.$inferSelect;
+export type NewSiteConfig = typeof siteConfig.$inferInsert;

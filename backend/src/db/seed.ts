@@ -9,7 +9,8 @@ import {
   blogTags, 
   postTags,
   messages,
-  pageViews
+  pageViews,
+  siteConfig
 } from './schema';
 
 export async function seed() {
@@ -34,6 +35,7 @@ export async function seed() {
     await db.delete(blogTags);
     await db.delete(messages);
     await db.delete(pageViews);
+    await db.delete(siteConfig);
 
     // Seed project categories
     console.log('📁 Seeding project categories...');
@@ -456,6 +458,41 @@ Stay tuned for the full article!`,
       }
     ]);
 
+    // Seed site configuration
+    console.log('⚙️ Seeding site configuration...');
+    await db.insert(siteConfig).values([
+      {
+        key: 'default_weather_type',
+        value: 'none',
+        description: 'Default weather effect type (none, rain, snow)',
+        dataType: 'string'
+      },
+      {
+        key: 'default_weather_speed',
+        value: '1.0',
+        description: 'Default weather effect speed multiplier',
+        dataType: 'number'
+      },
+      {
+        key: 'enforce_weather_effects',
+        value: 'false',
+        description: 'Whether to prevent users from changing weather effects',
+        dataType: 'boolean'
+      },
+      {
+        key: 'site_title',
+        value: 'dane.gg - Software Engineer & Designer',
+        description: 'Site title for SEO and display',
+        dataType: 'string'
+      },
+      {
+        key: 'site_description',
+        value: 'Hi, I\'m Dane! I\'m a software engineer & freelance designer from Manchester, UK.',
+        description: 'Site description for SEO',
+        dataType: 'string'
+      }
+    ]);
+
     console.log('✅ Database seeded successfully!');
     console.log(`📊 Seeded data:`);
     console.log(`   - ${categories.length} project categories`);
@@ -467,6 +504,7 @@ Stay tuned for the full article!`,
     console.log(`   - ${postTagLinks.length} post-tag relationships`);
     console.log(`   - 3 sample messages`);
     console.log(`   - 3 sample page views`);
+    console.log(`   - 5 site configuration settings`);
 
   } catch (error) {
     console.error('❌ Error seeding database:', error);

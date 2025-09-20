@@ -1,13 +1,14 @@
 <script lang="ts">
-	import { weatherSettings, setWeatherType, setWeatherSpeed } from '$lib/stores/weather';
+	import { weatherSettings, setWeatherType, setWeatherSpeed, weatherConfig } from '$lib/stores/weather';
+	import { enforceWeatherEffects } from '$lib/stores/siteConfig';
 
 	let { class: className = '' } = $props();
 
 	// Weather type options
 	const weatherOptions = [
-		{ value: 'none', label: 'Disable Weather' },
-		{ value: 'rain', label: 'Rain' },
-		{ value: 'snow', label: 'Snow' }
+		{ value: 'none', label: weatherConfig.none.name },
+		{ value: 'rain', label: weatherConfig.rain.name },
+		{ value: 'snow', label: weatherConfig.snow.name }
 	];
 
 	// Handle weather type change
@@ -32,12 +33,17 @@
 	<div class="control-group">
 		<label class="control-label" for="weather-type">
 			Weather Effects
+			{#if $enforceWeatherEffects}
+				<span class="enforced-indicator">(Enforced)</span>
+			{/if}
 		</label>
 		<select
 			id="weather-type"
 			class="weather-select"
+			class:disabled={$enforceWeatherEffects}
 			bind:value={$weatherSettings.type}
 			onchange={handleWeatherTypeChange}
+			disabled={$enforceWeatherEffects}
 		>
 			{#each weatherOptions as option}
 				<option value={option.value}>
@@ -52,16 +58,21 @@
 		<div class="control-group">
 			<label class="control-label" for="weather-speed">
 				Speed: {$weatherSettings.speed.toFixed(1)}x
+				{#if $enforceWeatherEffects}
+					<span class="enforced-indicator">(Enforced)</span>
+				{/if}
 			</label>
 			<input
 				id="weather-speed"
 				type="range"
 				class="weather-slider"
+				class:disabled={$enforceWeatherEffects}
 				min="0.5"
 				max="3.0"
 				step="0.1"
 				value={$weatherSettings.speed}
 				oninput={handleSpeedChange}
+				disabled={$enforceWeatherEffects}
 			/>
 		</div>
 	{/if}
@@ -88,6 +99,14 @@
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
 		margin: 0;
+	}
+
+	.enforced-indicator {
+		font-size: 9px;
+		color: var(--text-muted);
+		font-weight: normal;
+		text-transform: none;
+		margin-left: 4px;
 	}
 
 	.weather-select,
@@ -157,6 +176,26 @@
 	.weather-slider::-moz-range-track {
 		background: transparent;
 		border: none;
+	}
+
+	/* Disabled state */
+	.weather-select.disabled,
+	.weather-slider.disabled {
+		background: #e0e0e0;
+		color: #888888;
+		cursor: not-allowed;
+		opacity: 0.6;
+	}
+
+	.weather-select.disabled:hover,
+	.weather-slider.disabled:hover {
+		background: #e0e0e0;
+	}
+
+	.weather-select.disabled:focus,
+	.weather-slider.disabled:focus {
+		border-color: #c0c0c0;
+		box-shadow: none;
 	}
 
 	/* Responsive design */
