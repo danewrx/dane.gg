@@ -91,6 +91,10 @@ export const handle: Handle = async ({ event, resolve }) => {
     const user = await verifyAuth(cookies);
     
     if (!user) {
+      // Don't redirect if already on login page to prevent loops
+      if (pathname === '/login') {
+        return resolve(event);
+      }
       // Redirect to login page
       throw redirect(302, '/login?redirect=' + encodeURIComponent(pathname));
     }

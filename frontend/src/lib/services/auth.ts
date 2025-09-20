@@ -44,13 +44,17 @@ class AuthService {
     };
 
     try {
+      console.log(`Making API request to: ${url}`);
       const response = await fetch(url, defaultOptions);
-      const data = await response.json();
-
+      
       if (!response.ok) {
-        throw new Error(data.message || data.error || 'Request failed');
+        const errorText = await response.text();
+        console.error(`API request failed: ${endpoint}`, response.status, errorText);
+        throw new Error(`Request failed with status ${response.status}: ${errorText}`);
       }
-
+      
+      const data = await response.json();
+      console.log(`API response from ${endpoint}:`, data);
       return data;
     } catch (error) {
       console.error(`API request failed: ${endpoint}`, error);
@@ -116,10 +120,10 @@ class AuthService {
     } catch (error) {
       console.error('Token refresh failed:', error);
       // Only logout if we're actually authenticated
-      if (auth.get().isAuthenticated) {
-        auth.logout();
-        auth.clearPersisted();
-      }
+      // Note: We can't easily check auth state here without subscribing
+      // This is a fallback, so we'll just clear the persisted data
+      auth.logout();
+      auth.clearPersisted();
       throw error;
     }
   }
@@ -196,11 +200,13 @@ class AuthService {
       await this.getCurrentUser();
       return true;
     } catch (error) {
+      console.log('Session check failed, trying token verification...');
       // If session fails, try token verification
       try {
         await this.verifyToken();
         return true;
       } catch (tokenError) {
+        console.log('Token verification also failed, user not authenticated');
         return false;
       }
     }
@@ -210,13 +216,17 @@ class AuthService {
   async init(): Promise<void> {
     if (!browser) return;
 
+    console.log('Initializing auth service...');
     auth.init();
 
     // Try to verify authentication
     try {
-      await this.checkAuth();
+      console.log('Checking auth...');
+      const isAuth = await this.checkAuth();
+      console.log('Auth check completed, authenticated:', isAuth);
     } catch (error) {
       console.error('Auth initialization failed:', error);
+      // Don't throw error, just log it - this allows the app to continue
     }
   }
 }

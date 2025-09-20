@@ -12,8 +12,18 @@
 
   // Get redirect URL from query params
   $: redirectUrl = $page.url.searchParams.get('redirect') || '/admin';
+  
+  // Reactive statement to handle auth state changes
+  $: if (!$isLoading && $auth.isAuthenticated) {
+    goto(redirectUrl);
+  }
 
   onMount(() => {
+    // Wait for auth to initialize before checking
+    if ($isLoading) {
+      return;
+    }
+    
     // If already authenticated, redirect
     if ($auth.isAuthenticated) {
       goto(redirectUrl);
