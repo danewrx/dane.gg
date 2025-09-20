@@ -415,6 +415,8 @@
 
 		// Weather settings subscription
 		const unsubscribe = weatherSettings.subscribe((settings) => {
+			if (!settings) return; // Skip if settings not initialized
+
 			// Update speed for existing particles
 			rainSystem?.setSpeedMultiplier(settings.speed);
 			snowSystem?.setSpeedMultiplier(settings.speed);

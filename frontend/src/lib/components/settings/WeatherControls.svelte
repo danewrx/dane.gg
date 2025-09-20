@@ -1,8 +1,15 @@
 <script lang="ts">
-	import { weatherSettings, setWeatherType, setWeatherSpeed, weatherConfig } from '$lib/stores/weather';
+	import { weatherSettings, setWeatherType, setWeatherSpeed, weatherConfig, restoreUserPreferences } from '$lib/stores/weather';
 	import { enforceWeatherEffects } from '$lib/stores/siteConfig';
 
 	let { class: className = '' } = $props();
+
+	// Watch for enforcement changes and restore user preferences when turned off
+	$effect(() => {
+		if (!$enforceWeatherEffects) {
+			restoreUserPreferences();
+		}
+	});
 
 	// Weather type options
 	const weatherOptions = [
@@ -41,7 +48,7 @@
 			id="weather-type"
 			class="weather-select"
 			class:disabled={$enforceWeatherEffects}
-			bind:value={$weatherSettings.type}
+			value={$weatherSettings?.type || 'none'}
 			onchange={handleWeatherTypeChange}
 			disabled={$enforceWeatherEffects}
 		>
@@ -53,11 +60,11 @@
 		</select>
 	</div>
 
-	{#if $weatherSettings.type !== 'none'}
+		{#if $weatherSettings?.type !== 'none'}
 		<!-- Speed -->
 		<div class="control-group">
 			<label class="control-label" for="weather-speed">
-				Speed: {$weatherSettings.speed.toFixed(1)}x
+				Speed: {$weatherSettings?.speed?.toFixed(1) || '1.0'}x
 				{#if $enforceWeatherEffects}
 					<span class="enforced-indicator">(Enforced)</span>
 				{/if}
@@ -70,7 +77,7 @@
 				min="0.5"
 				max="3.0"
 				step="0.1"
-				value={$weatherSettings.speed}
+				value={$weatherSettings?.speed || 1.0}
 				oninput={handleSpeedChange}
 				disabled={$enforceWeatherEffects}
 			/>
