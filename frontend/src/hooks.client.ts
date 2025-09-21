@@ -1,5 +1,6 @@
 import { authService } from '$lib/services/auth';
 import { themeService } from '$lib/services/theme';
+import { accentColorService } from '$lib/services/accentColor';
 import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
 import { page } from '$app/stores';
@@ -27,6 +28,11 @@ if (browser) {
     // Initialize theme service for admin routes
     themeService.init().catch(error => {
       console.error('Failed to initialize theme service:', error);
+    });
+
+    // Initialize accent color service for admin routes
+    accentColorService.init().catch(error => {
+      console.error('Failed to initialize accent color service:', error);
     });
   }
 
@@ -93,6 +99,11 @@ if (browser) {
       // Initialize theme service when navigating to admin routes
       themeService.init().catch(error => {
         console.error('Failed to initialize theme service on route change:', error);
+      });
+
+      // Initialize accent color service when navigating to admin routes
+      accentColorService.init().catch(error => {
+        console.error('Failed to initialize accent color service on route change:', error);
       });
     }
   });

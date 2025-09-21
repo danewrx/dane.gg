@@ -7,6 +7,7 @@ declare module 'express-session' {
       username: string;
       isAdmin: boolean;
       themePreference?: string;
+      accentColor?: string;
     };
   }
 }
@@ -19,6 +20,7 @@ declare global {
         username: string;
         isAdmin: boolean;
         themePreference?: string;
+        accentColor?: string;
       };
     }
   }

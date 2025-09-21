@@ -121,7 +121,7 @@
 	}
 
 	.menu-toggle:focus {
-		outline: 2px solid #6366f1;
+		outline: 2px solid var(--accent-color, #3b82f6);
 		outline-offset: 2px;
 	}
 
@@ -171,7 +171,7 @@
 	}
 
 	.logout-button:focus {
-		outline: 2px solid #6366f1;
+		outline: 2px solid var(--accent-color, #3b82f6);
 		outline-offset: 2px;
 	}
 

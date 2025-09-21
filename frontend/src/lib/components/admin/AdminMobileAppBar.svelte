@@ -167,18 +167,18 @@
 	}
 
 	.nav-item.active {
-		background: #4a4a4a;
-		color: #ffffff;
+		background: var(--accent-color, #3b82f6);
+		color: var(--accent-color-contrast, white);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
 
-	
-	:global(html:not(.dark)) .nav-item.active {
-		background: #e5e7eb;
-		color: #1f2937;
+	.nav-item.active:hover {
+		background: var(--accent-color-dark, #2563eb);
+		color: var(--accent-color-dark-contrast, white);
 	}
 
 	.nav-item:focus {
-		outline: 2px solid #6366f1;
+		outline: 2px solid var(--accent-color, #3b82f6);
 		outline-offset: 2px;
 	}
 

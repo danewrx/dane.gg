@@ -35,7 +35,8 @@ router.post('/login', authLimiter, loginSlowDown, bruteForceProtection, async (r
       passwordHash: users.passwordHash,
       isAdmin: users.isAdmin,
       createdAt: users.createdAt,
-      themePreference: users.themePreference
+      themePreference: users.themePreference,
+      accentColor: users.accentColor
     }).from(users).where(eq(users.username, username)).limit(1);
 
     if (user.length === 0) {
@@ -74,7 +75,8 @@ router.post('/login', authLimiter, loginSlowDown, bruteForceProtection, async (r
         id: userData.id,
         username: userData.username,
         isAdmin: userData.isAdmin || false,
-        themePreference: userData.themePreference || 'system'
+        themePreference: userData.themePreference || 'system',
+        accentColor: userData.accentColor || '#3b82f6'
       };
     }
 
@@ -109,7 +111,8 @@ router.post('/login', authLimiter, loginSlowDown, bruteForceProtection, async (r
         id: userData.id,
         username: userData.username,
         isAdmin: userData.isAdmin || false,
-        themePreference: userData.themePreference || 'system'
+        themePreference: userData.themePreference || 'system',
+        accentColor: userData.accentColor || '#3b82f6'
       },
       expiresIn: tokens.expiresIn
     });
@@ -182,7 +185,8 @@ router.post('/refresh', tokenRefreshLimiter, async (req: Request, res: Response)
       id: users.id,
       username: users.username,
       isAdmin: users.isAdmin,
-      themePreference: users.themePreference
+      themePreference: users.themePreference,
+      accentColor: users.accentColor
     }).from(users).where(eq(users.id, decoded.userId)).limit(1);
 
     if (user.length === 0) {
@@ -205,7 +209,8 @@ router.post('/refresh', tokenRefreshLimiter, async (req: Request, res: Response)
         id: user[0].id,
         username: user[0].username,
         isAdmin: user[0].isAdmin || false,
-        themePreference: user[0].themePreference || 'system'
+        themePreference: user[0].themePreference || 'system',
+        accentColor: user[0].accentColor || '#3b82f6'
       };
     }
 
@@ -251,7 +256,8 @@ router.get('/me', async (req: Request, res: Response) => {
         id: users.id,
         username: users.username,
         isAdmin: users.isAdmin,
-        themePreference: users.themePreference
+        themePreference: users.themePreference,
+        accentColor: users.accentColor
       }).from(users).where(eq(users.id, req.session.user.id)).limit(1);
 
       if (user.length > 0) {

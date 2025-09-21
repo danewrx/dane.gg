@@ -8,6 +8,12 @@ interface ThemeResponse {
   themePreference: string;
 }
 
+interface AccentColorResponse {
+  success: boolean;
+  message: string;
+  accentColor: string;
+}
+
 interface AdminSettingsResponse {
   success: boolean;
   message: string;
@@ -78,6 +84,34 @@ class SettingsService {
       return response;
     } catch (error) {
       console.error('Set theme preference failed:', error);
+      throw error;
+    }
+  }
+
+  // Accent color methods
+  async getAccentColor(): Promise<string> {
+    try {
+      const response = await this.makeRequest<AccentColorResponse>('/settings/accent-color', {
+        method: 'GET'
+      });
+
+      return response.accentColor || '#3b82f6';
+    } catch (error) {
+      console.error('Get accent color failed:', error);
+      return '#3b82f6'; // Default fallback
+    }
+  }
+
+  async setAccentColor(accentColor: string): Promise<AccentColorResponse> {
+    try {
+      const response = await this.makeRequest<AccentColorResponse>('/settings/accent-color', {
+        method: 'POST',
+        body: JSON.stringify({ accentColor })
+      });
+
+      return response;
+    } catch (error) {
+      console.error('Set accent color failed:', error);
       throw error;
     }
   }

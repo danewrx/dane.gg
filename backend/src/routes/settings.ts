@@ -35,6 +35,35 @@ router.get('/theme', requireSession, async (req: Request, res: Response) => {
   }
 });
 
+// Get user accent color (requires authentication)
+router.get('/accent-color', requireSession, async (req: Request, res: Response) => {
+  try {
+    const user = await db.select({
+      accentColor: users.accentColor
+    }).from(users).where(eq(users.id, req.user!.id)).limit(1);
+
+    if (user.length === 0) {
+      return res.status(404).json({
+        error: 'User not found',
+        message: 'User does not exist'
+      });
+    }
+
+    res.json({
+      success: true,
+      accentColor: user[0].accentColor || '#3b82f6',
+      message: 'Accent color retrieved successfully'
+    });
+
+  } catch (error) {
+    console.error('Get accent color error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to get accent color'
+    });
+  }
+});
+
 // Update user theme preference (requires authentication)
 router.post('/theme', requireSession, async (req: Request, res: Response) => {
   try {
@@ -64,6 +93,40 @@ router.post('/theme', requireSession, async (req: Request, res: Response) => {
     res.status(500).json({
       error: 'Internal server error',
       message: 'Failed to update theme preference'
+    });
+  }
+});
+
+// Update user accent color (requires authentication)
+router.post('/accent-color', requireSession, async (req: Request, res: Response) => {
+  try {
+    const { accentColor } = req.body;
+
+    // Validate accent color (hex format)
+    const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
+    if (!accentColor || !hexColorRegex.test(accentColor)) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        message: 'Accent color must be a valid hex color (e.g., #3b82f6)'
+      });
+    }
+
+    // Update accent color in database
+    await db.update(users)
+      .set({ accentColor })
+      .where(eq(users.id, req.user!.id));
+
+    res.json({
+      success: true,
+      accentColor,
+      message: 'Accent color updated successfully'
+    });
+
+  } catch (error) {
+    console.error('Update accent color error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to update accent color'
     });
   }
 });

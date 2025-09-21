@@ -23,7 +23,8 @@ export const users = websiteSchema.table('users', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   totpSecret: text('totp_secret'),
   totpEnabled: boolean('totp_enabled').default(false),
-  themePreference: varchar('theme_preference', { length: 10 }).default('system') // 'light', 'dark', 'system'
+  themePreference: varchar('theme_preference', { length: 10 }).default('system'), // 'light', 'dark', 'system'
+  accentColor: varchar('accent_color', { length: 7 }).default('#000000'), // Hex code
 });
 
 // Posts table

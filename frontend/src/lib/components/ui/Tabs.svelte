@@ -171,8 +171,8 @@
 	}
 
 	.tab.active {
-		background: rgba(99, 102, 241, 1);
-		color: white;
+		background: var(--accent-color, #3b82f6);
+		color: var(--accent-color-contrast, white);
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 	}
 
@@ -201,9 +201,9 @@
 	}
 
 	.variant-pills .tab.active {
-		background: rgba(99, 102, 241, 1);
-		border-color: rgba(99, 102, 241, 1);
-		color: white;
+		background: var(--accent-color, #3b82f6);
+		border-color: var(--accent-color, #3b82f6);
+		color: var(--accent-color-contrast, white);
 	}
 
 	/* Underline variant styles */
@@ -227,8 +227,8 @@
 	}
 
 	.variant-underline .tab.active {
-		color: rgba(99, 102, 241, 1);
-		border-bottom-color: rgba(99, 102, 241, 1);
+		color: var(--accent-color, #3b82f6);
+		border-bottom-color: var(--accent-color, #3b82f6);
 		background: transparent;
 		box-shadow: none;
 	}

@@ -11,5 +11,11 @@ export default defineConfig({
 				secure: false
 			}
 		}
+	},
+	optimizeDeps: {
+		include: ['svelte-sonner']
+	},
+	ssr: {
+		noExternal: ['svelte-sonner']
 	}
 });

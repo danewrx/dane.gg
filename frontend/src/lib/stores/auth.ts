@@ -6,6 +6,7 @@ export interface User {
   username: string;
   isAdmin: boolean;
   themePreference?: string;
+  accentColor?: string;
 }
 
 export interface AuthState {

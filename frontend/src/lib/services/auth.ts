@@ -17,6 +17,7 @@ interface AuthResponse {
     username: string;
     isAdmin: boolean;
     themePreference?: string;
+    accentColor?: string;
   };
   expiresIn?: string;
   accessToken?: string;

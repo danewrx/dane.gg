@@ -1,10 +1,14 @@
 <script lang="ts">
 	import { mode, setMode, userPrefersMode } from 'mode-watcher';
 	import Tabs from '$lib/components/ui/Tabs.svelte';
+	import AccentColorPicker from '$lib/components/ui/AccentColorPicker.svelte';
 	import { Monitor, Sun, Moon } from 'lucide-svelte';
 	import { authService } from '$lib/services/auth';
 	import { themeService } from '$lib/services/theme';
+	import { accentColorService } from '$lib/services/accentColor';
+	import { settingsService } from '$lib/services/settings';
 	import { user } from '$lib/stores/auth';
+	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
 
 	// Theme tabs configuration
@@ -16,6 +20,7 @@
 
 	// Get current theme preference - start with system as default
 	let currentTheme = $state('system');
+	let currentAccentColor = $state('#3b82f6');
 	let isInitialized = $state(false);
 
 	// Initialize theme from database (for authenticated users) or localStorage
@@ -25,12 +30,17 @@
 		if ($user) {
 			// Load from database if user is authenticated
 			try {
-				const dbTheme = await authService.getThemePreference();
+				const dbTheme = await settingsService.getThemePreference();
 				console.log('Loaded theme from database:', dbTheme);
 				currentTheme = dbTheme;
 				setMode(dbTheme as 'light' | 'dark' | 'system');
+
+				// Load accent color from user data or API
+				const dbAccentColor = $user.accentColor || await settingsService.getAccentColor();
+				console.log('Loaded accent color from database:', dbAccentColor);
+				currentAccentColor = dbAccentColor;
 			} catch (error) {
-				console.error('Failed to load theme from database:', error);
+				console.error('Failed to load settings from database:', error);
 				// Fallback to localStorage
 				loadFromLocalStorage();
 			}
@@ -40,6 +50,13 @@
 		}
 		
 		isInitialized = true;
+		
+		// Welcome toast after initialization
+		setTimeout(() => {
+			toast.success('Settings loaded successfully!', {
+				description: 'Your preferences are ready to customize'
+			});
+		}, 500);
 	});
 
 	function loadFromLocalStorage() {
@@ -66,16 +83,48 @@
 
 	async function handleThemeChange(tabId: string, value: string) {
 		console.log('Theme change requested:', { tabId, value });
+		console.log('About to show toast...');
 		currentTheme = value;
 
 		// Use theme service to set and save theme
 		try {
 			await themeService.setTheme(value);
 			console.log('Theme set and saved successfully:', value);
+			
+			// Show success toast
+			const themeName = value === 'system' ? 'Auto' : value.charAt(0).toUpperCase() + value.slice(1);
+			toast.success(`Theme changed to ${themeName}`, {
+				description: 'Your preference has been saved to your account'
+			});
 		} catch (error) {
 			console.error('Failed to set theme:', error);
 			// Fallback to local mode setting
 			setMode(value as 'light' | 'dark' | 'system');
+			
+			// Show error toast
+			toast.error('Failed to save theme preference');
+		}
+	}
+
+	async function handleAccentColorChange(event: CustomEvent<{ color: string }>) {
+		const { color } = event.detail;
+		console.log('Accent color change requested:', color);
+		currentAccentColor = color;
+
+		// Use accent color service to set and save color
+		try {
+			await accentColorService.setAccentColor(color);
+			console.log('Accent color set and saved successfully:', color);
+			
+			// Show success toast
+			toast.success(`Accent color updated`, {
+				description: `New color ${color.toUpperCase()} applied across the interface`
+			});
+		} catch (error) {
+			console.error('Failed to set accent color:', error);
+			
+			// Show error toast
+			toast.error('Failed to save accent color preference');
 		}
 	}
 </script>
@@ -117,6 +166,23 @@
 				</div>
 			</div>
 
+			<!-- Accent Color Section -->
+			<div class="setting-group accent-color-group">
+				<div class="setting-info">
+					<h3 class="setting-title">Accent Color</h3>
+					<p class="setting-description">Choose a color that reflects your style</p>
+				</div>
+				
+				<div class="setting-control accent-color-control">
+					<AccentColorPicker 
+						currentColor={currentAccentColor}
+						disabled={!isInitialized}
+						on:colorChange={handleAccentColorChange}
+					/>
+				</div>
+			</div>
+
+			<!-- Preview Section -->
 			<div class="theme-preview">
 				<div class="preview-card">
 					<div class="preview-header">
@@ -136,11 +202,20 @@
 					</div>
 					<div class="preview-content">
 						<div class="preview-text">
-							This is how your admin panel will look with the selected theme.
+							This is how your admin panel will look with the selected theme and accent color.
 						</div>
 						<div class="preview-elements">
 							<div class="preview-button primary">Primary Button</div>
 							<div class="preview-button secondary">Secondary Button</div>
+						</div>
+						
+						<!-- Test toast buttons - showcasing Sonner features -->
+						<div style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
+							<button onclick={() => toast.success('Settings saved!', { description: 'Your changes have been applied' })} style="padding: 4px 8px; font-size: 0.75rem; border: 1px solid #22c55e; background: #22c55e; color: white; border-radius: 4px;">Success</button>
+							<button onclick={() => toast.error('Save failed!', { description: 'Please check your connection' })} style="padding: 4px 8px; font-size: 0.75rem; border: 1px solid #ef4444; background: #ef4444; color: white; border-radius: 4px;">Error</button>
+							<button onclick={() => toast.warning('Unsaved changes', { description: 'You have unsaved changes' })} style="padding: 4px 8px; font-size: 0.75rem; border: 1px solid #f59e0b; background: #f59e0b; color: white; border-radius: 4px;">Warning</button>
+							<button onclick={() => toast('Export complete', { action: { label: 'Download', onClick: () => toast.success('Download started!') }, cancel: { label: 'Cancel', onClick: () => toast.info('Cancelled') } })} style="padding: 4px 8px; font-size: 0.75rem; border: 1px solid #8b5cf6; background: #8b5cf6; color: white; border-radius: 4px;">Action</button>
+							<button onclick={() => toast.promise(new Promise(resolve => setTimeout(resolve, 2000)), { loading: 'Saving...', success: 'Saved!', error: 'Failed!' })} style="padding: 4px 8px; font-size: 0.75rem; border: 1px solid #6366f1; background: #6366f1; color: white; border-radius: 4px;">Promise</button>
 						</div>
 					</div>
 				</div>
@@ -359,8 +434,13 @@
 	}
 
 	.preview-button.primary {
-		background: #6366f1;
-		color: white;
+		background: var(--accent-color, #3b82f6);
+		color: var(--accent-color-contrast, white);
+	}
+
+	.preview-button.primary:hover {
+		background: var(--accent-color-dark, #2563eb);
+		color: var(--accent-color-dark-contrast, white);
 	}
 
 	.preview-button.secondary {
@@ -374,6 +454,15 @@
 		background: rgba(0, 0, 0, 0.1);
 		border-color: rgba(0, 0, 0, 0.2);
 		color: #1f2937;
+	}
+
+	.accent-color-group {
+		margin-top: 32px;
+	}
+
+	.accent-color-control {
+		flex: 1;
+		min-width: 0;
 	}
 
 	@media (max-width: 768px) {
