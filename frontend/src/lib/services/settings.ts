@@ -1,0 +1,114 @@
+import { browser } from '$app/environment';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
+interface ThemeResponse {
+  success: boolean;
+  message: string;
+  themePreference: string;
+}
+
+interface AdminSettingsResponse {
+  success: boolean;
+  message: string;
+  settings: {
+    maintenance_mode: boolean;
+    registration_enabled: boolean;
+    site_title: string;
+    [key: string]: any;
+  };
+}
+
+class SettingsService {
+  private async makeRequest<T>(
+    endpoint: string, 
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${API_BASE_URL}${endpoint}`;
+    
+    const defaultOptions: RequestInit = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      },
+      credentials: 'include', // Important for cookies
+      ...options
+    };
+
+    try {
+      console.log(`Making settings API request to: ${url}`);
+      const response = await fetch(url, defaultOptions);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Settings API request failed: ${endpoint}`, response.status, errorText);
+        throw new Error(`Request failed with status ${response.status}: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log(`Settings API response from ${endpoint}:`, data);
+      return data;
+    } catch (error) {
+      console.error(`Settings API request failed: ${endpoint}`, error);
+      throw error;
+    }
+  }
+
+  // Theme preference methods
+  async getThemePreference(): Promise<string> {
+    try {
+      const response = await this.makeRequest<ThemeResponse>('/settings/theme', {
+        method: 'GET'
+      });
+
+      return response.themePreference || 'system';
+    } catch (error) {
+      console.error('Get theme preference failed:', error);
+      return 'system'; // Default fallback
+    }
+  }
+
+  async setThemePreference(themePreference: string): Promise<ThemeResponse> {
+    try {
+      const response = await this.makeRequest<ThemeResponse>('/settings/theme', {
+        method: 'POST',
+        body: JSON.stringify({ themePreference })
+      });
+
+      return response;
+    } catch (error) {
+      console.error('Set theme preference failed:', error);
+      throw error;
+    }
+  }
+
+  // Admin settings methods
+  async getAdminSettings(): Promise<AdminSettingsResponse['settings']> {
+    try {
+      const response = await this.makeRequest<AdminSettingsResponse>('/settings/admin', {
+        method: 'GET'
+      });
+
+      return response.settings;
+    } catch (error) {
+      console.error('Get admin settings failed:', error);
+      throw error;
+    }
+  }
+
+  async updateAdminSettings(settings: Record<string, any>): Promise<AdminSettingsResponse> {
+    try {
+      const response = await this.makeRequest<AdminSettingsResponse>('/settings/admin', {
+        method: 'POST',
+        body: JSON.stringify({ settings })
+      });
+
+      return response;
+    } catch (error) {
+      console.error('Update admin settings failed:', error);
+      throw error;
+    }
+  }
+}
+
+export const settingsService = new SettingsService();

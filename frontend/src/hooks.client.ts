@@ -1,4 +1,5 @@
 import { authService } from '$lib/services/auth';
+import { themeService } from '$lib/services/theme';
 import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
 import { page } from '$app/stores';
@@ -21,6 +22,11 @@ if (browser) {
     // Initialize auth service only for admin routes
     authService.init().catch(error => {
       console.error('Failed to initialize auth:', error);
+    });
+    
+    // Initialize theme service for admin routes
+    themeService.init().catch(error => {
+      console.error('Failed to initialize theme service:', error);
     });
   }
 
@@ -82,6 +88,11 @@ if (browser) {
       // Initialize auth when navigating to admin routes
       authService.init().catch(error => {
         console.error('Failed to initialize auth on route change:', error);
+      });
+      
+      // Initialize theme service when navigating to admin routes
+      themeService.init().catch(error => {
+        console.error('Failed to initialize theme service on route change:', error);
       });
     }
   });

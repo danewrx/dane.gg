@@ -16,10 +16,12 @@ interface AuthResponse {
     id: string;
     username: string;
     isAdmin: boolean;
+    themePreference?: string;
   };
   expiresIn?: string;
   accessToken?: string;
 }
+
 
 interface ApiError {
   error: string;

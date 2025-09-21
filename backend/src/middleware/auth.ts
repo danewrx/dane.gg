@@ -4,18 +4,7 @@ import { db } from '../db';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
 
-// Extend Express Request type to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        username: string;
-        isAdmin: boolean;
-      };
-    }
-  }
-}
+// Types are now defined in src/types/express.d.ts
 
 /**
  * Middleware to authenticate JWT tokens

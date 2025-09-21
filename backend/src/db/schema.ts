@@ -22,7 +22,8 @@ export const users = websiteSchema.table('users', {
   isAdmin: boolean('is_admin').default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   totpSecret: text('totp_secret'),
-  totpEnabled: boolean('totp_enabled').default(false)
+  totpEnabled: boolean('totp_enabled').default(false),
+  themePreference: varchar('theme_preference', { length: 10 }).default('system') // 'light', 'dark', 'system'
 });
 
 // Posts table

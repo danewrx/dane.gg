@@ -2,6 +2,10 @@
 	import { mode, setMode, userPrefersMode } from 'mode-watcher';
 	import Tabs from '$lib/components/ui/Tabs.svelte';
 	import { Monitor, Sun, Moon } from 'lucide-svelte';
+	import { authService } from '$lib/services/auth';
+	import { themeService } from '$lib/services/theme';
+	import { user } from '$lib/stores/auth';
+	import { onMount } from 'svelte';
 
 	// Theme tabs configuration
 	const themeTabs = [
@@ -12,18 +16,41 @@
 
 	// Get current theme preference - start with system as default
 	let currentTheme = $state('system');
+	let isInitialized = $state(false);
 
-	// Initialize theme from stored preference
-	$effect(() => {
-		// Check localStorage for stored preference
+	// Initialize theme from database (for authenticated users) or localStorage
+	onMount(async () => {
+		console.log('Settings page mounted, user:', $user);
+		
+		if ($user) {
+			// Load from database if user is authenticated
+			try {
+				const dbTheme = await authService.getThemePreference();
+				console.log('Loaded theme from database:', dbTheme);
+				currentTheme = dbTheme;
+				setMode(dbTheme as 'light' | 'dark' | 'system');
+			} catch (error) {
+				console.error('Failed to load theme from database:', error);
+				// Fallback to localStorage
+				loadFromLocalStorage();
+			}
+		} else {
+			// Fallback to localStorage for non-authenticated users
+			loadFromLocalStorage();
+		}
+		
+		isInitialized = true;
+	});
+
+	function loadFromLocalStorage() {
 		if (typeof window !== 'undefined') {
 			const stored = localStorage.getItem('mode-watcher-mode');
 			if (stored && ['light', 'dark', 'system'].includes(stored)) {
-				console.log('Loading stored theme:', stored);
+				console.log('Loading stored theme from localStorage:', stored);
 				currentTheme = stored;
 			}
 		}
-	});
+	}
 
 	// Debug current mode
 	$effect(() => {
@@ -37,11 +64,19 @@
 		}
 	});
 
-	function handleThemeChange(tabId: string, value: string) {
+	async function handleThemeChange(tabId: string, value: string) {
 		console.log('Theme change requested:', { tabId, value });
 		currentTheme = value;
-		setMode(value as 'light' | 'dark' | 'system');
-		console.log('Theme set to:', value);
+
+		// Use theme service to set and save theme
+		try {
+			await themeService.setTheme(value);
+			console.log('Theme set and saved successfully:', value);
+		} catch (error) {
+			console.error('Failed to set theme:', error);
+			// Fallback to local mode setting
+			setMode(value as 'light' | 'dark' | 'system');
+		}
 	}
 </script>
 
