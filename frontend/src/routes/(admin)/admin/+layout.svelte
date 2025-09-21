@@ -1,11 +1,17 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { authService } from '$lib/services/auth';
+	import { onMount } from 'svelte';
 	import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
 	import AdminSidebar from '$lib/components/admin/AdminSidebar.svelte';
+	import AdminMobileAppBar from '$lib/components/admin/AdminMobileAppBar.svelte';
+	import AdminMobileSidebar from '$lib/components/admin/AdminMobileSidebar.svelte';
 
 	let { children } = $props();
 	let sidebarCollapsed = $state(false);
+	let showMobileSidebar = $state(false);
+	let mobileSidebarItems = $state<any[]>([]);
+	
 
 	// Handle logout
 	async function handleLogout() {
@@ -18,10 +24,44 @@
 		}
 	}
 
-	// Handle sidebar toggle
+	// Handle desktop sidebar toggle
 	function handleToggleSidebar() {
 		sidebarCollapsed = !sidebarCollapsed;
 	}
+
+	// Handle mobile sidebar toggle
+	function handleToggleMobileSidebar() {
+		showMobileSidebar = !showMobileSidebar;
+	}
+
+	// Close mobile sidebar
+	function closeMobileSidebar() {
+		showMobileSidebar = false;
+	}
+
+	// Track whether mobile menu should be shown
+	let showMobileMenu = $derived(mobileSidebarItems.length > 0);
+
+
+	// Handle sidebar items update
+	function handleSidebarItemsUpdate(event: Event) {
+		const customEvent = event as CustomEvent;
+		mobileSidebarItems = customEvent.detail.items;
+	}
+
+	// Add event listener for sidebar items
+	onMount(() => {
+		window.addEventListener('updateSidebarItems', handleSidebarItemsUpdate);
+		
+		// Request initial update from app bar
+		setTimeout(() => {
+			window.dispatchEvent(new CustomEvent('requestSidebarUpdate'));
+		}, 100);
+		
+		return () => {
+			window.removeEventListener('updateSidebarItems', handleSidebarItemsUpdate);
+		};
+	});
 </script>
 
 <svelte:head>
@@ -32,7 +72,9 @@
 	<!-- Header Bar -->
 	<AdminHeader 
 		on:logout={handleLogout} 
-		on:toggleSidebar={handleToggleSidebar} 
+		on:toggleSidebar={handleToggleSidebar}
+		on:toggleMobileSidebar={handleToggleMobileSidebar}
+		{showMobileMenu}
 	/>
 	
 	<div class="admin-content">
@@ -44,6 +86,16 @@
 			{@render children?.()}
 		</main>
 	</div>
+
+	<!-- Mobile App Bar -->
+	<AdminMobileAppBar />
+	
+	<!-- Mobile Sidebar -->
+	<AdminMobileSidebar 
+		isOpen={showMobileSidebar} 
+		onClose={closeMobileSidebar}
+		items={mobileSidebarItems}
+	/>
 </div>
 
 <style>
@@ -77,6 +129,7 @@
 		
 		.admin-main {
 			padding: 16px;
+			padding-bottom: 100px; /* Space for mobile app bar */
 		}
 	}
 </style>

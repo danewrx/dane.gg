@@ -2,9 +2,12 @@
 	import { createEventDispatcher } from 'svelte';
 	import { LogOut, Menu } from 'lucide-svelte';
 
+	let { showMobileMenu = true } = $props();
+
 	const dispatch = createEventDispatcher<{
 		logout: void;
 		toggleSidebar: void;
+		toggleMobileSidebar: void;
 	}>();
 
 	function handleLogout() {
@@ -14,19 +17,36 @@
 	function handleToggleSidebar() {
 		dispatch('toggleSidebar');
 	}
+
+	function handleToggleMobileSidebar() {
+		dispatch('toggleMobileSidebar');
+	}
 </script>
 
 <header class="admin-header">
 	<div class="header-content">
 		<!-- Left side - Menu toggle and site title -->
 		<div class="header-left">
+			<!-- Desktop sidebar toggle -->
 			<button 
-				class="menu-toggle"
+				class="menu-toggle desktop-only"
 				onclick={handleToggleSidebar}
 				aria-label="Toggle sidebar"
 			>
 				<Menu size={20} />
 			</button>
+			
+			<!-- Mobile sidebar toggle -->
+			{#if showMobileMenu}
+				<button 
+					class="menu-toggle mobile-only"
+					onclick={handleToggleMobileSidebar}
+					aria-label="Open menu"
+				>
+					<Menu size={20} />
+				</button>
+			{/if}
+			
 			<h1 class="site-title">DANEGG</h1>
 		</div>
 		
@@ -135,6 +155,25 @@
 
 		.site-title {
 			font-size: 16px;
+		}
+	}
+
+	/* Show/hide menu buttons based on screen size */
+	.desktop-only {
+		display: block;
+	}
+
+	.mobile-only {
+		display: none;
+	}
+
+	@media (max-width: 768px) {
+		.desktop-only {
+			display: none;
+		}
+
+		.mobile-only {
+			display: block;
 		}
 	}
 </style>

@@ -1,19 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { Settings } from 'lucide-svelte';
+	import { adminNavigation } from '$lib/config/navigation';
 
 	let { isCollapsed = false } = $props();
 
-	// Navigation items - only Site Settings for now
-	const navItems = [
-		{
-			id: 'site-settings',
-			label: 'Site Settings',
-			icon: Settings,
-			path: '/admin/settings'
-		}
-	];
+	// Use shared navigation configuration
+	const navItems = adminNavigation;
 
 	// Check if a nav item is active
 	function isActive(path: string): boolean {
@@ -30,6 +23,7 @@
 	<nav class="sidebar-nav">
 		<ul class="nav-list">
 			{#each navItems as item (item.id)}
+				{@const IconComponent = item.icon}
 				<li class="nav-item">
 					<button
 						class="nav-link"
@@ -38,9 +32,9 @@
 						aria-current={isActive(item.path) ? 'page' : undefined}
 						title={isCollapsed ? item.label : undefined}
 					>
-						{#if item.icon === Settings}
-							<Settings size={20} />
-						{/if}
+						<div class="nav-icon">
+							<IconComponent size={20} />
+						</div>
 						{#if !isCollapsed}
 							<span class="nav-label">{item.label}</span>
 						{/if}
@@ -121,6 +115,13 @@
 		outline-offset: -2px;
 	}
 
+	.nav-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+
 	.nav-label {
 		font-size: 14px;
 		font-weight: 400;
@@ -139,30 +140,10 @@
 		padding: 12px;
 	}
 
-	/* Responsive design */
+	/* Hide desktop sidebar on mobile */
 	@media (max-width: 768px) {
 		.sidebar {
-			width: 100%;
-			height: auto;
-		}
-
-		.sidebar.collapsed {
-			width: 100%;
-		}
-
-		.nav-list {
-			display: flex;
-			overflow-x: auto;
-		}
-
-		.nav-item {
-			flex-shrink: 0;
-		}
-
-		.nav-link {
-			padding: 12px 16px;
-			min-width: 120px;
-			justify-content: center;
+			display: none;
 		}
 	}
 </style>

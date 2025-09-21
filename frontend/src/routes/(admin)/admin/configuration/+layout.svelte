@@ -20,7 +20,7 @@
 			color: 'from-blue-500 to-cyan-500',
 			bgColor: 'rgba(59, 130, 246, 0.1)',
 			borderColor: 'rgba(59, 130, 246, 0.2)',
-			path: '/admin/settings/weather'
+			path: '/admin/configuration/weather'
 		}
 	];
 
@@ -52,7 +52,7 @@
 
 	function closeSettingsPanel() {
 		// Navigate back to the main settings page
-		goto('/admin/settings');
+		goto('/admin/configuration');
 	}
 </script>
 
