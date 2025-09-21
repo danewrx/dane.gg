@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { weatherSettings, setWeatherType, setWeatherSpeed, weatherConfig, restoreUserPreferences } from '$lib/stores/weather';
-	import { enforceWeatherEffects, siteConfig } from '$lib/stores/siteConfig';
 	import { onMount } from 'svelte';
+	import { siteConfig, loadSiteConfig } from '$lib/stores/siteConfig';
+	import { CloudRain } from 'lucide-svelte';
 
 	let localSettings = $state({
 		defaultWeatherType: 'none',
@@ -52,18 +52,16 @@
 			}
 
 			// Reload site config
-			await fetch('/api/config').then(res => res.json()).then(data => {
-				if (data.success) {
-					siteConfig.set(data.data);
-				}
-			});
-
+			await loadSiteConfig();
 			saveMessage = 'Weather settings saved successfully!';
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Failed to save weather settings:', error);
-			saveMessage = 'Failed to save weather settings. Please try again.';
+			saveMessage = `Failed to save weather settings: ${error.message}`;
 		} finally {
 			isSaving = false;
+			setTimeout(() => {
+				saveMessage = '';
+			}, 3000);
 		}
 	}
 
@@ -84,8 +82,7 @@
 </script>
 
 <div class="weather-settings">
-	<div class="settings-section">
-		<h3>Weather Effects Configuration</h3>
+	<div class="settings-description">
 		<p>Configure the default weather effects and user permissions for your website.</p>
 	</div>
 
@@ -153,23 +150,18 @@
 
 <style>
 	.weather-settings {
-		max-width: 600px;
+		max-width: 100%;
+		width: 100%;
+		box-sizing: border-box;
 	}
 
-	.settings-section {
-		margin-bottom: 32px;
-		padding-bottom: 20px;
+	.settings-description {
+		margin-bottom: 24px;
+		padding-bottom: 16px;
 		border-bottom: 1px solid #2a2a2a;
 	}
 
-	.settings-section h3 {
-		color: #ffffff;
-		margin: 0 0 8px 0;
-		font-size: 20px;
-		font-weight: 600;
-	}
-
-	.settings-section p {
+	.settings-description p {
 		color: #a1a1aa;
 		margin: 0;
 		font-size: 14px;
@@ -217,6 +209,7 @@
 		background: #3a3a3a;
 		outline: none;
 		-webkit-appearance: none;
+		appearance: none;
 		padding: 0;
 	}
 
