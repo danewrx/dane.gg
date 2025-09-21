@@ -1,217 +1,138 @@
-# Frontend Authentication System
+# Frontend Library Structure
 
-This directory contains the complete authentication system for the dane.gg frontend, designed to work seamlessly with the backend API.
+This directory contains all the reusable components, utilities, and shared code for the frontend application, organized by application area for better maintainability.
 
-## 🔐 **Architecture Overview**
+## 📁 Directory Structure
 
-The authentication system follows SvelteKit's recommended patterns and provides:
-
-- **Server-side authentication** via `hooks.server.ts`
-- **Client-side state management** via Svelte stores
-- **Automatic token refresh** and session management
-- **Rate limiting compliance** with backend restrictions
-- **Secure cookie handling** for session persistence
-
-## 📁 **File Structure**
+The library is organized following the same pattern as the route structure, with clear separation between admin and public site code:
 
 ```
-src/lib/
-├── stores/
-│   └── auth.ts              # Svelte stores for auth state
-├── services/
-│   └── auth.ts              # API service for auth operations
-├── components/
-│   └── LoadingSpinner.svelte # Reusable loading component
-└── README.md                # This file
-
-src/hooks.server.ts          # Server-side auth hooks
-src/hooks.client.ts          # Client-side auth hooks
-src/routes/
-├── login/
-│   └── +page.svelte         # Login page
-├── logout/
-│   └── +page.svelte         # Logout page
-└── admin/
-    ├── +layout.svelte       # Protected admin layout
-    ├── +layout.server.ts    # Server-side layout data
-    └── +page.svelte         # Admin dashboard
+lib/
+├── admin/          # Admin panel specific code
+├── site/           # Public site specific code  
+├── shared/         # Code shared between admin and site
+├── index.ts        # Main exports for convenience
+└── README.md       # This file
 ```
 
-## 🚀 **Key Features**
+### `admin/` - Admin Panel Code
+All code specific to the admin dashboard and management interface.
 
-### **1. Authentication Store (`stores/auth.ts`)**
-- Centralized state management for user data
-- Reactive stores for `user`, `isAuthenticated`, `isLoading`, `error`
-- Automatic persistence to localStorage
-- Data expiration handling (24 hours)
+#### `admin/components/`
+- **`layout/`** - Layout components for admin interface
+  - `AdminHeader.svelte` - Admin dashboard header with navigation
+  - `AdminSidebar.svelte` - Admin dashboard sidebar navigation  
+  - `AdminMobileAppBar.svelte` - Mobile app-style bottom navigation
+  - `AdminMobileSidebar.svelte` - Mobile slide-out sidebar
+- **`ui/`** - Admin-specific UI components
+  - `AccentColorPicker.svelte` - Color picker for accent colors
+  - `SlideInPanel.svelte` - Slide-in panel component
+  - `Tabs.svelte` - Tab navigation component
+- **`settings/`** - Settings-related components
+  - `FontSelector.svelte` - Font selection component
+  - `SettingsIcon.svelte` - Settings icon component
+  - `SettingsPanel.svelte` - Main settings panel component
+  - `WeatherControls.svelte` - Weather effects control panel
 
-### **2. Auth Service (`services/auth.ts`)**
-- Complete API integration with backend
-- Handles all authentication operations:
-  - Login with remember me functionality
-  - Logout with session cleanup
-  - Token refresh and verification
-  - Password change
-- Automatic error handling and user feedback
-- Rate limiting compliance
+#### `admin/services/`
+Business logic and API services for admin functionality:
+- `accentColor.ts` - Accent color management service
+- `auth.ts` - Authentication service
+- `settings.ts` - Settings API service  
+- `theme.ts` - Theme management service
 
-### **3. Server-side Protection (`hooks.server.ts`)**
-- Validates authentication on every request
-- Redirects unauthorized users to login
-- Preserves redirect URL for post-login navigation
-- Supports both session and JWT token authentication
+#### `admin/stores/`
+Svelte stores for admin state management:
+- `auth.ts` - Authentication state store
+- `theme.ts` - Theme state management
 
-### **4. Client-side Hooks (`hooks.client.ts`)**
-- Initializes authentication on app start
-- Sets up automatic token refresh (every 30 minutes)
-- Handles cross-tab logout synchronization
-- Verifies authentication on tab focus
+#### `admin/config/`
+Configuration files for admin panel:
+- `navigation.ts` - Navigation configuration for admin panel
 
-### **5. Protected Routes**
-- All `/admin/*` routes are automatically protected
-- Server-side redirects for unauthorized access
-- Client-side loading states during authentication
-- Graceful error handling
+### `site/` - Public Site Code
+All code specific to the public-facing website.
 
-## 🔧 **Usage Examples**
+#### `site/components/`
+- **`layout/`** - Layout components for public site
+  - `Header.svelte` - Main site header
+- **`ui/`** - Public site UI components
+  - `LoadingSpinner.svelte` - Loading spinner component
+  - `TabSwitch.svelte` - Toggle switch for tabs
+- **`effects/`** - Visual effects components
+  - `WeatherEffects.svelte` - Weather effects overlay
 
-### **Login**
-```typescript
-import { authService } from '$lib/services/auth';
+#### `site/stores/`
+Svelte stores for public site state:
+- `font.ts` - Font selection state
+- `siteConfig.ts` - Site configuration state
+- `weather.ts` - Weather effects state
 
-await authService.login({
-  username: 'admin',
-  password: 'password123',
-  rememberMe: true
-});
-```
+### `shared/` - Shared Code
+Code that can be used by both admin and public site.
 
-### **Check Authentication**
-```typescript
-import { isAuthenticated, user } from '$lib/stores/auth';
+#### `shared/components/ui/`
+- `Tabs.example.svelte` - Example usage of Tabs component
 
-if ($isAuthenticated) {
-  console.log('User:', $user);
-}
-```
+#### `shared/assets/`
+- `favicon.svg` - Site favicon
 
-### **Logout**
-```typescript
-import { authService } from '$lib/services/auth';
+## 🚀 Usage
 
-await authService.logout();
-```
+### Import Patterns
 
-### **Protected Component**
+**Admin components:**
 ```svelte
-<script>
-  import { isAuthenticated, user } from '$lib/stores/auth';
-</script>
-
-{#if $isAuthenticated}
-  <p>Welcome, {$user.username}!</p>
-{:else}
-  <p>Please log in to continue.</p>
-{/if}
+import AdminHeader from '$lib/admin/components/layout/AdminHeader.svelte';
+import { authService } from '$lib/admin/services/auth';
+import { user } from '$lib/admin/stores/auth';
 ```
 
-## 🛡️ **Security Features**
-
-- **HTTP-only cookies** for session management
-- **JWT tokens** for stateless authentication
-- **Automatic token refresh** to maintain sessions
-- **Rate limiting compliance** with backend restrictions
-- **CSRF protection** via SameSite cookies
-- **Secure password handling** (never stored client-side)
-- **Session invalidation** on logout
-- **Cross-tab synchronization** for security
-
-## 🔄 **Authentication Flow**
-
-1. **User visits `/admin`** → Server checks authentication
-2. **If not authenticated** → Redirect to `/login?redirect=/admin`
-3. **User logs in** → Backend validates credentials
-4. **Backend returns** → User data + session cookie
-5. **Frontend stores** → User data in store + localStorage
-6. **User accesses** → Protected routes with valid session
-7. **Automatic refresh** → Tokens refreshed every 30 minutes
-8. **User logs out** → Session destroyed + redirect to login
-
-## ⚙️ **Configuration**
-
-### **Environment Variables**
-```env
-VITE_API_URL=http://localhost:3001/api
-VITE_APP_NAME=dane.gg
-VITE_APP_VERSION=2.0.0
+**Site components:**
+```svelte
+import Header from '$lib/site/components/layout/Header.svelte';
+import LoadingSpinner from '$lib/site/components/ui/LoadingSpinner.svelte';
 ```
 
-### **Backend Integration**
-The frontend expects these backend endpoints:
-- `POST /api/auth/login` - User login
-- `POST /api/auth/logout` - User logout
-- `POST /api/auth/refresh` - Token refresh
-- `GET /api/auth/verify` - Token verification
-- `GET /api/auth/me` - Get current user
-- `POST /api/auth/change-password` - Change password
-
-## 🐛 **Troubleshooting**
-
-### **Common Issues**
-
-1. **"Redirecting to login..." loop**
-   - Check backend API is running
-   - Verify `VITE_API_URL` is correct
-   - Check browser console for errors
-
-2. **"Token verification failed"**
-   - Backend JWT secret may have changed
-   - Clear localStorage and login again
-   - Check backend logs for JWT errors
-
-3. **Rate limiting errors**
-   - Wait for rate limit to reset
-   - Check backend rate limiting configuration
-   - Implement exponential backoff if needed
-
-### **Debug Mode**
-Enable debug logging by setting:
-```javascript
-localStorage.setItem('debug', 'auth:*');
+**Shared components:**
+```svelte
+import favicon from '$lib/shared/assets/favicon.svg';
 ```
 
-## 📚 **API Reference**
+**Convenience exports (from main index.ts):**
+```svelte
+import { authService, user, themeService } from '$lib';
+```
 
-### **Auth Store Methods**
-- `auth.setUser(user)` - Set user data
-- `auth.setLoading(boolean)` - Set loading state
-- `auth.setError(string)` - Set error message
-- `auth.clearError()` - Clear error
-- `auth.logout()` - Clear user data
-- `auth.init()` - Initialize from localStorage
-- `auth.persist(user)` - Save to localStorage
+## 📋 Guidelines
 
-### **Auth Service Methods**
-- `authService.login(credentials)` - Login user
-- `authService.logout()` - Logout user
-- `authService.refreshToken()` - Refresh tokens
-- `authService.verifyToken()` - Verify current token
-- `authService.getCurrentUser()` - Get user from session
-- `authService.changePassword(data)` - Change password
-- `authService.checkAuth()` - Check authentication status
-- `authService.init()` - Initialize authentication
+### 🧩 Component Guidelines
+1. **Keep components focused** - Single responsibility principle
+2. **Use TypeScript** - All components should be typed
+3. **Follow naming conventions** - PascalCase for components, camelCase for utilities
+4. **Document props and events** - Use JSDoc comments for public APIs
+5. **Make components reusable** - Use props instead of hardcoding values
+6. **Place in correct directory** - Admin-specific in `admin/`, site-specific in `site/`, shared in `shared/`
 
-## 🎯 **Best Practices**
+### 🔧 Service Guidelines
+1. **Use classes for stateful services** - Export instances, not classes
+2. **Handle errors gracefully** - Always catch and handle potential errors
+3. **Use TypeScript interfaces** - Define clear contracts for data structures
+4. **Keep services focused** - Each service should handle one domain
+5. **Place services correctly** - Admin services in `admin/services/`, site services in `site/services/`
 
-1. **Always use the auth store** for user state
-2. **Handle loading states** in UI components
-3. **Show appropriate errors** to users
-4. **Use server-side protection** for sensitive routes
-5. **Implement proper error boundaries** for auth failures
-6. **Test authentication flows** thoroughly
-7. **Monitor rate limiting** in production
-8. **Keep tokens secure** (HTTP-only cookies)
+### 📦 Store Guidelines
+1. **Use Svelte 5 runes** - Prefer `$state` and `$derived` over legacy stores where possible
+2. **Keep stores simple** - Complex logic should be in services
+3. **Use TypeScript** - Type your store data
+4. **Document state shape** - Use interfaces to define store structure
+5. **Organize by area** - Admin stores in `admin/stores/`, site stores in `site/stores/`
 
----
+## 🎯 Benefits of This Structure
 
-This authentication system provides enterprise-grade security while maintaining a smooth user experience. It's designed to scale with your application and integrate seamlessly with your backend API.
+✅ **Clear Separation** - Easy to understand what belongs where  
+✅ **Scalable** - Easy to add new admin or site features without conflicts  
+✅ **Maintainable** - Changes to admin code won't affect site code and vice versa  
+✅ **Consistent** - Matches the route structure pattern  
+✅ **Team Friendly** - Multiple developers can work on different areas without conflicts  
+✅ **Import Clarity** - Import paths clearly indicate the source and purpose

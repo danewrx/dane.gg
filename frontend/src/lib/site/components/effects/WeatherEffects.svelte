@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { weatherSettings } from '$lib/stores/weather';
+	import { weatherSettings } from '$lib/site/stores/weather';
 	import { browser } from '$app/environment';
 
 	let canvas: HTMLCanvasElement;

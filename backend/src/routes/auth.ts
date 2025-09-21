@@ -34,7 +34,9 @@ router.post('/login', authLimiter, loginSlowDown, bruteForceProtection, async (r
       username: users.username,
       passwordHash: users.passwordHash,
       isAdmin: users.isAdmin,
-      createdAt: users.createdAt
+      createdAt: users.createdAt,
+      themePreference: users.themePreference,
+      accentColor: users.accentColor
     }).from(users).where(eq(users.username, username)).limit(1);
 
     if (user.length === 0) {
@@ -64,21 +66,27 @@ router.post('/login', authLimiter, loginSlowDown, bruteForceProtection, async (r
     const tokens = generateTokenPair({
       id: userData.id,
       username: userData.username,
-      isAdmin: userData.isAdmin
+      isAdmin: userData.isAdmin || false
     });
 
     // Set session data
-    req.session.user = {
-      id: userData.id,
-      username: userData.username,
-      isAdmin: userData.isAdmin
-    };
+    if (req.session) {
+      req.session.user = {
+        id: userData.id,
+        username: userData.username,
+        isAdmin: userData.isAdmin || false,
+        themePreference: userData.themePreference || 'system',
+        accentColor: userData.accentColor || '#3b82f6'
+      };
+    }
 
     // Set session cookie options based on remember me
-    if (rememberMe) {
-      req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
-    } else {
-      req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 1 day
+    if (req.session) {
+      if (rememberMe) {
+        req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
+      } else {
+        req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 1 day
+      }
     }
 
     // Set secure HTTP-only cookies for tokens
@@ -102,7 +110,9 @@ router.post('/login', authLimiter, loginSlowDown, bruteForceProtection, async (r
       user: {
         id: userData.id,
         username: userData.username,
-        isAdmin: userData.isAdmin
+        isAdmin: userData.isAdmin || false,
+        themePreference: userData.themePreference || 'system',
+        accentColor: userData.accentColor || '#3b82f6'
       },
       expiresIn: tokens.expiresIn
     });
@@ -174,7 +184,9 @@ router.post('/refresh', tokenRefreshLimiter, async (req: Request, res: Response)
     const user = await db.select({
       id: users.id,
       username: users.username,
-      isAdmin: users.isAdmin
+      isAdmin: users.isAdmin,
+      themePreference: users.themePreference,
+      accentColor: users.accentColor
     }).from(users).where(eq(users.id, decoded.userId)).limit(1);
 
     if (user.length === 0) {
@@ -185,10 +197,22 @@ router.post('/refresh', tokenRefreshLimiter, async (req: Request, res: Response)
     }
 
     // Generate new tokens
-    const tokens = generateTokenPair(user[0]);
+    const tokens = generateTokenPair({
+      id: user[0].id,
+      username: user[0].username,
+      isAdmin: user[0].isAdmin || false
+    });
 
     // Update session
-    req.session.user = user[0];
+    if (req.session) {
+      req.session.user = {
+        id: user[0].id,
+        username: user[0].username,
+        isAdmin: user[0].isAdmin || false,
+        themePreference: user[0].themePreference || 'system',
+        accentColor: user[0].accentColor || '#3b82f6'
+      };
+    }
 
     // Set new cookies
     res.cookie('accessToken', tokens.accessToken, {
@@ -224,13 +248,39 @@ router.get('/verify', authenticateToken, (req: Request, res: Response) => {
 });
 
 // Get current user from session
-router.get('/me', (req: Request, res: Response) => {
+router.get('/me', async (req: Request, res: Response) => {
   if (req.session && req.session.user) {
-    res.json({
-      success: true,
-      user: req.session.user,
-      message: 'User session found'
-    });
+    try {
+      // Get user with theme preference from database
+      const user = await db.select({
+        id: users.id,
+        username: users.username,
+        isAdmin: users.isAdmin,
+        themePreference: users.themePreference,
+        accentColor: users.accentColor
+      }).from(users).where(eq(users.id, req.session.user.id)).limit(1);
+
+      if (user.length > 0) {
+        const userData = user[0];
+        res.json({
+          success: true,
+          user: userData,
+          message: 'User session found'
+        });
+      } else {
+        res.status(401).json({
+          error: 'Not authenticated',
+          message: 'User not found'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      res.json({
+        success: true,
+        user: req.session.user,
+        message: 'User session found'
+      });
+    }
   } else {
     res.status(401).json({
       error: 'Not authenticated',

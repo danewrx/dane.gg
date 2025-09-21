@@ -5,6 +5,8 @@ export interface User {
   id: string;
   username: string;
   isAdmin: boolean;
+  themePreference?: string;
+  accentColor?: string;
 }
 
 export interface AuthState {

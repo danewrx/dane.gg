@@ -1,4 +1,4 @@
-import { auth } from '$lib/stores/auth';
+import { auth } from '$lib/admin/stores/auth';
 import { browser } from '$app/environment';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
@@ -16,10 +16,13 @@ interface AuthResponse {
     id: string;
     username: string;
     isAdmin: boolean;
+    themePreference?: string;
+    accentColor?: string;
   };
   expiresIn?: string;
   accessToken?: string;
 }
+
 
 interface ApiError {
   error: string;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fontMode, fontConfigs, setFontMode } from '$lib/stores/font';
+	import { fontMode, fontConfigs, setFontMode } from '$lib/site/stores/font';
 
 	let { class: className = '' } = $props();
 </script>

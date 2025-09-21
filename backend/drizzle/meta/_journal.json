@@ -15,6 +15,20 @@
       "when": 1758328665153,
       "tag": "0001_wise_venom",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1758468404908,
+      "tag": "0002_third_kate_bishop",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1758469225124,
+      "tag": "0003_true_nehzno",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { theme } from '$lib/stores/theme';
+	// Contact page
 </script>
 
 <svelte:head>

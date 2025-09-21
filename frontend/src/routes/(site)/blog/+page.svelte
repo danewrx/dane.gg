@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { theme } from '$lib/stores/theme';
+	// Blog page
 </script>
 
 <svelte:head>

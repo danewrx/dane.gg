@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { authService } from '$lib/services/auth';
+  import { authService } from '$lib/admin/services/auth';
 
   onMount(async () => {
     // Perform logout

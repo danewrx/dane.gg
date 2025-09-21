@@ -61,6 +61,7 @@ import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
 import statusRoutes from './routes/status';
 import configRoutes from './routes/config';
+import settingsRoutes from './routes/settings';
 import { generalLimiter } from './middleware/rateLimiting';
 
 // Routes
@@ -71,7 +72,8 @@ app.get('/api', (req, res) => {
     endpoints: {
       health: '/api/health',
       auth: '/api/auth',
-      users: '/api/users'
+      users: '/api/users',
+      settings: '/api/settings'
     }
   });
 });
@@ -98,6 +100,9 @@ app.use('/api/status', statusRoutes);
 
 // Site configuration routes
 app.use('/api/config', configRoutes);
+
+// Settings routes (admin settings, user preferences)
+app.use('/api/settings', settingsRoutes);
 
 // 404 handler for API routes
 app.use('/api', (req, res) => {
