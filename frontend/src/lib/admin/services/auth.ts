@@ -7,6 +7,8 @@ interface LoginCredentials {
   username: string;
   password: string;
   rememberMe?: boolean;
+  totpCode?: string;
+  backupCode?: string;
 }
 
 interface AuthResponse {
@@ -21,6 +23,7 @@ interface AuthResponse {
   };
   expiresIn?: string;
   accessToken?: string;
+  requiresTOTP?: boolean;
 }
 
 
@@ -70,17 +73,39 @@ class AuthService {
       auth.setLoading(true);
       auth.clearError();
 
-      const response = await this.makeRequest<AuthResponse>('/auth/login', {
+      const url = `${API_BASE_URL}/auth/login`;
+      const response = await fetch(url, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
         body: JSON.stringify(credentials)
       });
 
-      if (response.success && response.user) {
-        auth.setUser(response.user);
-        auth.persist(response.user);
+      // Handle TOTP requirement (status 202)
+      if (response.status === 202) {
+        const data = await response.json();
+        return {
+          success: false,
+          message: data.message || 'Two-factor authentication required',
+          requiresTOTP: true
+        };
       }
 
-      return response;
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Request failed with status ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.user) {
+        auth.setUser(data.user);
+        auth.persist(data.user);
+      }
+
+      return data;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
       auth.setError(errorMessage);

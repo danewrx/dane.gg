@@ -7,6 +7,8 @@ export { authService } from './admin/services/auth';
 export { themeService } from './admin/services/theme';
 export { accentColorService } from './admin/services/accentColor';
 export { settingsService } from './admin/services/settings';
+export { accountService } from './admin/services/account';
+export { TotpService } from './admin/services/totp';
 export { user } from './admin/stores/auth';
 export { adminNavigation } from './admin/config/navigation';
 

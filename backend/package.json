@@ -28,10 +28,13 @@
     "express-session": "^1.18.2",
     "express-slow-down": "^3.0.0",
     "jsonwebtoken": "^9.0.2",
-    "postgres": "^3.4.7"
+    "otpauth": "^9.4.1",
+    "postgres": "^3.4.7",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
+    "@types/qrcode": "^1.5.5",
     "bun-types": "latest",
     "drizzle-kit": "0.28.1"
   },
