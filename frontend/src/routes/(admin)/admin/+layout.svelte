@@ -6,6 +6,7 @@
 	import AdminSidebar from '$lib/components/admin/AdminSidebar.svelte';
 	import AdminMobileAppBar from '$lib/components/admin/AdminMobileAppBar.svelte';
 	import AdminMobileSidebar from '$lib/components/admin/AdminMobileSidebar.svelte';
+	import { ModeWatcher } from 'mode-watcher';
 
 	let { children } = $props();
 	let sidebarCollapsed = $state(false);
@@ -68,6 +69,9 @@
 	<title>Admin Panel - dane.gg</title>
 </svelte:head>
 
+<!-- Mode Watcher for theme management -->
+<ModeWatcher track={true} />
+
 <div class="admin-layout">
 	<!-- Header Bar -->
 	<AdminHeader 
@@ -106,6 +110,12 @@
 		background: #1a1a1a;
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 		color: #ffffff;
+		transition: background-color 0.2s ease, color 0.2s ease;
+	}
+
+	:global(html:not(.dark)) .admin-layout {
+		background: #f8fafc;
+		color: #1f2937;
 	}
 
 	.admin-content {
@@ -119,6 +129,11 @@
 		overflow-y: auto;
 		background: #1a1a1a;
 		padding: 24px;
+		transition: background-color 0.2s ease;
+	}
+
+	:global(html:not(.dark)) .admin-main {
+		background: #f8fafc;
 	}
 
 	/* Responsive design */

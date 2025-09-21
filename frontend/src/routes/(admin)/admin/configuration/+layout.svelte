@@ -131,12 +131,24 @@
 		margin: 0 0 8px 0;
 		font-size: 28px;
 		font-weight: 600;
+		transition: color 0.2s ease;
+	}
+
+	
+	:global(html:not(.dark)) .header-text h1 {
+		color: #1f2937;
 	}
 
 	.header-text p {
 		color: #a1a1aa;
 		margin: 0;
 		font-size: 16px;
+		transition: color 0.2s ease;
+	}
+
+	
+	:global(html:not(.dark)) .header-text p {
+		color: #6b7280;
 	}
 
 	.header-icon {
@@ -209,6 +221,12 @@
 		font-size: 18px;
 		font-weight: 600;
 		color: #ffffff;
+		transition: color 0.2s ease;
+	}
+
+	
+	:global(html:not(.dark)) .card-content h3 {
+		color: #1f2937;
 	}
 
 	.card-content p {
@@ -216,13 +234,24 @@
 		color: #a1a1aa;
 		font-size: 14px;
 		line-height: 1.4;
+		transition: color 0.2s ease;
+	}
+
+	
+	:global(html:not(.dark)) .card-content p {
+		color: #6b7280;
 	}
 
 	.card-arrow {
 		color: #a1a1aa;
-		transition: transform 0.2s ease;
+		transition: transform 0.2s ease, color 0.2s ease;
 		position: relative;
 		z-index: 1;
+	}
+
+	
+	:global(html:not(.dark)) .card-arrow {
+		color: #6b7280;
 	}
 
 	.settings-card:hover .card-arrow {

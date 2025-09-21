@@ -254,8 +254,14 @@
 		display: flex;
 		flex-direction: column;
 		transform: translateX(-100%);
-		transition: transform 0.2s ease;
+		transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 		overflow: hidden;
+	}
+
+	
+	:global(html:not(.dark)) .mobile-sidebar {
+		background: #ffffff;
+		border-right-color: #e5e7eb;
 	}
 
 	.mobile-sidebar.open {
@@ -277,6 +283,12 @@
 		padding: 20px 24px;
 		border-bottom: 1px solid #2a2a2a;
 		flex-shrink: 0;
+		transition: border-color 0.2s ease;
+	}
+
+	
+	:global(html:not(.dark)) .sidebar-header {
+		border-bottom-color: #e5e7eb;
 	}
 
 	.sidebar-title {
@@ -284,6 +296,12 @@
 		font-size: 18px;
 		font-weight: 600;
 		color: #ffffff;
+		transition: color 0.2s ease;
+	}
+
+	
+	:global(html:not(.dark)) .sidebar-title {
+		color: #1f2937;
 	}
 
 	.close-button {
@@ -295,12 +313,22 @@
 		border: none;
 		padding: 8px;
 		cursor: pointer;
-		transition: background-color 0.2s ease;
+		transition: background-color 0.2s ease, color 0.2s ease;
 		border-radius: 4px;
+	}
+
+	
+	:global(html:not(.dark)) .close-button {
+		color: #1f2937;
 	}
 
 	.close-button:hover {
 		background: #2a2a2a;
+	}
+
+	
+	:global(html:not(.dark)) .close-button:hover {
+		background: #f3f4f6;
 	}
 
 	.close-button:focus {
@@ -336,18 +364,34 @@
 		color: #ffffff;
 		text-align: left;
 		cursor: pointer;
-		transition: background-color 0.2s ease;
+		transition: background-color 0.2s ease, color 0.2s ease;
 		font-size: 16px;
 		font-weight: 400;
+	}
+
+	
+	:global(html:not(.dark)) .nav-link {
+		color: #1f2937;
 	}
 
 	.nav-link:hover {
 		background: #2a2a2a;
 	}
 
+	
+	:global(html:not(.dark)) .nav-link:hover {
+		background: #f3f4f6;
+	}
+
 	.nav-link.active {
 		background: #3a3a3a;
 		color: #ffffff;
+	}
+
+	
+	:global(html:not(.dark)) .nav-link.active {
+		background: #e5e7eb;
+		color: #1f2937;
 	}
 
 	.nav-link:focus {

@@ -117,6 +117,13 @@
 		border-top: 1px solid #3a3a3a;
 		z-index: 1000;
 		display: none; /* Hidden by default, shown on mobile */
+		transition: background-color 0.2s ease, border-color 0.2s ease;
+	}
+
+	
+	:global(html:not(.dark)) .mobile-app-bar {
+		background: #ffffff;
+		border-top-color: #e5e7eb;
 	}
 
 	.app-bar-content {
@@ -145,13 +152,29 @@
 		flex-shrink: 0;
 	}
 
+	
+	:global(html:not(.dark)) .nav-item {
+		color: #1f2937;
+	}
+
 	.nav-item:hover {
 		background: #3a3a3a;
+	}
+
+	
+	:global(html:not(.dark)) .nav-item:hover {
+		background: #f3f4f6;
 	}
 
 	.nav-item.active {
 		background: #4a4a4a;
 		color: #ffffff;
+	}
+
+	
+	:global(html:not(.dark)) .nav-item.active {
+		background: #e5e7eb;
+		color: #1f2937;
 	}
 
 	.nav-item:focus {

@@ -71,6 +71,13 @@
 		position: sticky;
 		top: 0;
 		border-bottom: 1px solid #2a2a2a;
+		transition: background-color 0.2s ease, border-color 0.2s ease;
+	}
+
+	:global(html:not(.dark)) .admin-header {
+		background: #ffffff;
+		color: #1f2937;
+		border-bottom-color: #e5e7eb;
 	}
 
 	.header-content {
@@ -97,12 +104,20 @@
 		border: none;
 		padding: 8px;
 		cursor: pointer;
-		transition: background-color 0.2s ease;
+		transition: background-color 0.2s ease, color 0.2s ease;
 		border-radius: 4px;
+	}
+
+	:global(html:not(.dark)) .menu-toggle {
+		color: #1f2937;
 	}
 
 	.menu-toggle:hover {
 		background: #2a2a2a;
+	}
+
+	:global(html:not(.dark)) .menu-toggle:hover {
+		background: #f3f4f6;
 	}
 
 	.menu-toggle:focus {
@@ -117,6 +132,11 @@
 		color: #ffffff;
 		letter-spacing: 0.5px;
 		text-transform: uppercase;
+		transition: color 0.2s ease;
+	}
+
+	:global(html:not(.dark)) .site-title {
+		color: #1f2937;
 	}
 
 	.header-right {
@@ -134,12 +154,20 @@
 		border: none;
 		padding: 8px;
 		cursor: pointer;
-		transition: background-color 0.2s ease;
+		transition: background-color 0.2s ease, color 0.2s ease;
 		border-radius: 4px;
+	}
+
+	:global(html:not(.dark)) .logout-button {
+		color: #1f2937;
 	}
 
 	.logout-button:hover {
 		background: #2a2a2a;
+	}
+
+	:global(html:not(.dark)) .logout-button:hover {
+		background: #f3f4f6;
 	}
 
 	.logout-button:focus {

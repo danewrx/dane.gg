@@ -52,12 +52,18 @@
 		color: #ffffff;
 		overflow-y: auto;
 		z-index: 999;
-		transition: width 0.3s ease;
+		transition: width 0.3s ease, background-color 0.2s ease, border-color 0.2s ease;
 		flex-shrink: 0;
 		display: flex;
 		flex-direction: column;
 		min-height: 100%;
 		border-right: 1px solid #2a2a2a;
+	}
+
+	:global(html:not(.dark)) .sidebar {
+		background: #ffffff;
+		color: #1f2937;
+		border-right-color: #e5e7eb;
 	}
 
 	.sidebar.collapsed {
@@ -94,20 +100,33 @@
 		color: #ffffff;
 		text-align: left;
 		cursor: pointer;
-		transition: background-color 0.2s ease;
+		transition: background-color 0.2s ease, color 0.2s ease;
 		font-size: 14px;
 		font-weight: 400;
 		white-space: nowrap;
 		position: relative;
 	}
 
+	:global(html:not(.dark)) .nav-link {
+		color: #374151;
+	}
+
 	.nav-link:hover {
 		background: #2a2a2a;
+	}
+
+	:global(html:not(.dark)) .nav-link:hover {
+		background: #f3f4f6;
 	}
 
 	.nav-link.active {
 		background: #3a3a3a;
 		color: #ffffff;
+	}
+
+	:global(html:not(.dark)) .nav-link.active {
+		background: #e5e7eb;
+		color: #1f2937;
 	}
 
 	.nav-link:focus {
