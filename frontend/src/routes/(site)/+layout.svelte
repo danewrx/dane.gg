@@ -1,19 +1,17 @@
 <script lang="ts">
-	import favicon from '$lib/assets/favicon.svg';
+	import favicon from '$lib/shared/assets/favicon.svg';
 	import '../../app.css';
-	import { theme } from '$lib/stores/theme';
-	import SettingsIcon from '$lib/components/settings/SettingsIcon.svelte';
-	import SettingsPanel from '$lib/components/settings/SettingsPanel.svelte';
-	import Header from '$lib/components/Header.svelte';
-	import WeatherEffects from '$lib/components/WeatherEffects.svelte';
+	import SettingsIcon from '$lib/admin/components/settings/SettingsIcon.svelte';
+	import SettingsPanel from '$lib/admin/components/settings/SettingsPanel.svelte';
+	import Header from '$lib/site/components/layout/Header.svelte';
+	import WeatherEffects from '$lib/site/components/effects/WeatherEffects.svelte';
 	import { onMount } from 'svelte';
 
 	let { children } = $props();
 	let settingsOpen = $state(false);
 
 	onMount(() => {
-		// Initialize theme on mount
-		theme.init();
+		// Site initialization
 	});
 
 	function handleSettingsToggle() {
@@ -32,7 +30,7 @@
 </svelte:head>
 
 <!-- Public website layout -->
-<div class="main-container" class:light-theme={$theme === 'light'} class:dark-theme={$theme === 'dark'}>
+<div class="main-container dark-theme">
 	<!-- Weather Effects -->
 	<WeatherEffects />
 	
@@ -63,37 +61,21 @@
 </div>
 
 <style>
-	/* CSS Variables for theming */
+	/* Static CSS Variables - Dark Grey Theme */
 	:global(:root) {
-		/* Dark theme (default) */
-		--bg-primary: #0a0a0a;
-		--bg-secondary: #1a1a1a;
-		--bg-tertiary: #2a2a2a;
-		--bg-hover: #3a3a3a;
+		/* Dark grey color scheme */
+		--bg-primary: #1a1a1a;
+		--bg-secondary: #2d2d2d;
+		--bg-tertiary: #3a3a3a;
+		--bg-hover: #474747;
 		--text-primary: #ffffff;
-		--text-secondary: #cccccc;
-		--text-muted: #888888;
-		--border-color: #444444;
-		--accent-color: #ffffff;
-		--accent-hover: #cccccc;
-		--shadow: rgba(0, 0, 0, 0.5);
-		--content-bg: rgba(0, 0, 0, 0.8);
-	}
-
-	:global([data-theme="light"]) {
-		/* Light theme */
-		--bg-primary: #ffffff;
-		--bg-secondary: #f8f9fa;
-		--bg-tertiary: #e9ecef;
-		--bg-hover: #dee2e6;
-		--text-primary: #212529;
-		--text-secondary: #495057;
-		--text-muted: #6c757d;
-		--border-color: #dee2e6;
-		--accent-color: #000000;
-		--accent-hover: #333333;
-		--shadow: rgba(0, 0, 0, 0.1);
-		--content-bg: rgba(255, 255, 255, 0.9);
+		--text-secondary: #e0e0e0;
+		--text-muted: #b0b0b0;
+		--border-color: #555555;
+		--accent-color: #4a9eff;
+		--accent-hover: #357abd;
+		--shadow: rgba(0, 0, 0, 0.3);
+		--content-bg: rgba(45, 45, 45, 0.95);
 	}
 
 	:global(html) {
@@ -177,24 +159,13 @@
 
 
 
-	/* Light theme specific adjustments */
-	.light-theme .content-window {
+	/* Content styling - static dark theme */
+	.content-window {
 		background: var(--content-bg);
 		border-color: var(--border-color);
 	}
 
-	.light-theme .content-area {
-		background: var(--bg-primary);
-		color: var(--text-primary);
-	}
-
-	/* Dark theme specific adjustments */
-	.dark-theme .content-window {
-		background: var(--content-bg);
-		border-color: var(--border-color);
-	}
-
-	.dark-theme .content-area {
+	.content-area {
 		background: var(--bg-primary);
 		color: var(--text-primary);
 	}

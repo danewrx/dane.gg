@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { adminNavigation } from '$lib/config/navigation';
+	import { adminNavigation } from '$lib/admin/config/navigation';
 
 	let { isCollapsed = false } = $props();
 

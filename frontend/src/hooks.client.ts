@@ -1,6 +1,6 @@
-import { authService } from '$lib/services/auth';
-import { themeService } from '$lib/services/theme';
-import { accentColorService } from '$lib/services/accentColor';
+import { authService } from '$lib/admin/services/auth';
+import { themeService } from '$lib/admin/services/theme';
+import { accentColorService } from '$lib/admin/services/accentColor';
 import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
 import { page } from '$app/stores';

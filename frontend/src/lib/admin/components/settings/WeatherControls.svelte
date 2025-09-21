@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { weatherSettings, setWeatherType, setWeatherSpeed, weatherConfig, restoreUserPreferences } from '$lib/stores/weather';
-	import { enforceWeatherEffects } from '$lib/stores/siteConfig';
+	import { weatherSettings, setWeatherType, setWeatherSpeed, weatherConfig, restoreUserPreferences } from '$lib/site/stores/weather';
+	import { enforceWeatherEffects } from '$lib/site/stores/siteConfig';
 
 	let { class: className = '' } = $props();
 

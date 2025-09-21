@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { mode, setMode, userPrefersMode } from 'mode-watcher';
-	import Tabs from '$lib/components/ui/Tabs.svelte';
-	import AccentColorPicker from '$lib/components/ui/AccentColorPicker.svelte';
+	import Tabs from '$lib/admin/components/ui/Tabs.svelte';
+	import AccentColorPicker from '$lib/admin/components/ui/AccentColorPicker.svelte';
 	import { Monitor, Sun, Moon } from 'lucide-svelte';
-	import { authService } from '$lib/services/auth';
-	import { themeService } from '$lib/services/theme';
-	import { accentColorService } from '$lib/services/accentColor';
-	import { settingsService } from '$lib/services/settings';
-	import { user } from '$lib/stores/auth';
+	import { authService } from '$lib/admin/services/auth';
+	import { themeService } from '$lib/admin/services/theme';
+	import { accentColorService } from '$lib/admin/services/accentColor';
+	import { settingsService } from '$lib/admin/services/settings';
+	import { user } from '$lib/admin/stores/auth';
 	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
 

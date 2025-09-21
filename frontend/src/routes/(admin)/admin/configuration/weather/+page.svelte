@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { siteConfig, loadSiteConfig } from '$lib/stores/siteConfig';
+	import { siteConfig, loadSiteConfig } from '$lib/site/stores/siteConfig';
 	import { CloudRain } from 'lucide-svelte';
 
 	let localSettings = $state({

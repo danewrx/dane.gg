@@ -1,5 +1,5 @@
 import { settingsService } from './settings';
-import { user } from '$lib/stores/auth';
+import { user } from '$lib/admin/stores/auth';
 import { browser } from '$app/environment';
 import { get } from 'svelte/store';
 

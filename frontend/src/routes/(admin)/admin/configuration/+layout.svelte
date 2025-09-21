@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import SlideInPanel from '$lib/components/ui/SlideInPanel.svelte';
+	import SlideInPanel from '$lib/admin/components/ui/SlideInPanel.svelte';
 	import { 
 		CloudRain,
 		Settings as SettingsIcon,

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { authService } from '$lib/services/auth';
+	import { authService } from '$lib/admin/services/auth';
 	import { onMount } from 'svelte';
-	import AdminHeader from '$lib/components/admin/AdminHeader.svelte';
-	import AdminSidebar from '$lib/components/admin/AdminSidebar.svelte';
-	import AdminMobileAppBar from '$lib/components/admin/AdminMobileAppBar.svelte';
-	import AdminMobileSidebar from '$lib/components/admin/AdminMobileSidebar.svelte';
+	import AdminHeader from '$lib/admin/components/layout/AdminHeader.svelte';
+	import AdminSidebar from '$lib/admin/components/layout/AdminSidebar.svelte';
+	import AdminMobileAppBar from '$lib/admin/components/layout/AdminMobileAppBar.svelte';
+	import AdminMobileSidebar from '$lib/admin/components/layout/AdminMobileSidebar.svelte';
 	import { Toaster } from 'svelte-sonner';
 	import { ModeWatcher, mode } from 'mode-watcher';
 
