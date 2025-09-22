@@ -161,6 +161,33 @@
 		background: #f8fafc;
 	}
 
+	/* CSS Variables for components */
+	:global(:root) {
+		--bg-primary: #1a1a1a;
+		--bg-secondary: #2d2d2d;
+		--bg-tertiary: #3a3a3a;
+		--bg-hover: #404040;
+		--text-primary: #ffffff;
+		--text-secondary: #a1a1aa;
+		--border-color: #404040;
+		--accent-color: #3b82f6;
+		--accent-color-light: rgba(59, 130, 246, 0.1);
+		--accent-color-medium: rgba(59, 130, 246, 0.2);
+		--accent-color-dark: #2563eb;
+		--accent-color-contrast: #ffffff;
+		--accent-color-dark-contrast: #ffffff;
+	}
+
+	:global(html:not(.dark)) {
+		--bg-primary: #ffffff;
+		--bg-secondary: #f8fafc;
+		--bg-tertiary: #f1f5f9;
+		--bg-hover: #e2e8f0;
+		--text-primary: #1f2937;
+		--text-secondary: #6b7280;
+		--border-color: #e5e7eb;
+	}
+
 	/* Global accent color applications */
 	:global(.btn-primary) {
 		background: var(--accent-color, #3b82f6) !important;

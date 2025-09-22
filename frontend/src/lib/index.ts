@@ -11,6 +11,7 @@ export { accountService } from './admin/services/account';
 export { TotpService } from './admin/services/totp';
 export { user } from './admin/stores/auth';
 export { adminNavigation } from './admin/config/navigation';
+export { default as Logo } from './admin/components/Logo.svelte';
 
 // Site exports  
 export { default as Header } from './site/components/layout/Header.svelte';

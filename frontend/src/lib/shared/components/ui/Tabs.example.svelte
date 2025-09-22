@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Tabs from './Tabs.svelte';
+	import Tabs from '$lib/admin/components/ui/Tabs.svelte';
 
 	// Example tabs data
 	const basicTabs = [
