@@ -22,6 +22,7 @@
   let backupCode = '';
   let showBackupForm = false;
   let loginUsername = ''; // Store username for 2FA display
+  let isInitialLoad = true; // Track if this is the initial page load
   
   // Individual digit inputs for TOTP
   let digits = ['', '', '', '', '', ''];
@@ -117,6 +118,7 @@
       if (result.requiresTOTP) {
         // Show 2FA form
         loginUsername = username;
+        isInitialLoad = false; // Disable animation for 2FA form
         showTotpForm = true;
         toast.info('Two-factor authentication required');
       } else if (result.success) {
@@ -204,6 +206,7 @@
     totpCode = '';
     backupCode = '';
     loginUsername = '';
+    isInitialLoad = false; // Disable animation when returning to login
     // Clear digit inputs
     digits = ['', '', '', '', '', ''];
     auth.clearError();
@@ -220,7 +223,7 @@
     {#if !showTotpForm}
       <!-- Login Form -->
       <div class="login-header">
-        <Logo />
+        <Logo animate={isInitialLoad} />
       </div>
 
       <form onsubmit={handleLoginSubmit}>
@@ -271,7 +274,7 @@
     {:else}
       <!-- 2FA Form -->
       <div class="login-header">
-        <Logo />
+        <Logo animate={false} />
         
         <div class="twofa-title">
           <h2>Two-Factor Authentication</h2>
