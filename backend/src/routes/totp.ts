@@ -1,6 +1,10 @@
 import express from 'express';
 import { requireSession } from '../middleware/auth.js';
 import { TotpService } from '../services/totpService.js';
+import { verifyPassword } from '../utils/password.js';
+import { db } from '../db/index.js';
+import { users } from '../db/schema.js';
+import { eq } from 'drizzle-orm';
 
 const router = express.Router();
 
@@ -113,8 +117,34 @@ router.post('/disable', async (req, res) => {
       return res.status(400).json({ error: 'Current password is required to disable TOTP' });
     }
 
-    // Verify current password (assuming we have access to password verification)
-    // Note: You may need to adjust this based on your auth implementation
+    // Get user's password hash for verification
+    const user = await db.select({
+      id: users.id,
+      passwordHash: users.passwordHash,
+      totpEnabled: users.totpEnabled
+    }).from(users).where(eq(users.id, userId)).limit(1);
+
+    if (user.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userData = user[0];
+
+    // Check if TOTP is actually enabled
+    if (!userData.totpEnabled) {
+      return res.status(400).json({ error: 'TOTP is not enabled for this account' });
+    }
+
+    // Verify current password
+    const isValidPassword = await verifyPassword(currentPassword, userData.passwordHash);
+    if (!isValidPassword) {
+      return res.status(401).json({ 
+        error: 'Authentication failed', 
+        message: 'Current password is incorrect' 
+      });
+    }
+
+    // Disable TOTP only after password verification
     const success = await TotpService.disableTotp(userId);
     
     if (success) {
@@ -213,8 +243,34 @@ router.post('/backup-codes/regenerate', async (req, res) => {
       return res.status(400).json({ error: 'Current password is required to regenerate backup codes' });
     }
 
-    // Note: You may want to verify the current password here for extra security
+    // Get user's password hash for verification
+    const user = await db.select({
+      id: users.id,
+      passwordHash: users.passwordHash,
+      totpEnabled: users.totpEnabled
+    }).from(users).where(eq(users.id, userId)).limit(1);
 
+    if (user.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userData = user[0];
+
+    // Check if TOTP is actually enabled
+    if (!userData.totpEnabled) {
+      return res.status(400).json({ error: 'TOTP is not enabled for this account' });
+    }
+
+    // Verify current password
+    const isValidPassword = await verifyPassword(currentPassword, userData.passwordHash);
+    if (!isValidPassword) {
+      return res.status(401).json({ 
+        error: 'Authentication failed', 
+        message: 'Current password is incorrect' 
+      });
+    }
+
+    // Regenerate backup codes only after password verification
     const backupCodes = await TotpService.regenerateBackupCodes(userId);
     
     if (backupCodes) {

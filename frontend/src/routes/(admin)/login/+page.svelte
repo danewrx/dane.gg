@@ -30,6 +30,14 @@
 
   // Update totpCode when digits change
   $: totpCode = digits.join('');
+  
+  // Auto-submit when all 6 digits are filled
+  $: if (totpCode.length === 6 && !isSubmitting && showTotpForm && !showBackupForm) {
+    // Small delay to ensure the UI updates before submitting
+    setTimeout(() => {
+      handleTotpSubmit(new Event('submit'));
+    }, 100);
+  }
 
   function handleDigitInput(index: number, event: Event) {
     const target = event.target as HTMLInputElement;

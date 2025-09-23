@@ -21,8 +21,8 @@ if (browser) {
   
   if (isAdminRoute(currentPath)) {
     // Initialize auth service only for admin routes
-    authService.init().catch(error => {
-      console.error('Failed to initialize auth:', error);
+    authService.init().catch(() => {
+      // Auth initialization failed - this is normal for unauthenticated users
     });
     
     // Initialize theme service for admin routes
@@ -71,7 +71,7 @@ if (browser) {
         try {
           await authService.checkAuth();
         } catch (error) {
-          console.error('Auth check failed on visibility change:', error);
+          // Auth check failed - this is normal for unauthenticated users
           // Only redirect to login if we're on an admin route
           if (isAdminRoute(currentPath)) {
             goto('/login');
@@ -92,8 +92,8 @@ if (browser) {
     
     if (isAdminRoute(currentPath)) {
       // Initialize auth when navigating to admin routes
-      authService.init().catch(error => {
-        console.error('Failed to initialize auth on route change:', error);
+      authService.init().catch(() => {
+        // Auth initialization failed - this is normal for unauthenticated users
       });
       
       // Initialize theme service when navigating to admin routes
