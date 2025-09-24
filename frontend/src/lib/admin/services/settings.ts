@@ -42,17 +42,33 @@ class SettingsService {
     };
 
     try {
-      console.log(`Making settings API request to: ${url}`);
       const response = await fetch(url, defaultOptions);
       
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`Settings API request failed: ${endpoint}`, response.status, errorText);
-        throw new Error(`Request failed with status ${response.status}: ${errorText}`);
+        
+        // Try to parse the error response to extract user-friendly message
+        let errorMessage = `Request failed with status ${response.status}`;
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch {
+          // If JSON parsing fails, use the raw error text
+          errorMessage = errorText;
+        }
+        
+        const error = new Error(errorMessage);
+        (error as any).status = response.status;
+        (error as any).response = { data: JSON.parse(errorText) };
+        throw error;
       }
       
       const data = await response.json();
-      console.log(`Settings API response from ${endpoint}:`, data);
       return data;
     } catch (error) {
       console.error(`Settings API request failed: ${endpoint}`, error);

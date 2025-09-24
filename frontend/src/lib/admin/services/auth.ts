@@ -7,6 +7,8 @@ interface LoginCredentials {
   username: string;
   password: string;
   rememberMe?: boolean;
+  totpCode?: string;
+  backupCode?: string;
 }
 
 interface AuthResponse {
@@ -21,6 +23,7 @@ interface AuthResponse {
   };
   expiresIn?: string;
   accessToken?: string;
+  requiresTOTP?: boolean;
 }
 
 
@@ -31,6 +34,8 @@ interface ApiError {
 }
 
 class AuthService {
+  private initialized: boolean = false;
+
   private async makeRequest<T>(
     endpoint: string, 
     options: RequestInit = {}
@@ -47,20 +52,33 @@ class AuthService {
     };
 
     try {
-      console.log(`Making API request to: ${url}`);
       const response = await fetch(url, defaultOptions);
       
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`API request failed: ${endpoint}`, response.status, errorText);
-        throw new Error(`Request failed with status ${response.status}: ${errorText}`);
+        const errorData = await response.json().catch(() => ({
+          error: 'Request failed',
+          message: `HTTP ${response.status}: ${response.statusText}`
+        }));
+        
+        // Only log errors for non-401 status codes (401 is expected for unauthenticated users)
+        if (response.status !== 401) {
+          console.error(`API request failed: ${endpoint}`, response.status, errorData);
+        }
+        
+        // Create error object with status for processing
+        const error = new Error(errorData.message || errorData.error || 'Request failed');
+        (error as any).status = response.status;
+        (error as any).response = { data: errorData };
+        throw error;
       }
       
       const data = await response.json();
-      console.log(`API response from ${endpoint}:`, data);
       return data;
     } catch (error) {
-      console.error(`API request failed: ${endpoint}`, error);
+      // Only log errors for non-401 status codes
+      if ((error as any).status !== 401) {
+        console.error(`API request failed: ${endpoint}`, error);
+      }
       throw error;
     }
   }
@@ -70,19 +88,59 @@ class AuthService {
       auth.setLoading(true);
       auth.clearError();
 
-      const response = await this.makeRequest<AuthResponse>('/auth/login', {
+      const url = `${API_BASE_URL}/auth/login`;
+      const response = await fetch(url, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
         body: JSON.stringify(credentials)
       });
 
-      if (response.success && response.user) {
-        auth.setUser(response.user);
-        auth.persist(response.user);
+      // Handle TOTP requirement (status 202)
+      if (response.status === 202) {
+        const data = await response.json();
+        return {
+          success: false,
+          message: data.message || 'Two-factor authentication required',
+          requiresTOTP: true
+        };
       }
 
-      return response;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({
+          error: 'Request failed',
+          message: `HTTP ${response.status}: ${response.statusText}`
+        }));
+        
+        // Create error object with status for processing
+        const error = new Error(errorData.message || errorData.error || 'Request failed');
+        (error as any).status = response.status;
+        (error as any).response = { data: errorData };
+        throw error;
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.user) {
+        auth.setUser(data.user);
+        auth.persist(data.user);
+      }
+
+      return data;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      let errorMessage = 'Login failed';
+      
+      if (error instanceof Error) {
+        // Check if it's a structured error with response data
+        if ((error as any).response?.data?.message) {
+          errorMessage = (error as any).response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+      }
+      
       auth.setError(errorMessage);
       throw error;
     } finally {
@@ -144,7 +202,7 @@ class AuthService {
 
       return response;
     } catch (error) {
-      console.error('Token verification failed:', error);
+      // Token verification failed - this is normal for unauthenticated users
       auth.logout();
       auth.clearPersisted();
       throw error;
@@ -164,7 +222,7 @@ class AuthService {
 
       return response;
     } catch (error) {
-      console.error('Get current user failed:', error);
+      // Get current user failed - this is normal for unauthenticated users
       auth.logout();
       auth.clearPersisted();
       throw error;
@@ -186,7 +244,17 @@ class AuthService {
 
       return response;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Password change failed';
+      let errorMessage = 'Password change failed';
+      
+      if (error instanceof Error) {
+        // Check if it's a structured error with response data
+        if ((error as any).response?.data?.message) {
+          errorMessage = (error as any).response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+      }
+      
       auth.setError(errorMessage);
       throw error;
     } finally {
@@ -203,13 +271,12 @@ class AuthService {
       await this.getCurrentUser();
       return true;
     } catch (error) {
-      console.log('Session check failed, trying token verification...');
       // If session fails, try token verification
       try {
         await this.verifyToken();
         return true;
       } catch (tokenError) {
-        console.log('Token verification also failed, user not authenticated');
+        // User not authenticated - this is normal for login page
         return false;
       }
     }
@@ -217,19 +284,16 @@ class AuthService {
 
   // Initialize authentication on app start
   async init(): Promise<void> {
-    if (!browser) return;
+    if (!browser || this.initialized) return;
 
-    console.log('Initializing auth service...');
+    this.initialized = true;
     auth.init();
 
-    // Try to verify authentication
+    // Try to verify authentication silently
     try {
-      console.log('Checking auth...');
-      const isAuth = await this.checkAuth();
-      console.log('Auth check completed, authenticated:', isAuth);
+      await this.checkAuth();
     } catch (error) {
-      console.error('Auth initialization failed:', error);
-      // Don't throw error, just log it - this allows the app to continue
+      // Auth check failed - this is normal for unauthenticated users
     }
   }
 }

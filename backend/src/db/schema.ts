@@ -27,6 +27,16 @@ export const users = websiteSchema.table('users', {
   accentColor: varchar('accent_color', { length: 7 }).default('#000000'), // Hex code
 });
 
+// TOTP backup codes table
+export const totpBackupCodes = websiteSchema.table('totp_backup_codes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  codeHash: varchar('code_hash', { length: 255 }).notNull(), // Hashed backup code
+  used: boolean('used').default(false),
+  usedAt: timestamp('used_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
+});
+
 // Posts table
 export const posts = websiteSchema.table('posts', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -177,6 +187,17 @@ export const postTagsRelations = relations(postTags, ({ one }) => ({
   })
 }));
 
+export const usersRelations = relations(users, ({ many }) => ({
+  totpBackupCodes: many(totpBackupCodes)
+}));
+
+export const totpBackupCodesRelations = relations(totpBackupCodes, ({ one }) => ({
+  user: one(users, {
+    fields: [totpBackupCodes.userId],
+    references: [users.id]
+  })
+}));
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -200,3 +221,5 @@ export type PostTag = typeof postTags.$inferSelect;
 export type NewPostTag = typeof postTags.$inferInsert;
 export type SiteConfig = typeof siteConfig.$inferSelect;
 export type NewSiteConfig = typeof siteConfig.$inferInsert;
+export type TotpBackupCode = typeof totpBackupCodes.$inferSelect;
+export type NewTotpBackupCode = typeof totpBackupCodes.$inferInsert;

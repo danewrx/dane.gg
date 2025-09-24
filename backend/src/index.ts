@@ -62,6 +62,7 @@ import userRoutes from './routes/users';
 import statusRoutes from './routes/status';
 import configRoutes from './routes/config';
 import settingsRoutes from './routes/settings';
+import totpRoutes from './routes/totp';
 import { generalLimiter } from './middleware/rateLimiting';
 
 // Routes
@@ -73,7 +74,8 @@ app.get('/api', (req, res) => {
       health: '/api/health',
       auth: '/api/auth',
       users: '/api/users',
-      settings: '/api/settings'
+      settings: '/api/settings',
+      totp: '/api/totp'
     }
   });
 });
@@ -103,6 +105,9 @@ app.use('/api/config', configRoutes);
 
 // Settings routes (admin settings, user preferences)
 app.use('/api/settings', settingsRoutes);
+
+// TOTP/2FA routes
+app.use('/api/totp', totpRoutes);
 
 // 404 handler for API routes
 app.use('/api', (req, res) => {

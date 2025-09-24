@@ -12,8 +12,6 @@ class AccentColorService {
    */
   async init(): Promise<void> {
     if (!browser || this.initialized) return;
-
-    console.log('Initializing accent color service...');
     
     // Listen for auth state changes
     user.subscribe(async (currentUser) => {
@@ -32,11 +30,8 @@ class AccentColorService {
     try {
       const currentUser = get(user);
       if (!currentUser?.id) {
-        console.log('No authenticated user, skipping accent color load');
         return;
       }
-
-      console.log('Loading user accent color preference...');
       
       // Try to get color from user object first (if just logged in)
       let accentColor = currentUser.accentColor;
@@ -47,11 +42,9 @@ class AccentColorService {
       }
 
       if (accentColor && this.isValidHexColor(accentColor)) {
-        console.log('Applying user accent color:', accentColor);
         this.applyAccentColor(accentColor);
         this.currentColor = accentColor;
       } else {
-        console.log('No valid accent color found, using default');
         this.applyAccentColor('#3b82f6');
       }
     } catch (error) {
@@ -102,7 +95,6 @@ class AccentColorService {
     try {
       const currentUser = get(user);
       if (!currentUser?.id) {
-        console.log('No authenticated user, accent color will only be saved locally');
         return;
       }
 
@@ -110,9 +102,7 @@ class AccentColorService {
         throw new Error('Invalid hex color format');
       }
 
-      console.log('Saving accent color to database:', color);
       await settingsService.setAccentColor(color);
-      console.log('Accent color saved successfully');
     } catch (error) {
       console.error('Failed to save accent color:', error);
       throw error;

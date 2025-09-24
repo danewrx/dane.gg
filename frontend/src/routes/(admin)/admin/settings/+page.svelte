@@ -25,19 +25,16 @@
 
 	// Initialize theme from database (for authenticated users) or localStorage
 	onMount(async () => {
-		console.log('Settings page mounted, user:', $user);
 		
 		if ($user) {
 			// Load from database if user is authenticated
 			try {
 				const dbTheme = await settingsService.getThemePreference();
-				console.log('Loaded theme from database:', dbTheme);
 				currentTheme = dbTheme;
 				setMode(dbTheme as 'light' | 'dark' | 'system');
 
 				// Load accent color from user data or API
 				const dbAccentColor = $user.accentColor || await settingsService.getAccentColor();
-				console.log('Loaded accent color from database:', dbAccentColor);
 				currentAccentColor = dbAccentColor;
 			} catch (error) {
 				console.error('Failed to load settings from database:', error);
@@ -63,7 +60,6 @@
 		if (typeof window !== 'undefined') {
 			const stored = localStorage.getItem('mode-watcher-mode');
 			if (stored && ['light', 'dark', 'system'].includes(stored)) {
-				console.log('Loading stored theme from localStorage:', stored);
 				currentTheme = stored;
 			}
 		}
@@ -71,25 +67,14 @@
 
 	// Debug current mode
 	$effect(() => {
-		console.log('Current resolved mode:', mode.current);
-		console.log('User preference:', userPrefersMode.current);
-		
-		// Debug HTML classes
-		if (typeof window !== 'undefined') {
-			console.log('HTML classes:', document.documentElement.classList.toString());
-			console.log('HTML has dark class:', document.documentElement.classList.contains('dark'));
-		}
 	});
 
 	async function handleThemeChange(tabId: string, value: string) {
-		console.log('Theme change requested:', { tabId, value });
-		console.log('About to show toast...');
 		currentTheme = value;
 
 		// Use theme service to set and save theme
 		try {
 			await themeService.setTheme(value);
-			console.log('Theme set and saved successfully:', value);
 			
 			// Show success toast
 			const themeName = value === 'system' ? 'Auto' : value.charAt(0).toUpperCase() + value.slice(1);
@@ -108,13 +93,11 @@
 
 	async function handleAccentColorChange(event: CustomEvent<{ color: string }>) {
 		const { color } = event.detail;
-		console.log('Accent color change requested:', color);
 		currentAccentColor = color;
 
 		// Use accent color service to set and save color
 		try {
 			await accentColorService.setAccentColor(color);
-			console.log('Accent color set and saved successfully:', color);
 			
 			// Show success toast
 			toast.success(`Accent color updated`, {
