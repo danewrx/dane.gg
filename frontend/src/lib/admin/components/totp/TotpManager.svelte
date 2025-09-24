@@ -150,6 +150,7 @@
 			const result = await TotpService.regenerateBackupCodes(regeneratePassword);
 			
 			if (result.backupCodes) {
+				// Validation is now handled in the service layer
 				newBackupCodes = result.backupCodes;
 				toast.success('Backup codes have been regenerated');
 				await loadTotpStatus();

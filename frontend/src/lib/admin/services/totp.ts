@@ -35,6 +35,16 @@ export class TotpService {
     const response = await settingsService.makeRequest('/totp/setup', {
       method: 'POST'
     });
+
+    // Validate the backup codes in the response
+    if (response.backupCodes) {
+      const validation = this.validateBackupCodes(response.backupCodes);
+      if (!validation.valid) {
+        console.error('Invalid backup codes received from server during setup:', validation.error);
+        throw new Error(`Invalid backup codes received from server: ${validation.error}`);
+      }
+    }
+
     return response;
   }
 
@@ -43,6 +53,15 @@ export class TotpService {
    */
   static async enableTotp(secret: string, token: string, backupCodes: string[]): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
+      // Validate backup codes before sending to server
+      const validation = this.validateBackupCodes(backupCodes);
+      if (!validation.valid) {
+        return {
+          success: false,
+          error: `Invalid backup codes: ${validation.error}`
+        };
+      }
+
       const response = await settingsService.makeRequest('/totp/enable', {
         method: 'POST',
         body: JSON.stringify({
@@ -117,6 +136,66 @@ export class TotpService {
   }
 
   /**
+   * Validate backup codes array
+   */
+  static validateBackupCodes(codes: string[]): { valid: boolean; error?: string } {
+    // Check if codes is an array
+    if (!Array.isArray(codes)) {
+      return { valid: false, error: 'Backup codes must be an array' };
+    }
+
+    // Check expected count (10 codes)
+    const expectedCount = 10;
+    if (codes.length !== expectedCount) {
+      return { 
+        valid: false, 
+        error: `Expected ${expectedCount} backup codes, received ${codes.length}` 
+      };
+    }
+
+    // Validate each code
+    const codePattern = /^[A-F0-9]{4}-[A-F0-9]{4}$/;
+    for (let i = 0; i < codes.length; i++) {
+      const code = codes[i];
+      
+      // Check if code is a string
+      if (typeof code !== 'string') {
+        return { 
+          valid: false, 
+          error: `Backup code at index ${i} must be a string` 
+        };
+      }
+
+      // Check format (XXXX-XXXX with hexadecimal characters)
+      if (!codePattern.test(code)) {
+        return { 
+          valid: false, 
+          error: `Backup code at index ${i} has invalid format: "${code}". Expected format: XXXX-XXXX` 
+        };
+      }
+
+      // Check length (should be 9 characters: 4 + dash + 4)
+      if (code.length !== 9) {
+        return { 
+          valid: false, 
+          error: `Backup code at index ${i} has invalid length: "${code}". Expected 9 characters` 
+        };
+      }
+    }
+
+    // Check for duplicates
+    const uniqueCodes = new Set(codes);
+    if (uniqueCodes.size !== codes.length) {
+      return { 
+        valid: false, 
+        error: 'Backup codes contain duplicates' 
+      };
+    }
+
+    return { valid: true };
+  }
+
+  /**
    * Regenerate backup codes
    */
   static async regenerateBackupCodes(currentPassword: string): Promise<{ backupCodes?: string[]; error?: string }> {
@@ -127,6 +206,18 @@ export class TotpService {
           currentPassword
         })
       });
+
+      // Validate the response backup codes
+      if (response.backupCodes) {
+        const validation = this.validateBackupCodes(response.backupCodes);
+        if (!validation.valid) {
+          console.error('Invalid backup codes received from server:', validation.error);
+          return {
+            error: `Invalid backup codes received from server: ${validation.error}`
+          };
+        }
+      }
+
       return response;
     } catch (error: any) {
       return {
