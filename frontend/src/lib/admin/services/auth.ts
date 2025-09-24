@@ -130,7 +130,17 @@ class AuthService {
 
       return data;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      let errorMessage = 'Login failed';
+      
+      if (error instanceof Error) {
+        // Check if it's a structured error with response data
+        if ((error as any).response?.data?.message) {
+          errorMessage = (error as any).response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+      }
+      
       auth.setError(errorMessage);
       throw error;
     } finally {
@@ -234,7 +244,17 @@ class AuthService {
 
       return response;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Password change failed';
+      let errorMessage = 'Password change failed';
+      
+      if (error instanceof Error) {
+        // Check if it's a structured error with response data
+        if ((error as any).response?.data?.message) {
+          errorMessage = (error as any).response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+      }
+      
       auth.setError(errorMessage);
       throw error;
     } finally {

@@ -1,4 +1,5 @@
 import { settingsService } from './settings';
+import { getErrorMessage } from '$lib/shared/utils/errorUtils';
 
 export interface TotpSetupData {
   secret: string;
@@ -54,7 +55,7 @@ export class TotpService {
     } catch (error: any) {
       return {
         success: false,
-        error: error.message || 'Failed to enable TOTP'
+        error: getErrorMessage(error, 'Failed to enable TOTP')
       };
     }
   }
@@ -74,7 +75,7 @@ export class TotpService {
     } catch (error: any) {
       return {
         success: false,
-        error: error.message || 'Failed to disable TOTP'
+        error: getErrorMessage(error, 'Failed to disable TOTP')
       };
     }
   }
@@ -92,7 +93,7 @@ export class TotpService {
     } catch (error: any) {
       return {
         valid: false,
-        error: error.message || 'Failed to verify token'
+        error: getErrorMessage(error, 'Failed to verify token')
       };
     }
   }
@@ -110,7 +111,7 @@ export class TotpService {
     } catch (error: any) {
       return {
         valid: false,
-        error: error.message || 'Failed to verify backup code'
+        error: getErrorMessage(error, 'Failed to verify backup code')
       };
     }
   }
@@ -129,7 +130,7 @@ export class TotpService {
       return response;
     } catch (error: any) {
       return {
-        error: error.message || 'Failed to regenerate backup codes'
+        error: getErrorMessage(error, 'Failed to regenerate backup codes')
       };
     }
   }

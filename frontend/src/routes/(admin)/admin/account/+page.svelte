@@ -3,6 +3,7 @@
 	import { accountService } from '$lib/admin/services/account';
 	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
+	import { getErrorMessage } from '$lib/shared/utils/errorUtils';
 	import { User, Shield, Eye, EyeOff, Check, X, Loader2 } from 'lucide-svelte';
 	import TotpManager from '$lib/admin/components/totp/TotpManager.svelte';
 
@@ -39,11 +40,71 @@
 	});
 	let usernameCheckTimeout: ReturnType<typeof setTimeout> | null = null;
 
+	// TOTP button state
+	let totpButtonText = $state('Enable 2FA');
+	let totpButtonClass = $state('section-action-button');
+	let showRegenerateButton = $state(false);
+
+	// Reactive update of TOTP button state
+	$effect(() => {
+		// Update button state when component mounts or changes
+		if (typeof window !== 'undefined') {
+			setTimeout(() => {
+				const enableButton = document.querySelector('.totp-manager-container .action-button.enable');
+				const disableButton = document.querySelector('.totp-manager-container .action-button.disable');
+				const regenerateButton = document.querySelector('.totp-manager-container .action-button.regenerate');
+				
+				if (enableButton) {
+					// 2FA is disabled
+					totpButtonText = 'Enable 2FA';
+					totpButtonClass = 'section-action-button';
+					showRegenerateButton = false;
+				} else if (disableButton && regenerateButton) {
+					// 2FA is enabled - show disable as primary action
+					totpButtonText = 'Disable 2FA';
+					totpButtonClass = 'section-action-button disable';
+					showRegenerateButton = true;
+				}
+			}, 100);
+		}
+	});
+
 	// Initialize form data
 	onMount(() => {
 		if ($user) {
 			usernameForm.newUsername = $user.username;
 		}
+		
+		// Update TOTP button state periodically
+		const updateTotpButton = () => {
+			const enableButton = document.querySelector('.totp-manager-container .action-button.enable');
+			const disableButton = document.querySelector('.totp-manager-container .action-button.disable');
+			const regenerateButton = document.querySelector('.totp-manager-container .action-button.regenerate');
+			
+			if (enableButton) {
+				// 2FA is disabled
+				totpButtonText = 'Enable 2FA';
+				totpButtonClass = 'section-action-button';
+				showRegenerateButton = false;
+			} else if (disableButton && regenerateButton) {
+				// 2FA is enabled - show disable as primary action
+				totpButtonText = 'Disable 2FA';
+				totpButtonClass = 'section-action-button disable';
+				showRegenerateButton = true;
+			}
+		};
+
+		// Check every 500ms until buttons are loaded
+		const interval = setInterval(() => {
+			updateTotpButton();
+			// Stop checking once we've detected the state or after 10 seconds
+			if (document.querySelector('.totp-manager-container .action-button')) {
+				clearInterval(interval);
+			}
+		}, 500);
+
+		// Clean up interval after 10 seconds
+		setTimeout(() => clearInterval(interval), 10000);
 	});
 
 	// Debounced username availability checking
@@ -151,7 +212,7 @@
 		} catch (error) {
 			console.error('Username update failed:', error);
 			toast.error('Failed to update username', {
-				description: error instanceof Error ? error.message : 'Please try again'
+				description: getErrorMessage(error, 'Please try again')
 			});
 		} finally {
 			isSubmitting = false;
@@ -210,7 +271,7 @@
 		} catch (error) {
 			console.error('Password update failed:', error);
 			toast.error('Failed to update password', {
-				description: error instanceof Error ? error.message : 'Please try again'
+				description: getErrorMessage(error, 'Please try again')
 			});
 		} finally {
 			isSubmitting = false;
@@ -253,69 +314,65 @@
 	<meta name="description" content="Manage your account settings and profile information." />
 </svelte:head>
 
-<div class="account-page">
+<div class="settings-page">
 	<div class="page-header">
 		<div class="header-content">
-			<div class="header-text">
-				<h1>Account Settings</h1>
-				<p>Manage your profile and security settings</p>
-			</div>
+			<h1 class="page-title">Account Settings</h1>
+			<p>Manage your profile and security settings</p>
 		</div>
 	</div>
 
-	<div class="account-content">
-		<!-- Account Overview Card -->
-		<div class="account-card">
-			<div class="card-header">
-				<div class="card-icon">
+	<div class="page-content">
+		<!-- Account Overview Section -->
+		<div class="settings-section">
+			<div class="section-header">
+				<div class="section-title-with-icon">
 					<User size={24} />
+					<h2 class="section-title">Account Information</h2>
 				</div>
-				<div class="card-title">
-					<h2>Account Information</h2>
-					<p>Your basic account details</p>
-				</div>
+				<p class="section-description">Your basic account details</p>
 			</div>
 			
-			<div class="card-content">
-				<div class="account-overview">
-					<div class="overview-item">
-						<span class="overview-label">Username</span>
-						<div class="overview-value">
-							<span class="username">{$user?.username || 'Loading...'}</span>
-						</div>
+			<div class="account-overview">
+				<div class="overview-item">
+					<span class="overview-label">Username</span>
+					<div class="overview-value">
+						<span class="username">{$user?.username || 'Loading...'}</span>
 					</div>
-					
-					<div class="overview-item">
-						<span class="overview-label">Account Type</span>
-						<div class="overview-value">
-							<div class="account-type" class:admin={$user?.isAdmin} class:user={!$user?.isAdmin}>
-								<Shield size={16} />
-								<span>{$user?.isAdmin ? 'Administrator' : 'User'}</span>
-							</div>
+				</div>
+				
+				<div class="overview-item">
+					<span class="overview-label">Account Type</span>
+					<div class="overview-value">
+						<div class="account-type" class:admin={$user?.isAdmin} class:user={!$user?.isAdmin}>
+							<Shield size={16} />
+							<span>{$user?.isAdmin ? 'Administrator' : 'User'}</span>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<!-- Username Management Card -->
-		<div class="account-card">
-			<div class="card-header">
-				<div class="card-title">
-					<h2>Username</h2>
-					<p>Change your login username</p>
+		<!-- Username Management Section -->
+		<div class="settings-section">
+			<div class="section-header">
+				<div class="section-title-with-actions">
+					<div>
+						<h2 class="section-title">Username</h2>
+						<p class="section-description">Change your login username</p>
+					</div>
+					{#if !isEditingUsername}
+						<button class="edit-button" onclick={() => {
+							isEditingUsername = true;
+							// Check availability of current value when starting to edit
+							if (usernameForm.newUsername !== $user?.username) {
+								checkUsernameAvailability(usernameForm.newUsername);
+							}
+						}}>
+							Edit
+						</button>
+					{/if}
 				</div>
-				{#if !isEditingUsername}
-					<button class="edit-button" onclick={() => {
-						isEditingUsername = true;
-						// Check availability of current value when starting to edit
-						if (usernameForm.newUsername !== $user?.username) {
-							checkUsernameAvailability(usernameForm.newUsername);
-						}
-					}}>
-						Edit
-					</button>
-				{/if}
 			</div>
 			
 			<div class="card-content">
@@ -402,18 +459,20 @@
 			</div>
 		</div>
 
-		<!-- Password Management Card -->
-		<div class="account-card">
-			<div class="card-header">
-				<div class="card-title">
-					<h2>Password</h2>
-					<p>Change your login password</p>
+		<!-- Password Management Section -->
+		<div class="settings-section">
+			<div class="section-header">
+				<div class="section-title-with-actions">
+					<div>
+						<h2 class="section-title">Password</h2>
+						<p class="section-description">Change your login password</p>
+					</div>
+					{#if !isEditingPassword}
+						<button class="edit-button" onclick={() => isEditingPassword = true}>
+							Change Password
+						</button>
+					{/if}
 				</div>
-				{#if !isEditingPassword}
-					<button class="edit-button" onclick={() => isEditingPassword = true}>
-						Change Password
-					</button>
-				{/if}
 			</div>
 			
 			<div class="card-content">
@@ -519,9 +578,48 @@
 			</div>
 		</div>
 
-		<!-- Two-Factor Authentication Card -->
-		<div class="account-card">
-			<div class="card-content">
+		<!-- Two-Factor Authentication Section -->
+		<div class="settings-section">
+			<div class="section-header">
+				<div class="section-title-with-actions">
+					<div class="section-title-with-icon">
+						<Shield size={24} />
+						<h2 class="section-title">Two-Factor Authentication</h2>
+					</div>
+					<div class="section-actions">
+						{#if showRegenerateButton}
+							<button 
+								class="section-action-button secondary"
+								onclick={() => {
+									const regenerateButton = document.querySelector('.totp-manager-container .action-button.regenerate');
+									if (regenerateButton) {
+										(regenerateButton as HTMLButtonElement).click();
+									}
+								}}
+							>
+								<span class="button-text">Regenerate Codes</span>
+							</button>
+						{/if}
+						<button 
+							class={totpButtonClass}
+							onclick={() => {
+								// This will be handled by the TotpManager component
+								const enableButton = document.querySelector('.totp-manager-container .action-button.enable');
+								const disableButton = document.querySelector('.totp-manager-container .action-button.disable');
+								if (enableButton) {
+									(enableButton as HTMLButtonElement).click();
+								} else if (disableButton) {
+									(disableButton as HTMLButtonElement).click();
+								}
+							}}
+						>
+							<span class="button-text">{totpButtonText}</span>
+						</button>
+					</div>
+				</div>
+				<p class="section-description">Secure your account with 2FA</p>
+			</div>
+			<div class="totp-manager-container">
 				<TotpManager />
 			</div>
 		</div>
@@ -529,398 +627,347 @@
 </div>
 
 <style>
-	.account-page {
-		padding: 2rem;
-		max-width: 900px;
+	.settings-page {
+		padding: 32px;
+		max-width: 1000px;
 		margin: 0 auto;
-		min-height: calc(100vh - 4rem);
 	}
 
 	.page-header {
-		margin-bottom: 3rem;
-		padding-bottom: 1.5rem;
-		border-bottom: 1px solid var(--border-color);
+		margin-bottom: 32px;
 	}
 
-	.header-content {
+	.header-content h1 {
+		font-size: 2rem;
+		font-weight: 700;
+		color: #ffffff;
+		margin: 0 0 8px 0;
+	}
+
+	.header-content p {
+		color: rgba(255, 255, 255, 0.7);
+		margin: 0;
+		font-size: 1rem;
+	}
+
+	:global(html:not(.dark)) .header-content h1 {
+		color: #1f2937;
+	}
+
+	:global(html:not(.dark)) .header-content p {
+		color: rgba(0, 0, 0, 0.6);
+	}
+
+	.page-content {
+		min-height: 400px;
+	}
+
+	.settings-section {
+		background: rgba(255, 255, 255, 0.02);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 16px;
+		padding: 32px;
+		margin-bottom: 24px;
+	}
+
+	:global(html:not(.dark)) .settings-section {
+		background: rgba(0, 0, 0, 0.02);
+		border-color: rgba(0, 0, 0, 0.1);
+	}
+
+	.section-header {
+		margin-bottom: 32px;
+		padding-bottom: 16px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	:global(html:not(.dark)) .section-header {
+		border-bottom-color: rgba(0, 0, 0, 0.1);
+	}
+
+	.section-title-with-icon {
 		display: flex;
 		align-items: center;
-		gap: 1rem;
+		gap: 12px;
+		margin-bottom: 8px;
 	}
 
-	.header-text h1 {
-		color: var(--text-primary);
-		font-size: 2.5rem;
-		font-weight: 700;
-		margin: 0 0 0.75rem 0;
-		background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-color) 100%);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
+	.section-title-with-actions {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		margin-bottom: 8px;
 	}
 
-	.header-text p {
-		color: var(--text-secondary);
+	.section-actions {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.section-action-button {
+		background: var(--accent-color, #3b82f6);
+		color: white;
+		border: none;
+		border-radius: 8px;
+		padding: 10px 16px;
+		font-size: 0.9rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.section-action-button:hover {
+		opacity: 0.9;
+		transform: translateY(-1px);
+	}
+
+	.section-action-button:active {
+		transform: translateY(0);
+	}
+
+	.section-action-button.disable {
+		background: #ef4444;
+	}
+
+	.section-action-button.disable:hover {
+		background: #dc2626;
+	}
+
+	.section-action-button.secondary {
+		background: rgba(255, 255, 255, 0.1);
+		color: #ffffff;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+	}
+
+	.section-action-button.secondary:hover {
+		background: rgba(255, 255, 255, 0.15);
+		border-color: rgba(255, 255, 255, 0.3);
+	}
+
+	.section-title {
+		font-size: 1.5rem;
+		font-weight: 600;
+		color: #ffffff;
 		margin: 0;
-		font-size: 1.125rem;
-		font-weight: 400;
 	}
 
-	/* Light mode support */
-	:global(html:not(.dark)) .header-text h1 {
-		color: #212529;
+	:global(html:not(.dark)) .section-title {
+		color: #1f2937;
 	}
 
-	:global(html:not(.dark)) .header-text p {
-		color: #6c757d;
+	.section-description {
+		color: rgba(255, 255, 255, 0.7);
+		margin: 0;
+		font-size: 0.9rem;
 	}
 
-	.account-content {
+	:global(html:not(.dark)) .section-description {
+		color: rgba(0, 0, 0, 0.6);
+	}
+
+	/* Account-specific styles */
+	.account-overview {
 		display: flex;
 		flex-direction: column;
-		gap: 2rem;
-	}
-
-	.account-card {
-		background: var(--bg-secondary);
-		border: 1px solid var(--border-color);
-		border-radius: 16px;
-		overflow: hidden;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-		transition: all 0.3s ease;
-	}
-
-	.account-card:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-	}
-
-	/* Light mode support */
-	:global(html:not(.dark)) .account-card {
-		background: #f8f9fa;
-		border-color: #e9ecef;
-	}
-
-	.card-header {
-		padding: 2rem 2rem 1.5rem 2rem;
-		border-bottom: 1px solid var(--border-color);
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-	}
-
-	/* Light mode support */
-	:global(html:not(.dark)) .card-header {
-		border-bottom-color: #e9ecef;
-	}
-
-	.card-icon {
-		color: var(--accent-color);
-		background: var(--accent-color-light, rgba(59, 130, 246, 0.1));
-		padding: 0.75rem;
-		border-radius: 12px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.card-title {
-		flex: 1;
-		margin-left: 1rem;
-	}
-
-	.card-title h2 {
-		color: var(--text-primary);
-		font-size: 1.5rem;
-		font-weight: 700;
-		margin: 0 0 0.5rem 0;
-		letter-spacing: -0.025em;
-	}
-
-	.card-title p {
-		color: var(--text-secondary);
-		margin: 0;
-		font-size: 0.95rem;
-		font-weight: 400;
-	}
-
-	/* Light mode support */
-	:global(html:not(.dark)) .card-title h2 {
-		color: #212529;
-	}
-
-	:global(html:not(.dark)) .card-title p {
-		color: #6c757d;
-	}
-
-	.edit-button {
-		background: var(--accent-color);
-		color: var(--accent-color-contrast, white);
-		border: none;
-		border-radius: 10px;
-		padding: 0.75rem 1.5rem;
-		font-size: 0.9rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.3s ease;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-		position: relative;
-		overflow: hidden;
-	}
-
-	.edit-button::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: -100%;
-		width: 100%;
-		height: 100%;
-		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-		transition: left 0.5s;
-	}
-
-	.edit-button:hover::before {
-		left: 100%;
-	}
-
-	.edit-button:hover {
-		background: var(--accent-color-dark);
-		color: var(--accent-color-dark-contrast, white);
-		transform: translateY(-1px);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-	}
-
-	.edit-button:focus {
-		outline: 2px solid var(--accent-color);
-		outline-offset: 2px;
-	}
-
-	.card-content {
-		padding: 2rem;
-	}
-
-	.account-overview {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-		gap: 2rem;
+		gap: 20px;
 	}
 
 	.overview-item {
 		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-		padding: 1.5rem;
-		background: var(--bg-tertiary);
-		border-radius: 12px;
-		border: 1px solid var(--border-color);
-		transition: all 0.3s ease;
+		justify-content: space-between;
+		align-items: center;
+		padding: 16px 0;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	}
 
-	.overview-item:hover {
-		transform: translateY(-1px);
-		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	:global(html:not(.dark)) .overview-item {
+		border-bottom-color: rgba(0, 0, 0, 0.1);
+	}
+
+	.overview-item:last-child {
+		border-bottom: none;
 	}
 
 	.overview-label {
-		color: var(--text-secondary);
-		font-size: 0.8rem;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
+		font-weight: 500;
+		color: rgba(255, 255, 255, 0.8);
+		font-size: 0.9rem;
 	}
 
-	/* Light mode support */
 	:global(html:not(.dark)) .overview-label {
-		color: #6c757d;
+		color: rgba(0, 0, 0, 0.7);
 	}
 
 	.overview-value {
 		display: flex;
 		align-items: center;
-		gap: 0.75rem;
+		gap: 8px;
 	}
 
 	.username {
-		color: var(--text-primary);
-		font-weight: 700;
-		font-size: 1.25rem;
-		letter-spacing: -0.025em;
+		font-weight: 600;
+		color: #ffffff;
+		font-size: 1rem;
 	}
 
-	/* Light mode support */
 	:global(html:not(.dark)) .username {
-		color: #212529;
+		color: #1f2937;
 	}
 
 	.account-type {
 		display: flex;
 		align-items: center;
-		gap: 0.75rem;
-		padding: 0.75rem 1rem;
-		border-radius: 12px;
-		font-size: 0.95rem;
-		font-weight: 600;
-		letter-spacing: -0.025em;
-		transition: all 0.3s ease;
+		gap: 6px;
+		padding: 4px 12px;
+		border-radius: 20px;
+		font-size: 0.85rem;
+		font-weight: 500;
 	}
 
 	.account-type.admin {
-		background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.05) 100%);
-		color: #16a34a;
-		border: 1px solid rgba(34, 197, 94, 0.3);
-		box-shadow: 0 2px 4px rgba(34, 197, 94, 0.1);
+		background: rgba(34, 197, 94, 0.1);
+		color: #22c55e;
+		border: 1px solid rgba(34, 197, 94, 0.2);
 	}
 
 	.account-type.user {
-		background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
-		color: #2563eb;
-		border: 1px solid rgba(59, 130, 246, 0.3);
-		box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+		background: rgba(59, 130, 246, 0.1);
+		color: #3b82f6;
+		border: 1px solid rgba(59, 130, 246, 0.2);
 	}
 
-	.current-value {
-		color: var(--text-secondary);
-		padding: 1.5rem;
-		background: var(--bg-tertiary);
+	.totp-manager-container {
+		margin-top: 16px;
+		width: 100%;
+	}
+
+	/* Completely override TotpManager styling to match settings page */
+	:global(.totp-manager-container .totp-manager) {
+		max-width: none;
+		margin: 0;
+		width: 100%;
+		background: none;
+		border: none;
+		padding: 0;
+	}
+
+	/* Hide the TotpManager's own header since we have our own */
+	:global(.totp-manager-container .manager-header) {
+		display: none;
+	}
+
+	/* Style the status cards to match settings page */
+	:global(.totp-manager-container .status-card) {
+		background: rgba(255, 255, 255, 0.02);
+		border: 1px solid rgba(255, 255, 255, 0.1);
 		border-radius: 12px;
-		border: 1px solid var(--border-color);
+		padding: 24px;
+		margin-bottom: 16px;
+		transition: all 0.2s ease;
 	}
 
-	.current-value strong {
-		color: var(--text-primary);
-		font-weight: 700;
+	:global(html:not(.dark)) .totp-manager-container .status-card {
+		background: rgba(0, 0, 0, 0.02);
+		border-color: rgba(0, 0, 0, 0.1);
 	}
 
-	/* Light mode support */
-	:global(html:not(.dark)) .current-value {
-		color: #6c757d;
-		background: #f1f3f4;
+	:global(.totp-manager-container .status-card:hover) {
+		background: rgba(255, 255, 255, 0.04);
+		border-color: rgba(255, 255, 255, 0.15);
 	}
 
-	:global(html:not(.dark)) .current-value strong {
-		color: #212529;
+	:global(html:not(.dark)) .totp-manager-container .status-card:hover {
+		background: rgba(0, 0, 0, 0.04);
+		border-color: rgba(0, 0, 0, 0.15);
 	}
 
-	.password-note {
-		margin-top: 0.75rem;
-		font-size: 0.875rem;
-		color: var(--text-muted);
-		font-style: italic;
-	}
-
-	/* Light mode support */
-	:global(html:not(.dark)) .password-note {
-		color: #9ca3af;
-	}
-
-	.edit-form {
+	/* Style the status info section */
+	:global(.totp-manager-container .status-info) {
 		display: flex;
-		flex-direction: column;
-		gap: 1.5rem;
-		padding: 1.5rem;
-		background: var(--bg-tertiary);
-		border-radius: 12px;
-		border: 1px solid var(--border-color);
+		align-items: flex-start;
+		gap: 16px;
+		margin-bottom: 20px;
 	}
 
-	.form-group {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
+	:global(.totp-manager-container .status-icon) {
+		color: var(--accent-color, #3b82f6);
+		margin-top: 4px;
 	}
 
-	.form-group label {
-		color: var(--text-secondary);
-		font-size: 0.9rem;
+	:global(.totp-manager-container .status-info h3) {
+		font-size: 1.25rem;
 		font-weight: 600;
-		letter-spacing: -0.025em;
+		color: #ffffff;
+		margin: 0 0 8px 0;
 	}
 
-	/* Light mode support */
-	:global(html:not(.dark)) .form-group label {
-		color: #374151;
+	:global(html:not(.dark)) .totp-manager-container .status-info h3 {
+		color: #1f2937;
 	}
 
-	:global(html:not(.dark)) .edit-form {
-		background: #f8fafc;
-		border-color: #e2e8f0;
+	:global(.totp-manager-container .status-info p) {
+		color: rgba(255, 255, 255, 0.7);
+		margin: 0;
+		font-size: 0.9rem;
+		line-height: 1.5;
 	}
 
-	.form-input {
-		background: var(--bg-primary);
-		border: 2px solid var(--border-color);
-		border-radius: 10px;
-		padding: 1rem 1.25rem;
-		color: var(--text-primary);
-		font-size: 0.95rem;
+	:global(html:not(.dark)) .totp-manager-container .status-info p {
+		color: rgba(0, 0, 0, 0.6);
+	}
+
+	/* Style the action buttons */
+	:global(.totp-manager-container .action-button) {
+		background: var(--accent-color, #3b82f6);
+		color: white;
+		border: none;
+		border-radius: 8px;
+		padding: 12px 20px;
+		font-size: 0.9rem;
 		font-weight: 500;
-		transition: all 0.3s ease;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		cursor: pointer;
+		transition: all 0.2s ease;
+		display: flex;
+		align-items: center;
+		gap: 8px;
 	}
 
-	.form-input:focus {
-		outline: none;
-		border-color: var(--accent-color);
-		box-shadow: 0 0 0 3px var(--accent-color-light, rgba(59, 130, 246, 0.1)), 0 2px 8px rgba(0, 0, 0, 0.15);
+	:global(.totp-manager-container .action-button:hover) {
+		opacity: 0.9;
 		transform: translateY(-1px);
 	}
 
-	.form-input:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
+	:global(.totp-manager-container .action-button.regenerate) {
+		background: #f59e0b;
 	}
 
-	.form-input.checking {
-		border-color: #eab308;
+	:global(.totp-manager-container .action-button.disable) {
+		background: #ef4444;
 	}
 
-	.form-input.available {
-		border-color: #22c55e;
+	/* Hide the original action buttons since we have them in the header */
+	:global(.totp-manager-container .status-actions) {
+		display: none;
 	}
 
-	.form-input.unavailable,
-	.form-input.error {
-		border-color: #ef4444;
+	/* Hide loading state styling */
+	:global(.totp-manager-container .loading-state) {
+		text-align: center;
+		padding: 40px 20px;
+		color: rgba(255, 255, 255, 0.7);
 	}
 
-	/* Light mode support */
-	:global(html:not(.dark)) .form-input {
-		background: #ffffff;
-		border-color: #d1d5db;
-		color: #212529;
+	:global(html:not(.dark)) .totp-manager-container .loading-state {
+		color: rgba(0, 0, 0, 0.6);
 	}
 
-	.username-input-group {
-		position: relative;
-		display: flex;
-		align-items: center;
-	}
-
-	.username-input-group .form-input {
-		padding-right: 2.5rem;
-		flex: 1;
-	}
-
-	.availability-indicator {
-		position: absolute;
-		right: 0.75rem;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	:global(.availability-indicator .spin) {
+	:global(.totp-manager-container .loading-state .spin) {
 		animation: spin 1s linear infinite;
-		color: #eab308;
-	}
-
-	:global(.availability-indicator .success) {
-		color: #22c55e;
-	}
-
-	:global(.availability-indicator .error) {
-		color: #ef4444;
+		margin-bottom: 16px;
 	}
 
 	@keyframes spin {
@@ -928,242 +975,145 @@
 		to { transform: rotate(360deg); }
 	}
 
-	.availability-message {
-		font-size: 0.8rem;
-		margin-top: 0.5rem;
+	/* Form styles */
+	.edit-form {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+	}
+
+	.form-group {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.form-group label {
 		font-weight: 500;
-		padding: 0.5rem 0.75rem;
+		color: rgba(255, 255, 255, 0.9);
+		font-size: 0.9rem;
+	}
+
+	:global(html:not(.dark)) .form-group label {
+		color: rgba(0, 0, 0, 0.8);
+	}
+
+	.form-group input {
+		padding: 12px 16px;
+		border: 1px solid rgba(255, 255, 255, 0.2);
 		border-radius: 8px;
-		animation: slideIn 0.3s ease-out;
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
+		background: rgba(255, 255, 255, 0.05);
+		color: #ffffff;
+		font-size: 1rem;
+		transition: all 0.2s ease;
 	}
 
-	@keyframes slideIn {
-		from {
-			opacity: 0;
-			transform: translateY(-10px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
+	:global(html:not(.dark)) .form-group input {
+		border-color: rgba(0, 0, 0, 0.2);
+		background: rgba(0, 0, 0, 0.02);
+		color: #1f2937;
 	}
 
-	.availability-message.success {
-		color: #16a34a;
-		background: rgba(34, 197, 94, 0.1);
-		border: 1px solid rgba(34, 197, 94, 0.2);
-	}
-
-	.availability-message.error {
-		color: #dc2626;
-		background: rgba(239, 68, 68, 0.1);
-		border: 1px solid rgba(239, 68, 68, 0.2);
-	}
-
-	.availability-message.checking {
-		color: #ca8a04;
-		background: rgba(234, 179, 8, 0.1);
-		border: 1px solid rgba(234, 179, 8, 0.2);
-	}
-
-	.password-input-group {
-		position: relative;
-		display: flex;
-		align-items: center;
-	}
-
-	.password-input-group .form-input {
-		padding-right: 2.5rem;
-		flex: 1;
-	}
-
-	.password-toggle {
-		position: absolute;
-		right: 0.75rem;
-		background: none;
-		border: none;
-		color: var(--text-secondary);
-		cursor: pointer;
-		padding: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		transition: color 0.2s ease;
-	}
-
-	.password-toggle:hover {
-		color: var(--text-primary);
-	}
-
-	.password-toggle:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-	}
-
-	/* Light mode support */
-	:global(html:not(.dark)) .password-toggle {
-		color: #6c757d;
-	}
-
-	:global(html:not(.dark)) .password-toggle:hover {
-		color: #212529;
+	.form-group input:focus {
+		outline: none;
+		border-color: var(--accent-color, #3b82f6);
+		box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 	}
 
 	.form-actions {
 		display: flex;
-		gap: 1rem;
-		margin-top: 1rem;
-		padding-top: 1rem;
-		border-top: 1px solid var(--border-color);
+		gap: 12px;
+		justify-content: flex-end;
+		margin-top: 8px;
 	}
 
-	.cancel-button, .save-button {
-		padding: 1rem 2rem;
-		border-radius: 10px;
-		font-size: 0.95rem;
-		font-weight: 600;
+	.edit-button, .save-button, .cancel-button {
+		padding: 8px 16px;
+		border-radius: 6px;
+		font-weight: 500;
+		font-size: 0.9rem;
 		cursor: pointer;
-		transition: all 0.3s ease;
+		transition: all 0.2s ease;
 		border: none;
-		position: relative;
-		overflow: hidden;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
 
-	.cancel-button {
-		background: var(--bg-primary);
-		color: var(--text-secondary);
-		border: 2px solid var(--border-color);
+	.edit-button {
+		background: var(--accent-color, #3b82f6);
+		color: white;
 	}
 
-	.cancel-button:hover {
-		background: var(--bg-hover);
-		color: var(--text-primary);
-		transform: translateY(-1px);
-		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+	.edit-button:hover {
+		opacity: 0.9;
 	}
 
 	.save-button {
-		background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-color-dark, #2563eb) 100%);
-		color: var(--accent-color-contrast, white);
-		border: 2px solid var(--accent-color);
-	}
-
-	.save-button::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: -100%;
-		width: 100%;
-		height: 100%;
-		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-		transition: left 0.5s;
-	}
-
-	.save-button:hover::before {
-		left: 100%;
+		background: #22c55e;
+		color: white;
 	}
 
 	.save-button:hover {
-		transform: translateY(-1px);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+		background: #16a34a;
 	}
 
-	.cancel-button:disabled,
-	.save-button:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
+	.cancel-button {
+		background: rgba(255, 255, 255, 0.1);
+		color: rgba(255, 255, 255, 0.8);
+		border: 1px solid rgba(255, 255, 255, 0.2);
 	}
 
-	.cancel-button:focus,
-	.save-button:focus {
-		outline: 2px solid var(--accent-color);
-		outline-offset: 2px;
-	}
-
-	/* Light mode support */
 	:global(html:not(.dark)) .cancel-button {
-		background: #e5e7eb;
-		color: #6c757d;
-		border-color: #d1d5db;
+		background: rgba(0, 0, 0, 0.05);
+		color: rgba(0, 0, 0, 0.7);
+		border-color: rgba(0, 0, 0, 0.2);
 	}
 
-	:global(html:not(.dark)) .cancel-button:hover {
-		background: #d1d5db;
-		color: #212529;
+	.current-value {
+		padding: 16px 0;
+		color: rgba(255, 255, 255, 0.8);
 	}
 
+	:global(html:not(.dark)) .current-value {
+		color: rgba(0, 0, 0, 0.7);
+	}
+
+	/* Responsive design */
 	@media (max-width: 768px) {
-		.account-page {
-			padding: 1rem;
+		.settings-page {
+			padding: 16px;
 		}
 
-		.page-header {
-			margin-bottom: 2rem;
-			padding-bottom: 1rem;
+		.settings-section {
+			padding: 20px;
 		}
 
-		.header-text h1 {
-			font-size: 2rem;
-		}
-
-		.header-text p {
-			font-size: 1rem;
-		}
-
-		.account-content {
-			gap: 1.5rem;
-		}
-
-		.card-header {
-			padding: 1.5rem 1.5rem 1rem 1.5rem;
+		.section-title-with-actions {
 			flex-direction: column;
+			gap: 16px;
 			align-items: flex-start;
-			gap: 1rem;
-		}
-
-		.card-title {
-			margin-left: 0;
-		}
-
-		.card-content {
-			padding: 1.5rem;
-		}
-
-		.account-overview {
-			grid-template-columns: 1fr;
-			gap: 1rem;
-		}
-
-		.overview-item {
-			padding: 1rem;
-		}
-
-		.edit-form {
-			padding: 1rem;
-			gap: 1rem;
 		}
 
 		.form-actions {
 			flex-direction: column;
-			gap: 0.75rem;
 		}
 
-		.cancel-button,
-		.save-button {
+		/* TOTP section responsive adjustments */
+		:global(.totp-manager-container .status-card) {
+			padding: 16px;
+			margin-bottom: 12px;
+		}
+
+		:global(.totp-manager-container .status-info) {
+			flex-direction: column;
+			gap: 12px;
+		}
+
+		:global(.totp-manager-container .status-actions) {
+			flex-direction: column;
+		}
+
+		:global(.totp-manager-container .action-button) {
 			width: 100%;
-			padding: 0.875rem 1.5rem;
-		}
-
-		.username-input-group .form-input {
-			padding-right: 2.25rem;
-		}
-
-		.availability-indicator {
-			right: 0.5rem;
+			justify-content: center;
 		}
 	}
 </style>

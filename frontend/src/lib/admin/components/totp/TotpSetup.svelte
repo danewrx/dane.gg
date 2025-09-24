@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { TotpService, type TotpSetupData } from '../../services/totp';
+	import { getErrorMessage } from '$lib/shared/utils/errorUtils';
 	import { Eye, EyeOff, Copy, Check, Shield, Key, Download, AlertTriangle, Loader2 } from 'lucide-svelte';
 
 	export let onComplete: () => void;
@@ -45,7 +46,7 @@
 			setupData = await TotpService.generateSetup();
 		} catch (error: any) {
 			toast.error('Failed to generate TOTP setup', {
-				description: error.message
+				description: getErrorMessage(error, 'Unable to generate setup data')
 			});
 		} finally {
 			isLoading = false;
@@ -122,7 +123,7 @@
 			}
 		} catch (error: any) {
 			toast.error('Failed to enable 2FA', {
-				description: error.message
+				description: getErrorMessage(error, 'Unable to enable 2FA')
 			});
 		} finally {
 			isVerifying = false;

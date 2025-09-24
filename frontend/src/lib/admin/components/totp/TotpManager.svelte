@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { TotpService, type TotpStatus } from '../../services/totp';
+	import { getErrorMessage } from '$lib/shared/utils/errorUtils';
 	import TotpSetup from './TotpSetup.svelte';
 	import { Shield, ShieldCheck, ShieldX, Key, RotateCcw, AlertTriangle, Loader2, Eye, EyeOff } from 'lucide-svelte';
 
@@ -28,7 +29,7 @@
 			totpStatus = await TotpService.getStatus();
 		} catch (error: any) {
 			toast.error('Failed to load 2FA status', {
-				description: error.message
+				description: getErrorMessage(error, 'Unable to load 2FA status')
 			});
 		} finally {
 			isLoading = false;
@@ -82,7 +83,7 @@
 			}
 		} catch (error: any) {
 			toast.error('Failed to disable 2FA', {
-				description: error.message
+				description: getErrorMessage(error, 'Unable to disable 2FA')
 			});
 		} finally {
 			isDisabling = false;
@@ -123,7 +124,7 @@
 			}
 		} catch (error: any) {
 			toast.error('Failed to regenerate backup codes', {
-				description: error.message
+				description: getErrorMessage(error, 'Unable to regenerate backup codes')
 			});
 		} finally {
 			isRegenerating = false;

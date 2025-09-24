@@ -6,7 +6,7 @@
   import { authService } from '$lib/admin/services/auth';
   import { TotpService } from '$lib/admin/services/totp';
   import { toast } from 'svelte-sonner';
-  import { Shield, Key, Eye, EyeOff, Loader2, AlertTriangle, ArrowLeft } from 'lucide-svelte';
+  import { ShieldCheck, Loader2, LogIn } from 'lucide-svelte';
   import { Logo } from '$lib';
 
   // Login state
@@ -23,6 +23,7 @@
   let showBackupForm = false;
   let loginUsername = ''; // Store username for 2FA display
   let isInitialLoad = true; // Track if this is the initial page load
+  let hasSubmittedTotp = false; // Prevent auto-submit loop after error
   
   // Individual digit inputs for TOTP
   let digits = ['', '', '', '', '', ''];
@@ -31,8 +32,8 @@
   // Update totpCode when digits change
   $: totpCode = digits.join('');
   
-  // Auto-submit when all 6 digits are filled
-  $: if (totpCode.length === 6 && !isSubmitting && showTotpForm && !showBackupForm) {
+  // Auto-submit when all 6 digits are filled (only if not already submitted)
+  $: if (totpCode.length === 6 && !isSubmitting && showTotpForm && !showBackupForm && !hasSubmittedTotp) {
     // Small delay to ensure the UI updates before submitting
     setTimeout(() => {
       handleTotpSubmit(new Event('submit'));
@@ -42,6 +43,9 @@
   function handleDigitInput(index: number, event: Event) {
     const target = event.target as HTMLInputElement;
     const value = target.value.replace(/\D/g, ''); // Only allow digits
+    
+    // Reset submission flag when user changes input
+    hasSubmittedTotp = false;
     
     if (value.length > 1) {
       // Handle paste or multiple characters
@@ -78,6 +82,9 @@
     event.preventDefault();
     const pastedText = event.clipboardData?.getData('text') || '';
     const pastedDigits = pastedText.replace(/\D/g, '').slice(0, 6).split('');
+    
+    // Reset submission flag when user pastes
+    hasSubmittedTotp = false;
     
     for (let i = 0; i < 6; i++) {
       digits[i] = pastedDigits[i] || '';
@@ -128,7 +135,6 @@
         loginUsername = username;
         isInitialLoad = false; // Disable animation for 2FA form
         showTotpForm = true;
-        toast.info('Two-factor authentication required');
       } else if (result.success) {
         // Successful login, redirect
         goto(redirectUrl);
@@ -163,6 +169,7 @@
     }
 
     isSubmitting = true;
+    hasSubmittedTotp = true;
     auth.clearError();
 
     try {
@@ -197,6 +204,7 @@
     totpCode = '';
     // Clear digit inputs
     digits = ['', '', '', '', '', ''];
+    hasSubmittedTotp = false; // Reset submission flag
     auth.clearError();
   }
 
@@ -205,6 +213,7 @@
     backupCode = '';
     // Clear digit inputs
     digits = ['', '', '', '', '', ''];
+    hasSubmittedTotp = false; // Reset submission flag
     auth.clearError();
   }
 
@@ -217,6 +226,7 @@
     isInitialLoad = false; // Disable animation when returning to login
     // Clear digit inputs
     digits = ['', '', '', '', '', ''];
+    hasSubmittedTotp = false; // Reset submission flag
     auth.clearError();
   }
 
@@ -273,11 +283,17 @@
           class="submit-button"
         >
           {#if isSubmitting}
-            SIGNING IN...
+          <Loader2 size={16} class="spin" /> Signing in...
           {:else}
-            SIGN IN
+           <LogIn size={16} /> Sign In
           {/if}
         </button>
+        <br>
+        <div class="footer-links">
+          <button type="button" class="footer-link" onclick={() => window.open('/', '_blank')}>
+            ← Return to dane.gg
+          </button>
+        </div>
       </form>
     {:else}
       <!-- 2FA Form -->
@@ -348,11 +364,9 @@
           class="submit-button"
         >
           {#if isSubmitting}
-            <Loader2 size={16} class="spin" />
-            Submitting...
+            <Loader2 size={16} class="spin" /> Submitting...
           {:else}
-            <Shield size={16} />
-            Submit
+            <ShieldCheck size={16} /> Submit
           {/if}
         </button>
 
@@ -561,7 +575,6 @@
     margin-bottom: 1rem;
     letter-spacing: -0.025em;
     transition: color 0.2s ease;
-    text-transform: uppercase;
     letter-spacing: 0.025em;
   }
 
