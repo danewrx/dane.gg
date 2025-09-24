@@ -190,17 +190,14 @@
 					</h3>
 					<p>You'll need a TOTP authenticator app on your mobile device. We recommend:</p>
 					<div class="app-list">
-						<div class="app-item">
-							<strong>Google Authenticator</strong> - Free, simple to use
+						<div class="app-item recommended">
+							<strong>Ente Auth (recommended)</strong> - Open source, privacy-focused
 						</div>
 						<div class="app-item">
-							<strong>Authy</strong> - Supports backup and sync
+							<strong>2FAS Authenticator</strong> - Free, secure, and user-friendly
 						</div>
 						<div class="app-item">
-							<strong>1Password</strong> - Integrated with password manager
-						</div>
-						<div class="app-item">
-							<strong>Microsoft Authenticator</strong> - Good Windows integration
+							<strong>Google Authenticator</strong> - Simple and widely used
 						</div>
 					</div>
 				</div>
@@ -540,10 +537,31 @@
 		background: var(--bg-tertiary);
 		border-radius: 8px;
 		border: 1px solid var(--border-color);
+		transition: all 0.2s ease;
+	}
+
+	.app-item.recommended {
+		background: var(--accent-color-light, rgba(59, 130, 246, 0.1));
+		border-color: var(--accent-color, #3b82f6);
+		border-width: 2px;
+		position: relative;
+	}
+
+	.app-item.recommended::before {
+		content: '★';
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		color: var(--accent-color, #3b82f6);
+		font-size: 1.2rem;
 	}
 
 	.app-item strong {
 		color: var(--text-primary);
+	}
+
+	.app-item.recommended strong {
+		color: var(--accent-color, #3b82f6);
 	}
 
 	.qr-section {

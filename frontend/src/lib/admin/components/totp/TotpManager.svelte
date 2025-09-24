@@ -8,6 +8,24 @@
 
 	let totpStatus: TotpStatus | null = null;
 	let isLoading = true;
+
+	// Dispatch state changes when totpStatus changes
+	$: if (typeof window !== 'undefined' && totpStatus !== null) {
+		// Small delay to ensure DOM has updated
+		setTimeout(() => {
+			console.log('TotpManager: Dispatching totpStatusChanged event:', { enabled: totpStatus?.enabled });
+			window.dispatchEvent(new CustomEvent('totpStatusChanged', { 
+				detail: { enabled: totpStatus?.enabled } 
+			}));
+			
+			if ((window as any).updateAccountTotpButtons) {
+				console.log('TotpManager: Calling global update function from reactive');
+				setTimeout(() => {
+					(window as any).updateAccountTotpButtons();
+				}, 100);
+			}
+		}, 50);
+	}
 	let showSetup = false;
 	let showDisableForm = false;
 	let showRegenerateForm = false;
@@ -48,6 +66,24 @@
 		showSetup = false;
 		await loadTotpStatus();
 		toast.success('Two-factor authentication has been successfully enabled!');
+		
+		// Force immediate update after setup completion
+		if (typeof window !== 'undefined') {
+			console.log('TotpManager: Setup complete, dispatching immediate update');
+			window.dispatchEvent(new CustomEvent('totpStatusChanged', { 
+				detail: { enabled: totpStatus?.enabled } 
+			}));
+			
+			if ((window as any).updateAccountTotpButtons) {
+				console.log('TotpManager: Calling global update function');
+				setTimeout(() => {
+					(window as any).updateAccountTotpButtons();
+				}, 100);
+				setTimeout(() => {
+					(window as any).updateAccountTotpButtons();
+				}, 500);
+			}
+		}
 	}
 
 	function startDisable() {
@@ -286,6 +322,11 @@
 											placeholder="Enter your current password"
 											disabled={isDisabling}
 											class="form-input"
+											onkeydown={(e) => {
+												if (e.key === 'Enter' && !isDisabling && disablePassword.trim()) {
+													confirmDisable();
+												}
+											}}
 										/>
 										<button 
 											type="button" 
@@ -392,6 +433,11 @@
 												placeholder="Enter your current password"
 												disabled={isRegenerating}
 												class="form-input"
+												onkeydown={(e) => {
+													if (e.key === 'Enter' && !isRegenerating && regeneratePassword.trim()) {
+														confirmRegenerate();
+													}
+												}}
 											/>
 											<button 
 												type="button" 

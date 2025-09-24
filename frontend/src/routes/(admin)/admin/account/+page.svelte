@@ -44,28 +44,85 @@
 	let totpButtonText = $state('Enable 2FA');
 	let totpButtonClass = $state('section-action-button');
 	let showRegenerateButton = $state(false);
+	let totpStatus: { enabled: boolean } | null = $state(null);
 
-	// Reactive update of TOTP button state
+	// Function to update TOTP button state
+	function updateTotpButtonState() {
+		if (typeof window !== 'undefined') {
+			// Try multiple selectors to find the buttons
+			const enableButton = document.querySelector('.totp-manager-container .action-button.enable') || 
+								document.querySelector('.action-button.enable');
+			const disableButton = document.querySelector('.totp-manager-container .action-button.disable') || 
+								 document.querySelector('.action-button.disable');
+			const regenerateButton = document.querySelector('.totp-manager-container .action-button.regenerate') || 
+									document.querySelector('.action-button.regenerate');
+			
+			// Also check if we can detect the status from the status card
+			const statusCard = document.querySelector('.totp-manager-container .status-card');
+			const isEnabled = statusCard?.classList.contains('enabled');
+			
+			// Check for the status text content as well
+			const statusText = document.querySelector('.totp-manager-container .status-info h3');
+			const isEnabledByText = statusText?.textContent?.includes('Enabled');
+			
+			// Check for backup codes text as well
+			const backupText = document.querySelector('.totp-manager-container .backup-info');
+			const hasBackupCodes = backupText?.textContent?.includes('unused backup codes');
+			
+			console.log('Updating TOTP button state:', {
+				enableButton: !!enableButton,
+				disableButton: !!disableButton,
+				regenerateButton: !!regenerateButton,
+				isEnabled: isEnabled,
+				isEnabledByText: isEnabledByText,
+				hasBackupCodes: hasBackupCodes,
+				totpStatus: totpStatus
+			});
+			
+			if (enableButton || (!isEnabled && !isEnabledByText && !hasBackupCodes)) {
+				// 2FA is disabled
+				totpButtonText = 'Enable 2FA';
+				totpButtonClass = 'section-action-button';
+				showRegenerateButton = false;
+				console.log('Set to Enable 2FA');
+			} else if ((disableButton && regenerateButton) || isEnabled || isEnabledByText || hasBackupCodes) {
+				// 2FA is enabled - show disable as primary action
+				totpButtonText = 'Disable 2FA';
+				totpButtonClass = 'section-action-button disable';
+				showRegenerateButton = true;
+				console.log('Set to Disable 2FA');
+			}
+		}
+	}
+
+	// Expose the update function globally so TotpManager can call it
+	if (typeof window !== 'undefined') {
+		(window as any).updateAccountTotpButtons = updateTotpButtonState;
+	}
+
+	// Reactive update of TOTP button state based on totpStatus
+	$effect(() => {
+		if (totpStatus) {
+			console.log('Account page: TOTP status reactive update:', totpStatus);
+			if (totpStatus.enabled) {
+				totpButtonText = 'Disable 2FA';
+				totpButtonClass = 'section-action-button disable';
+				showRegenerateButton = true;
+				console.log('Account page: Reactive: Set to Disable 2FA');
+			} else {
+				totpButtonText = 'Enable 2FA';
+				totpButtonClass = 'section-action-button';
+				showRegenerateButton = false;
+				console.log('Account page: Reactive: Set to Enable 2FA');
+			}
+		}
+	});
+
+	// Also update based on DOM changes as fallback
 	$effect(() => {
 		// Update button state when component mounts or changes
 		if (typeof window !== 'undefined') {
-			setTimeout(() => {
-				const enableButton = document.querySelector('.totp-manager-container .action-button.enable');
-				const disableButton = document.querySelector('.totp-manager-container .action-button.disable');
-				const regenerateButton = document.querySelector('.totp-manager-container .action-button.regenerate');
-				
-				if (enableButton) {
-					// 2FA is disabled
-					totpButtonText = 'Enable 2FA';
-					totpButtonClass = 'section-action-button';
-					showRegenerateButton = false;
-				} else if (disableButton && regenerateButton) {
-					// 2FA is enabled - show disable as primary action
-					totpButtonText = 'Disable 2FA';
-					totpButtonClass = 'section-action-button disable';
-					showRegenerateButton = true;
-				}
-			}, 100);
+			setTimeout(updateTotpButtonState, 100);
 		}
 	});
 
@@ -75,36 +132,58 @@
 			usernameForm.newUsername = $user.username;
 		}
 		
-		// Update TOTP button state periodically
-		const updateTotpButton = () => {
-			const enableButton = document.querySelector('.totp-manager-container .action-button.enable');
-			const disableButton = document.querySelector('.totp-manager-container .action-button.disable');
-			const regenerateButton = document.querySelector('.totp-manager-container .action-button.regenerate');
-			
-			if (enableButton) {
-				// 2FA is disabled
-				totpButtonText = 'Enable 2FA';
-				totpButtonClass = 'section-action-button';
-				showRegenerateButton = false;
-			} else if (disableButton && regenerateButton) {
-				// 2FA is enabled - show disable as primary action
-				totpButtonText = 'Disable 2FA';
-				totpButtonClass = 'section-action-button disable';
-				showRegenerateButton = true;
-			}
-		};
-
-		// Check every 500ms until buttons are loaded
+		// Update TOTP button state immediately and then more frequently
+		updateTotpButtonState();
 		const interval = setInterval(() => {
-			updateTotpButton();
-			// Stop checking once we've detected the state or after 10 seconds
-			if (document.querySelector('.totp-manager-container .action-button')) {
-				clearInterval(interval);
-			}
-		}, 500);
+			updateTotpButtonState();
+		}, 50);
 
-		// Clean up interval after 10 seconds
-		setTimeout(() => clearInterval(interval), 10000);
+		// Also check immediately when the component is ready
+		setTimeout(() => {
+			updateTotpButtonState();
+		}, 100);
+		setTimeout(() => {
+			updateTotpButtonState();
+		}, 500);
+		setTimeout(() => {
+			updateTotpButtonState();
+		}, 1000);
+
+		// Also use MutationObserver to watch for DOM changes
+		const totpContainer = document.querySelector('.totp-manager-container');
+		if (totpContainer) {
+			const observer = new MutationObserver(() => {
+				updateTotpButtonState();
+			});
+			
+			observer.observe(totpContainer, {
+				childList: true,
+				subtree: true,
+				attributes: true,
+				attributeFilter: ['class']
+			});
+
+			// Clean up observer after 30 seconds
+			setTimeout(() => observer.disconnect(), 30000);
+		}
+
+		// Listen for TOTP status changes from TotpManager
+		const handleTotpStatusChange = (event: any) => {
+			console.log('Account page: TOTP status changed:', event.detail);
+			totpStatus = event.detail;
+			// Update immediately and also after a short delay to ensure DOM is updated
+			updateTotpButtonState();
+			setTimeout(updateTotpButtonState, 50);
+			setTimeout(updateTotpButtonState, 200);
+		};
+		
+		window.addEventListener('totpStatusChanged', handleTotpStatusChange);
+
+		// Clean up interval and event listener after 30 seconds
+		setTimeout(() => {
+			clearInterval(interval);
+			window.removeEventListener('totpStatusChanged', handleTotpStatusChange);
+		}, 30000);
 	});
 
 	// Debounced username availability checking

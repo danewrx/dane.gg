@@ -24,6 +24,7 @@
   let loginUsername = ''; // Store username for 2FA display
   let isInitialLoad = true; // Track if this is the initial page load
   let hasSubmittedTotp = false; // Prevent auto-submit loop after error
+  let wasPasted = false; // Track if the current input was pasted
   
   // Individual digit inputs for TOTP
   let digits = ['', '', '', '', '', ''];
@@ -32,8 +33,8 @@
   // Update totpCode when digits change
   $: totpCode = digits.join('');
   
-  // Auto-submit when all 6 digits are filled (only if not already submitted)
-  $: if (totpCode.length === 6 && !isSubmitting && showTotpForm && !showBackupForm && !hasSubmittedTotp) {
+  // Auto-submit when all 6 digits are filled (only if pasted and not already submitted)
+  $: if (totpCode.length === 6 && wasPasted && !isSubmitting && showTotpForm && !showBackupForm && !hasSubmittedTotp) {
     // Small delay to ensure the UI updates before submitting
     setTimeout(() => {
       handleTotpSubmit(new Event('submit'));
@@ -46,9 +47,12 @@
     
     // Reset submission flag when user changes input
     hasSubmittedTotp = false;
+    // Mark as manual typing (not pasted)
+    wasPasted = false;
     
     if (value.length > 1) {
-      // Handle paste or multiple characters
+      // Handle paste or multiple characters - mark as pasted
+      wasPasted = true;
       const pastedDigits = value.slice(0, 6).split('');
       for (let i = 0; i < 6; i++) {
         digits[i] = pastedDigits[i] || '';
@@ -57,7 +61,8 @@
       const lastIndex = Math.min(pastedDigits.length - 1, 5);
       digitInputs[lastIndex]?.focus();
     } else {
-      // Single character input
+      // Single character input - mark as manual typing
+      wasPasted = false;
       digits[index] = value;
       
       // Move to next input if value entered and not the last input
@@ -85,6 +90,8 @@
     
     // Reset submission flag when user pastes
     hasSubmittedTotp = false;
+    // Mark as pasted for auto-submit
+    wasPasted = true;
     
     for (let i = 0; i < 6; i++) {
       digits[i] = pastedDigits[i] || '';
@@ -170,6 +177,7 @@
 
     isSubmitting = true;
     hasSubmittedTotp = true;
+    wasPasted = false; // Reset paste flag after submission
     auth.clearError();
 
     try {
@@ -205,6 +213,7 @@
     // Clear digit inputs
     digits = ['', '', '', '', '', ''];
     hasSubmittedTotp = false; // Reset submission flag
+    wasPasted = false; // Reset paste flag
     auth.clearError();
   }
 
@@ -214,6 +223,7 @@
     // Clear digit inputs
     digits = ['', '', '', '', '', ''];
     hasSubmittedTotp = false; // Reset submission flag
+    wasPasted = false; // Reset paste flag
     auth.clearError();
   }
 
@@ -227,6 +237,7 @@
     // Clear digit inputs
     digits = ['', '', '', '', '', ''];
     hasSubmittedTotp = false; // Reset submission flag
+    wasPasted = false; // Reset paste flag
     auth.clearError();
   }
 
