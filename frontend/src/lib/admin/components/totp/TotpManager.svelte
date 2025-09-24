@@ -592,39 +592,22 @@
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
-		padding: 0.875rem 1.5rem;
-		border-radius: 10px;
-		font-weight: 600;
+		padding: 8px 16px;
+		border-radius: 6px;
+		font-weight: 500;
+		font-size: 0.9rem;
 		cursor: pointer;
-		transition: all 0.3s ease;
+		transition: all 0.2s ease;
 		border: none;
-		position: relative;
-		overflow: hidden;
-	}
-
-	.action-button::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: -100%;
-		width: 100%;
-		height: 100%;
-		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-		transition: left 0.5s;
-	}
-
-	.action-button:hover::before {
-		left: 100%;
 	}
 
 	.action-button.enable {
-		background: var(--accent-color);
-		color: var(--accent-color-contrast, white);
+		background: var(--accent-color, #3b82f6);
+		color: white;
 	}
 
 	.action-button.enable:hover {
-		background: var(--accent-color-dark);
-		transform: translateY(-1px);
+		opacity: 0.9;
 	}
 
 	.action-button.regenerate {
@@ -634,7 +617,6 @@
 
 	.action-button.regenerate:hover {
 		background: #d97706;
-		transform: translateY(-1px);
 	}
 
 	.action-button.disable {
@@ -644,7 +626,6 @@
 
 	.action-button.disable:hover {
 		background: #dc2626;
-		transform: translateY(-1px);
 	}
 
 	.modal-overlay {
@@ -808,11 +789,12 @@
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
-		padding: 0.875rem 1.5rem;
-		border-radius: 10px;
-		font-weight: 600;
+		padding: 8px 16px;
+		border-radius: 6px;
+		font-weight: 500;
+		font-size: 0.9rem;
 		cursor: pointer;
-		transition: all 0.3s ease;
+		transition: all 0.2s ease;
 		border: none;
 	}
 
@@ -822,34 +804,31 @@
 	}
 
 	.modal-button.cancel {
-		background: var(--bg-tertiary);
-		color: var(--text-secondary);
-		border: 1px solid var(--border-color);
+		background: rgba(255, 255, 255, 0.1);
+		color: rgba(255, 255, 255, 0.8);
+		border: 1px solid rgba(255, 255, 255, 0.2);
 	}
 
 	.modal-button.cancel:hover:not(:disabled) {
-		background: var(--bg-hover);
-		color: var(--text-primary);
+		opacity: 0.9;
 	}
 
 	.modal-button.primary {
-		background: var(--accent-color);
-		color: var(--accent-color-contrast, white);
+		background: var(--accent-color, #3b82f6);
+		color: white;
 	}
 
 	.modal-button.primary:hover:not(:disabled) {
-		background: var(--accent-color-dark);
-		transform: translateY(-1px);
+		opacity: 0.9;
 	}
 
 	.modal-button.secondary {
-		background: #6b7280;
+		background: #22c55e;
 		color: white;
 	}
 
 	.modal-button.secondary:hover:not(:disabled) {
-		background: #4b5563;
-		transform: translateY(-1px);
+		background: #16a34a;
 	}
 
 	.modal-button.danger {
@@ -859,7 +838,6 @@
 
 	.modal-button.danger:hover:not(:disabled) {
 		background: #dc2626;
-		transform: translateY(-1px);
 	}
 
 	@media (max-width: 768px) {

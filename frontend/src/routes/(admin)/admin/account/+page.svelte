@@ -979,7 +979,17 @@
 	.edit-form {
 		display: flex;
 		flex-direction: column;
-		gap: 20px;
+		gap: 24px;
+		padding: 20px;
+		background: rgba(255, 255, 255, 0.02);
+		border-radius: 16px;
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		backdrop-filter: blur(10px);
+	}
+
+	:global(html:not(.dark)) .edit-form {
+		background: rgba(0, 0, 0, 0.02);
+		border-color: rgba(0, 0, 0, 0.08);
 	}
 
 	.form-group {
@@ -989,35 +999,160 @@
 	}
 
 	.form-group label {
-		font-weight: 500;
-		color: rgba(255, 255, 255, 0.9);
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.95);
 		font-size: 0.9rem;
+		margin-bottom: 4px;
+		letter-spacing: 0.025em;
+		text-transform: uppercase;
+		font-size: 0.8rem;
 	}
 
 	:global(html:not(.dark)) .form-group label {
-		color: rgba(0, 0, 0, 0.8);
+		color: rgba(0, 0, 0, 0.85);
+	}
+
+	/* Input group containers */
+	.password-input-group, .username-input-group {
+		position: relative;
+		display: flex;
+		align-items: center;
 	}
 
 	.form-group input {
-		padding: 12px 16px;
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		border-radius: 8px;
-		background: rgba(255, 255, 255, 0.05);
+		padding: 14px 16px;
+		border: 2px solid rgba(255, 255, 255, 0.15);
+		border-radius: 12px;
+		background: rgba(255, 255, 255, 0.08);
 		color: #ffffff;
 		font-size: 1rem;
-		transition: all 0.2s ease;
+		transition: all 0.3s ease;
+		width: 100%;
+		backdrop-filter: blur(10px);
 	}
 
 	:global(html:not(.dark)) .form-group input {
-		border-color: rgba(0, 0, 0, 0.2);
-		background: rgba(0, 0, 0, 0.02);
+		border-color: rgba(0, 0, 0, 0.15);
+		background: rgba(0, 0, 0, 0.03);
 		color: #1f2937;
 	}
 
 	.form-group input:focus {
 		outline: none;
 		border-color: var(--accent-color, #3b82f6);
-		box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+		box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+		background: rgba(255, 255, 255, 0.12);
+		transform: translateY(-1px);
+	}
+
+	:global(html:not(.dark)) .form-group input:focus {
+		background: rgba(0, 0, 0, 0.05);
+	}
+
+	.form-group input:hover {
+		border-color: rgba(255, 255, 255, 0.25);
+		background: rgba(255, 255, 255, 0.1);
+	}
+
+	:global(html:not(.dark)) .form-group input:hover {
+		border-color: rgba(0, 0, 0, 0.25);
+		background: rgba(0, 0, 0, 0.05);
+	}
+
+	.form-group input:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.form-group input::placeholder {
+		color: rgba(255, 255, 255, 0.4);
+		font-style: italic;
+	}
+
+	:global(html:not(.dark)) .form-group input::placeholder {
+		color: rgba(0, 0, 0, 0.4);
+	}
+
+	/* Password toggle button */
+	.password-toggle {
+		position: absolute;
+		right: 12px;
+		top: 50%;
+		transform: translateY(-50%);
+		background: none;
+		border: none;
+		color: rgba(255, 255, 255, 0.6);
+		cursor: pointer;
+		padding: 8px;
+		border-radius: 6px;
+		transition: all 0.2s ease;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	:global(html:not(.dark)) .password-toggle {
+		color: rgba(0, 0, 0, 0.5);
+	}
+
+	.password-toggle:hover {
+		color: rgba(255, 255, 255, 0.9);
+		background: rgba(255, 255, 255, 0.1);
+	}
+
+	:global(html:not(.dark)) .password-toggle:hover {
+		color: rgba(0, 0, 0, 0.8);
+		background: rgba(0, 0, 0, 0.05);
+	}
+
+	.password-toggle:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+
+	/* Username availability indicator */
+	.availability-indicator {
+		position: absolute;
+		right: 12px;
+		top: 50%;
+		transform: translateY(-50%);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.availability-indicator .success {
+		color: #22c55e;
+	}
+
+	.availability-indicator .error {
+		color: #ef4444;
+	}
+
+	.availability-indicator .spin {
+		animation: spin 1s linear infinite;
+	}
+
+	/* Input state classes */
+	.form-input.checking {
+		border-color: #f59e0b;
+		background: rgba(245, 158, 11, 0.05);
+	}
+
+	.form-input.available {
+		border-color: #22c55e;
+		background: rgba(34, 197, 94, 0.05);
+	}
+
+	.form-input.unavailable {
+		border-color: #ef4444;
+		background: rgba(239, 68, 68, 0.05);
+	}
+
+	.form-input.error {
+		border-color: #ef4444;
+		background: rgba(239, 68, 68, 0.05);
 	}
 
 	.form-actions {
