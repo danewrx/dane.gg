@@ -140,6 +140,15 @@ export const siteConfig = websiteSchema.table('site_config', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
 });
 
+// Widgets table - unified table for all widget data
+export const widgets = websiteSchema.table('widgets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  type: varchar('type', { length: 50 }).notNull(), // 'discord_status', 'services_status', 'now_playing', 'latest_tweet', etc.
+  data: text('data').notNull(), // JSON data for the widget
+  lastUpdate: timestamp('last_update', { withTimezone: true }).defaultNow(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
+});
+
 // Relations
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   category: one(projectCategories, {
@@ -223,3 +232,5 @@ export type SiteConfig = typeof siteConfig.$inferSelect;
 export type NewSiteConfig = typeof siteConfig.$inferInsert;
 export type TotpBackupCode = typeof totpBackupCodes.$inferSelect;
 export type NewTotpBackupCode = typeof totpBackupCodes.$inferInsert;
+export type Widget = typeof widgets.$inferSelect;
+export type NewWidget = typeof widgets.$inferInsert;

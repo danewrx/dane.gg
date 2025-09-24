@@ -63,6 +63,8 @@ import statusRoutes from './routes/status';
 import configRoutes from './routes/config';
 import settingsRoutes from './routes/settings';
 import totpRoutes from './routes/totp';
+import widgetsRoutes from './routes/widgets';
+import webhooksRoutes from './routes/webhooks';
 import { generalLimiter } from './middleware/rateLimiting';
 
 // Routes
@@ -75,7 +77,9 @@ app.get('/api', (req, res) => {
       auth: '/api/auth',
       users: '/api/users',
       settings: '/api/settings',
-      totp: '/api/totp'
+      totp: '/api/totp',
+      widgets: '/api/widgets',
+      webhooks: '/webhooks'
     }
   });
 });
@@ -108,6 +112,12 @@ app.use('/api/settings', settingsRoutes);
 
 // TOTP/2FA routes
 app.use('/api/totp', totpRoutes);
+
+// Widgets routes (for fetching widget data)
+app.use('/api/widgets', widgetsRoutes);
+
+// Webhooks routes (for external services to update data)
+app.use('/webhooks', webhooksRoutes);
 
 // 404 handler for API routes
 app.use('/api', (req, res) => {
