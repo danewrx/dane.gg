@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { WidgetService } from '../services/widgetService';
+import { LastFmService } from '../services/lastfmService';
 
 const router = Router();
 
@@ -41,21 +42,50 @@ router.get('/services/status', async (req, res) => {
 
 /**
  * GET /api/widgets/nowplaying
- * Get now playing information
+ * Get now playing information from Last.fm
  */
 router.get('/nowplaying', async (req, res) => {
   try {
-    const widgetData = await WidgetService.getWidgetDataWithFallback('now_playing', {
-      track: null,
-      artist: null,
-      album: null,
-      lastUpdate: new Date().toISOString()
-    });
+    if (!LastFmService.isConfigured()) {
+      // Return default data if Last.fm is not configured
+      const widgetData = await WidgetService.getWidgetDataWithFallback('now_playing', {
+        track: null,
+        artist: null,
+        album: null,
+        image: null,
+        url: null,
+        nowPlaying: false,
+        lastUpdate: new Date().toISOString()
+      });
+      return res.json(widgetData.data);
+    }
+
+    // Get fresh data from Last.fm
+    const musicData = await LastFmService.getCurrentMusicStatus();
     
-    res.json(widgetData.data);
+    // Update the database with fresh data
+    await LastFmService.updateMusicStatus();
+    
+    res.json(musicData);
   } catch (error) {
     console.error('Error fetching now playing:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    
+    // Fallback to cached data if Last.fm fails
+    try {
+      const widgetData = await WidgetService.getWidgetDataWithFallback('now_playing', {
+        track: null,
+        artist: null,
+        album: null,
+        image: null,
+        url: null,
+        nowPlaying: false,
+        lastUpdate: new Date().toISOString()
+      });
+      res.json(widgetData.data);
+    } catch (fallbackError) {
+      console.error('Error fetching fallback now playing data:', fallbackError);
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 });
 

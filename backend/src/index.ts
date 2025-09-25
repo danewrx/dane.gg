@@ -5,7 +5,7 @@ import { config } from 'dotenv';
 import { createDefaultAdmin } from './utils/createDefaultAdmin';
 
 // Load environment variables from root .env file
-config({ path: '../../.env' });
+config({ path: '../.env' });
 
 const app = express();
 const PORT = process.env.PORT || 3001;

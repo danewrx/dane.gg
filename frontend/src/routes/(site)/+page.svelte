@@ -1,8 +1,18 @@
 <script lang="ts">
 	import DiscordStatus from '$lib/site/components/widgets/DiscordStatus.svelte';
+	import MusicWidget from '$lib/site/components/widgets/MusicWidget.svelte';
 	import BorderedBox from '$lib/site/components/ui/BorderedBox.svelte';
+	import { Radio } from 'lucide-svelte';
+	import type { PageData } from './$types';
 	
-	// Public site homepage
+	// Get pre-loaded data from the server
+	let { data }: { data: PageData } = $props();
+	
+	// Initialize with pre-loaded music data
+	let musicData: any = $state(data.musicData);
+	
+	// Reactive header text based on music status
+	const musicHeaderText = $derived(musicData?.nowPlaying ? 'Now Playing' : 'Recently Played');
 </script>
 
 <svelte:head>
@@ -17,6 +27,17 @@
 			<div class="widgets-section">
 				<BorderedBox padding="12px 16px" className="discord-widget">
 					<DiscordStatus />
+				</BorderedBox>
+				
+				<BorderedBox padding="8px 16px" className="music-widget" showHeader={true} headerText={musicHeaderText}>
+					<svelte:fragment slot="header-icon">
+						{#if musicData?.nowPlaying}
+							<Radio size={20} class="status-icon playing" />
+						{:else}
+							<div class="status-icon offline"></div>
+						{/if}
+					</svelte:fragment>
+					<MusicWidget bind:musicData />
 				</BorderedBox>
 			</div>
 		</div>
@@ -96,6 +117,29 @@
 		justify-content: flex-start;
 		align-items: center;
 		min-height: 60px;
+	}
+
+	:global(.music-widget) {
+		display: flex;
+		flex-direction: column;
+		min-height: 80px;
+		margin-top: var(--spacing-md, 16px);
+	}
+
+	/* Status icon styles */
+	:global(.status-icon) {
+		flex-shrink: 0;
+	}
+
+	:global(.status-icon.playing) {
+		color: #22c55e; /* Green for playing */
+	}
+
+	:global(.status-icon.offline) {
+		width: 16px;
+		height: 16px;
+		border-radius: 50%;
+		background-color: #6b7280; /* Grey for offline */
 	}
 
 	:global(.intro-section) {

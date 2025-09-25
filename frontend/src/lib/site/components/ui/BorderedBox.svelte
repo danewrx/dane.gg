@@ -7,6 +7,8 @@
 	export let backgroundColor: string = '#1a1a1a';
 	export let hoverBackground: string = '#222222';
 	export let className: string = '';
+	export let showHeader: boolean = false;
+	export let headerText: string = '';
 
 	// Create event dispatcher for any events
 	const dispatch = createEventDispatcher();
@@ -30,7 +32,18 @@
 	role="button"
 	tabindex="0"
 >
-	<slot />
+	{#if showHeader && headerText}
+		<div class="bordered-box-header">
+			<div class="header-text">
+				<slot name="header-icon" />
+				{headerText}
+			</div>
+			<div class="header-divider"></div>
+		</div>
+	{/if}
+	<div class="bordered-box-content">
+		<slot />
+	</div>
 </div>
 
 <style>
@@ -51,6 +64,31 @@
 	.bordered-box:focus {
 		outline: 2px solid var(--border-color);
 		outline-offset: 2px;
+	}
+
+	.bordered-box-header {
+		margin-bottom: -2px;
+		padding-top: 8px;
+	}
+
+	.header-text {
+		font-size: 16px;
+		font-weight: 600;
+		color: var(--text-primary, #ffffff);
+		margin: 0 0 4px 0;
+		padding: 0;
+		line-height: 1.2;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.header-divider {
+		width: 100%;
+		height: 2px;
+		background: var(--border-color, #ffffff);
+		margin: 0;
+		padding: 0;
 	}
 
 	/* Dark mode support */
