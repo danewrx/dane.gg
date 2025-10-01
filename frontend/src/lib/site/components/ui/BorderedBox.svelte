@@ -11,10 +11,6 @@
 	export let headerText: string = '';
 
 	const dispatch = createEventDispatcher();
-
-	function handleClick(event: MouseEvent | KeyboardEvent) {
-		dispatch('click', event);
-	}
 </script>
 
 <div 
@@ -25,10 +21,6 @@
 		--background-color: {backgroundColor};
 		--hover-background: {hoverBackground};
 	"
-	on:click={handleClick}
-	on:keydown={(e) => e.key === 'Enter' && handleClick(e)}
-	role="button"
-	tabindex="0"
 >
 	{#if showHeader && headerText}
 		<div class="bordered-box-header">
@@ -51,17 +43,15 @@
 		border: 1px solid var(--border-color);
 		padding: var(--padding);
 		transition: all 0.3s ease;
-		cursor: pointer;
 		box-sizing: border-box;
 	}
 
 	.bordered-box:hover {
-		background: var(--hover-background);
+		background: var(--background-color);
 	}
 
 	.bordered-box:focus {
-		outline: 2px solid var(--border-color);
-		outline-offset: 2px;
+		outline: none;
 	}
 
 	.bordered-box-header {
