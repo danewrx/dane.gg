@@ -75,6 +75,19 @@
 <style>
 	.discord-status {
 		font-family: 'Courier New', monospace;
+		display: flex;
+		align-items: center;
+		justify-content: flex-start;
+		height: 100%;
+		min-height: 32px;
+	}
+
+	.status-text {
+		display: flex;
+		align-items: center;
+		height: 100%;
+		position: relative;
+		padding-top: 3px;
 	}
 
 	.status-prefix {
@@ -82,16 +95,16 @@
 		font-weight: normal;
 		color: #cccccc;
 		display: inline-block;
-		vertical-align: middle;
 		margin-right: 4px;
+		line-height: 1;
+		vertical-align: baseline;
 	}
 
 	.status-indicator {
 		display: inline-flex;
 		align-items: center;
-		height: 40px;
 		line-height: 1;
-		vertical-align: middle;
+		vertical-align: baseline;
 	}
 
 	.status-state {
@@ -104,7 +117,7 @@
 		transition: all 0.3s ease;
 		line-height: 1;
 		display: inline-block;
-		vertical-align: middle;
+		vertical-align: baseline;
 	}
 
 	.status-state.online {
@@ -138,9 +151,9 @@
 		margin-left: 2px;
 		transform: skew(-15deg);
 		display: inline-block;
-		vertical-align: middle;
 		transition: all 0.3s ease;
 		line-height: 1;
+		vertical-align: baseline;
 	}
 
 	.status-exclaim.online {
@@ -174,6 +187,25 @@
 
 	/* Responsive design */
 	@media (max-width: 768px) {
+		.discord-status {
+			text-align: left;
+		}
+		
+		.status-prefix {
+			font-size: 20px;
+		}
+		
+		.status-state, .status-exclaim {
+			font-size: 26px;
+		}
+		
+	}
+
+	@media (max-width: 480px) {
+		.discord-status {
+			text-align: left;
+		}
+		
 		.status-prefix {
 			font-size: 18px;
 		}
@@ -182,23 +214,6 @@
 			font-size: 24px;
 		}
 		
-		.status-indicator {
-			height: 32px;
-		}
-	}
-
-	@media (max-width: 480px) {
-		.status-prefix {
-			font-size: 16px;
-		}
-		
-		.status-state, .status-exclaim {
-			font-size: 20px;
-		}
-		
-		.status-indicator {
-			height: 28px;
-		}
 	}
 
 	/* Dark mode support for text colors */

@@ -22,7 +22,7 @@
 		<!-- Left Column (30%) -->
 		<div class="left-column">
 			<div class="widgets-section">
-				<BorderedBox padding="12px 16px" className="discord-widget">
+				<BorderedBox padding="16px" className="discord-widget">
 					<DiscordStatus />
 				</BorderedBox>
 				
@@ -113,7 +113,7 @@
 		display: flex;
 		justify-content: flex-start;
 		align-items: center;
-		min-height: 60px;
+		min-height: 64px;
 	}
 
 	:global(.music-widget) {
@@ -213,7 +213,7 @@
 		}
 		
 		:global(.discord-widget) {
-			justify-content: center;
+			justify-content: flex-start;
 		}
 		
 		.feature-cards {
