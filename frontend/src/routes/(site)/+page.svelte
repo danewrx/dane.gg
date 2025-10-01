@@ -91,7 +91,7 @@
 
 	.two-column-layout {
 		display: flex;
-		gap: 2rem;
+		gap: 0.5rem;
 		align-items: flex-start;
 	}
 
