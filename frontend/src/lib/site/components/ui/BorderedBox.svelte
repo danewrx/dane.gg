@@ -10,10 +10,8 @@
 	export let showHeader: boolean = false;
 	export let headerText: string = '';
 
-	// Create event dispatcher for any events
 	const dispatch = createEventDispatcher();
 
-	// Handle click events
 	function handleClick(event: MouseEvent | KeyboardEvent) {
 		dispatch('click', event);
 	}
@@ -69,6 +67,15 @@
 	.bordered-box-header {
 		margin-bottom: -2px;
 		padding-top: 8px;
+		margin-left: calc(-1 * var(--padding));
+		margin-right: calc(-1 * var(--padding));
+		padding-left: var(--padding);
+		padding-right: var(--padding);
+	}
+	
+	.bordered-box-content {
+		margin-top: 0;
+		padding-top: 0;
 	}
 
 	.header-text {
@@ -107,13 +114,45 @@
 	/* Responsive padding */
 	@media (max-width: 768px) {
 		.bordered-box {
-			padding: calc(var(--padding) * 0.75);
+			padding: 6px 12px;
+		}
+		
+		.bordered-box-header {
+			margin-left: -12px;
+			margin-right: -12px;
+			padding-left: 12px;
+			padding-right: 12px;
+		}
+		
+		.header-divider {
+			margin-left: 0;
+			margin-right: 0;
+		}
+		
+		.bordered-box-content {
+			margin-top: -4px;
 		}
 	}
 
 	@media (max-width: 480px) {
 		.bordered-box {
-			padding: calc(var(--padding) * 0.5);
+			padding: 4px 8px;
+		}
+		
+		.bordered-box-header {
+			margin-left: -8px;
+			margin-right: -8px;
+			padding-left: 8px;
+			padding-right: 8px;
+		}
+		
+		.header-divider {
+			margin-left: 0;
+			margin-right: 0;
+		}
+		
+		.bordered-box-content {
+			margin-top: -6px;
 		}
 	}
 </style>

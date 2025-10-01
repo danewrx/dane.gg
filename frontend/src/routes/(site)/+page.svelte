@@ -5,13 +5,10 @@
 	import { Radio } from 'lucide-svelte';
 	import type { PageData } from './$types';
 	
-	// Get pre-loaded data from the server
 	let { data }: { data: PageData } = $props();
 	
-	// Initialize with pre-loaded music data
 	let musicData: any = $state(data.musicData);
 	
-	// Reactive header text based on music status
 	const musicHeaderText = $derived(musicData?.nowPlaying ? 'Now Playing' : 'Recently Played');
 </script>
 
@@ -32,7 +29,7 @@
 				<BorderedBox padding="8px 16px" className="music-widget" showHeader={true} headerText={musicHeaderText}>
 					<svelte:fragment slot="header-icon">
 						{#if musicData?.nowPlaying}
-							<Radio size={20} class="status-icon playing" />
+							<Radio size={16} class="status-icon playing" />
 						{:else}
 							<div class="status-icon offline"></div>
 						{/if}
@@ -129,17 +126,22 @@
 	/* Status icon styles */
 	:global(.status-icon) {
 		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	:global(.status-icon.playing) {
-		color: #22c55e; /* Green for playing */
+		color: #22c55e;
+		width: 16px;
+		height: 16px;
 	}
 
 	:global(.status-icon.offline) {
-		width: 16px;
-		height: 16px;
+		width: 12px;
+		height: 12px;
 		border-radius: 50%;
-		background-color: #6b7280; /* Grey for offline */
+		background-color: #6b7280;
 	}
 
 	:global(.intro-section) {
