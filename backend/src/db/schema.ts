@@ -140,13 +140,26 @@ export const siteConfig = websiteSchema.table('site_config', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
 });
 
-// Widgets table - unified table for all widget data
-export const widgets = websiteSchema.table('widgets', {
+// Discord status table
+export const discordStatus = websiteSchema.table('discord_status', {
   id: uuid('id').primaryKey().defaultRandom(),
-  type: varchar('type', { length: 50 }).notNull(), // 'discord_status', 'services_status', 'now_playing', 'latest_tweet', etc.
-  data: text('data').notNull(), // JSON data for the widget
+  status: integer('status').notNull(),
   lastUpdate: timestamp('last_update', { withTimezone: true }).defaultNow(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
+});
+
+// Tweet table
+export const tweets = websiteSchema.table('tweets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tweetId: varchar('tweet_id', { length: 50 }).notNull().unique(),
+  content: text('content').notNull(),
+  authorName: varchar('author_name', { length: 100 }).notNull(),
+  authorUsername: varchar('author_username', { length: 50 }).notNull(),
+  authorProfileImage: varchar('author_profile_image', { length: 500 }),
+  authorProfileUrl: varchar('author_profile_url', { length: 500 }),
+  tweetUrl: varchar('tweet_url', { length: 500 }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
 });
 
 // Relations
@@ -232,5 +245,7 @@ export type SiteConfig = typeof siteConfig.$inferSelect;
 export type NewSiteConfig = typeof siteConfig.$inferInsert;
 export type TotpBackupCode = typeof totpBackupCodes.$inferSelect;
 export type NewTotpBackupCode = typeof totpBackupCodes.$inferInsert;
-export type Widget = typeof widgets.$inferSelect;
-export type NewWidget = typeof widgets.$inferInsert;
+export type DiscordStatus = typeof discordStatus.$inferSelect;
+export type NewDiscordStatus = typeof discordStatus.$inferInsert;
+export type Tweet = typeof tweets.$inferSelect;
+export type NewTweet = typeof tweets.$inferInsert;

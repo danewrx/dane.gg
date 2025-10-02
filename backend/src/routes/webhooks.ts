@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { WidgetService } from '../services/widgetService';
+import { DiscordStatusService } from '../services/discordStatusService';
+import { TweetService } from '../services/tweetService';
 
 const router = Router();
 
@@ -32,13 +33,7 @@ router.post('/discord-status/update', validateWebhookAuth, async (req, res) => {
       });
     }
 
-    // Update status in database using unified widget service
-    const data = {
-      status,
-      lastUpdate: new Date().toISOString()
-    };
-
-    const success = await WidgetService.updateWidgetData('discord-widget', data);
+    const success = await DiscordStatusService.updateStatus(status);
 
     if (success) {
       res.json({ 
@@ -57,82 +52,48 @@ router.post('/discord-status/update', validateWebhookAuth, async (req, res) => {
 });
 
 /**
- * POST /api/webhooks/services/update
- * Webhook endpoint to update services status
- */
-router.post('/services/update', validateWebhookAuth, async (req, res) => {
-  try {
-    const { heartbeat, monitor } = req.body;
-
-    if (!monitor || !heartbeat) {
-      return res.status(400).json({ error: 'Invalid payload format' });
-    }
-
-    const service = monitor.name.toLowerCase();
-    const status = heartbeat.status;
-
-    // Update services status in database
-    const data = {
-      services: {
-        [service]: {
-          status: status === 1 ? 1 : 0,
-          lastUpdate: heartbeat.time || new Date().toISOString()
-        }
-      },
-      lastUpdated: new Date().toISOString()
-    };
-
-    const success = await WidgetService.updateWidgetData('services_status', data);
-
-    if (success) {
-      res.json({ 
-        success: true, 
-        message: 'Services status updated successfully',
-        service,
-        status,
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      res.status(500).json({ error: 'Failed to update services status' });
-    }
-  } catch (error) {
-    console.error('Services status webhook error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-/**
  * POST /api/webhooks/twitter/update
  * Webhook endpoint to update latest tweet
  */
 router.post('/twitter/update', validateWebhookAuth, async (req, res) => {
   try {
-    const { accountName, username, profilePicture, caption, postedTime } = req.body;
+    const { 
+      tweetId, 
+      content, 
+      authorName, 
+      authorUsername, 
+      authorProfileImage, 
+      authorProfileUrl, 
+      tweetUrl 
+    } = req.body;
 
-    if (!accountName || !username || !caption || !postedTime) {
-      return res.status(400).json({ error: 'Invalid payload format' });
+    if (!tweetId || !content || !authorName || !authorUsername) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: tweetId, content, authorName, authorUsername' 
+      });
     }
 
-    // Update latest tweet in database
-    const data = {
-      accountName,
-      username,
-      profilePicture,
-      text: caption,
-      createdAt: postedTime,
-      lastUpdate: new Date().toISOString()
+    const tweetData = {
+      tweetId,
+      content,
+      authorName,
+      authorUsername,
+      authorProfileImage: authorProfileImage || null,
+      authorProfileUrl: authorProfileUrl || `https://x.com/${authorUsername}`,
+      tweetUrl: tweetUrl || null
     };
 
-    const success = await WidgetService.updateWidgetData('latest_tweet', data);
+    const success = await TweetService.upsertTweet(tweetData);
 
     if (success) {
       res.json({ 
         success: true, 
-        message: 'Twitter status updated successfully',
+        message: 'Tweet updated successfully',
+        tweetId,
         timestamp: new Date().toISOString()
       });
     } else {
-      res.status(500).json({ error: 'Failed to update Twitter status' });
+      res.status(500).json({ error: 'Failed to update tweet' });
     }
   } catch (error) {
     console.error('Twitter webhook error:', error);

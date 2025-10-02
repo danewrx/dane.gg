@@ -1,15 +1,18 @@
 <script lang="ts">
 	import DiscordStatus from '$lib/site/components/widgets/DiscordStatus.svelte';
 	import MusicWidget from '$lib/site/components/widgets/MusicWidget.svelte';
+	import TweetWidget from '$lib/site/components/widgets/TweetWidget.svelte';
 	import BorderedBox from '$lib/site/components/ui/BorderedBox.svelte';
-	import { Radio } from 'lucide-svelte';
+	import { Radio, Twitter } from 'lucide-svelte';
 	import type { PageData } from './$types';
 	
 	let { data }: { data: PageData } = $props();
 	
 	let musicData: any = $state(data.musicData);
+	let tweetData: any = $state(data.tweetData);
 	
 	const musicHeaderText = $derived(musicData?.nowPlaying ? 'Now Playing' : 'Recently Played');
+	const tweetHeaderText = $derived('Latest Tweet');
 </script>
 
 <svelte:head>
@@ -35,6 +38,13 @@
 						{/if}
 					</svelte:fragment>
 					<MusicWidget bind:musicData />
+				</BorderedBox>
+				
+				<BorderedBox padding="8px 16px" className="tweet-widget" showHeader={true} headerText={tweetHeaderText}>
+					<svelte:fragment slot="header-icon">
+						<Twitter size={16} class="status-icon twitter" />
+					</svelte:fragment>
+					<TweetWidget bind:tweetData />
 				</BorderedBox>
 			</div>
 		</div>
@@ -123,6 +133,13 @@
 		margin-top: var(--spacing-md, 16px);
 	}
 
+	:global(.tweet-widget) {
+		display: flex;
+		flex-direction: column;
+		min-height: 80px;
+		margin-top: var(--spacing-md, 16px);
+	}
+
 	/* Status icon styles */
 	:global(.status-icon) {
 		flex-shrink: 0;
@@ -142,6 +159,12 @@
 		height: 12px;
 		border-radius: 50%;
 		background-color: #6b7280;
+	}
+
+	:global(.status-icon.twitter) {
+		color: #1da1f2;
+		width: 16px;
+		height: 16px;
 	}
 
 	:global(.intro-section) {

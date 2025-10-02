@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { WidgetService } from '../services/widgetService';
+import { DiscordStatusService } from '../services/discordStatusService';
 import { LastFmService } from '../services/lastfmService';
+import { TweetService } from '../services/tweetService';
 
 const router = Router();
 
@@ -10,32 +11,21 @@ const router = Router();
  */
 router.get('/discord-status', async (req, res) => {
   try {
-    const widgetData = await WidgetService.getWidgetDataWithFallback('discord-widget', {
-      status: 0,
-      lastUpdate: new Date().toISOString()
-    });
+    const statusData = await DiscordStatusService.getCurrentStatus();
     
-    res.json(widgetData.data);
+    if (!statusData) {
+      return res.json({
+        status: 0,
+        lastUpdate: new Date().toISOString()
+      });
+    }
+
+    res.json({
+      status: statusData.status,
+      lastUpdate: statusData.lastUpdate?.toISOString() || new Date().toISOString()
+    });
   } catch (error) {
     console.error('Error fetching Discord status:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-/**
- * GET /api/widgets/services/status
- * Get services status
- */
-router.get('/services/status', async (req, res) => {
-  try {
-    const widgetData = await WidgetService.getWidgetDataWithFallback('services_status', {
-      services: {},
-      lastUpdated: new Date().toISOString()
-    });
-    
-    res.json(widgetData.data);
-  } catch (error) {
-    console.error('Error fetching services status:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -80,51 +70,39 @@ router.get('/nowplaying', async (req, res) => {
 
 /**
  * GET /api/widgets/latest-tweet
- * Get latest tweet
+ * Get latest tweet from database
  */
 router.get('/latest-tweet', async (req, res) => {
   try {
-    const widgetData = await WidgetService.getWidgetDataWithFallback('latest_tweet', {
-      text: null,
-      username: null,
-      createdAt: null,
-      lastUpdate: new Date().toISOString()
-    });
+    const latestTweet = await TweetService.getLatestTweet();
     
-    res.json(widgetData.data);
+    if (!latestTweet) {
+      return res.json({
+        tweetId: null,
+        content: null,
+        authorName: null,
+        authorUsername: null,
+        authorProfileImage: null,
+        authorProfileUrl: null,
+        tweetUrl: null,
+        createdAt: null,
+        lastUpdate: new Date().toISOString()
+      });
+    }
+
+    res.json({
+      tweetId: latestTweet.tweetId,
+      content: latestTweet.content,
+      authorName: latestTweet.authorName,
+      authorUsername: latestTweet.authorUsername,
+      authorProfileImage: latestTweet.authorProfileImage,
+      authorProfileUrl: latestTweet.authorProfileUrl,
+      tweetUrl: latestTweet.tweetUrl,
+      createdAt: latestTweet.createdAt,
+      lastUpdate: latestTweet.updatedAt
+    });
   } catch (error) {
     console.error('Error fetching latest tweet:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-/**
- * GET /api/widgets/config/weather
- * Get weather configuration
- */
-router.get('/config/weather', async (req, res) => {
-  try {
-    const widgetData = await WidgetService.getWidgetDataWithFallback('weather_config', {
-      defaultWeather: (process.env.DEFAULT_WEATHER || 'rain').toLowerCase()
-    });
-    
-    res.json(widgetData.data);
-  } catch (error) {
-    console.error('Error fetching weather config:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-/**
- * GET /api/widgets/types
- * Get all available widget types
- */
-router.get('/types', async (req, res) => {
-  try {
-    const types = await WidgetService.getAllWidgetTypes();
-    res.json({ types });
-  } catch (error) {
-    console.error('Error fetching widget types:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

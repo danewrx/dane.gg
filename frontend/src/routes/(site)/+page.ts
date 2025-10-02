@@ -2,24 +2,24 @@ import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ fetch }) => {
 	try {
-		// Pre-fetch music data on the server/during SSR
-		const response = await fetch('/api/widgets/nowplaying');
+		// Pre-fetch both music and tweet data on the server/during SSR
+		const [musicResponse, tweetResponse] = await Promise.all([
+			fetch('/api/widgets/nowplaying'),
+			fetch('/api/widgets/latest-tweet')
+		]);
 		
-		if (response.ok) {
-			const musicData = await response.json();
-			return {
-				musicData
-			};
-		}
+		const musicData = musicResponse.ok ? await musicResponse.json() : null;
+		const tweetData = tweetResponse.ok ? await tweetResponse.json() : null;
 		
-		// If fetch fails, return null so component can handle it
 		return {
-			musicData: null
+			musicData,
+			tweetData
 		};
 	} catch (error) {
-		console.error('Error pre-loading music data:', error);
+		console.error('Error pre-loading widget data:', error);
 		return {
-			musicData: null
+			musicData: null,
+			tweetData: null
 		};
 	}
 };

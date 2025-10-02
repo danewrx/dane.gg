@@ -1,39 +1,23 @@
-import { WidgetService } from './widgetService';
-
-export interface DiscordStatusData {
-  status: number;
-  lastUpdate: string;
-}
+import { db } from '../db';
+import { discordStatus, type DiscordStatus, type NewDiscordStatus } from '../db/schema';
+import { eq, desc } from 'drizzle-orm';
 
 export class DiscordStatusService {
-  private static readonly WIDGET_TYPE = 'discord-widget';
-
   /**
-   * Get the current Discord status
+   * Get current Discord status
    */
-  static async getCurrentStatus(): Promise<DiscordStatusData> {
+  static async getCurrentStatus(): Promise<DiscordStatus | null> {
     try {
-      const defaultData = {
-        status: 0,
-        lastUpdate: new Date().toISOString()
-      };
+      const latestStatus = await db
+        .select()
+        .from(discordStatus)
+        .orderBy(desc(discordStatus.lastUpdate))
+        .limit(1);
 
-      const widgetData = await WidgetService.getWidgetDataWithFallback(
-        this.WIDGET_TYPE,
-        defaultData
-      );
-
-      return {
-        status: widgetData.data.status,
-        lastUpdate: widgetData.lastUpdate
-      };
+      return latestStatus[0] || null;
     } catch (error) {
-      console.error('Error getting Discord status:', error);
-      // Return default offline status on error
-      return {
-        status: 0,
-        lastUpdate: new Date().toISOString()
-      };
+      console.error('Error fetching Discord status:', error);
+      return null;
     }
   }
 
@@ -43,16 +27,32 @@ export class DiscordStatusService {
   static async updateStatus(status: number): Promise<boolean> {
     try {
       // Validate status value
-      if (typeof status !== 'number' || ![0, 1].includes(status)) {
-        throw new Error('Status must be 0 (offline) or 1 (online)');
+      if (![0, 1].includes(status)) {
+        throw new Error('Invalid status value. Must be 0 (offline) or 1 (online)');
       }
 
-      const data = {
-        status,
-        lastUpdate: new Date().toISOString()
-      };
+      const currentStatus = await this.getCurrentStatus();
+      
+      if (currentStatus && currentStatus.status === status) {
+        await db
+          .update(discordStatus)
+          .set({ lastUpdate: new Date() })
+          .where(eq(discordStatus.id, currentStatus.id));
+      } else {
+        const newStatus: NewDiscordStatus = {
+          status,
+          lastUpdate: new Date()
+        };
+        
+        await db.insert(discordStatus).values(newStatus);
+      }
 
-      return await WidgetService.updateWidgetData(this.WIDGET_TYPE, data);
+      console.log(`Discord status updated: ${status === 1 ? 'online' : 'offline'}`);
+      
+      // Clean up old records after each update
+      await this.cleanupOldRecords();
+      
+      return true;
     } catch (error) {
       console.error('Error updating Discord status:', error);
       return false;
@@ -60,17 +60,67 @@ export class DiscordStatusService {
   }
 
   /**
-   * Get status history (optional, for future use)
+   * Get status history (for admin purposes)
    */
-  static async getStatusHistory(limit: number = 10): Promise<DiscordStatusData[]> {
+  static async getStatusHistory(limit: number = 50): Promise<DiscordStatus[]> {
     try {
-      // This would require a more complex query to get history
-      // For now, return current status as single item
-      const currentStatus = await this.getCurrentStatus();
-      return [currentStatus];
+      return await db
+        .select()
+        .from(discordStatus)
+        .orderBy(desc(discordStatus.lastUpdate))
+        .limit(limit);
     } catch (error) {
-      console.error('Error getting Discord status history:', error);
+      console.error('Error fetching Discord status history:', error);
       return [];
+    }
+  }
+
+  /**
+   * Get status count
+   */
+  static async getStatusCount(): Promise<number> {
+    try {
+      const result = await db
+        .select({ count: discordStatus.id })
+        .from(discordStatus);
+      
+      return result.length;
+    } catch (error) {
+      console.error('Error getting Discord status count:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Clean up old status records (keep only last 30)
+   */
+  static async cleanupOldRecords(): Promise<boolean> {
+    try {
+      // Get all records ordered by lastUpdate
+      const allRecords = await db
+        .select({ id: discordStatus.id })
+        .from(discordStatus)
+        .orderBy(desc(discordStatus.lastUpdate));
+
+      // If we have more than 30 records, delete the oldest ones
+      if (allRecords.length > 30) {
+        const recordsToDelete = allRecords.slice(30);
+        const idsToDelete = recordsToDelete.map(record => record.id);
+
+        // Delete all old records at once
+        for (const id of idsToDelete) {
+          await db
+            .delete(discordStatus)
+            .where(eq(discordStatus.id, id));
+        }
+
+        console.log(`Cleaned up ${recordsToDelete.length} old Discord status records (kept last 30)`);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error cleaning up Discord status records:', error);
+      return false;
     }
   }
 }
