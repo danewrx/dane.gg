@@ -14,6 +14,7 @@
 
 	let { musicData = $bindable() }: { musicData?: MusicData | null } = $props();
 	let error: string | null = $state(null);
+	let hasReceivedApiResponse = $state(!!musicData);
 
 	onMount(() => {
 		// Always fetch data on mount
@@ -198,6 +199,7 @@
 			const previousPlayingState = musicData?.nowPlaying;
 			
 			musicData = data;
+			hasReceivedApiResponse = true;
 			
 			if (previousPlayingState !== data.nowPlaying) {
 				console.log(`Music status changed: ${previousPlayingState ? 'playing' : 'not playing'} -> ${data.nowPlaying ? 'playing' : 'not playing'}`);
@@ -217,16 +219,19 @@
 		} catch (err) {
 			console.error('Error fetching music data:', err);
 			error = err instanceof Error ? err.message : 'Failed to fetch music data';
-			// Set default placeholder data on error
-			musicData = {
-				track: "Inferno",
-				artist: "Bladee & Yung Lean",
-				album: "Inferno",
-				image: "https://i.scdn.co/image/ab67616d0000b273244ae1071898d7ba2bc76d25",
-				url: "https://www.last.fm/music/Bladee/_/Inferno",
-				nowPlaying: false,
-				lastUpdate: new Date().toISOString()
-			};
+			// Only set default data if no API response yet
+			if (!hasReceivedApiResponse) {
+				musicData = {
+					track: "Inferno",
+					artist: "Bladee & Yung Lean",
+					album: "Inferno",
+					image: "https://i.scdn.co/image/ab67616d0000b273244ae1071898d7ba2bc76d25",
+					url: "https://www.last.fm/music/Bladee/_/Inferno",
+					nowPlaying: false,
+					lastUpdate: new Date().toISOString()
+				};
+			}
+			hasReceivedApiResponse = true;
 		}
 	}
 
@@ -321,7 +326,7 @@
 				</div>
 			</div>
 		</div>
-	{:else}
+	{:else if !hasReceivedApiResponse}
 		<div class="default-placeholder">
 			<div class="track-image">
 				<div class="no-image">
@@ -331,6 +336,19 @@
 			<div class="track-details">
 				<div class="track-title">No music playing</div>
 				<div class="track-artist">Last.fm unavailable</div>
+				<div class="track-status">Check back later</div>
+			</div>
+		</div>
+	{:else}
+		<div class="default-placeholder">
+			<div class="track-image">
+				<div class="no-image">
+					<Radio size={20} />
+				</div>
+			</div>
+			<div class="track-details">
+				<div class="track-title">No recent tracks</div>
+				<div class="track-artist">No music data available</div>
 				<div class="track-status">Check back later</div>
 			</div>
 		</div>
@@ -579,7 +597,6 @@
 			font-size: 11px;
 		}
 		
-		/* Slower scroll animation on mobile for better readability */
 		:global(.track-title.scroll),
 		:global(.track-artist.scroll) {
 			animation-duration: 14s !important;
@@ -587,14 +604,13 @@
 	}
 
 	@media (max-width: 480px) {
-		/* Even slower on very small screens */
 		:global(.track-title.scroll),
 		:global(.track-artist.scroll) {
 			animation-duration: 16s !important;
 		}
 		
 		.track-info {
-			padding: 2px 16px 16px 16px; /* Minimal top padding, keep sides and bottom */
+			padding: 2px 16px 16px 16px;
 			gap: var(--spacing-lg, 16px);
 		}
 		
@@ -604,11 +620,10 @@
 		}
 		
 		.track-details {
-			/* Ensure full width utilization on very small screens */
 			flex: 1;
 			min-width: 0;
-			height: 52px; /* Match mobile album art height */
-			gap: 5px; /* More generous gap for very small screens */
+			height: 52px;
+			gap: 5px;
 		}
 		
 		.track-title {
@@ -620,7 +635,7 @@
 		}
 		
 		.track-status {
-			font-size: 12px; /* Larger on tiny screens */
+			font-size: 12px;
 		}
 
 		.default-placeholder .track-details {
