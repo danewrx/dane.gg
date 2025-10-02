@@ -6,7 +6,7 @@ export interface DiscordStatusData {
 }
 
 export class DiscordStatusService {
-  private static readonly WIDGET_TYPE = 'discord_status';
+  private static readonly WIDGET_TYPE = 'discord-widget';
 
   /**
    * Get the current Discord status

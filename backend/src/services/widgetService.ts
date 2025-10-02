@@ -42,15 +42,27 @@ export class WidgetService {
   }
 
   /**
-   * Update widget data by type
+   * Update widget data by type (UPSERT - update existing or insert new)
    */
   static async updateWidgetData(type: string, data: WidgetData): Promise<boolean> {
     try {
-      await db.insert(widgets).values({
-        type,
-        data: JSON.stringify(data),
-        lastUpdate: new Date()
-      });
+      // First, try to update existing record
+      const updateResult = await db
+        .update(widgets)
+        .set({
+          data: JSON.stringify(data),
+          lastUpdate: new Date()
+        })
+        .where(eq(widgets.type, type));
+
+      // If no rows were updated, insert a new one
+      if (updateResult.rowCount === 0) {
+        await db.insert(widgets).values({
+          type,
+          data: JSON.stringify(data),
+          lastUpdate: new Date()
+        });
+      }
 
       return true;
     } catch (error) {

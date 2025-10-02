@@ -13,14 +13,11 @@
 	}
 
 	let { musicData = $bindable() }: { musicData?: MusicData | null } = $props();
-	let isLoading = $state(!musicData); // Don't show loading if we already have data
 	let error: string | null = $state(null);
 
 	onMount(() => {
-		// Only fetch immediately if we don't have pre-loaded data
-		if (!musicData) {
-			fetchMusicData();
-		}
+		// Always fetch data on mount
+		fetchMusicData();
 		
 		let fetchInterval: NodeJS.Timeout;
 		let timeUpdateInterval: NodeJS.Timeout;
@@ -220,8 +217,16 @@
 		} catch (err) {
 			console.error('Error fetching music data:', err);
 			error = err instanceof Error ? err.message : 'Failed to fetch music data';
-		} finally {
-			isLoading = false;
+			// Set default placeholder data on error
+			musicData = {
+				track: "Inferno",
+				artist: "Bladee & Yung Lean",
+				album: "Inferno",
+				image: "https://i.scdn.co/image/ab67616d0000b273244ae1071898d7ba2bc76d25",
+				url: "https://www.last.fm/music/Bladee/_/Inferno",
+				nowPlaying: false,
+				lastUpdate: new Date().toISOString()
+			};
 		}
 	}
 
@@ -286,17 +291,7 @@
 </script>
 
 <div class="music-widget">
-	{#if isLoading}
-		<div class="loading-state">
-			<div class="loading-spinner"></div>
-			<span>Loading music...</span>
-		</div>
-	{:else if error}
-		<div class="error-state">
-			<span class="error-icon">♪</span>
-			<span>Music unavailable</span>
-		</div>
-	{:else if musicData && musicData.track}
+	{#if musicData && musicData.track}
 		<div class="track-info">
 			<div class="track-image">
 				{#if musicData.image}
@@ -327,9 +322,17 @@
 			</div>
 		</div>
 	{:else}
-		<div class="no-data">
-			<span class="no-data-icon">♪</span>
-			<span>No recent tracks</span>
+		<div class="default-placeholder">
+			<div class="track-image">
+				<div class="no-image">
+					<Radio size={20} />
+				</div>
+			</div>
+			<div class="track-details">
+				<div class="track-title">No music playing</div>
+				<div class="track-artist">Last.fm unavailable</div>
+				<div class="track-status">Check back later</div>
+			</div>
 		</div>
 	{/if}
 </div>
@@ -344,31 +347,60 @@
 		gap: var(--spacing-sm, 8px);
 	}
 
-	.loading-state, .error-state, .no-data {
+	.default-placeholder {
 		display: flex;
 		align-items: center;
 		gap: var(--spacing-sm, 8px);
-		color: var(--text-secondary, #cccccc);
-		font-size: var(--font-size-sm, 14px);
-	}
-
-	.loading-spinner {
-		width: 16px;
-		height: 16px;
-		border: 2px solid var(--border-color, #555555);
-		border-top: 2px solid var(--accent-color, #4a9eff);
-		border-radius: 50%;
-		animation: spin 1s linear infinite;
-	}
-
-	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
-	}
-
-	.error-icon, .no-data-icon {
-		font-size: 18px;
 		opacity: 0.6;
+	}
+
+	.default-placeholder .track-image {
+		flex-shrink: 0;
+	}
+
+	.default-placeholder .track-details {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: flex-start;
+		gap: 4px;
+		overflow: hidden;
+		height: 56px;
+	}
+
+	.default-placeholder .track-title {
+		font-weight: 600;
+		font-size: 16px;
+		color: var(--text-primary, #ffffff);
+		margin: 0;
+		padding: 0;
+		line-height: 1;
+		width: 100%;
+		max-width: 100%;
+	}
+
+	.default-placeholder .track-artist {
+		font-size: 14px;
+		color: var(--text-primary, #ffffff);
+		margin: 0;
+		padding: 0;
+		line-height: 1;
+		width: 100%;
+		max-width: 100%;
+	}
+
+	.default-placeholder .track-status {
+		font-size: 10px;
+		margin: 0;
+		padding: 0;
+		line-height: 1;
+		width: 100%;
+		max-width: 100%;
+		color: var(--text-muted, #999999);
+		overflow: hidden !important;
+		text-overflow: ellipsis !important;
 	}
 
 	.track-info {
@@ -403,31 +435,6 @@
 		border: 1px solid rgba(255, 255, 255, 0.2);
 	}
 
-	.playing-indicator {
-		position: absolute;
-		top: -4px;
-		right: -4px;
-		width: 16px;
-		height: 16px;
-		background: var(--accent-color, #4a9eff);
-		border-radius: 50%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.pulse {
-		width: 8px;
-		height: 8px;
-		background: white;
-		border-radius: 50%;
-		animation: pulse 2s ease-in-out infinite;
-	}
-
-	@keyframes pulse {
-		0%, 100% { opacity: 1; transform: scale(1); }
-		50% { opacity: 0.5; transform: scale(0.8); }
-	}
 
 	.track-details {
 		flex: 1;
@@ -523,28 +530,6 @@
 		100% { transform: translateX(0); }
 	}
 
-	.now-playing {
-		color: var(--accent-color, #4a9eff);
-		font-weight: 500;
-	}
-
-	.last-played {
-		color: var(--text-muted, #999999);
-		font-weight: 400;
-	}
-
-	.track-link {
-		font-size: var(--font-size-xs, 12px);
-		color: var(--accent-color, #4a9eff);
-		text-decoration: none;
-		opacity: 0.8;
-		transition: opacity 0.2s ease;
-	}
-
-	.track-link:hover {
-		opacity: 1;
-		text-decoration: underline;
-	}
 
 	/* Responsive design */
 	@media (max-width: 768px) {
@@ -576,6 +561,22 @@
 		
 		.track-status {
 			font-size: 11px; /* Larger on mobile */
+		}
+
+		.default-placeholder .track-details {
+			height: 48px;
+		}
+
+		.default-placeholder .track-title {
+			font-size: 16px;
+		}
+
+		.default-placeholder .track-artist {
+			font-size: 14px;
+		}
+
+		.default-placeholder .track-status {
+			font-size: 11px;
 		}
 		
 		/* Slower scroll animation on mobile for better readability */
@@ -620,6 +621,23 @@
 		
 		.track-status {
 			font-size: 12px; /* Larger on tiny screens */
+		}
+
+		.default-placeholder .track-details {
+			height: 52px;
+			gap: 5px;
+		}
+
+		.default-placeholder .track-title {
+			font-size: 17px;
+		}
+
+		.default-placeholder .track-artist {
+			font-size: 15px;
+		}
+
+		.default-placeholder .track-status {
+			font-size: 12px;
 		}
 	}
 </style>

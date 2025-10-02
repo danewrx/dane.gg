@@ -10,7 +10,7 @@ const router = Router();
  */
 router.get('/discord-status', async (req, res) => {
   try {
-    const widgetData = await WidgetService.getWidgetDataWithFallback('discord_status', {
+    const widgetData = await WidgetService.getWidgetDataWithFallback('discord-widget', {
       status: 0,
       lastUpdate: new Date().toISOString()
     });
@@ -42,13 +42,13 @@ router.get('/services/status', async (req, res) => {
 
 /**
  * GET /api/widgets/nowplaying
- * Get now playing information from Last.fm
+ * Get now playing information from Last.fm API
  */
 router.get('/nowplaying', async (req, res) => {
   try {
     if (!LastFmService.isConfigured()) {
       // Return default data if Last.fm is not configured
-      const widgetData = await WidgetService.getWidgetDataWithFallback('now_playing', {
+      return res.json({
         track: null,
         artist: null,
         album: null,
@@ -57,35 +57,24 @@ router.get('/nowplaying', async (req, res) => {
         nowPlaying: false,
         lastUpdate: new Date().toISOString()
       });
-      return res.json(widgetData.data);
     }
 
-    // Get fresh data from Last.fm
+    // Get fresh data directly from Last.fm API
     const musicData = await LastFmService.getCurrentMusicStatus();
-    
-    // Update the database with fresh data
-    await LastFmService.updateMusicStatus();
-    
     res.json(musicData);
   } catch (error) {
-    console.error('Error fetching now playing:', error);
+    console.error('Error fetching now playing from Last.fm:', error);
     
-    // Fallback to cached data if Last.fm fails
-    try {
-      const widgetData = await WidgetService.getWidgetDataWithFallback('now_playing', {
-        track: null,
-        artist: null,
-        album: null,
-        image: null,
-        url: null,
-        nowPlaying: false,
-        lastUpdate: new Date().toISOString()
-      });
-      res.json(widgetData.data);
-    } catch (fallbackError) {
-      console.error('Error fetching fallback now playing data:', fallbackError);
-      res.status(500).json({ error: 'Internal server error' });
-    }
+    // Return default data on error
+    res.json({
+      track: null,
+      artist: null,
+      album: null,
+      image: null,
+      url: null,
+      nowPlaying: false,
+      lastUpdate: new Date().toISOString()
+    });
   }
 });
 

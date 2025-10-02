@@ -38,7 +38,7 @@ router.post('/discord-status/update', validateWebhookAuth, async (req, res) => {
       lastUpdate: new Date().toISOString()
     };
 
-    const success = await WidgetService.updateWidgetData('discord_status', data);
+    const success = await WidgetService.updateWidgetData('discord-widget', data);
 
     if (success) {
       res.json({ 
@@ -140,41 +140,5 @@ router.post('/twitter/update', validateWebhookAuth, async (req, res) => {
   }
 });
 
-/**
- * POST /api/webhooks/nowplaying/update
- * Webhook endpoint to update now playing information
- */
-router.post('/nowplaying/update', validateWebhookAuth, async (req, res) => {
-  try {
-    const { track, artist, album, lastUpdate } = req.body;
-
-    if (!track || !artist) {
-      return res.status(400).json({ error: 'Track and artist are required' });
-    }
-
-    // Update now playing in database
-    const data = {
-      track,
-      artist,
-      album: album || null,
-      lastUpdate: lastUpdate || new Date().toISOString()
-    };
-
-    const success = await WidgetService.updateWidgetData('now_playing', data);
-
-    if (success) {
-      res.json({ 
-        success: true, 
-        message: 'Now playing updated successfully',
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      res.status(500).json({ error: 'Failed to update now playing' });
-    }
-  } catch (error) {
-    console.error('Now playing webhook error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
 
 export default router;

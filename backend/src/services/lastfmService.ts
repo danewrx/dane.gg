@@ -1,4 +1,3 @@
-import { WidgetService } from './widgetService';
 
 export interface LastFmTrack {
 	artist: string;
@@ -43,7 +42,6 @@ export interface LastFmResponse {
 }
 
 export class LastFmService {
-	private static readonly WIDGET_TYPE = 'now_playing';
 	private static readonly API_BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
 
 	/**
@@ -194,47 +192,18 @@ export class LastFmService {
 			};
 		} catch (error) {
 			console.error('Error getting music status from Last.fm:', error);
-			
-			// Try to get cached data from widget service as fallback
-			try {
-				const fallbackData = await WidgetService.getWidgetDataWithFallback(this.WIDGET_TYPE, {
-					track: null,
-					artist: null,
-					album: null,
-					image: null,
-					url: null,
-					nowPlaying: false,
-					lastUpdate: new Date().toISOString()
-				});
-				console.log('Using cached music data as fallback');
-				return fallbackData.data;
-			} catch (fallbackError) {
-				console.error('Error getting fallback music data:', fallbackError);
-				return {
-					track: null,
-					artist: null,
-					album: null,
-					image: null,
-					url: null,
-					nowPlaying: false,
-					lastUpdate: new Date().toISOString()
-				};
-			}
+			return {
+				track: null,
+				artist: null,
+				album: null,
+				image: null,
+				url: null,
+				nowPlaying: false,
+				lastUpdate: new Date().toISOString()
+			};
 		}
 	}
 
-	/**
-	 * Update the music status in the database
-	 */
-	static async updateMusicStatus(): Promise<boolean> {
-		try {
-			const musicData = await this.getCurrentMusicStatus();
-			return await WidgetService.updateWidgetData(this.WIDGET_TYPE, musicData);
-		} catch (error) {
-			console.error('Error updating music status:', error);
-			return false;
-		}
-	}
 
 	/**
 	 * Get the best available image from Last.fm
