@@ -12,7 +12,7 @@
 	let tweetData: any = $state(data.tweetData);
 	
 	const musicHeaderText = $derived(musicData?.nowPlaying ? 'Now Playing' : 'Recently Played');
-	const tweetHeaderText = $derived('Latest Tweet');
+	const tweetHeaderText = $derived('Status');
 </script>
 
 <svelte:head>
@@ -40,10 +40,7 @@
 					<MusicWidget bind:musicData />
 				</BorderedBox>
 				
-				<BorderedBox padding="8px 16px" className="tweet-widget" showHeader={true} headerText={tweetHeaderText}>
-					<svelte:fragment slot="header-icon">
-						<Twitter size={16} class="status-icon twitter" />
-					</svelte:fragment>
+				<BorderedBox padding="8px 16px" className="tweet-widget tweet-bordered-box" showHeader={true} headerText={tweetHeaderText}>
 					<TweetWidget bind:tweetData />
 				</BorderedBox>
 			</div>
@@ -139,7 +136,7 @@
 		min-height: 80px;
 		margin-top: var(--spacing-md, 16px);
 	}
-
+	
 	/* Status icon styles */
 	:global(.status-icon) {
 		flex-shrink: 0;
