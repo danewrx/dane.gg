@@ -112,6 +112,11 @@
 		max-width: 50% !important; /* Ensure it doesn't exceed 50% */
 	}
 
+	:global(html:not(.dark)) .slide-panel {
+		background: #ffffff;
+		border-left-color: #e5e7eb;
+	}
+
 	.slide-panel.closing {
 		animation: slideOut 0.3s ease-in;
 	}
@@ -143,6 +148,10 @@
 		flex-shrink: 0;
 	}
 
+	:global(html:not(.dark)) .panel-header {
+		border-bottom-color: #e5e7eb;
+	}
+
 	.panel-title {
 		display: flex;
 		align-items: center;
@@ -150,6 +159,10 @@
 		color: #ffffff;
 		font-size: 18px;
 		font-weight: 600;
+	}
+
+	:global(html:not(.dark)) .panel-title {
+		color: #1f2937;
 	}
 
 	.close-button {
@@ -165,13 +178,22 @@
 		justify-content: center;
 	}
 
+	:global(html:not(.dark)) .close-button {
+		color: #6b7280;
+	}
+
 	.close-button:hover {
 		background: #2a2a2a;
 		color: #ffffff;
 	}
 
+	:global(html:not(.dark)) .close-button:hover {
+		background: #f3f4f6;
+		color: #1f2937;
+	}
+
 	.close-button:focus {
-		outline: 2px solid #6366f1;
+		outline: 2px solid var(--accent-color, #3b82f6);
 		outline-offset: 2px;
 	}
 

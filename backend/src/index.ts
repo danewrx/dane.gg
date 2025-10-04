@@ -65,6 +65,7 @@ import settingsRoutes from './routes/settings';
 import totpRoutes from './routes/totp';
 import widgetsRoutes from './routes/widgets';
 import webhooksRoutes from './routes/webhooks';
+import socialLinksRoutes from './routes/socialLinks';
 import { generalLimiter } from './middleware/rateLimiting';
 
 // Routes
@@ -115,6 +116,9 @@ app.use('/api/totp', totpRoutes);
 
 // Widgets routes (for fetching widget data)
 app.use('/api/widgets', widgetsRoutes);
+
+// Social links routes
+app.use('/api/social-links', socialLinksRoutes);
 
 // Webhooks routes (for external services to update data)
 app.use('/webhooks', webhooksRoutes);

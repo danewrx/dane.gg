@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
 
-const API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.VITE_API_URL || '/api';
 
 interface User {
   id: string;
@@ -81,7 +81,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     return resolve(event);
   }
 
-  // Check if this is an admin route (anything starting with /admin, /login, /logout)
+  // Check if admin route (/admin, /login, /logout)
   const isAdminRoute = pathname.startsWith('/admin') || 
                       pathname.startsWith('/login') || 
                       pathname.startsWith('/logout');
@@ -91,7 +91,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     const user = await verifyAuth(cookies);
     
     if (!user) {
-      // Don't redirect if already on login page to prevent loops
+      // Don't redirect if already on login page
       if (pathname === '/login') {
         return resolve(event);
       }
@@ -103,19 +103,6 @@ export const handle: Handle = async ({ event, resolve }) => {
     event.locals.user = user;
     event.locals.isAuthenticated = true;
   }
-
-  // Everything else (including all (site) routes) is public and doesn't need auth
-
-  // For other protected routes, you can add similar logic here
-  // const isProtectedRoute = pathname.startsWith('/protected');
-  // if (isProtectedRoute) {
-  //   const user = await verifyAuth(cookies);
-  //   if (!user) {
-  //     throw redirect(302, '/login?redirect=' + encodeURIComponent(pathname));
-  //   }
-  //   event.locals.user = user;
-  //   event.locals.isAuthenticated = true;
-  // }
 
   return resolve(event);
 };

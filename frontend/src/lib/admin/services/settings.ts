@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface ThemeResponse {
   success: boolean;
@@ -37,7 +37,7 @@ class SettingsService {
         'Content-Type': 'application/json',
         ...options.headers
       },
-      credentials: 'include', // Important for cookies
+      credentials: 'include',
       ...options
     };
 
@@ -86,7 +86,7 @@ class SettingsService {
       return response.themePreference || 'system';
     } catch (error) {
       console.error('Get theme preference failed:', error);
-      return 'system'; // Default fallback
+      return 'system';
     }
   }
 
@@ -114,7 +114,7 @@ class SettingsService {
       return response.accentColor || '#3b82f6';
     } catch (error) {
       console.error('Get accent color failed:', error);
-      return '#3b82f6'; // Default fallback
+      return '#3b82f6';
     }
   }
 

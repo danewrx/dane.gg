@@ -2,6 +2,7 @@
 	import DiscordStatus from '$lib/site/components/widgets/DiscordStatus.svelte';
 	import MusicWidget from '$lib/site/components/widgets/MusicWidget.svelte';
 	import TweetWidget from '$lib/site/components/widgets/TweetWidget.svelte';
+	import LinksWidget from '$lib/site/components/widgets/LinksWidget.svelte';
 	import BorderedBox from '$lib/site/components/ui/BorderedBox.svelte';
 	import { Radio, Twitter } from 'lucide-svelte';
 	import type { PageData } from './$types';
@@ -28,6 +29,10 @@
 				<BorderedBox padding="16px" className="discord-widget">
 					<DiscordStatus />
 				</BorderedBox>
+
+				<BorderedBox padding="8px 16px" className="tweet-widget tweet-bordered-box" showHeader={true} headerText={tweetHeaderText}>
+					<TweetWidget bind:tweetData />
+				</BorderedBox>
 				
 				<BorderedBox padding="8px 16px" className="music-widget" showHeader={true} headerText={musicHeaderText}>
 					<svelte:fragment slot="header-icon">
@@ -40,8 +45,8 @@
 					<MusicWidget bind:musicData />
 				</BorderedBox>
 				
-				<BorderedBox padding="8px 16px" className="tweet-widget tweet-bordered-box" showHeader={true} headerText={tweetHeaderText}>
-					<TweetWidget bind:tweetData />
+				<BorderedBox padding="8px 16px" className="links-widget" showHeader={true} headerText="Links">
+					<LinksWidget />
 				</BorderedBox>
 			</div>
 		</div>
@@ -79,22 +84,6 @@
 		margin: 0 auto;
 	}
 
-	h1 {
-		font-size: 3rem;
-		font-weight: 700;
-		color: var(--text-primary);
-		margin-bottom: 1rem;
-		transition: color 0.3s ease;
-		text-align: center;
-	}
-
-	.subtitle {
-		font-size: 1.5rem;
-		color: var(--text-secondary);
-		margin-bottom: 2rem;
-		transition: color 0.3s ease;
-		text-align: center;
-	}
 
 	.two-column-layout {
 		display: flex;
@@ -135,6 +124,40 @@
 		flex-direction: column;
 		min-height: 80px;
 		margin-top: var(--spacing-md, 16px);
+	}
+
+	:global(.links-widget) {
+		display: flex;
+		flex-direction: column;
+		min-height: 120px;
+		margin-top: var(--spacing-md, 16px);
+	}
+
+	:global(.links-widget .bordered-box) {
+		transition: none !important;
+	}
+
+	:global(.links-widget .bordered-box:hover) {
+		background: var(--background-color) !important;
+		box-shadow: none !important;
+	}
+
+	:global(.links-widget *) {
+		box-shadow: none !important;
+		outline: none !important;
+		transition: none !important;
+	}
+
+	:global(.links-widget *:hover) {
+		box-shadow: none !important;
+		outline: none !important;
+		background: transparent !important;
+	}
+
+	:global(.links-widget *:focus) {
+		box-shadow: none !important;
+		outline: none !important;
+		background: transparent !important;
 	}
 	
 	/* Status icon styles */
@@ -209,14 +232,6 @@
 	}
 
 	@media (max-width: 768px) {
-		h1 {
-			font-size: 2rem;
-		}
-		
-		.subtitle {
-			font-size: 1.2rem;
-		}
-		
 		.two-column-layout {
 			flex-direction: column;
 			gap: 1.5rem;

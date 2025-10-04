@@ -5,12 +5,12 @@
 	import { 
 		CloudRain,
 		Settings as SettingsIcon,
-		ChevronRight
+		ChevronRight,
+		Link
 	} from 'lucide-svelte';
 
 	let { children } = $props();
 
-	// Settings categories - only weather effects
 	const settingsCategories = [
 		{
 			id: 'weather',
@@ -21,6 +21,16 @@
 			bgColor: 'rgba(59, 130, 246, 0.1)',
 			borderColor: 'rgba(59, 130, 246, 0.2)',
 			path: '/admin/configuration/weather'
+		},
+		{
+			id: 'social-links',
+			title: 'Social Links',
+			description: 'Manage social media and external links',
+			icon: Link,
+			color: 'from-purple-500 to-pink-500',
+			bgColor: 'rgba(147, 51, 234, 0.1)',
+			borderColor: 'rgba(147, 51, 234, 0.2)',
+			path: '/admin/configuration/social-links'
 		}
 	];
 

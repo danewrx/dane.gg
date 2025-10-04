@@ -1,7 +1,7 @@
 import { auth } from '$lib/admin/stores/auth';
 import { get } from 'svelte/store';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface UpdateUsernameRequest {
   newUsername: string;
