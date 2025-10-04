@@ -26,15 +26,15 @@
 		<!-- Left Column (30%) -->
 		<div class="left-column">
 			<div class="widgets-section">
-				<BorderedBox padding="16px" className="discord-widget">
+				<BorderedBox padding="16px" className="discord-widget" contentPadding={true}>
 					<DiscordStatus />
 				</BorderedBox>
 
-				<BorderedBox padding="8px 16px" className="tweet-widget tweet-bordered-box" showHeader={true} headerText={tweetHeaderText}>
+				<BorderedBox padding="8px 16px" className="tweet-widget tweet-bordered-box" showHeader={true} headerText={tweetHeaderText} contentPadding={true}>
 					<TweetWidget bind:tweetData />
 				</BorderedBox>
 				
-				<BorderedBox padding="8px 16px" className="music-widget" showHeader={true} headerText={musicHeaderText}>
+				<BorderedBox padding="8px 16px" className="music-widget" showHeader={true} headerText={musicHeaderText} contentPadding={true} contentBottomPadding={true}>
 					<svelte:fragment slot="header-icon">
 						{#if musicData?.nowPlaying}
 							<Radio size={16} class="status-icon playing" />
@@ -45,7 +45,7 @@
 					<MusicWidget bind:musicData />
 				</BorderedBox>
 				
-				<BorderedBox padding="8px 16px" className="links-widget" showHeader={true} headerText="Links">
+				<BorderedBox padding="8px 16px" className="links-widget" showHeader={true} headerText="Links" dynamicHeight={true}>
 					<LinksWidget />
 				</BorderedBox>
 			</div>
@@ -58,7 +58,7 @@
 				<p>I'm a software engineer and designer passionate about creating beautiful, functional web applications and user experiences.</p>
 				
 				<div class="feature-cards">
-					<BorderedBox padding="16px" className="feature-card">
+					<BorderedBox padding="16px" className="feature-card" contentPadding={true}>
 						<h3>Development</h3>
 						<p>Full-stack web development with modern technologies and best practices.</p>
 					</BorderedBox>

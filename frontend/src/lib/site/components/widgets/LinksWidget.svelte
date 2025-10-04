@@ -64,24 +64,26 @@ interface SocialLink {
 							src={link.svgUrl} 
 							alt={link.name}
 							class="svg-icon"
-							width="18" 
-							height="18"
 						/>
 					{:else if link.iconType === 'coreui-brand' && link.iconName}
 						<Icon 
 							icon={`cib:${link.iconName}`} 
-							width="18" 
-							height="18" 
+							class="iconify-icon"
 						/>
 					{:else}
 						<Icon 
 							icon="cib:link" 
-							width="18" 
-							height="18" 
+							class="iconify-icon"
 						/>
 					{/if}
 				</button>
 			{/each}
+		</div>
+	</div>
+{:else}
+	<div class="links-container">
+		<div class="no-links-message">
+			<p>There are currently no links</p>
 		</div>
 	</div>
 {/if}
@@ -90,7 +92,9 @@ interface SocialLink {
 	.links-container {
 		width: 100%;
 		padding: 0;
+		box-sizing: border-box;
 	}
+
 
 	.loading {
 		display: flex;
@@ -113,11 +117,31 @@ interface SocialLink {
 		100% { transform: rotate(360deg); }
 	}
 
+	.no-links-message {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		padding: 20px;
+		text-align: center;
+	}
+
+	.no-links-message p {
+		color: var(--text-secondary, #9ca3af);
+		font-size: 14px;
+		font-weight: 400;
+		margin: 0;
+		opacity: 0.8;
+	}
+
 	.links-grid {
 		display: grid;
 		grid-template-columns: repeat(8, 1fr);
-		gap: 6px;
+		gap: 4px;
 		width: 100%;
+		margin: 0;
+		padding: 12px 8px;
+		box-sizing: border-box;
+		/* Height will be determined by content */
 	}
 
 	.link-item {
@@ -125,7 +149,7 @@ interface SocialLink {
 		align-items: center;
 		justify-content: center;
 		width: 100%;
-		height: 36px;
+		height: 20px;
 		background: transparent !important;
 		border: none !important;
 		border-radius: 2px;
@@ -133,11 +157,12 @@ interface SocialLink {
 		cursor: pointer;
 		padding: 0;
 		margin: 0;
-		font-size: 12px;
+		font-size: 8px;
 		font-weight: 500;
 		box-shadow: none !important;
 		outline: none !important;
 		transition: none !important;
+		box-sizing: border-box;
 	}
 
 	.link-item:hover {
@@ -196,6 +221,14 @@ interface SocialLink {
 	.svg-icon {
 		object-fit: contain;
 		filter: var(--icon-filter, none);
+		width: 14px;
+		height: 14px;
+	}
+
+	/* Target Iconify components */
+	:global(.link-item svg) {
+		width: 14px;
+		height: 14px;
 	}
 
 
@@ -204,36 +237,59 @@ interface SocialLink {
 		font-family: var(--font-family, 'Inter', sans-serif);
 	}
 
-	/* Responsive design */
+	/* Maintain 8 links per row on all screen sizes */
+	@media (max-width: 1024px) {
+		.links-grid {
+			gap: 3px;
+			--gap-height: 3px;
+		}
+	}
+
 	@media (max-width: 768px) {
 		.links-grid {
-			grid-template-columns: repeat(4, 1fr);
-			gap: 4px;
+			gap: 2px;
+			padding: 10px 6px;
+			--base-padding: 20px;
+			--icon-height: 24px;
+			--gap-height: 2px;
 		}
 		
 		.link-item {
-			height: 32px;
-			font-size: 11px;
+			height: 24px;
+			font-size: 9px;
 		}
 		
 		.text-icon {
-			font-size: 10px;
+			font-size: 8px;
+		}
+		
+		.svg-icon, :global(.link-item svg) {
+			width: 16px;
+			height: 16px;
 		}
 	}
 
 	@media (max-width: 480px) {
 		.links-grid {
-			grid-template-columns: repeat(3, 1fr);
-			gap: 3px;
+			gap: 2px;
+			padding: 8px 4px;
+			--base-padding: 16px;
+			--icon-height: 24px;
+			--gap-height: 2px;
 		}
 		
 		.link-item {
-			height: 28px;
-			font-size: 10px;
+			height: 24px;
+			font-size: 9px;
 		}
 		
 		.text-icon {
-			font-size: 9px;
+			font-size: 8px;
+		}
+		
+		.svg-icon, :global(.link-item svg) {
+			width: 16px;
+			height: 16px;
 		}
 	}
 </style>

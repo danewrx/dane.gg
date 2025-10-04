@@ -10,7 +10,7 @@ interface User {
 }
 
 // Helper function to verify authentication with backend
-async function verifyAuth(cookies: any): Promise<User | null> {
+async function verifyAuth(cookies: any, fetch: typeof globalThis.fetch): Promise<User | null> {
   try {
     const sessionCookie = cookies.get('dane.gg.sid');
     
@@ -88,7 +88,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   if (isAdminRoute) {
     // Verify authentication for admin routes
-    const user = await verifyAuth(cookies);
+    const user = await verifyAuth(cookies, event.fetch);
     
     if (!user) {
       // Don't redirect if already on login page

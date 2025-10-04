@@ -9,12 +9,18 @@
 	export let className: string = '';
 	export let showHeader: boolean = false;
 	export let headerText: string = '';
+	export let contentPadding: boolean = false;
+	export let contentBottomPadding: boolean = false;
+	export let dynamicHeight: boolean = false;
+	export let noContentPaddingOnMobile: boolean = false;
 
 	const dispatch = createEventDispatcher();
 </script>
 
 <div 
-	class="bordered-box {className}"
+	class="bordered-box {className}" 
+	class:dynamic-height={dynamicHeight}
+	class:no-content-padding-mobile={noContentPaddingOnMobile}
 	style="
 		--padding: {padding};
 		--border-color: {borderColor};
@@ -31,7 +37,7 @@
 			<div class="header-divider"></div>
 		</div>
 	{/if}
-	<div class="bordered-box-content">
+	<div class="bordered-box-content" class:padded={contentPadding} class:bottom-padded={contentBottomPadding}>
 		<slot />
 	</div>
 </div>
@@ -41,9 +47,14 @@
 		width: 100%;
 		background: var(--background-color);
 		border: 1px solid var(--border-color);
-		padding: var(--padding);
+		padding: 0 16px;
 		transition: all 0.3s ease;
 		box-sizing: border-box;
+	}
+	
+	.bordered-box.dynamic-height {
+		height: auto;
+		min-height: fit-content;
 	}
 
 	.bordered-box:hover {
@@ -56,16 +67,28 @@
 
 	.bordered-box-header {
 		margin-bottom: -2px;
-		padding-top: 8px;
-		margin-left: calc(-1 * var(--padding));
-		margin-right: calc(-1 * var(--padding));
-		padding-left: var(--padding);
-		padding-right: var(--padding);
+		padding: 8px 0 0 0;
 	}
 	
 	.bordered-box-content {
-		margin-top: 0;
-		padding-top: 0;
+		margin: 0 -16px 0 -16px;
+		padding: 0;
+	}
+	
+	.bordered-box-content.padded {
+		margin: 0;
+		padding: 0;
+	}
+	
+	.bordered-box-content.bottom-padded {
+		padding-bottom: 16px;
+	}
+	
+	@media (max-width: 768px) {
+		.bordered-box.no-content-padding-mobile .bordered-box-content.padded {
+			margin: 0 -16px 0 -16px;
+			padding: 0;
+		}
 	}
 
 	.header-text {
@@ -104,45 +127,57 @@
 	/* Responsive padding */
 	@media (max-width: 768px) {
 		.bordered-box {
-			padding: 6px 12px;
+			padding: 0 12px;
 		}
 		
 		.bordered-box-header {
-			margin-left: -12px;
-			margin-right: -12px;
-			padding-left: 12px;
-			padding-right: 12px;
+			padding: 6px 0 0 0;
+		}
+		
+		.bordered-box-content {
+			margin: 0 -12px 0 -12px;
+		}
+		
+		.bordered-box-content.padded {
+			margin: 0;
+			padding: 0;
+		}
+		
+		.bordered-box-content.bottom-padded {
+			padding-bottom: 12px;
 		}
 		
 		.header-divider {
 			margin-left: 0;
 			margin-right: 0;
-		}
-		
-		.bordered-box-content {
-			margin-top: -4px;
 		}
 	}
 
 	@media (max-width: 480px) {
 		.bordered-box {
-			padding: 4px 8px;
+			padding: 0 8px;
 		}
 		
 		.bordered-box-header {
-			margin-left: -8px;
-			margin-right: -8px;
-			padding-left: 8px;
-			padding-right: 8px;
+			padding: 4px 0 0 0;
+		}
+		
+		.bordered-box-content {
+			margin: 0 -8px 0 -8px;
+		}
+		
+		.bordered-box-content.padded {
+			margin: 0;
+			padding: 0;
+		}
+		
+		.bordered-box-content.bottom-padded {
+			padding-bottom: 8px;
 		}
 		
 		.header-divider {
 			margin-left: 0;
 			margin-right: 0;
-		}
-		
-		.bordered-box-content {
-			margin-top: -6px;
 		}
 	}
 </style>

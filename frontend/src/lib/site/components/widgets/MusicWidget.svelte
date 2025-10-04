@@ -549,14 +549,12 @@
 	}
 
 
-	/* Responsive design */
 	@media (max-width: 768px) {
 		.track-info {
 			gap: var(--spacing-md, 12px);
-			/* Ensure info section uses full width on mobile */
 			flex: 1;
 			min-width: 0;
-			padding: 4px 12px 12px 12px; /* Reduce top padding, keep sides and bottom */
+			padding: 4px 0 12px 0;
 		}
 		
 		.track-image img, .no-image {
@@ -565,8 +563,8 @@
 		}
 		
 		.track-details {
-			gap: 4px; /* Better spacing between lines */
-			height: 48px; /* Match mobile album art height */
+			gap: 4px;
+			height: 48px;
 		}
 		
 		.track-title {
@@ -578,7 +576,7 @@
 		}
 		
 		.track-status {
-			font-size: 11px; /* Larger on mobile */
+			font-size: 11px;
 		}
 
 		.default-placeholder .track-details {
@@ -610,7 +608,7 @@
 		}
 		
 		.track-info {
-			padding: 2px 16px 16px 16px;
+			padding: 2px 0 16px 0;
 			gap: var(--spacing-lg, 16px);
 		}
 		
