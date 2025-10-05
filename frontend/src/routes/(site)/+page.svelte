@@ -3,6 +3,7 @@
 	import MusicWidget from '$lib/site/components/widgets/MusicWidget.svelte';
 	import TweetWidget from '$lib/site/components/widgets/TweetWidget.svelte';
 	import LinksWidget from '$lib/site/components/widgets/LinksWidget.svelte';
+	import ButtonBanner from '$lib/site/components/widgets/ButtonBanner.svelte';
 	import BorderedBox from '$lib/site/components/ui/BorderedBox.svelte';
 	import { Radio, Twitter } from 'lucide-svelte';
 	import type { PageData } from './$types';
@@ -48,31 +49,27 @@
 				<BorderedBox padding="8px 16px" className="links-widget" showHeader={true} headerText="Links" dynamicHeight={true}>
 					<LinksWidget />
 				</BorderedBox>
+				
+				<ButtonBanner />
 			</div>
 		</div>
 		
 		<!-- Right Column (70%) -->
 		<div class="right-column">
-			<BorderedBox padding="24px" className="intro-section">
-				<h2>Welcome to my digital space</h2>
-				<p>I'm a software engineer and designer passionate about creating beautiful, functional web applications and user experiences.</p>
-				
-				<div class="feature-cards">
-					<BorderedBox padding="16px" className="feature-card" contentPadding={true}>
-						<h3>Development</h3>
-						<p>Full-stack web development with modern technologies and best practices.</p>
-					</BorderedBox>
-					
-					<BorderedBox padding="16px" className="feature-card">
-						<h3>Design</h3>
-						<p>User-centered design focusing on usability and aesthetic excellence.</p>
-					</BorderedBox>
-					
-					<BorderedBox padding="16px" className="feature-card">
-						<h3>Innovation</h3>
-						<p>Always exploring new technologies and creative solutions to complex problems.</p>
-					</BorderedBox>
-				</div>
+			<BorderedBox padding="8px 16px" className="about-section" showHeader={true} headerText="About Me" dynamicHeight={true} contentPadding={true}>
+				<p>Hi, I'm Dane! I'm a software engineer & freelance designer. You can read my full, more professional bio <a href="/about" target="_blank">here</a>!</p>
+				<br />
+				<p>Some quick facts about me:</p>
+				<ul>
+					<li>I'm from Manchester in the UK.</li>
+					<li>I currently work full-time as a software engineer @ a UK-based Azure Expert MSP</li>
+					<li>My main languages are C#, JavaScript & TypeScript.</li>
+					<li>I first started coding at age 13, learning Visual Basic (VB .NET).</li>
+					<li>In my free time, I design for and run a small clothing brand called Partial Spaces.</li>
+					<li>I'm a big fan of the old early 2000s internet and technology.</li>
+					<li>I like cats!</li>
+					<li>I don't like coffee.</li>
+				</ul>
 			</BorderedBox>
 		</div>
 	</div>
@@ -203,6 +200,40 @@
 		line-height: 1.6;
 	}
 
+	/* About Me section styling */
+	:global(.about-section .bordered-box-content) {
+		padding: 16px !important;
+	}
+
+	:global(.about-section p) {
+		color: var(--text-primary);
+		margin-bottom: 12px;
+		line-height: 1.6;
+		font-size: 14px;
+	}
+
+	:global(.about-section ul) {
+		margin: 0;
+		padding-left: 20px;
+		list-style-type: disc;
+	}
+
+	:global(.about-section li) {
+		color: var(--text-primary);
+		margin-bottom: 8px;
+		line-height: 1.5;
+		font-size: 14px;
+	}
+
+	:global(.about-section a) {
+		color: var(--accent-color);
+		text-decoration: underline;
+	}
+
+	:global(.about-section a:hover) {
+		color: var(--accent-color-light);
+	}
+
 	.feature-cards {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -253,6 +284,21 @@
 		
 		.feature-cards {
 			grid-template-columns: 1fr;
+		}
+
+		/* About Me section mobile styling */
+		:global(.about-section .bordered-box-content) {
+			padding: 12px !important;
+		}
+
+		:global(.about-section p) {
+			font-size: 13px;
+			margin-bottom: 10px;
+		}
+
+		:global(.about-section li) {
+			font-size: 13px;
+			margin-bottom: 6px;
 		}
 	}
 </style>
