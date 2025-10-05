@@ -98,19 +98,16 @@ interface SocialLink {
 	:global(*:hover) {
 		box-shadow: none !important;
 		outline: none !important;
-		background: transparent !important;
 	}
 
 	:global(*:focus) {
 		box-shadow: none !important;
 		outline: none !important;
-		background: transparent !important;
 	}
 
 	:global(*:active) {
 		box-shadow: none !important;
 		outline: none !important;
-		background: transparent !important;
 	}
 
 	:global(*:focus-visible) {

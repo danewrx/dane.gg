@@ -239,38 +239,45 @@
 		color: var(--accent-color-light);
 	}
 
-	:global(*) {
+	/* Remove green glow effects from specific interactive elements only */
+	:global(button),
+	:global(a),
+	:global(input),
+	:global(select),
+	:global(textarea),
+	:global([role="button"]) {
 		box-shadow: none !important;
 		outline: none !important;
 	}
 
-	:global(*:hover) {
+	:global(button:hover),
+	:global(a:hover),
+	:global(input:hover),
+	:global(select:hover),
+	:global(textarea:hover),
+	:global([role="button"]:hover) {
 		box-shadow: none !important;
 		outline: none !important;
 	}
 
-	:global(*:focus) {
+	:global(button:focus),
+	:global(a:focus),
+	:global(input:focus),
+	:global(select:focus),
+	:global(textarea:focus),
+	:global([role="button"]:focus) {
 		box-shadow: none !important;
 		outline: none !important;
 	}
 
-	:global(*:active) {
+	:global(button:active),
+	:global(a:active),
+	:global(input:active),
+	:global(select:active),
+	:global(textarea:active),
+	:global([role="button"]:active) {
 		box-shadow: none !important;
 		outline: none !important;
-	}
-
-	:global(*:focus-visible) {
-		box-shadow: none !important;
-		outline: none !important;
-	}
-
-	:global(*:focus-within) {
-		box-shadow: none !important;
-		outline: none !important;
-	}
-
-	:global(*) {
-		transition: none !important;
 	}
 
 	:global(.discord-widget),
@@ -292,7 +299,6 @@
 	:global(.about-section:hover) {
 		box-shadow: none !important;
 		outline: none !important;
-		background: var(--background-color) !important;
 	}
 
 	:global(.discord-widget:focus),
@@ -324,7 +330,6 @@
 	:global(.about-section *:hover) {
 		box-shadow: none !important;
 		outline: none !important;
-		background: transparent !important;
 	}
 
 	:global(.discord-widget *:focus),
@@ -335,7 +340,6 @@
 	:global(.about-section *:focus) {
 		box-shadow: none !important;
 		outline: none !important;
-		background: transparent !important;
 	}
 
 	:global(.discord-widget *:active),
@@ -346,7 +350,6 @@
 	:global(.about-section *:active) {
 		box-shadow: none !important;
 		outline: none !important;
-		background: transparent !important;
 	}
 
 	:global(.bordered-box) {
@@ -358,7 +361,6 @@
 	:global(.bordered-box:hover) {
 		box-shadow: none !important;
 		outline: none !important;
-		background: var(--background-color) !important;
 	}
 
 	:global(.bordered-box:focus) {
@@ -375,19 +377,16 @@
 	:global(.bordered-box *:hover) {
 		box-shadow: none !important;
 		outline: none !important;
-		background: transparent !important;
 	}
 
 	:global(.bordered-box *:focus) {
 		box-shadow: none !important;
 		outline: none !important;
-		background: transparent !important;
 	}
 
 	:global(.bordered-box *:active) {
 		box-shadow: none !important;
 		outline: none !important;
-		background: transparent !important;
 	}
 
 
