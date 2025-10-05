@@ -178,7 +178,7 @@
 		padding: 0;
 		gap: 20px;
 		flex-wrap: wrap;
-		justify-content: center;
+		justify-content: flex-start;
 	}
 
 	.nav-item {
@@ -240,7 +240,7 @@
 		}
 
 		.nav-list {
-			justify-content: center;
+			justify-content: flex-start;
 			gap: 15px;
 		}
 
@@ -252,7 +252,7 @@
 	@media (max-width: 480px) {
 		.nav-list {
 			flex-direction: column;
-			align-items: center;
+			align-items: flex-start;
 			gap: 10px;
 		}
 	}

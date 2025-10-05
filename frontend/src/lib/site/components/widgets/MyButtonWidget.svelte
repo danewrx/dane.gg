@@ -104,7 +104,7 @@
 		width: 100%;
 		box-sizing: border-box;
 		overflow: hidden;
-		padding: 4px 12px;
+		padding: 16px 12px;
 	}
 
 	.button-content {
@@ -240,7 +240,7 @@
 	/* Responsive design */
 	@media (max-width: 768px) {
 		.my-button-widget {
-			padding: 3px 8px;
+			padding: 12px 8px;
 		}
 
 		.button-content {
