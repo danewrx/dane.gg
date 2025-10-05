@@ -442,6 +442,7 @@
 			grid-template-columns: 1fr;
 		}
 
+
 		/* About Me section mobile styling */
 		:global(.about-section .bordered-box-content) {
 			padding: 12px !important;
@@ -457,5 +458,8 @@
 			margin-bottom: 6px;
 		}
 
+	}
+
+	@media (max-width: 480px) {
 	}
 </style>

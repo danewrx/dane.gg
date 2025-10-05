@@ -356,6 +356,8 @@
 		text-overflow: ellipsis;
 		width: 100%;
 		max-height: 100%;
+		min-height: 0;
+		flex: 1;
 	}
 
 	.tweet-text:hover {
@@ -408,6 +410,106 @@
 	}
 
 	/* Responsive design */
+	@media (max-width: 1024px) {
+		.author-details {
+			height: 60px;
+		}
+
+		.profile-image {
+			width: 60px;
+			height: 60px;
+		}
+
+		.default-placeholder .profile-image {
+			width: 60px;
+			height: 60px;
+		}
+
+		.no-image {
+			font-size: 17px;
+		}
+
+		.author-name {
+			font-size: 13px;
+		}
+
+		.author-username {
+			font-size: 13px;
+		}
+
+		.tweet-time {
+			font-size: 13px;
+		}
+
+		.tweet-text {
+			font-size: 13px;
+			-webkit-line-clamp: 2;
+			line-clamp: 2;
+		}
+
+		.tweet-title {
+			font-size: 13px;
+		}
+
+		.tweet-subtitle {
+			font-size: 13px;
+		}
+
+		.tweet-status {
+			font-size: 11px;
+		}
+	}
+
+	@media (max-width: 900px) {
+		.author-details {
+			height: 58px;
+		}
+
+		.profile-image {
+			width: 58px;
+			height: 58px;
+		}
+
+		.default-placeholder .profile-image {
+			width: 58px;
+			height: 58px;
+		}
+
+		.no-image {
+			font-size: 16px;
+		}
+
+		.author-name {
+			font-size: 12px;
+		}
+
+		.author-username {
+			font-size: 12px;
+		}
+
+		.tweet-time {
+			font-size: 12px;
+		}
+
+		.tweet-text {
+			font-size: 12px;
+			-webkit-line-clamp: 2;
+			line-clamp: 2;
+		}
+
+		.tweet-title {
+			font-size: 12px;
+		}
+
+		.tweet-subtitle {
+			font-size: 12px;
+		}
+
+		.tweet-status {
+			font-size: 10px;
+		}
+	}
+
 	@media (max-width: 768px) {
 		.author-details {
 			height: 56px;
@@ -441,6 +543,8 @@
 
 		.tweet-text {
 			font-size: 13px;
+			-webkit-line-clamp: 2;
+			line-clamp: 2;
 		}
 
 		.tweet-title {
@@ -453,6 +557,56 @@
 
 		.tweet-status {
 			font-size: 11px;
+		}
+	}
+
+	@media (max-width: 600px) {
+		.author-details {
+			height: 52px;
+		}
+
+		.profile-image {
+			width: 52px;
+			height: 52px;
+		}
+
+		.default-placeholder .profile-image {
+			width: 52px;
+			height: 52px;
+		}
+
+		.no-image {
+			font-size: 15px;
+		}
+
+		.author-name {
+			font-size: 11px;
+		}
+
+		.author-username {
+			font-size: 11px;
+		}
+
+		.tweet-time {
+			font-size: 11px;
+		}
+
+		.tweet-text {
+			font-size: 11px;
+			-webkit-line-clamp: 2;
+			line-clamp: 2;
+		}
+
+		.tweet-title {
+			font-size: 11px;
+		}
+
+		.tweet-subtitle {
+			font-size: 11px;
+		}
+
+		.tweet-status {
+			font-size: 9px;
 		}
 	}
 
@@ -489,6 +643,8 @@
 
 		.tweet-text {
 			font-size: 12px;
+			-webkit-line-clamp: 2;
+			line-clamp: 2;
 		}
 
 		.tweet-title {

@@ -15,6 +15,7 @@
 	let { musicData = $bindable() }: { musicData?: MusicData | null } = $props();
 	let error: string | null = $state(null);
 	let hasReceivedApiResponse = $state(!!musicData);
+	let isCheckingOverflow = $state(false);
 
 	onMount(() => {
 		// Always fetch data on mount
@@ -71,7 +72,9 @@
 
 	// Check if text overflows and add scroll class
 	function checkTextOverflow(): void {
-		if (typeof window === 'undefined') return;
+		if (typeof window === 'undefined' || isCheckingOverflow) return;
+		
+		isCheckingOverflow = true;
 		
 		const titleElement = document.querySelector('.music-widget .track-title') as HTMLElement | null;
 		const artistElement = document.querySelector('.music-widget .track-artist') as HTMLElement | null;
@@ -85,59 +88,71 @@
 			if (element) {
 				const elementType = ['title', 'artist'][index];
 				
+				element.classList.remove('scroll');
+				element.style.removeProperty('--scroll-distance');
+				
 				element.style.display = 'none';
 				element.offsetHeight;
 				element.style.display = '';
 				
-				// Wait for the element to render
 				setTimeout(() => {
+					const trackDetails = document.querySelector('.music-widget .track-details') as HTMLElement;
+					const containerWidth = trackDetails?.clientWidth || 0;
+					
+					const originalTextOverflow = element.style.textOverflow;
+					element.style.textOverflow = 'unset';
+					element.style.overflow = 'visible';
+					element.style.whiteSpace = 'nowrap';
+					
 					const scrollWidth = element.scrollWidth;
 					const clientWidth = element.clientWidth;
-					const parentWidth = element.parentElement?.clientWidth || 0;
-					const containerWidth = document.querySelector('.music-widget .track-details')?.clientWidth || 0;
 					
-					const textLength = element.textContent?.length || 0;
-					const shouldScroll = scrollWidth > (clientWidth + 2);
+					element.style.textOverflow = originalTextOverflow;
+					element.style.overflow = '';
+					element.style.whiteSpace = '';
+					
+					const availableWidth = containerWidth - 16; // Account for some padding
+					const shouldScroll = scrollWidth > availableWidth && scrollWidth > clientWidth;
 					
 					console.log(`${elementType}:`, {
 						text: element.textContent?.slice(0, 40),
-						textLength,
 						scrollWidth,
 						clientWidth,
-						parentWidth,
 						containerWidth,
+						availableWidth,
 						shouldScroll,
 						tagName: element.tagName
 					});
 					
 					if (shouldScroll) {
 						element.classList.add('scroll');
-						const actualOverflow = scrollWidth - clientWidth;
-						const scrollDistance = Math.max(actualOverflow, 0) + 10;
+						const actualOverflow = scrollWidth - availableWidth;
+						const scrollDistance = Math.max(actualOverflow, 0);
 						element.style.setProperty('--scroll-distance', `-${scrollDistance}px`);
 						console.log(`${elementType} scroll distance:`, `-${scrollDistance}px`, `(overflow: ${actualOverflow}px)`);
 					} else {
 						element.classList.remove('scroll');
 						element.style.removeProperty('--scroll-distance');
 					}
-				}, 50);
+				}, 100);
 			}
 		});
+		
+		setTimeout(() => {
+			isCheckingOverflow = false;
+		}, 150);
 	}
 
 	// Overflow check for when music data changes
 	$effect(() => {
 		if (musicData) {
-			setTimeout(checkTextOverflow, 100);
-			setTimeout(checkTextOverflow, 300);
-			setTimeout(checkTextOverflow, 500);
+			setTimeout(checkTextOverflow, 200);
 		}
 	});
 
 	// Window resize listener and container observer for overflow
 	onMount(() => {
 		let resizeTimeout: NodeJS.Timeout;
-		let resizeObserver: ResizeObserver | null = null;
 		
 		function handleResize() {
 			// Debounce resize events
@@ -149,26 +164,13 @@
 						el.classList.remove('scroll');
 						(el as HTMLElement).style.removeProperty('--scroll-distance');
 					});
-					// Re-check after elements reset
-					setTimeout(checkTextOverflow, 50);
-					setTimeout(checkTextOverflow, 200);
+					setTimeout(checkTextOverflow, 100);
 				}
-			}, 150);
+			}, 200);
 		}
 
 		window.addEventListener('resize', handleResize);
 		
-		// ResizeObserver for container size changes
-		const musicWidget = document.querySelector('.music-widget');
-		if (musicWidget && typeof ResizeObserver !== 'undefined') {
-			resizeObserver = new ResizeObserver((entries) => {
-				for (let entry of entries) {
-					console.log('Container size changed:', entry.contentRect.width, 'x', entry.contentRect.height);
-					handleResize();
-				}
-			});
-			resizeObserver.observe(musicWidget);
-		}
 		
 		setTimeout(() => {
 			console.log('Initial overflow check on mount...');
@@ -177,9 +179,6 @@
 
 		return () => {
 			window.removeEventListener('resize', handleResize);
-			if (resizeObserver) {
-				resizeObserver.disconnect();
-			}
 			clearTimeout(resizeTimeout);
 		};
 	});
@@ -415,7 +414,7 @@
 		align-items: flex-start;
 		gap: 4px;
 		overflow: hidden;
-		height: 56px;
+		height: 64px;
 	}
 
 	.default-placeholder .track-title {
@@ -453,7 +452,7 @@
 
 	.track-info {
 		display: flex;
-		gap: 12px;
+		gap: 8px;
 		align-items: center;
 	}
 
@@ -463,16 +462,16 @@
 	}
 
 	.track-image img {
-		width: 56px;
-		height: 56px;
+		width: 64px;
+		height: 64px;
 		border-radius: 0;
 		object-fit: cover;
 		border: 1px solid rgba(255, 255, 255, 0.2);
 	}
 
 	.no-image {
-		width: 56px;
-		height: 56px;
+		width: 64px;
+		height: 64px;
 		background: var(--bg-secondary, #2d2d2d);
 		border-radius: 0;
 		display: flex;
@@ -492,8 +491,8 @@
 		justify-content: center;
 		align-items: flex-start;
 		gap: 4px;
-		overflow: hidden; /* Contain scrolling text */
-		height: 56px; /* Match the album art height for proper centering */
+		overflow: hidden;
+		height: 64px;
 	}
 
 	.track-title {
@@ -563,6 +562,9 @@
 		position: relative;
 		display: inline-block;
 		max-width: 100%;
+		overflow: visible !important;
+		white-space: nowrap !important;
+		text-overflow: unset !important;
 	}
 
 	:global(.track-title.scroll:hover),
@@ -581,20 +583,20 @@
 
 	@media (max-width: 768px) {
 		.track-info {
-			gap: var(--spacing-md, 12px);
+			gap: 8px;
 			flex: 1;
 			min-width: 0;
 			padding: 4px 0 12px 0;
 		}
 		
 		.track-image img, .no-image {
-			width: 48px;
-			height: 48px;
+			width: 56px;
+			height: 56px;
 		}
 		
 		.track-details {
 			gap: 4px;
-			height: 48px;
+			height: 56px;
 		}
 		
 		.track-title {
@@ -610,7 +612,7 @@
 		}
 
 		.default-placeholder .track-details {
-			height: 48px;
+			height: 56px;
 		}
 
 		.default-placeholder .track-title {
@@ -639,18 +641,18 @@
 		
 		.track-info {
 			padding: 2px 0 16px 0;
-			gap: var(--spacing-lg, 16px);
+			gap: 8px;
 		}
 		
 		.track-image img, .no-image {
-			width: 52px;
-			height: 52px;
+			width: 48px;
+			height: 48px;
 		}
 		
 		.track-details {
 			flex: 1;
 			min-width: 0;
-			height: 52px;
+			height: 48px;
 			gap: 5px;
 		}
 		
@@ -667,7 +669,7 @@
 		}
 
 		.default-placeholder .track-details {
-			height: 52px;
+			height: 48px;
 			gap: 5px;
 		}
 
