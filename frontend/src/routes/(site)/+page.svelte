@@ -239,6 +239,157 @@
 		color: var(--accent-color-light);
 	}
 
+	:global(*) {
+		box-shadow: none !important;
+		outline: none !important;
+	}
+
+	:global(*:hover) {
+		box-shadow: none !important;
+		outline: none !important;
+	}
+
+	:global(*:focus) {
+		box-shadow: none !important;
+		outline: none !important;
+	}
+
+	:global(*:active) {
+		box-shadow: none !important;
+		outline: none !important;
+	}
+
+	:global(*:focus-visible) {
+		box-shadow: none !important;
+		outline: none !important;
+	}
+
+	:global(*:focus-within) {
+		box-shadow: none !important;
+		outline: none !important;
+	}
+
+	:global(*) {
+		transition: none !important;
+	}
+
+	:global(.discord-widget),
+	:global(.tweet-widget),
+	:global(.music-widget),
+	:global(.links-widget),
+	:global(.my-button-widget),
+	:global(.about-section) {
+		box-shadow: none !important;
+		outline: none !important;
+		transition: none !important;
+	}
+
+	:global(.discord-widget:hover),
+	:global(.tweet-widget:hover),
+	:global(.music-widget:hover),
+	:global(.links-widget:hover),
+	:global(.my-button-widget:hover),
+	:global(.about-section:hover) {
+		box-shadow: none !important;
+		outline: none !important;
+		background: var(--background-color) !important;
+	}
+
+	:global(.discord-widget:focus),
+	:global(.tweet-widget:focus),
+	:global(.music-widget:focus),
+	:global(.links-widget:focus),
+	:global(.my-button-widget:focus),
+	:global(.about-section:focus) {
+		box-shadow: none !important;
+		outline: none !important;
+	}
+
+	:global(.discord-widget *),
+	:global(.tweet-widget *),
+	:global(.music-widget *),
+	:global(.links-widget *),
+	:global(.my-button-widget *),
+	:global(.about-section *) {
+		box-shadow: none !important;
+		outline: none !important;
+		transition: none !important;
+	}
+
+	:global(.discord-widget *:hover),
+	:global(.tweet-widget *:hover),
+	:global(.music-widget *:hover),
+	:global(.links-widget *:hover),
+	:global(.my-button-widget *:hover),
+	:global(.about-section *:hover) {
+		box-shadow: none !important;
+		outline: none !important;
+		background: transparent !important;
+	}
+
+	:global(.discord-widget *:focus),
+	:global(.tweet-widget *:focus),
+	:global(.music-widget *:focus),
+	:global(.links-widget *:focus),
+	:global(.my-button-widget *:focus),
+	:global(.about-section *:focus) {
+		box-shadow: none !important;
+		outline: none !important;
+		background: transparent !important;
+	}
+
+	:global(.discord-widget *:active),
+	:global(.tweet-widget *:active),
+	:global(.music-widget *:active),
+	:global(.links-widget *:active),
+	:global(.my-button-widget *:active),
+	:global(.about-section *:active) {
+		box-shadow: none !important;
+		outline: none !important;
+		background: transparent !important;
+	}
+
+	:global(.bordered-box) {
+		box-shadow: none !important;
+		outline: none !important;
+		transition: none !important;
+	}
+
+	:global(.bordered-box:hover) {
+		box-shadow: none !important;
+		outline: none !important;
+		background: var(--background-color) !important;
+	}
+
+	:global(.bordered-box:focus) {
+		box-shadow: none !important;
+		outline: none !important;
+	}
+
+	:global(.bordered-box *) {
+		box-shadow: none !important;
+		outline: none !important;
+		transition: none !important;
+	}
+
+	:global(.bordered-box *:hover) {
+		box-shadow: none !important;
+		outline: none !important;
+		background: transparent !important;
+	}
+
+	:global(.bordered-box *:focus) {
+		box-shadow: none !important;
+		outline: none !important;
+		background: transparent !important;
+	}
+
+	:global(.bordered-box *:active) {
+		box-shadow: none !important;
+		outline: none !important;
+		background: transparent !important;
+	}
+
 
 	.feature-cards {
 		display: grid;
