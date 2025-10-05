@@ -4,6 +4,7 @@
 	import TweetWidget from '$lib/site/components/widgets/TweetWidget.svelte';
 	import LinksWidget from '$lib/site/components/widgets/LinksWidget.svelte';
 	import ButtonBanner from '$lib/site/components/widgets/ButtonBanner.svelte';
+	import MyButtonWidget from '$lib/site/components/widgets/MyButtonWidget.svelte';
 	import BorderedBox from '$lib/site/components/ui/BorderedBox.svelte';
 	import { Radio, Twitter } from 'lucide-svelte';
 	import type { PageData } from './$types';
@@ -51,6 +52,10 @@
 				</BorderedBox>
 				
 				<ButtonBanner />
+				
+				<BorderedBox padding="0 16px" className="my-button-widget" showHeader={true} headerText="My Button" dynamicHeight={true}>
+					<MyButtonWidget />
+				</BorderedBox>
 			</div>
 		</div>
 		
@@ -234,6 +239,7 @@
 		color: var(--accent-color-light);
 	}
 
+
 	.feature-cards {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -300,5 +306,6 @@
 			font-size: 13px;
 			margin-bottom: 6px;
 		}
+
 	}
 </style>
