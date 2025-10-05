@@ -63,13 +63,12 @@
 		<div class="right-column">
 			<BorderedBox padding="8px 16px" className="about-section" showHeader={true} headerText="About Me" dynamicHeight={true} contentPadding={true}>
 				<p>Hi, I'm Dane! I'm a software engineer & freelance designer. You can read my full, more professional bio <a href="/about" target="_blank">here</a>!</p>
-				<br />
-				<p>Some quick facts about me:</p>
+				<p><b>Some quick facts about me:</b></p>
 				<ul>
 					<li>I'm from Manchester in the UK.</li>
 					<li>I currently work full-time as a software engineer @ a UK-based Azure Expert MSP</li>
-					<li>My main languages are C#, JavaScript & TypeScript.</li>
-					<li>I first started coding at age 13, learning Visual Basic (VB .NET).</li>
+					<li>My main languages are <span style="color: #9179E4;">C#</span>, <span style="color: #F1E05A;">JavaScript</span> & <span style="color: #3178C6;">TypeScript</span>.</li>
+					<li>I first started coding at age 13, learning <span style="color: #9179E4;">Visual Basic (VB .NET)</span>.</li>
 					<li>In my free time, I design for and run a small clothing brand called Partial Spaces.</li>
 					<li>I'm a big fan of the old early 2000s internet and technology.</li>
 					<li>I like cats!</li>
@@ -225,8 +224,8 @@
 
 	:global(.about-section li) {
 		color: var(--text-primary);
-		margin-bottom: 8px;
-		line-height: 1.5;
+		margin-bottom: 4px;
+		line-height: 1.3;
 		font-size: 14px;
 	}
 
@@ -455,7 +454,8 @@
 
 		:global(.about-section li) {
 			font-size: 13px;
-			margin-bottom: 6px;
+			margin-bottom: 3px;
+			line-height: 1.3;
 		}
 
 	}
