@@ -66,7 +66,9 @@ import totpRoutes from './routes/totp';
 import widgetsRoutes from './routes/widgets';
 import webhooksRoutes from './routes/webhooks';
 import socialLinksRoutes from './routes/socialLinks';
+import statsRoutes from './routes/stats';
 import { generalLimiter } from './middleware/rateLimiting';
+import { trackStats } from './middleware/statsTracking';
 
 // Routes
 app.get('/api', (req, res) => {
@@ -96,6 +98,9 @@ app.get('/api/health', (req, res) => {
 // Apply general rate limiting to all API routes
 app.use('/api', generalLimiter);
 
+// Apply tracking middleware to all routes
+app.use(trackStats);
+
 // Auth routes
 app.use('/api/auth', authRoutes);
 
@@ -119,6 +124,9 @@ app.use('/api/widgets', widgetsRoutes);
 
 // Social links routes
 app.use('/api/social-links', socialLinksRoutes);
+
+// Stats routes (admin only)
+app.use('/api/stats', statsRoutes);
 
 // Webhooks routes (for external services to update data)
 app.use('/webhooks', webhooksRoutes);

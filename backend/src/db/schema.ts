@@ -101,16 +101,27 @@ export const projectTags = websiteSchema.table('project_tags', {
   pk: primaryKey({ columns: [table.projectId, table.tagId] })
 }));
 
-// Page views table
-export const pageViews = websiteSchema.table('page_views', {
+// Visitor tracking table
+export const visitorStats = websiteSchema.table('visitor_stats', {
   id: uuid('id').primaryKey().defaultRandom(),
-  pagePath: varchar('page_path', { length: 255 }).notNull(),
   visitorId: varchar('visitor_id', { length: 36 }).notNull(),
+  sessionId: varchar('session_id', { length: 36 }).notNull(),
+  method: varchar('method', { length: 10 }).notNull(),
+  path: varchar('path', { length: 500 }).notNull(),
+  query: text('query'),
+  statusCode: integer('status_code').notNull(),
+  responseTime: integer('response_time').notNull(),
+  contentLength: integer('content_length'),
   ipAddress: varchar('ip_address', { length: 45 }),
   userAgent: text('user_agent'),
-  countryCode: varchar('country_code', { length: 2 }),
+  country: varchar('country', { length: 100 }),
+  browser: varchar('browser', { length: 50 }),
+  os: varchar('os', { length: 50 }),
+  device: varchar('device', { length: 50 }),
+  screenResolution: varchar('screen_resolution', { length: 20 }),
+  language: varchar('language', { length: 10 }),
   referrer: text('referrer'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
+  timestamp: timestamp('timestamp', { withTimezone: true }).defaultNow()
 });
 
 // Blog tags table
@@ -134,7 +145,7 @@ export const siteConfig = websiteSchema.table('site_config', {
   key: varchar('key', { length: 100 }).notNull().unique(),
   value: text('value').notNull(),
   description: text('description'),
-  dataType: varchar('data_type', { length: 20 }).notNull().default('string'), // string, number, boolean, json
+  dataType: varchar('data_type', { length: 20 }).notNull().default('string'),
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
@@ -250,8 +261,8 @@ export type Tag = typeof tags.$inferSelect;
 export type NewTag = typeof tags.$inferInsert;
 export type ProjectTag = typeof projectTags.$inferSelect;
 export type NewProjectTag = typeof projectTags.$inferInsert;
-export type PageView = typeof pageViews.$inferSelect;
-export type NewPageView = typeof pageViews.$inferInsert;
+export type VisitorStat = typeof visitorStats.$inferSelect;
+export type NewVisitorStat = typeof visitorStats.$inferInsert;
 export type BlogTag = typeof blogTags.$inferSelect;
 export type NewBlogTag = typeof blogTags.$inferInsert;
 export type PostTag = typeof postTags.$inferSelect;

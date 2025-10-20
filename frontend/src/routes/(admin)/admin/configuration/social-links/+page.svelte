@@ -274,14 +274,15 @@
 				<div class="link-item" class:inactive={!link.isActive}>
 					<div class="link-info">
 						<div class="link-icon">
-							{#if link.iconType === 'custom-text'}
+							{#if link.iconType === 'custom-text' && link.iconText}
 								<span class="text-icon">{link.iconText}</span>
 							{:else if link.iconType === 'svg-url' && link.svgUrl}
 								<img src={link.svgUrl} alt={link.name} width="20" height="20" />
 							{:else if link.iconType === 'coreui-brand' && link.iconName}
-								<Icon icon={`cib:${link.iconName}`} width="20" height="20" />
+								<Icon icon={`cib:${link.iconName.replace('cb-', '')}`} width="20" height="20" />
 							{:else}
-								<Link size={20} />
+								<!-- Default icon when no specific icon is set -->
+								<Icon icon="lucide:external-link" width="20" height="20" class="default-icon" />
 							{/if}
 						</div>
 						<div class="link-details">
@@ -602,6 +603,10 @@
 		background: #374151;
 		border-radius: 8px;
 		color: #ffffff;
+	}
+	
+	.default-icon {
+		opacity: 0.7;
 	}
 
 	.text-icon {

@@ -1,61 +1,12 @@
 {
-  "version": "7",
+  "version": "7.0.0",
   "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
       "version": "7",
-      "when": 1758279326429,
-      "tag": "0000_burly_northstar",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1758328665153,
-      "tag": "0001_wise_venom",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1758468404908,
-      "tag": "0002_third_kate_bishop",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1758469225124,
-      "tag": "0003_true_nehzno",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1758492084655,
-      "tag": "0004_thankful_korg",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1759371697729,
-      "tag": "0005_stale_senator_kelly",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1759528835392,
-      "tag": "0006_organic_raza",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1759534509055,
-      "tag": "0007_colossal_kree",
+      "when": 1761000030664,
+      "tag": "0000_small_doctor_faustus",
       "breakpoints": true
     }
   ]

@@ -18,6 +18,7 @@
     "@types/express-session": "^1.18.2",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.15.5",
+    "@types/uuid": "^11.0.0",
     "bcryptjs": "^3.0.2",
     "connect-pg-simple": "^10.0.0",
     "cookie-parser": "^1.4.7",
@@ -30,7 +31,8 @@
     "jsonwebtoken": "^9.0.2",
     "otpauth": "^9.4.1",
     "postgres": "^3.4.7",
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",

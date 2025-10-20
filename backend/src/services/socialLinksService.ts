@@ -12,7 +12,16 @@ export class SocialLinksService {
         .where(eq(socialLinks.isActive, true))
         .orderBy(asc(socialLinks.displayOrder));
 
-      return links;
+      console.log('🔗 Fetched social links from database:', links.length);
+      console.log('📊 First few links:', links.slice(0, 3));
+      
+      // Map lucide icons to coreui-brand for compatibility
+      const mappedLinks = links.map(link => ({
+        ...link,
+        iconType: link.iconType === 'lucide' ? 'coreui-brand' : link.iconType
+      }));
+
+      return mappedLinks;
     } catch (error) {
       console.error('❌ SocialLinksService.getAll error:', error);
       throw new Error('Failed to fetch social links');
