@@ -99,20 +99,28 @@ export class StatsService {
   static async getTotalSiteViews(timeRange: string): Promise<number> {
     const timeAgo = this.getTimeAgo(timeRange);
     
+    const conditions = [
+      eq(visitorStats.method, 'GET'),
+      sql`${visitorStats.path} NOT LIKE '/api/%'`,
+      sql`${visitorStats.path} NOT LIKE '/admin%'`,
+      sql`${visitorStats.path} NOT LIKE '/login%'`,
+      sql`${visitorStats.path} NOT LIKE '/logout%'`,
+      sql`${visitorStats.path} NOT LIKE '/latest-tweet%'`,
+      sql`${visitorStats.path} NOT LIKE '/nowplaying%'`,
+      sql`${visitorStats.path} NOT LIKE '/discord-status%'`,
+      sql`${visitorStats.path} NOT LIKE '/social-links%'`,
+      sql`${visitorStats.path} NOT LIKE '/widgets/%'`,
+      sql`${visitorStats.path} NOT LIKE '/webhooks/%'`
+    ];
+    
+    if (timeAgo) {
+      conditions.push(gte(visitorStats.timestamp, timeAgo));
+    }
+    
     const result = await db
       .select({ count: count() })
       .from(visitorStats)
-      .where(and(
-        gte(visitorStats.timestamp, timeAgo),
-        eq(visitorStats.method, 'GET'),
-        sql`${visitorStats.path} NOT LIKE '/api/%'`,
-        sql`${visitorStats.path} NOT LIKE '/latest-tweet%'`,
-        sql`${visitorStats.path} NOT LIKE '/nowplaying%'`,
-        sql`${visitorStats.path} NOT LIKE '/discord-status%'`,
-        sql`${visitorStats.path} NOT LIKE '/social-links%'`,
-        sql`${visitorStats.path} NOT LIKE '/widgets/%'`,
-        sql`${visitorStats.path} NOT LIKE '/webhooks/%'`
-      ));
+      .where(and(...conditions));
     
     return result[0]?.count || 0;
   }
@@ -123,22 +131,30 @@ export class StatsService {
   static async getUniqueVisitors(timeRange: string): Promise<number> {
     const timeAgo = this.getTimeAgo(timeRange);
     
+    const conditions = [
+      eq(visitorStats.method, 'GET'),
+      sql`${visitorStats.path} NOT LIKE '/api/%'`,
+      sql`${visitorStats.path} NOT LIKE '/admin%'`,
+      sql`${visitorStats.path} NOT LIKE '/login%'`,
+      sql`${visitorStats.path} NOT LIKE '/logout%'`,
+      sql`${visitorStats.path} NOT LIKE '/latest-tweet%'`,
+      sql`${visitorStats.path} NOT LIKE '/nowplaying%'`,
+      sql`${visitorStats.path} NOT LIKE '/discord-status%'`,
+      sql`${visitorStats.path} NOT LIKE '/social-links%'`,
+      sql`${visitorStats.path} NOT LIKE '/widgets/%'`,
+      sql`${visitorStats.path} NOT LIKE '/webhooks/%'`
+    ];
+    
+    if (timeAgo) {
+      conditions.push(gte(visitorStats.timestamp, timeAgo));
+    }
+    
     const result = await db
       .select({ count: sql<number>`count(distinct ${visitorStats.visitorId})` })
       .from(visitorStats)
-      .where(and(
-        gte(visitorStats.timestamp, timeAgo),
-        eq(visitorStats.method, 'GET'),
-        sql`${visitorStats.path} NOT LIKE '/api/%'`,
-        sql`${visitorStats.path} NOT LIKE '/latest-tweet%'`,
-        sql`${visitorStats.path} NOT LIKE '/nowplaying%'`,
-        sql`${visitorStats.path} NOT LIKE '/discord-status%'`,
-        sql`${visitorStats.path} NOT LIKE '/social-links%'`,
-        sql`${visitorStats.path} NOT LIKE '/widgets/%'`,
-        sql`${visitorStats.path} NOT LIKE '/webhooks/%'`
-      ));
+      .where(and(...conditions));
     
-    return result[0]?.count || 0;
+    return Number(result[0]?.count || 0);
   }
 
   /**
@@ -311,6 +327,72 @@ export class StatsService {
     return result;
   }
 
+
+  static async getTotalPagesIndexed(timeRange: string): Promise<number> {
+    const timeAgo = this.getTimeAgo(timeRange);
+    
+    const conditions = [
+      eq(visitorStats.method, 'GET'),
+      sql`${visitorStats.path} NOT LIKE '/api/%'`,
+      sql`${visitorStats.path} NOT LIKE '/admin%'`,
+      sql`${visitorStats.path} NOT LIKE '/login%'`,
+      sql`${visitorStats.path} NOT LIKE '/logout%'`,
+      sql`${visitorStats.path} NOT LIKE '/latest-tweet%'`,
+      sql`${visitorStats.path} NOT LIKE '/nowplaying%'`,
+      sql`${visitorStats.path} NOT LIKE '/discord-status%'`,
+      sql`${visitorStats.path} NOT LIKE '/social-links%'`,
+      sql`${visitorStats.path} NOT LIKE '/widgets/%'`,
+      sql`${visitorStats.path} NOT LIKE '/webhooks/%'`
+    ];
+    
+    if (timeAgo) {
+      conditions.push(gte(visitorStats.timestamp, timeAgo));
+    }
+    
+    const result = await db
+      .select({ count: sql<number>`count(distinct ${visitorStats.path})` })
+      .from(visitorStats)
+      .where(and(...conditions));
+    
+    return Number(result[0]?.count || 0);
+  }
+
+  /**
+   * Get total days since tracking started
+   */
+  static async getTotalDaysSinceTracking(): Promise<number> {
+    const result = await db
+      .select({ 
+        firstDate: sql<Date>`min(${visitorStats.timestamp})`,
+        lastDate: sql<Date>`max(${visitorStats.timestamp})`
+      })
+      .from(visitorStats)
+      .where(and(
+        eq(visitorStats.method, 'GET'),
+        sql`${visitorStats.path} NOT LIKE '/api/%'`,
+        sql`${visitorStats.path} NOT LIKE '/admin%'`,
+        sql`${visitorStats.path} NOT LIKE '/login%'`,
+        sql`${visitorStats.path} NOT LIKE '/logout%'`,
+        sql`${visitorStats.path} NOT LIKE '/latest-tweet%'`,
+        sql`${visitorStats.path} NOT LIKE '/nowplaying%'`,
+        sql`${visitorStats.path} NOT LIKE '/discord-status%'`,
+        sql`${visitorStats.path} NOT LIKE '/social-links%'`,
+        sql`${visitorStats.path} NOT LIKE '/widgets/%'`,
+        sql`${visitorStats.path} NOT LIKE '/webhooks/%'`
+      ));
+    
+    if (!result[0]?.firstDate) {
+      return 0;
+    }
+    
+    const firstDate = new Date(result[0].firstDate);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - firstDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+  }
+
   /**
    * Generate a unique ID
    */
@@ -367,10 +449,12 @@ export class StatsService {
   /**
    * Get time ago based on time range
    */
-  private static getTimeAgo(timeRange: string): Date {
+  private static getTimeAgo(timeRange: string): Date | null {
     const now = new Date();
     
     switch (timeRange) {
+      case '12h':
+        return new Date(now.getTime() - 12 * 60 * 60 * 1000);
       case '1h':
         return new Date(now.getTime() - 60 * 60 * 1000);
       case '24h':
@@ -379,6 +463,12 @@ export class StatsService {
         return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       case '30d':
         return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      case '6m':
+        return new Date(now.getTime() - 6 * 30 * 24 * 60 * 60 * 1000);
+      case '1y':
+        return new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+      case 'all':
+        return null; // No time filtering for 'all'
       default:
         return new Date(now.getTime() - 24 * 60 * 60 * 1000);
     }

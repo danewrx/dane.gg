@@ -9,7 +9,6 @@ import {
   blogTags, 
   postTags,
   messages,
-  pageViews,
   siteConfig
 } from './schema';
 
@@ -34,7 +33,6 @@ export async function seed() {
     await db.delete(tags);
     await db.delete(blogTags);
     await db.delete(messages);
-    await db.delete(pageViews);
     await db.delete(siteConfig);
 
     // Seed project categories
@@ -429,34 +427,6 @@ Stay tuned for the full article!`,
       }
     ]);
 
-    // Seed some sample page views
-    console.log('📊 Seeding page views...');
-    await db.insert(pageViews).values([
-      {
-        pagePath: '/',
-        visitorId: 'visitor-001',
-        ipAddress: '192.168.1.100',
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        countryCode: 'US',
-        referrer: 'https://google.com'
-      },
-      {
-        pagePath: '/projects',
-        visitorId: 'visitor-001',
-        ipAddress: '192.168.1.100',
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        countryCode: 'US',
-        referrer: 'https://dane.gg'
-      },
-      {
-        pagePath: '/blog',
-        visitorId: 'visitor-002',
-        ipAddress: '192.168.1.101',
-        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-        countryCode: 'CA',
-        referrer: 'https://github.com'
-      }
-    ]);
 
     // Seed site configuration
     console.log('⚙️ Seeding site configuration...');

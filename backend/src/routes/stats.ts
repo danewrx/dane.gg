@@ -1,18 +1,27 @@
 import { Router, Request, Response } from 'express';
 import { StatsService } from '../services/statsService';
-import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { requireSession } from '../middleware/auth';
 
 const router = Router();
 
-// All stats routes require authentication and admin privileges
-router.use(authenticateToken);
-router.use(requireAdmin);
+// Stats routes require session authentication and admin privileges
+router.use(requireSession);
+
+function checkAdmin(req: Request, res: Response, next: Function) {
+  if (!req.user || !req.user.isAdmin) {
+    return res.status(403).json({ 
+      error: 'Access denied', 
+      message: 'Admin privileges required' 
+    });
+  }
+  next();
+}
 
 /**
  * GET /api/stats/overview
  * Get overview statistics
  */
-router.get('/overview', async (req: Request, res: Response) => {
+router.get('/overview', checkAdmin, async (req: Request, res: Response) => {
   try {
     const timeRange = (req.query.timeRange as string) || '24h';
     
@@ -42,7 +51,7 @@ router.get('/overview', async (req: Request, res: Response) => {
  * GET /api/stats/page-views
  * Get page views by page
  */
-router.get('/page-views', async (req: Request, res: Response) => {
+router.get('/page-views', checkAdmin, async (req: Request, res: Response) => {
   try {
     const timeRange = (req.query.timeRange as string) || '24h';
     const limit = parseInt((req.query.limit as string) || '10');
@@ -68,7 +77,7 @@ router.get('/page-views', async (req: Request, res: Response) => {
  * GET /api/stats/visitors/countries
  * Get visitor countries
  */
-router.get('/visitors/countries', async (req: Request, res: Response) => {
+router.get('/visitors/countries', checkAdmin, async (req: Request, res: Response) => {
   try {
     const timeRange = (req.query.timeRange as string) || '24h';
     const limit = parseInt((req.query.limit as string) || '10');
@@ -94,7 +103,7 @@ router.get('/visitors/countries', async (req: Request, res: Response) => {
  * GET /api/stats/visitors/browsers
  * Get visitor browsers
  */
-router.get('/visitors/browsers', async (req: Request, res: Response) => {
+router.get('/visitors/browsers', checkAdmin, async (req: Request, res: Response) => {
   try {
     const timeRange = (req.query.timeRange as string) || '24h';
     const limit = parseInt((req.query.limit as string) || '10');
@@ -120,7 +129,7 @@ router.get('/visitors/browsers', async (req: Request, res: Response) => {
  * GET /api/stats/visitors/os
  * Get visitor operating systems
  */
-router.get('/visitors/os', async (req: Request, res: Response) => {
+router.get('/visitors/os', checkAdmin, async (req: Request, res: Response) => {
   try {
     const timeRange = (req.query.timeRange as string) || '24h';
     const limit = parseInt((req.query.limit as string) || '10');
@@ -146,7 +155,7 @@ router.get('/visitors/os', async (req: Request, res: Response) => {
  * GET /api/stats/visitors/devices
  * Get visitor devices
  */
-router.get('/visitors/devices', async (req: Request, res: Response) => {
+router.get('/visitors/devices', checkAdmin, async (req: Request, res: Response) => {
   try {
     const timeRange = (req.query.timeRange as string) || '24h';
     const limit = parseInt((req.query.limit as string) || '10');
@@ -172,7 +181,7 @@ router.get('/visitors/devices', async (req: Request, res: Response) => {
  * GET /api/stats/request-logs
  * Get raw request logs
  */
-router.get('/request-logs', async (req: Request, res: Response) => {
+router.get('/request-logs', checkAdmin, async (req: Request, res: Response) => {
   try {
     const timeRange = (req.query.timeRange as string) || '24h';
     const limit = parseInt((req.query.limit as string) || '100');
@@ -200,13 +209,15 @@ router.get('/request-logs', async (req: Request, res: Response) => {
  * GET /api/stats/dashboard
  * Get all dashboard data in one request
  */
-router.get('/dashboard', async (req: Request, res: Response) => {
+router.get('/dashboard', checkAdmin, async (req: Request, res: Response) => {
   try {
     const timeRange = (req.query.timeRange as string) || '24h';
     
     const [
       totalViews,
       uniqueVisitors,
+      totalPagesIndexed,
+      totalDaysSinceTracking,
       pageViews,
       countries,
       browsers,
@@ -215,6 +226,8 @@ router.get('/dashboard', async (req: Request, res: Response) => {
     ] = await Promise.all([
       StatsService.getTotalSiteViews(timeRange),
       StatsService.getUniqueVisitors(timeRange),
+      StatsService.getTotalPagesIndexed(timeRange),
+      StatsService.getTotalDaysSinceTracking(),
       StatsService.getPageViewsByPage(timeRange, 10),
       StatsService.getVisitorCountries(timeRange, 10),
       StatsService.getVisitorBrowsers(timeRange, 10),
@@ -228,6 +241,8 @@ router.get('/dashboard', async (req: Request, res: Response) => {
         overview: {
           totalViews,
           uniqueVisitors,
+          totalPagesIndexed,
+          totalDaysSinceTracking,
           timeRange
         },
         pageViews,

@@ -4,7 +4,8 @@ import {
 	Users, 
 	BarChart3, 
 	FileText,
-	Sliders
+	Sliders,
+	TrendingUp
 } from 'lucide-svelte';
 
 export interface NavigationItem {
@@ -17,6 +18,13 @@ export interface NavigationItem {
 
 // Shared navigation configuration for admin panel
 export const adminNavigation: NavigationItem[] = [
+	{
+		id: 'stats',
+		label: 'Statistics',
+		icon: TrendingUp,
+		path: '/admin/stats',
+		description: 'Website analytics and visitor statistics'
+	},
 	{
 		id: 'configuration',
 		label: 'Configuration',

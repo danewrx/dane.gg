@@ -1,40 +1,14 @@
-import { browser } from '$app/environment';
 
-export interface TrackingData {
-  pagePath: string;
-  visitorId?: string;
-  sessionId?: string;
-  screenResolution?: string;
-  language?: string;
-  referrer?: string;
-}
-
-export class TrackingService {
+class TrackingService {
   private static instance: TrackingService;
   private visitorId: string | null = null;
   private sessionId: string | null = null;
 
-  private constructor() {
-    if (browser) {
-      this.initializeTracking();
-    }
-  }
-
-  public static getInstance(): TrackingService {
+  static getInstance(): TrackingService {
     if (!TrackingService.instance) {
       TrackingService.instance = new TrackingService();
     }
     return TrackingService.instance;
-  }
-
-  private initializeTracking() {
-    if (!browser) return;
-
-    this.visitorId = this.getCookie('visitor_id') || this.generateId();
-    this.sessionId = this.getCookie('session_id') || this.generateId();
-
-    this.setCookie('visitor_id', this.visitorId, 365); // 1 year
-    this.setCookie('session_id', this.sessionId, 1); // 1 day
   }
 
   private generateId(): string {
@@ -45,88 +19,103 @@ export class TrackingService {
     });
   }
 
-  private getCookie(name: string): string | null {
-    if (!browser) return null;
-    
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) {
-      return parts.pop()?.split(';').shift() || null;
+  private getVisitorId(): string {
+    if (!this.visitorId) {
+      this.visitorId = localStorage.getItem('visitor_id');
+      if (!this.visitorId) {
+        this.visitorId = this.generateId();
+        localStorage.setItem('visitor_id', this.visitorId);
+      }
     }
-    return null;
+    return this.visitorId;
   }
 
-  private setCookie(name: string, value: string, days: number) {
-    if (!browser) return;
+  private getSessionId(): string {
+    if (!this.sessionId) {
+      this.sessionId = sessionStorage.getItem('session_id');
+      if (!this.sessionId) {
+        this.sessionId = this.generateId();
+        sessionStorage.setItem('session_id', this.sessionId);
+      }
+    }
+    return this.sessionId;
+  }
+
+  private shouldTrackPath(path: string): boolean {
+    // Skip tracking for admin pages + api routes
+    if (path.startsWith('/admin') || 
+        path.startsWith('/login') || 
+        path.startsWith('/logout')) {
+      console.log('TrackingService: Path excluded (admin):', path);
+      return false;
+    }
+
+    // Skip API routes
+    if (path.startsWith('/api/') ||
+        path.startsWith('/latest-tweet') ||
+        path.startsWith('/nowplaying') ||
+        path.startsWith('/discord-status') ||
+        path.startsWith('/social-links') ||
+        path.startsWith('/widgets/') ||
+        path.startsWith('/webhooks/')) {
+      console.log('TrackingService: Path excluded (API):', path);
+      return false;
+    }
+
+    // Skip system routes
+    if (path.startsWith('/_app/') ||
+        path.startsWith('/_svelte/') ||
+        path.startsWith('/favicon') ||
+        path.startsWith('/robots') ||
+        path.startsWith('/assets/') ||
+        path.startsWith('/static/')) {
+      console.log('TrackingService: Path excluded (system):', path);
+      return false;
+    }
+
+    console.log('TrackingService: Path allowed:', path);
+    return true;
+  }
+
+  async trackPageView(path: string): Promise<void> {
+    console.log('TrackingService: trackPageView called for path:', path);
     
-    const expires = new Date();
-    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Strict`;
-  }
+    // Check paths to be tracked
+    if (!this.shouldTrackPath(path)) {
+      console.log('TrackingService: Path excluded by shouldTrackPath:', path);
+      return;
+    }
 
-  private getScreenResolution(): string {
-    if (!browser) return '';
-    return `${window.screen.width}x${window.screen.height}`;
-  }
+    console.log('TrackingService: Sending fetch request for path:', path);
 
-  private getLanguage(): string {
-    if (!browser) return '';
-    return navigator.language || 'en-US';
-  }
-
-  private getReferrer(): string {
-    if (!browser) return '';
-    return document.referrer || '';
-  }
-
-  public trackPageView(pagePath: string) {
-    if (!browser) return;
-
-    const trackingData: TrackingData = {
-      pagePath,
-      visitorId: this.visitorId || undefined,
-      sessionId: this.sessionId || undefined,
-      screenResolution: this.getScreenResolution(),
-      language: this.getLanguage(),
-      referrer: this.getReferrer()
-    };
-
-    // Send tracking data to frontend API endpoint
-    this.sendTrackingData('/api/visitor-stats/track', trackingData);
-  }
-
-  public trackSiteVisit() {
-    if (!browser) return;
-
-    const trackingData: TrackingData = {
-      pagePath: window.location.pathname,
-      visitorId: this.visitorId || undefined,
-      sessionId: this.sessionId || undefined,
-      screenResolution: this.getScreenResolution(),
-      language: this.getLanguage(),
-      referrer: this.getReferrer()
-    };
-
-    // Send tracking data to backend
-    this.sendTrackingData('/api/track/site-visit', trackingData);
-  }
-
-  private async sendTrackingData(endpoint: string, data: TrackingData) {
     try {
-      await fetch(endpoint, {
+      const response = await fetch('/api/track', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data)
+        credentials: 'include',
+        body: JSON.stringify({
+          path,
+          method: 'GET',
+          statusCode: 200,
+          responseTime: 0,
+          contentLength: 0,
+          visitorId: this.getVisitorId(),
+          sessionId: this.getSessionId()
+        })
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('TrackingService: Failed to track page view (response not ok):', response.status, errorData);
+      } else {
+        console.log('TrackingService: Page view tracsked successfully for path:', path);
+      }
     } catch (error) {
-      console.error('Error sending tracking data:', error);
+      console.error('TrackingService: Failed to track page view (fetch error):', error);
     }
   }
 }
 
-// Export singleton instance
 export const trackingService = TrackingService.getInstance();
-
-

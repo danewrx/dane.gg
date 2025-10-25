@@ -2,20 +2,38 @@
 	// Root layout - handles routing between (site) and (admin) sections
 	import { page } from '$app/stores';
 	import { fontMode } from '$lib/site/stores/font';
+	import { trackingService } from '$lib/tracking';
+	import { onMount } from 'svelte';
 	
-	// Determine which section we're in based on the current route
 	$: isAdminSection = $page.url.pathname.startsWith('/admin') || 
 	                   $page.url.pathname.startsWith('/login') || 
 	                   $page.url.pathname.startsWith('/logout');
 	
-	// Initialize font store
 	$: fontMode;
+	
+	// Track page views (only for public site)
+	onMount(() => {
+		const unsubscribe = page.subscribe((newPage) => {
+			console.log('Layout: Page store updated. New path:', newPage.url.pathname);
+			const isAdmin = newPage.url.pathname.startsWith('/admin') || 
+			               newPage.url.pathname.startsWith('/login') || 
+			               newPage.url.pathname.startsWith('/logout');
+			
+			if (!isAdmin) {
+				console.log('Layout: Calling trackPageView for:', newPage.url.pathname);
+				trackingService.trackPageView(newPage.url.pathname);
+			} else {
+				console.log('Layout: Skipping tracking for admin path:', newPage.url.pathname);
+			}
+		});
+		
+		return unsubscribe;
+	});
 </script>
 
 <slot />
 
 <style>
-	/* Root styles - minimal, let each section handle its own styling */
 	:global(html, body) {
 		margin: 0;
 		padding: 0;

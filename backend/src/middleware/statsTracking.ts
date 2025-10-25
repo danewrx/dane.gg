@@ -31,6 +31,11 @@ export function trackStats(req: Request, res: Response, next: NextFunction) {
     return next();
   }
   
+  // Skip if API request
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+  
   // Only track GET requests for actual pages
   if (req.method !== 'GET') {
     return next();
