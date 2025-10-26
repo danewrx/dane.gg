@@ -12,7 +12,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			return json({ error: 'Unauthorized' }, { status: 401 });
 		}
 
-		const backendUrl = `http://localhost:3001/api/stats/dashboard?timeRange=${timeRange}`;
+		const backendUrl = `http://localhost:3000/api/stats/dashboard?timeRange=${timeRange}`;
 		
 		const response = await fetch(backendUrl, {
 			method: 'GET',

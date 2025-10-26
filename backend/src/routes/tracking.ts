@@ -28,7 +28,7 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     // Extract visitor data
-    const visitorData = StatsService.extractVisitorData(req);
+    const visitorData = await StatsService.extractVisitorData(req);
     
     // Use provided visitor and session IDs, or fall back to extracted ones
     const finalVisitorId = visitorId || visitorData.visitorId;

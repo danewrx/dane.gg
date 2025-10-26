@@ -2,19 +2,22 @@ import { db } from '../db';
 import { visitorStats } from '../db/schema';
 import { eq, desc, gte, sql, and, count } from 'drizzle-orm';
 import { Request } from 'express';
+import { VPNDetectionService } from './vpnDetection';
+import { GeoLocationService } from './geoLocation';
 
 export interface VisitorData {
   visitorId: string;
   sessionId: string;
   ipAddress: string;
   userAgent: string;
-  country?: string;
+  country?: string | null;
   browser?: string;
   os?: string;
   device?: string;
   screenResolution?: string;
   language?: string;
   referrer?: string;
+  isVpn?: boolean;
 }
 
 export interface VisitorTrackingData extends VisitorData {
@@ -30,9 +33,15 @@ export class StatsService {
   /**
    * Extract visitor data from request
    */
-  static extractVisitorData(req: Request): VisitorData {
+  static async extractVisitorData(req: Request): Promise<VisitorData> {
     const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
     const userAgent = req.get('User-Agent') || 'unknown';
+    
+    // Get country and VPN status in parallel
+    const [country, isVpn] = await Promise.all([
+      GeoLocationService.getCountry(ipAddress),
+      VPNDetectionService.isVPN(ipAddress)
+    ]);
     
     // Generate visitor ID if not exists
     let visitorId = req.cookies?.visitor_id;
@@ -54,17 +63,19 @@ export class StatsService {
       sessionId,
       ipAddress,
       userAgent,
+      country,
       browser,
       os,
       device,
       screenResolution: req.headers['x-screen-resolution'] as string,
       language: req.headers['accept-language']?.split(',')[0],
-      referrer: req.get('Referer')
+      referrer: req.get('Referer'),
+      isVpn
     };
   }
 
   /**
-   * Track visitor data (single method for all tracking)
+   * Track visitor data
    */
   static async trackVisitor(data: VisitorTrackingData): Promise<void> {
     try {
@@ -86,6 +97,7 @@ export class StatsService {
         screenResolution: data.screenResolution,
         language: data.language,
         referrer: data.referrer,
+        isVpn: data.isVpn || false,
         timestamp: new Date()
       });
     } catch (error) {
@@ -113,7 +125,7 @@ export class StatsService {
       sql`${visitorStats.path} NOT LIKE '/webhooks/%'`
     ];
     
-    if (timeAgo) {
+    if (timeAgo !== null) {
       conditions.push(gte(visitorStats.timestamp, timeAgo));
     }
     
@@ -145,7 +157,7 @@ export class StatsService {
       sql`${visitorStats.path} NOT LIKE '/webhooks/%'`
     ];
     
-    if (timeAgo) {
+    if (timeAgo !== null) {
       conditions.push(gte(visitorStats.timestamp, timeAgo));
     }
     
@@ -163,23 +175,31 @@ export class StatsService {
   static async getPageViewsByPage(timeRange: string, limit: number = 10): Promise<Array<{ page: string; views: number }>> {
     const timeAgo = this.getTimeAgo(timeRange);
     
+    const conditions = [
+      eq(visitorStats.method, 'GET'),
+      sql`${visitorStats.path} NOT LIKE '/api/%'`,
+      sql`${visitorStats.path} NOT LIKE '/admin%'`,
+      sql`${visitorStats.path} NOT LIKE '/login%'`,
+      sql`${visitorStats.path} NOT LIKE '/logout%'`,
+      sql`${visitorStats.path} NOT LIKE '/latest-tweet%'`,
+      sql`${visitorStats.path} NOT LIKE '/nowplaying%'`,
+      sql`${visitorStats.path} NOT LIKE '/discord-status%'`,
+      sql`${visitorStats.path} NOT LIKE '/social-links%'`,
+      sql`${visitorStats.path} NOT LIKE '/widgets/%'`,
+      sql`${visitorStats.path} NOT LIKE '/webhooks/%'`
+    ];
+    
+    if (timeAgo !== null) {
+      conditions.push(gte(visitorStats.timestamp, timeAgo));
+    }
+    
     const result = await db
       .select({
         page: visitorStats.path,
         views: sql<number>`count(*)`
       })
       .from(visitorStats)
-      .where(and(
-        gte(visitorStats.timestamp, timeAgo),
-        eq(visitorStats.method, 'GET'),
-        sql`${visitorStats.path} NOT LIKE '/api/%'`,
-        sql`${visitorStats.path} NOT LIKE '/latest-tweet%'`,
-        sql`${visitorStats.path} NOT LIKE '/nowplaying%'`,
-        sql`${visitorStats.path} NOT LIKE '/discord-status%'`,
-        sql`${visitorStats.path} NOT LIKE '/social-links%'`,
-        sql`${visitorStats.path} NOT LIKE '/widgets/%'`,
-        sql`${visitorStats.path} NOT LIKE '/webhooks/%'`
-      ))
+      .where(and(...conditions))
       .groupBy(visitorStats.path)
       .orderBy(desc(sql<number>`count(*)`))
       .limit(limit);
@@ -190,27 +210,36 @@ export class StatsService {
   /**
    * Get visitor countries (only actual pages)
    */
-  static async getVisitorCountries(timeRange: string, limit: number = 10): Promise<Array<{ country: string; visitors: number }>> {
+  static async getVisitorCountries(timeRange: string, limit: number = 10): Promise<Array<{ country: string | null; visitors: number; vpnVisitors: number }>> {
     const timeAgo = this.getTimeAgo(timeRange);
+    
+    const conditions = [
+      eq(visitorStats.method, 'GET'),
+      sql`${visitorStats.path} NOT LIKE '/api/%'`,
+      sql`${visitorStats.path} NOT LIKE '/admin%'`,
+      sql`${visitorStats.path} NOT LIKE '/login%'`,
+      sql`${visitorStats.path} NOT LIKE '/logout%'`,
+      sql`${visitorStats.path} NOT LIKE '/latest-tweet%'`,
+      sql`${visitorStats.path} NOT LIKE '/nowplaying%'`,
+      sql`${visitorStats.path} NOT LIKE '/discord-status%'`,
+      sql`${visitorStats.path} NOT LIKE '/social-links%'`,
+      sql`${visitorStats.path} NOT LIKE '/widgets/%'`,
+      sql`${visitorStats.path} NOT LIKE '/webhooks/%'`,
+      sql`${visitorStats.country} IS NOT NULL`
+    ];
+    
+    if (timeAgo !== null) {
+      conditions.push(gte(visitorStats.timestamp, timeAgo));
+    }
     
     const result = await db
       .select({
         country: visitorStats.country,
-        visitors: sql<number>`count(distinct ${visitorStats.visitorId})`
+        visitors: sql<number>`count(distinct ${visitorStats.visitorId})`,
+        vpnVisitors: sql<number>`count(distinct case when ${visitorStats.isVpn} = true then ${visitorStats.visitorId} end)`
       })
       .from(visitorStats)
-      .where(and(
-        gte(visitorStats.timestamp, timeAgo),
-        eq(visitorStats.method, 'GET'),
-        sql`${visitorStats.path} NOT LIKE '/api/%'`,
-        sql`${visitorStats.path} NOT LIKE '/latest-tweet%'`,
-        sql`${visitorStats.path} NOT LIKE '/nowplaying%'`,
-        sql`${visitorStats.path} NOT LIKE '/discord-status%'`,
-        sql`${visitorStats.path} NOT LIKE '/social-links%'`,
-        sql`${visitorStats.path} NOT LIKE '/widgets/%'`,
-        sql`${visitorStats.path} NOT LIKE '/webhooks/%'`,
-        sql`${visitorStats.country} IS NOT NULL`
-      ))
+      .where(and(...conditions))
       .groupBy(visitorStats.country)
       .orderBy(desc(sql<number>`count(distinct ${visitorStats.visitorId})`))
       .limit(limit);
@@ -221,8 +250,27 @@ export class StatsService {
   /**
    * Get visitor browsers (only actual pages)
    */
-  static async getVisitorBrowsers(timeRange: string, limit: number = 10): Promise<Array<{ browser: string; visitors: number }>> {
+  static async getVisitorBrowsers(timeRange: string, limit: number = 10): Promise<Array<{ browser: string | null; visitors: number }>> {
     const timeAgo = this.getTimeAgo(timeRange);
+    
+    const conditions = [
+      eq(visitorStats.method, 'GET'),
+      sql`${visitorStats.path} NOT LIKE '/api/%'`,
+      sql`${visitorStats.path} NOT LIKE '/admin%'`,
+      sql`${visitorStats.path} NOT LIKE '/login%'`,
+      sql`${visitorStats.path} NOT LIKE '/logout%'`,
+      sql`${visitorStats.path} NOT LIKE '/latest-tweet%'`,
+      sql`${visitorStats.path} NOT LIKE '/nowplaying%'`,
+      sql`${visitorStats.path} NOT LIKE '/discord-status%'`,
+      sql`${visitorStats.path} NOT LIKE '/social-links%'`,
+      sql`${visitorStats.path} NOT LIKE '/widgets/%'`,
+      sql`${visitorStats.path} NOT LIKE '/webhooks/%'`,
+      sql`${visitorStats.browser} IS NOT NULL`
+    ];
+    
+    if (timeAgo !== null) {
+      conditions.push(gte(visitorStats.timestamp, timeAgo));
+    }
     
     const result = await db
       .select({
@@ -230,18 +278,7 @@ export class StatsService {
         visitors: sql<number>`count(distinct ${visitorStats.visitorId})`
       })
       .from(visitorStats)
-      .where(and(
-        gte(visitorStats.timestamp, timeAgo),
-        eq(visitorStats.method, 'GET'),
-        sql`${visitorStats.path} NOT LIKE '/api/%'`,
-        sql`${visitorStats.path} NOT LIKE '/latest-tweet%'`,
-        sql`${visitorStats.path} NOT LIKE '/nowplaying%'`,
-        sql`${visitorStats.path} NOT LIKE '/discord-status%'`,
-        sql`${visitorStats.path} NOT LIKE '/social-links%'`,
-        sql`${visitorStats.path} NOT LIKE '/widgets/%'`,
-        sql`${visitorStats.path} NOT LIKE '/webhooks/%'`,
-        sql`${visitorStats.browser} IS NOT NULL`
-      ))
+      .where(and(...conditions))
       .groupBy(visitorStats.browser)
       .orderBy(desc(sql<number>`count(distinct ${visitorStats.visitorId})`))
       .limit(limit);
@@ -252,8 +289,27 @@ export class StatsService {
   /**
    * Get visitor operating systems (only actual pages)
    */
-  static async getVisitorOS(timeRange: string, limit: number = 10): Promise<Array<{ os: string; visitors: number }>> {
+  static async getVisitorOS(timeRange: string, limit: number = 10): Promise<Array<{ os: string | null; visitors: number }>> {
     const timeAgo = this.getTimeAgo(timeRange);
+    
+    const conditions = [
+      eq(visitorStats.method, 'GET'),
+      sql`${visitorStats.path} NOT LIKE '/api/%'`,
+      sql`${visitorStats.path} NOT LIKE '/admin%'`,
+      sql`${visitorStats.path} NOT LIKE '/login%'`,
+      sql`${visitorStats.path} NOT LIKE '/logout%'`,
+      sql`${visitorStats.path} NOT LIKE '/latest-tweet%'`,
+      sql`${visitorStats.path} NOT LIKE '/nowplaying%'`,
+      sql`${visitorStats.path} NOT LIKE '/discord-status%'`,
+      sql`${visitorStats.path} NOT LIKE '/social-links%'`,
+      sql`${visitorStats.path} NOT LIKE '/widgets/%'`,
+      sql`${visitorStats.path} NOT LIKE '/webhooks/%'`,
+      sql`${visitorStats.os} IS NOT NULL`
+    ];
+    
+    if (timeAgo !== null) {
+      conditions.push(gte(visitorStats.timestamp, timeAgo));
+    }
     
     const result = await db
       .select({
@@ -261,18 +317,7 @@ export class StatsService {
         visitors: sql<number>`count(distinct ${visitorStats.visitorId})`
       })
       .from(visitorStats)
-      .where(and(
-        gte(visitorStats.timestamp, timeAgo),
-        eq(visitorStats.method, 'GET'),
-        sql`${visitorStats.path} NOT LIKE '/api/%'`,
-        sql`${visitorStats.path} NOT LIKE '/latest-tweet%'`,
-        sql`${visitorStats.path} NOT LIKE '/nowplaying%'`,
-        sql`${visitorStats.path} NOT LIKE '/discord-status%'`,
-        sql`${visitorStats.path} NOT LIKE '/social-links%'`,
-        sql`${visitorStats.path} NOT LIKE '/widgets/%'`,
-        sql`${visitorStats.path} NOT LIKE '/webhooks/%'`,
-        sql`${visitorStats.os} IS NOT NULL`
-      ))
+      .where(and(...conditions))
       .groupBy(visitorStats.os)
       .orderBy(desc(sql<number>`count(distinct ${visitorStats.visitorId})`))
       .limit(limit);
@@ -283,8 +328,27 @@ export class StatsService {
   /**
    * Get visitor devices (only actual pages)
    */
-  static async getVisitorDevices(timeRange: string, limit: number = 10): Promise<Array<{ device: string; visitors: number }>> {
+  static async getVisitorDevices(timeRange: string, limit: number = 10): Promise<Array<{ device: string | null; visitors: number }>> {
     const timeAgo = this.getTimeAgo(timeRange);
+    
+    const conditions = [
+      eq(visitorStats.method, 'GET'),
+      sql`${visitorStats.path} NOT LIKE '/api/%'`,
+      sql`${visitorStats.path} NOT LIKE '/admin%'`,
+      sql`${visitorStats.path} NOT LIKE '/login%'`,
+      sql`${visitorStats.path} NOT LIKE '/logout%'`,
+      sql`${visitorStats.path} NOT LIKE '/latest-tweet%'`,
+      sql`${visitorStats.path} NOT LIKE '/nowplaying%'`,
+      sql`${visitorStats.path} NOT LIKE '/discord-status%'`,
+      sql`${visitorStats.path} NOT LIKE '/social-links%'`,
+      sql`${visitorStats.path} NOT LIKE '/widgets/%'`,
+      sql`${visitorStats.path} NOT LIKE '/webhooks/%'`,
+      sql`${visitorStats.device} IS NOT NULL`
+    ];
+    
+    if (timeAgo !== null) {
+      conditions.push(gte(visitorStats.timestamp, timeAgo));
+    }
     
     const result = await db
       .select({
@@ -292,18 +356,7 @@ export class StatsService {
         visitors: sql<number>`count(distinct ${visitorStats.visitorId})`
       })
       .from(visitorStats)
-      .where(and(
-        gte(visitorStats.timestamp, timeAgo),
-        eq(visitorStats.method, 'GET'),
-        sql`${visitorStats.path} NOT LIKE '/api/%'`,
-        sql`${visitorStats.path} NOT LIKE '/latest-tweet%'`,
-        sql`${visitorStats.path} NOT LIKE '/nowplaying%'`,
-        sql`${visitorStats.path} NOT LIKE '/discord-status%'`,
-        sql`${visitorStats.path} NOT LIKE '/social-links%'`,
-        sql`${visitorStats.path} NOT LIKE '/widgets/%'`,
-        sql`${visitorStats.path} NOT LIKE '/webhooks/%'`,
-        sql`${visitorStats.device} IS NOT NULL`
-      ))
+      .where(and(...conditions))
       .groupBy(visitorStats.device)
       .orderBy(desc(sql<number>`count(distinct ${visitorStats.visitorId})`))
       .limit(limit);
@@ -317,10 +370,16 @@ export class StatsService {
   static async getRequestLogs(timeRange: string, limit: number = 100): Promise<any[]> {
     const timeAgo = this.getTimeAgo(timeRange);
     
+    const conditions = [];
+    
+    if (timeAgo !== null) {
+      conditions.push(gte(visitorStats.timestamp, timeAgo));
+    }
+    
     const result = await db
       .select()
       .from(visitorStats)
-      .where(gte(visitorStats.timestamp, timeAgo))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(desc(visitorStats.timestamp))
       .limit(limit);
     
@@ -345,7 +404,7 @@ export class StatsService {
       sql`${visitorStats.path} NOT LIKE '/webhooks/%'`
     ];
     
-    if (timeAgo) {
+    if (timeAgo !== null) {
       conditions.push(gte(visitorStats.timestamp, timeAgo));
     }
     

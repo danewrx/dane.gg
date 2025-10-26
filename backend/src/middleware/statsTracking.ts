@@ -5,7 +5,7 @@ import { StatsService } from '../services/statsService';
  * Middleware to track request statistics
  * This should be used on all public routes that need tracking
  */
-export function trackStats(req: Request, res: Response, next: NextFunction) {
+export async function trackStats(req: Request, res: Response, next: NextFunction) {
   const startTime = Date.now();
   
   // Skip tracking for certain paths (only track actual pages)
@@ -60,7 +60,7 @@ export function trackStats(req: Request, res: Response, next: NextFunction) {
     return next();
   }
   
-  const visitorData = StatsService.extractVisitorData(req);
+  const visitorData = await StatsService.extractVisitorData(req);
   
   res.cookie('visitor_id', visitorData.visitorId, {
     httpOnly: true,
@@ -78,7 +78,7 @@ export function trackStats(req: Request, res: Response, next: NextFunction) {
   
   // Override res.end to track response data
   const originalEnd = res.end;
-  res.end = function(chunk?: any, encoding?: any) {
+  res.end = function(chunk?: any, encoding?: any, cb?: () => void) {
     const responseTime = Date.now() - startTime;
     
     StatsService.trackVisitor({
@@ -93,7 +93,7 @@ export function trackStats(req: Request, res: Response, next: NextFunction) {
       console.error('Error tracking visitor data:', error);
     });
     
-    originalEnd.call(this, chunk, encoding);
+    return originalEnd.call(this, chunk, encoding, cb);
   };
   
   next();

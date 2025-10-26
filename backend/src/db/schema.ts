@@ -121,6 +121,7 @@ export const visitorStats = websiteSchema.table('visitor_stats', {
   screenResolution: varchar('screen_resolution', { length: 20 }),
   language: varchar('language', { length: 10 }),
   referrer: text('referrer'),
+  isVpn: boolean('is_vpn').default(false),
   timestamp: timestamp('timestamp', { withTimezone: true }).defaultNow()
 });
 

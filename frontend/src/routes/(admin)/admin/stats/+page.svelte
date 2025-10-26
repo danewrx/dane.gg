@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Eye, Users, FileText, Calendar } from 'lucide-svelte';
+	import CountryPieChart from '$lib/admin/components/CountryPieChart.svelte';
 
 	// Time range
 	const timeRanges = [
@@ -20,6 +21,7 @@
 		totalPagesIndexed: 0,
 		totalDaysSinceTracking: 0
 	});
+	let countries = $state([]);
 	let loading = $state(true);
 	let error = $state('');
 
@@ -66,6 +68,7 @@
 			}
 			
 			const data = await response.json();
+			console.log('API Response:', data);
 			
 			if (data.success) {
 				stats = {
@@ -74,6 +77,8 @@
 					totalPagesIndexed: data.data.overview.totalPagesIndexed,
 					totalDaysSinceTracking: data.data.overview.totalDaysSinceTracking
 				};
+				countries = data.data.countries || [];
+			console.log('Stats page - Countries data:', countries);
 			} else {
 				throw new Error(data.message || 'Failed to load stats');
 			}
@@ -142,6 +147,12 @@
 					</div>
 				{/each}
 			</div>
+
+			{#if countries.length > 0}
+				<div class="charts-section">
+					<CountryPieChart data={countries} title="Visitor Countries" />
+				</div>
+			{/if}
 		{/if}
 	</section>
 </div>
@@ -246,6 +257,10 @@
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
 		gap: 20px;
+	}
+
+	.charts-section {
+		margin-top: 32px;
 	}
 
 	.stat-card {

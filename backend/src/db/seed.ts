@@ -9,7 +9,8 @@ import {
   blogTags, 
   postTags,
   messages,
-  siteConfig
+  siteConfig,
+  visitorStats
 } from './schema';
 
 export async function seed() {
@@ -25,6 +26,7 @@ export async function seed() {
 
     // Clear existing data (in reverse order of dependencies)
     console.log('🧹 Clearing existing data...');
+    await db.delete(visitorStats);
     await db.delete(projectTags);
     await db.delete(postTags);
     await db.delete(projects);
@@ -470,11 +472,181 @@ Stay tuned for the full article!`,
     console.log(`   - ${blogTagSeeds.length} blog tags`);
     console.log(`   - ${projectSeeds.length} projects`);
     console.log(`   - ${postSeeds.length} blog posts`);
+    // Seed visitor statistics
+    console.log('📊 Seeding visitor statistics...');
+    const testVisitorData = [
+      // Real visitors from different countries
+      {
+        visitorId: 'visitor-001',
+        sessionId: 'session-001',
+        method: 'GET',
+        path: '/',
+        statusCode: 200,
+        responseTime: 150,
+        contentLength: 5000,
+        ipAddress: '203.0.113.1', // Australia
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        country: 'Australia',
+        browser: 'Chrome',
+        os: 'Windows',
+        device: 'Desktop',
+        screenResolution: '1920x1080',
+        language: 'en-AU',
+        referrer: null,
+        isVpn: false,
+        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
+      },
+      {
+        visitorId: 'visitor-002',
+        sessionId: 'session-002',
+        method: 'GET',
+        path: '/about',
+        statusCode: 200,
+        responseTime: 200,
+        contentLength: 3000,
+        ipAddress: '198.51.100.1', // United States
+        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        country: 'United States',
+        browser: 'Safari',
+        os: 'macOS',
+        device: 'Desktop',
+        screenResolution: '2560x1440',
+        language: 'en-US',
+        referrer: 'https://google.com',
+        isVpn: false,
+        timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) // 1 day ago
+      },
+      {
+        visitorId: 'visitor-003',
+        sessionId: 'session-003',
+        method: 'GET',
+        path: '/blog',
+        statusCode: 200,
+        responseTime: 180,
+        contentLength: 4000,
+        ipAddress: '185.86.151.100', // NordVPN (Netherlands)
+        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15',
+        country: 'Netherlands',
+        browser: 'Safari',
+        os: 'iOS',
+        device: 'Mobile',
+        screenResolution: '375x667',
+        language: 'en-GB',
+        referrer: 'https://twitter.com',
+        isVpn: true,
+        timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000) // 12 hours ago
+      },
+      {
+        visitorId: 'visitor-004',
+        sessionId: 'session-004',
+        method: 'GET',
+        path: '/projects',
+        statusCode: 200,
+        responseTime: 220,
+        contentLength: 6000,
+        ipAddress: '103.86.96.200', // NordVPN (Australia)
+        userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36',
+        country: 'Australia',
+        browser: 'Firefox',
+        os: 'Linux',
+        device: 'Desktop',
+        screenResolution: '1920x1080',
+        language: 'en-AU',
+        referrer: 'https://reddit.com',
+        isVpn: true,
+        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000) // 6 hours ago
+      },
+      {
+        visitorId: 'visitor-005',
+        sessionId: 'session-005',
+        method: 'GET',
+        path: '/contact',
+        statusCode: 200,
+        responseTime: 160,
+        contentLength: 2500,
+        ipAddress: '192.0.2.1', // United Kingdom
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101',
+        country: 'United Kingdom',
+        browser: 'Firefox',
+        os: 'Windows',
+        device: 'Desktop',
+        screenResolution: '1366x768',
+        language: 'en-GB',
+        referrer: 'https://github.com',
+        isVpn: false,
+        timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000) // 3 hours ago
+      },
+      {
+        visitorId: 'visitor-006',
+        sessionId: 'session-006',
+        method: 'GET',
+        path: '/',
+        statusCode: 200,
+        responseTime: 140,
+        contentLength: 5000,
+        ipAddress: '203.0.113.2', // Australia (return visitor)
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        country: 'Australia',
+        browser: 'Chrome',
+        os: 'Windows',
+        device: 'Desktop',
+        screenResolution: '1920x1080',
+        language: 'en-AU',
+        referrer: null,
+        isVpn: false,
+        timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000) // 1 hour ago
+      },
+      {
+        visitorId: 'visitor-007',
+        sessionId: 'session-007',
+        method: 'GET',
+        path: '/about',
+        statusCode: 200,
+        responseTime: 190,
+        contentLength: 3000,
+        ipAddress: '198.51.100.2', // United States (return visitor)
+        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        country: 'United States',
+        browser: 'Safari',
+        os: 'macOS',
+        device: 'Desktop',
+        screenResolution: '2560x1440',
+        language: 'en-US',
+        referrer: 'https://google.com',
+        isVpn: false,
+        timestamp: new Date(Date.now() - 30 * 60 * 1000) // 30 minutes ago
+      },
+      {
+        visitorId: 'visitor-008',
+        sessionId: 'session-008',
+        method: 'GET',
+        path: '/blog',
+        statusCode: 200,
+        responseTime: 170,
+        contentLength: 4000,
+        ipAddress: '203.0.113.3', // Canada
+        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15',
+        country: 'Canada',
+        browser: 'Safari',
+        os: 'iOS',
+        device: 'Mobile',
+        screenResolution: '375x667',
+        language: 'en-CA',
+        referrer: 'https://facebook.com',
+        isVpn: false,
+        timestamp: new Date(Date.now() - 15 * 60 * 1000) // 15 minutes ago
+      }
+    ];
+
+    await db.insert(visitorStats).values(testVisitorData);
+    console.log(`✅ Seeded ${testVisitorData.length} visitor records`);
+
     console.log(`   - ${projectTagLinks.length} project-tag relationships`);
     console.log(`   - ${postTagLinks.length} post-tag relationships`);
     console.log(`   - 3 sample messages`);
     console.log(`   - 3 sample page views`);
     console.log(`   - 5 site configuration settings`);
+    console.log(`   - ${testVisitorData.length} visitor statistics records`);
 
   } catch (error) {
     console.error('❌ Error seeding database:', error);
