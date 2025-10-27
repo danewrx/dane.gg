@@ -235,12 +235,12 @@
 	}));
 
 	// Chart dimensions
-	const chartSize = 400;
+	const chartSize = 450;
 	const centerX = chartSize / 2;
 	const centerY = chartSize / 2;
-	const radius = 100;
-	const innerRadius = 50;
-	const flagDistance = 150;
+	const radius = 115;
+	const innerRadius = 58;
+	const flagDistance = 170;
 
 	// Calculate flag positions
 	const flagPositions = $derived(segments.map(segment => {
@@ -342,7 +342,8 @@
 	
 	<div class="chart-content">
 		<div class="chart-main">
-			<div class="chart-wrapper" style="width: {chartSize}px; height: {chartSize}px; position: relative;">
+			<div class="chart-left">
+				<div class="chart-wrapper" style="width: {chartSize}px; height: {chartSize}px; position: relative;">
 				<!-- SVG for pie chart -->
 				<svg width={chartSize} height={chartSize} class="chart-svg">
 					<!-- Pie chart segments -->
@@ -395,6 +396,7 @@
 						<span class="fi fi-{flag.flag}"></span>
 					</div>
 				{/each}
+				</div>
 			</div>
 
 			<!-- Legend - Desktop: Right side -->
@@ -481,18 +483,19 @@
 
 <style>
 	.chart-container {
-		background: #282828;
+		background: var(--bg-secondary, #282828);
 		border-radius: 12px;
-		padding: 24px;
-		border: 1px solid #3a3a3a;
+		padding: 20px;
+		border: 1px solid var(--border-color, #3a3a3a);
 		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+		transition: background 0.2s ease, border-color 0.2s ease;
 	}
 
 	.chart-title {
-		color: #f9fafb;
+		color: var(--text-primary, #f9fafb);
 		font-size: 18px;
 		font-weight: 600;
-		margin: 0 0 20px 0;
+		margin: 0 0 16px 0;
 		text-align: center;
 	}
 
@@ -500,22 +503,29 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 20px;
+		gap: 16px;
 	}
 
 	.chart-main {
 		display: flex;
 		align-items: flex-start;
-		gap: 20px;
+		gap: 24px;
 		width: 100%;
-		max-width: 1000px;
+		max-width: 1100px;
+		justify-content: space-between;
+	}
+
+	.chart-left {
+		flex: 1;
+		display: flex;
+		justify-content: center;
 	}
 
 	.chart-wrapper {
 		position: relative;
-		flex: 1;
 		display: flex;
 		justify-content: center;
+		flex: 0 0 auto;
 	}
 
 	.chart-svg {
@@ -569,7 +579,7 @@
 	}
 
 	.legend-scroll::-webkit-scrollbar-track {
-		background: #282828;
+		background: var(--bg-primary, #282828);
 		border-radius: 3px;
 	}
 
@@ -587,17 +597,18 @@
 		align-items: center;
 		gap: 12px;
 		padding: 12px 16px;
-		background: #2f2f2f;
+		background: var(--bg-tertiary, #2f2f2f);
 		border-radius: 8px;
-		border: 1px solid #3a3a3a;
+		border: 1px solid var(--border-color, #3a3a3a);
 		margin-bottom: 8px;
-		transition: background-color 0.2s ease;
+		transition: background-color 0.2s ease, border-color 0.2s ease;
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	}
 
 	.legend-item:hover {
-		background: #3a3a3a;
+		background: var(--bg-hover, #3a3a3a);
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+		border-color: var(--accent-color, #6366f1);
 	}
 
 	.legend-color {
@@ -629,13 +640,13 @@
 	}
 
 	.legend-text {
-		color: #d1d5db;
+		color: var(--text-primary, #d1d5db);
 		font-size: 14px;
 		font-weight: 500;
 	}
 
 	.legend-percentage {
-		color: #9ca3af;
+		color: var(--text-secondary, #9ca3af);
 		font-size: 12px;
 		font-weight: 500;
 	}
@@ -657,11 +668,12 @@
 		align-items: center;
 		gap: 8px;
 		padding: 8px 12px;
-		background: #2f2f2f;
+		background: var(--bg-tertiary, #2f2f2f);
 		border-radius: 6px;
-		border: 1px solid #3a3a3a;
+		border: 1px solid var(--border-color, #3a3a3a);
 		margin-bottom: 8px;
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		transition: background 0.2s ease, border-color 0.2s ease;
 	}
 
 	.chart-legend-mobile .legend-text-container {
@@ -683,12 +695,13 @@
 	}
 
 	.tooltip-content {
-		background: #242424;
-		border: 1px solid #3a3a3a;
+		background: var(--bg-tertiary, #242424);
+		border: 1px solid var(--border-color, #3a3a3a);
 		border-radius: 8px;
 		padding: 12px;
 		box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
 		min-width: 200px;
+		transition: background 0.2s ease, border-color 0.2s ease;
 	}
 
 	.tooltip-header {
@@ -712,7 +725,7 @@
 	}
 
 	.tooltip-country {
-		color: #f9fafb;
+		color: var(--text-primary, #f9fafb);
 		font-weight: 600;
 		font-size: 14px;
 	}
@@ -724,12 +737,12 @@
 	}
 
 	.tooltip-stat {
-		color: #d1d5db;
+		color: var(--text-secondary, #d1d5db);
 		font-size: 12px;
 	}
 
 	.tooltip-stat strong {
-		color: #60a5fa;
+		color: var(--accent-color, #60a5fa);
 	}
 
 	.vpn-percentage {
@@ -799,5 +812,10 @@
 		.legend-scroll {
 			max-height: 150px;
 		}
+	}
+
+	/* Make unknown/test flags (xx) black in light mode */
+	:global(html:not(.dark)) .fi-xx {
+		filter: brightness(0) saturate(100%);
 	}
 </style>
