@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Eye, Users, FileText, Calendar } from 'lucide-svelte';
-	import CountryPieChart from '$lib/admin/components/CountryPieChart.svelte';
+import CountryPieChart from '$lib/admin/components/CountryPieChart.svelte';
+import BrowserList from '$lib/admin/components/BrowserList.svelte';
 
 	// Time range
 	const timeRanges = [
@@ -21,7 +22,8 @@
 		totalPagesIndexed: 0,
 		totalDaysSinceTracking: 0
 	});
-	let countries = $state([]);
+let countries = $state([]);
+let browsers = $state([]);
 	let loading = $state(true);
 	let error = $state('');
 
@@ -71,13 +73,14 @@
 			console.log('API Response:', data);
 			
 			if (data.success) {
-				stats = {
+                stats = {
 					totalViews: data.data.overview.totalViews,
 					uniqueVisitors: data.data.overview.uniqueVisitors,
 					totalPagesIndexed: data.data.overview.totalPagesIndexed,
 					totalDaysSinceTracking: data.data.overview.totalDaysSinceTracking
 				};
-				countries = data.data.countries || [];
+                countries = data.data.countries || [];
+                browsers = data.data.browsers || [];
 			console.log('Stats page - Countries data:', countries);
 			} else {
 				throw new Error(data.message || 'Failed to load stats');
@@ -148,11 +151,16 @@
 				{/each}
 			</div>
 
-			{#if countries.length > 0}
-				<div class="charts-section">
-					<CountryPieChart data={countries} title="Visitor Countries" />
-				</div>
-			{/if}
+            <div class="dashboard-row">
+                <div class="panel-left">
+                    {#if countries.length > 0}
+                        <CountryPieChart data={countries} title="Visitor Countries" />
+                    {/if}
+                </div>
+                <aside class="panel-right">
+                    <BrowserList data={browsers} title="Top Browsers" />
+                </aside>
+            </div>
 		{/if}
 	</section>
 </div>
@@ -263,9 +271,34 @@
 		gap: 20px;
 	}
 
-	.charts-section {
-		margin-top: 32px;
-	}
+.dashboard-row {
+    margin-top: 32px;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 0;
+    align-items: start;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.panel-left { 
+    grid-column: span 8; 
+    min-width: 0; 
+    padding-right: 10px;
+    overflow: hidden;
+}
+
+.panel-right { 
+    grid-column: span 4; 
+    min-width: 0; 
+    padding-left: 10px;
+    overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+    .dashboard-row { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+    .panel-left, .panel-right { grid-column: span 12; }
+}
 
 	.stat-card {
 		background: var(--bg-secondary, #282828);
