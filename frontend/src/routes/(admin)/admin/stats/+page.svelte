@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Eye, Users, FileText, Calendar } from 'lucide-svelte';
-import CountryPieChart from '$lib/admin/components/CountryPieChart.svelte';
-import BrowserList from '$lib/admin/components/BrowserList.svelte';
+	import CountryPieChart from '$lib/admin/components/CountryPieChart.svelte';
+	import BrowserList from '$lib/admin/components/BrowserList.svelte';
+	import OperatingSystemList from '$lib/admin/components/OperatingSystemList.svelte';
 
 	// Time range
 	const timeRanges = [
@@ -22,8 +23,9 @@ import BrowserList from '$lib/admin/components/BrowserList.svelte';
 		totalPagesIndexed: 0,
 		totalDaysSinceTracking: 0
 	});
-let countries = $state([]);
-let browsers = $state([]);
+	let countries = $state([]);
+	let browsers = $state([]);
+	let operatingSystems = $state([]);
 	let loading = $state(true);
 	let error = $state('');
 
@@ -79,8 +81,9 @@ let browsers = $state([]);
 					totalPagesIndexed: data.data.overview.totalPagesIndexed,
 					totalDaysSinceTracking: data.data.overview.totalDaysSinceTracking
 				};
-                countries = data.data.countries || [];
-                browsers = data.data.browsers || [];
+				countries = data.data.countries || [];
+				browsers = data.data.browsers || [];
+				operatingSystems = data.data.os || [];
 			console.log('Stats page - Countries data:', countries);
 			} else {
 				throw new Error(data.message || 'Failed to load stats');
@@ -158,7 +161,12 @@ let browsers = $state([]);
                     {/if}
                 </div>
                 <aside class="panel-right">
-                    <BrowserList data={browsers} title="Top Browsers" />
+                    <div class="browser-section">
+                        <BrowserList data={browsers} title="Top Browsers" />
+                    </div>
+                    <div class="os-section">
+                        <OperatingSystemList data={operatingSystems} title="Top Operating Systems" />
+                    </div>
                 </aside>
             </div>
 		{/if}
@@ -275,6 +283,7 @@ let browsers = $state([]);
     margin-top: 32px;
     display: grid;
     grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: 1fr;
     gap: 0;
     align-items: start;
     width: 100%;
@@ -282,22 +291,51 @@ let browsers = $state([]);
 }
 
 .panel-left { 
-    grid-column: span 8; 
+    grid-column: 1 / 9; 
     min-width: 0; 
     padding-right: 10px;
-    overflow: hidden;
 }
 
 .panel-right { 
-    grid-column: span 4; 
+    grid-column: 9 / 13; 
+    grid-row: 1;
     min-width: 0; 
+    height: 100%;
     padding-left: 10px;
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 20px;
     overflow: hidden;
+}
+
+.browser-section {
+    grid-row: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.os-section {
+    grid-row: 2;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 @media (max-width: 1024px) {
     .dashboard-row { grid-template-columns: repeat(12, minmax(0, 1fr)); }
     .panel-left, .panel-right { grid-column: span 12; }
+    
+    .panel-right {
+        grid-template-rows: auto auto;
+    }
+    
+    .browser-section,
+    .os-section {
+        grid-row: auto;
+    }
 }
 
 	.stat-card {

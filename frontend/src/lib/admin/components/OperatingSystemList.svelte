@@ -10,55 +10,53 @@
     }
   });
 
-  interface BrowserItem {
-    browser: string | null;
+  interface OSItem {
+    os: string | null;
     visitors: number;
   }
 
   interface Props {
     title?: string;
-    data: BrowserItem[];
+    data: OSItem[];
   }
 
-  let { title = 'Top Browsers', data }: Props = $props();
+  let { title = 'Top Operating Systems', data }: Props = $props();
 
   function normalize(name: string | null): string {
     const n = (name || 'Unknown').toLowerCase();
-    if (n.includes('chrome') && !n.includes('edge') && !n.includes('brave') && !n.includes('vivaldi') && !n.includes('opera')) return 'chrome';
-    if (n.includes('chromium')) return 'chromium';
-    if (n.includes('firefox')) return 'firefox';
-    if (n.includes('safari') && !n.includes('mobile')) return 'safari';
-    if (n.includes('edge')) return 'edge';
-    if (n.includes('opera')) return 'opera';
-    if (n.includes('brave')) return 'brave';
-    if (n.includes('samsung')) return 'samsung-internet';
-    if (n.includes('vivaldi')) return 'vivaldi';
-    if (n.includes('uc')) return 'uc';
-    if (n.includes('ie') || n.includes('internet explorer')) return 'ie';
+    if (n.includes('windows')) return 'windows';
+    if (n.includes('mac') || n.includes('darwin')) return 'macos';
+    if (n.includes('linux') && !n.includes('android')) return 'linux';
+    if (n.includes('android')) return 'android';
+    if (n.includes('ios') || n.includes('iphone') || n.includes('ipad')) return 'ios';
+    if (n.includes('chrome os') || n.includes('chromeos')) return 'chromeos';
+    if (n.includes('ubuntu')) return 'ubuntu';
+    if (n.includes('debian')) return 'debian';
+    if (n.includes('fedora')) return 'fedora';
+    if (n.includes('arch')) return 'arch';
     return 'other';
   }
 
   function iconFor(name: string) {
     switch (name) {
-      case 'chrome': return { icon: 'logos:chrome', color: '#4285F4' };
-      case 'chromium': return { icon: 'logos:chromium', color: '#4285F4' };
-      case 'firefox': return { icon: 'logos:firefox', color: '#FF7139' };
-      case 'safari': return { icon: 'logos:safari', color: '#0FB5EE' };
-      case 'edge': return { icon: 'logos:microsoft-edge', color: '#0A7CF2' };
-      case 'opera': return { icon: 'logos:opera', color: '#FF1B2D' };
-      case 'brave': return { icon: 'logos:brave', color: '#FB542B' };
-      case 'samsung-internet': return { icon: 'logos:samsung-internet', color: '#1428A0' };
-      case 'vivaldi': return { icon: 'logos:vivaldi-icon', color: '#EF3939' };
-      case 'uc': return { icon: 'logos:uc-browser', color: '#E36F00' };
-      case 'ie': return { icon: 'logos:ie', color: '#1EBBEE' };
-      default: return { icon: 'lucide:globe', color: 'var(--accent-color, #6366f1)' };
+      case 'windows': return { icon: 'logos:microsoft-windows-icon', color: '#0078D4' };
+      case 'macos': return { icon: 'logos:apple', color: '#000000' };
+      case 'linux': return { icon: 'logos:linux-tux', color: '#FCC624' };
+      case 'android': return { icon: 'logos:android-icon', color: '#3DDC84' };
+      case 'ios': return { icon: 'logos:apple', color: '#000000' };
+      case 'chromeos': return { icon: 'logos:chrome', color: '#4285F4' };
+      case 'ubuntu': return { icon: 'logos:ubuntu', color: '#E95420' };
+      case 'debian': return { icon: 'logos:debian', color: '#A81D33' };
+      case 'fedora': return { icon: 'logos:fedora', color: '#294172' };
+      case 'arch': return { icon: 'logos:archlinux', color: '#1793D1' };
+      default: return { icon: 'lucide:monitor', color: 'var(--accent-color, #6366f1)' };
     }
   }
 
   const total = $derived(data.reduce((s, d) => s + (typeof d.visitors === 'number' ? d.visitors : parseInt(d.visitors as any) || 0), 0));
 
   const items = $derived(data.map((d) => {
-    const name = d.browser ?? 'Unknown';
+    const name = d.os ?? 'Unknown';
     const key = normalize(name);
     const { icon, color } = iconFor(key);
     const visitors = typeof d.visitors === 'number' ? d.visitors : parseInt(d.visitors as any) || 0;
@@ -69,7 +67,7 @@
   function circumference(r: number) { return 2 * Math.PI * r; }
 </script>
 
-<div class="browsers-card">
+<div class="os-card">
   <h3 class="card-title">{title}</h3>
   <div class="list">
     {#each items as item}
@@ -112,7 +110,7 @@
 </div>
 
 <style>
-  .browsers-card {
+  .os-card {
     background: var(--bg-secondary, #282828);
     border-radius: 12px;
     border: 1px solid var(--border-color, #3a3a3a);
@@ -199,5 +197,4 @@
 
   .empty { color: var(--text-secondary, #9ca3af); text-align: center; padding: 8px 0; }
 </style>
-
 
