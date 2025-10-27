@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import countryFlagColors from 'country-flag-colors';
+	import countryData from 'flag-icons/country.json';
+	import 'flag-icons/css/flag-icons.min.css';
 
 	interface Props {
 		data: Array<{
@@ -12,543 +15,204 @@
 
 	let { data, title = 'Visitor Countries' }: Props = $props();
 
-	// Color palette for chart segments (fallback)
+	// Fallback for segment colours
 	const colors = [
-		'#3B82F6', // Blue
-		'#10B981', // Green
-		'#F59E0B', // Orange
-		'#EF4444', // Red
-		'#8B5CF6', // Purple
-		'#06B6D4', // Cyan
-		'#84CC16', // Lime
-		'#F97316', // Orange
-		'#EC4899', // Pink
-		'#6366F1'  // Indigo
+		'#3B82F6',
+		'#10B981',
+		'#F59E0B',
+		'#EF4444',
+		'#8B5CF6',
+		'#06B6D4',
+		'#84CC16',
+		'#F97316',
+		'#EC4899',
+		'#6366F1'
 	];
 
-	// Flag gradient colors for major countries
-	function getFlagGradient(country: string): { start: string; end: string } {
-		// Deterministic fallback: pick from a set of flag-like color pairs
-		function autoGradient(name: string): { start: string; end: string } {
-			const pairs: Array<{ start: string; end: string }> = [
-				{ start: '#CE1126', end: '#FFFFFF' }, // red/white
-				{ start: '#002868', end: '#FFFFFF' }, // blue/white
-				{ start: '#007A3D', end: '#FFFFFF' }, // green/white
-				{ start: '#009739', end: '#FFDF00' }, // green/yellow
-				{ start: '#0033A0', end: '#FFC400' }, // blue/yellow
-				{ start: '#000000', end: '#FCD116' }, // black/yellow
-				{ start: '#000000', end: '#CE1126' }, // black/red
-				{ start: '#A2001D', end: '#00205B' }, // red/blue
-				{ start: '#14B53A', end: '#FCD116' }, // green/gold
-				{ start: '#8B5CF6', end: '#3B82F6' }  // purple/blue
-			];
+	// Get flag colors (library)
+	function getFlagColorsFromLibrary(country: string): { primary: string; secondary: string } {
+		try {
+			const countryData = countryFlagColors.find((f: any) => 
+				f.name.toLowerCase() === country.toLowerCase()
+			);
+			
+			if (countryData && countryData.colors && countryData.colors.length > 0) {
+				const primary = countryData.colors[0];
+				const secondary = countryData.colors.length > 1 ? countryData.colors[1] : (countryData.colors.length > 0 ? countryData.colors[0] : '#6B7280');
+				return { primary, secondary };
+			}
+		} catch (e) {}
+		return { primary: '#6B7280', secondary: '#9CA3AF' };
+	}
+
+	function getFlagColors(country: string): { primary: string; secondary: string } {
+		// Fetch from lib first
+		const libraryColors = getFlagColorsFromLibrary(country);
+		if (libraryColors.primary !== '#6B7280' && libraryColors.secondary !== '#9CA3AF') {
+			return libraryColors;
+		}
+
+		// Fallback:pick color palette based on country name
+		function getFallbackColors(name: string): { primary: string; secondary: string } {
 			let hash = 0;
-			for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
-			const idx = hash % pairs.length;
-			return pairs[idx];
-		}
-		const gradientMap: Record<string, { start: string; end: string }> = {
-			// United States - Red, White, Blue
-			'United States': { start: '#B22234', end: '#002868' },
-			'USA': { start: '#B22234', end: '#002868' },
-			'US': { start: '#B22234', end: '#002868' },
+			for (let i = 0; i < name.length; i++) {
+				hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+			}
 			
-			// United Kingdom - Red, White, Blue
-			'United Kingdom': { start: '#CE1124', end: '#012169' },
-			'UK': { start: '#CE1124', end: '#012169' },
-			'Great Britain': { start: '#CE1124', end: '#012169' },
+			const primary = colors[hash % colors.length];
+			const secondary = colors[(hash + 5) % colors.length];
 			
-			// Germany - Black, Red, Gold
-			'Germany': { start: '#000000', end: '#DD0000' },
-			
-			// France - Blue, White, Red
-			'France': { start: '#0055A4', end: '#EF4135' },
-			
-			// Italy - Green, White, Red
-			'Italy': { start: '#009246', end: '#CE2B37' },
-			
-			// Spain - Red, Yellow
-			'Spain': { start: '#C60B1E', end: '#FFC400' },
-			
-			// Netherlands - Red, White, Blue
-			'Netherlands': { start: '#CE1126', end: '#21468B' },
-			
-			// Belgium - Black, Yellow, Red
-			'Belgium': { start: '#000000', end: '#ED2939' },
-			
-			// Canada - Red, White
-			'Canada': { start: '#EF1420', end: '#FFFFFF' },
-			
-			// Australia - Blue, White
-			'Australia': { start: '#012169', end: '#FFFFFF' },
-			
-			// Japan - Red, White
-			'Japan': { start: '#BC002D', end: '#FFFFFF' },
-			
-			// China - Red, Yellow
-			'China': { start: '#DE2910', end: '#FFDE00' },
-			
-			// Brazil - Green, Yellow
-			'Brazil': { start: '#009739', end: '#FFDF00' },
-			
-			// India - Saffron, White, Green
-			'India': { start: '#FF9933', end: '#138808' },
-			
-			// Russia - White, Blue, Red
-			'Russia': { start: '#FFFFFF', end: '#0052BD' },
-			
-			// South Korea - White, Red, Blue
-			'South Korea': { start: '#0047A0', end: '#CE1126' },
-			'Korea': { start: '#0047A0', end: '#CE1126' },
-			
-			// Sweden - Blue, Yellow
-			'Sweden': { start: '#006AA7', end: '#FECC00' },
-			
-			// Norway - Red, Blue
-			'Norway': { start: '#BA0C2F', end: '#00205B' },
-			
-			// Denmark - Red, White
-			'Denmark': { start: '#C8102E', end: '#FFFFFF' },
-			
-			// Finland - Blue, White
-			'Finland': { start: '#002F6C', end: '#FFFFFF' },
-			
-			// Ireland - Green, Orange
-			'Ireland': { start: '#169B62', end: '#FF883E' },
-			
-			// Poland - White, Red
-			'Poland': { start: '#FFFFFF', end: '#DC143C' },
-			
-			// Czech Republic - Blue, White, Red
-			'Czech Republic': { start: '#11457E', end: '#D7141A' },
-			'Czechia': { start: '#11457E', end: '#D7141A' },
-			
-			// Switzerland - Red, White
-			'Switzerland': { start: '#FF0000', end: '#FFFFFF' },
-			
-			// Mexico - Green, White, Red
-			'Mexico': { start: '#006847', end: '#CE1126' },
-			
-			// Argentina - Light Blue, White
-			'Argentina': { start: '#74ACDF', end: '#FFFFFF' },
-			
-			// Chile - Blue, Red
-			'Chile': { start: '#002654', end: '#C8102E' },
-			
-			// Colombia - Yellow, Blue, Red
-			'Colombia': { start: '#FFE800', end: '#ED0017' },
-			
-			// Turkey - Red, White
-			'Turkey': { start: '#E30A17', end: '#FFFFFF' },
-			
-			// Israel - Blue, White
-			'Israel': { start: '#0038B8', end: '#FFFFFF' },
-			
-			// Saudi Arabia - Green
-			'Saudi Arabia': { start: '#006C35', end: '#FFFFFF' },
-			
-			// United Arab Emirates - Red, Green, White, Black
-			'United Arab Emirates': { start: '#007A3D', end: '#000000' },
-			'UAE': { start: '#007A3D', end: '#000000' },
-			
-			// Egypt - Red, White, Black
-			'Egypt': { start: '#CE1126', end: '#000000' },
-			
-			// South Africa - Multi-color
-			'South Africa': { start: '#007A4D', end: '#002395' },
-			
-			// Nigeria - Green, White
-			'Nigeria': { start: '#008751', end: '#FFFFFF' },
-			
-			// Kenya - Black, Red, Green
-			'Kenya': { start: '#000000', end: '#006600' },
-			
-			// New Zealand - Blue, White
-			'New Zealand': { start: '#00247D', end: '#FFFFFF' },
-			
-			// Singapore - Red, White
-			'Singapore': { start: '#CE1126', end: '#FFFFFF' },
-			
-			// Malaysia - Blue, Yellow
-			'Malaysia': { start: '#003D82', end: '#FFCC00' },
-			
-			// Indonesia - Red, White
-			'Indonesia': { start: '#FF0000', end: '#FFFFFF' },
-			
-			// Philippines - Blue, Red
-			'Philippines': { start: '#0032A0', end: '#CE1126' },
-			
-			// Thailand - Red, White, Blue
-			'Thailand': { start: '#A51931', end: '#2E2FA7' },
-			
-			// Vietnam - Red, Yellow
-			'Vietnam': { start: '#DA020E', end: '#FFD700' },
-			
-			// Bangladesh - Green, Red
-			'Bangladesh': { start: '#006747', end: '#F42A41' },
-			
-			// Pakistan - Green, White
-			'Pakistan': { start: '#01411C', end: '#FFFFFF' },
-			
-			// Iran - Green, White, Red
-			'Iran': { start: '#239F40', end: '#DA0000' },
-			
-			// Iraq - Red, White, Black
-			'Iraq': { start: '#CE1126', end: '#000000' },
-			
-			// Egypt - Red, White, Black
-			'Egypt': { start: '#CE1126', end: '#000000' },
-			
-			// Morocco - Red, Green
-			'Morocco': { start: '#C1272D', end: '#006233' },
-			
-			// Algeria - Green, White
-			'Algeria': { start: '#006633', end: '#FFFFFF' },
-			
-			// Ghana - Red, Yellow, Green
-			'Ghana': { start: '#CE1126', end: '#006B3C' },
-			
-			// Ethiopia - Green, Yellow, Red
-			'Ethiopia': { start: '#078930', end: '#DA1219' },
-			
-			// Zimbabwe - Green, Yellow, Red
-			'Zimbabwe': { start: '#006400', end: '#FFE800' },
-			
-			// Angola - Red, Black
-			'Angola': { start: '#C8102E', end: '#000000' },
-			
-			// Madagascar - Red, Green
-			'Madagascar': { start: '#FC3D32', end: '#007E3A' },
-			
-			// Test Country - Gradient
-			'Test Country': { start: '#3B82F6', end: '#10B981' },
-			
-			// Default fallback
-			'Unknown': { start: '#6B7280', end: '#9CA3AF' }
-		};
-		
-		// Try exact match first
-		if (gradientMap[country]) {
-			return gradientMap[country];
+			return { primary, secondary };
 		}
 		
-		// Try case-insensitive partial match
-		const lowerCountry = country.toLowerCase();
-		const match = Object.entries(gradientMap).find(([key]) => 
-			key.toLowerCase() === lowerCountry || lowerCountry.includes(key.toLowerCase())
+		return getFallbackColors(country);
+	}
+
+	// Get country code from lib
+	function getCountryCode(countryName: string): string {
+		// Try exact match
+		const match = countryData.find((c: any) => 
+			c.name.toLowerCase() === countryName.toLowerCase()
 		);
 		
 		if (match) {
-			return match[1];
+			return match.code;
 		}
 		
-		// Default gradient for unknown countries: deterministic but varied
-		return autoGradient(country);
-	}
-
-	// Comprehensive country flag mapping
-	function getCountryFlag(country: string): string {
-		const flagMap: Record<string, string> = {
-			// North America
-			'United States': '🇺🇸',
-			'USA': '🇺🇸',
-			'US': '🇺🇸',
-			'Canada': '🇨🇦',
-			'Mexico': '🇲🇽',
-			'Guatemala': '🇬🇹',
-			'Belize': '🇧🇿',
-			'El Salvador': '🇸🇻',
-			'Honduras': '🇭🇳',
-			'Nicaragua': '🇳🇮',
-			'Costa Rica': '🇨🇷',
-			'Panama': '🇵🇦',
-			'Cuba': '🇨🇺',
-			'Jamaica': '🇯🇲',
-			'Haiti': '🇭🇹',
-			'Dominican Republic': '🇩🇴',
-			'Puerto Rico': '🇵🇷',
-			'Trinidad and Tobago': '🇹🇹',
-			'Barbados': '🇧🇧',
-			'Bahamas': '🇧🇸',
-
-			// South America
-			'Brazil': '🇧🇷',
-			'Argentina': '🇦🇷',
-			'Chile': '🇨🇱',
-			'Colombia': '🇨🇴',
-			'Peru': '🇵🇪',
-			'Venezuela': '🇻🇪',
-			'Ecuador': '🇪🇨',
-			'Bolivia': '🇧🇴',
-			'Paraguay': '🇵🇾',
-			'Uruguay': '🇺🇾',
-			'Guyana': '🇬🇾',
-			'Suriname': '🇸🇷',
-			'French Guiana': '🇬🇫',
-
-			// Europe
-			'United Kingdom': '🇬🇧',
-			'UK': '🇬🇧',
-			'Great Britain': '🇬🇧',
-			'Germany': '🇩🇪',
-			'France': '🇫🇷',
-			'Italy': '🇮🇹',
-			'Spain': '🇪🇸',
-			'Netherlands': '🇳🇱',
-			'Belgium': '🇧🇪',
-			'Switzerland': '🇨🇭',
-			'Austria': '🇦🇹',
-			'Sweden': '🇸🇪',
-			'Norway': '🇳🇴',
-			'Denmark': '🇩🇰',
-			'Finland': '🇫🇮',
-			'Poland': '🇵🇱',
-			'Czech Republic': '🇨🇿',
-			'Czechia': '🇨🇿',
-			'Hungary': '🇭🇺',
-			'Portugal': '🇵🇹',
-			'Greece': '🇬🇷',
-			'Turkey': '🇹🇷',
-			'Russia': '🇷🇺',
-			'Ukraine': '🇺🇦',
-			'Romania': '🇷🇴',
-			'Bulgaria': '🇧🇬',
-			'Croatia': '🇭🇷',
-			'Serbia': '🇷🇸',
-			'Slovenia': '🇸🇮',
-			'Slovakia': '🇸🇰',
-			'Lithuania': '🇱🇹',
-			'Latvia': '🇱🇻',
-			'Estonia': '🇪🇪',
-			'Ireland': '🇮🇪',
-			'Iceland': '🇮🇸',
-			'Luxembourg': '🇱🇺',
-			'Malta': '🇲🇹',
-			'Cyprus': '🇨🇾',
-			'Albania': '🇦🇱',
-			'Macedonia': '🇲🇰',
-			'North Macedonia': '🇲🇰',
-			'Montenegro': '🇲🇪',
-			'Bosnia and Herzegovina': '🇧🇦',
-			'Moldova': '🇲🇩',
-			'Belarus': '🇧🇾',
-			'Georgia': '🇬🇪',
-			'Armenia': '🇦🇲',
-			'Azerbaijan': '🇦🇿',
-			'Kazakhstan': '🇰🇿',
-			'Uzbekistan': '🇺🇿',
-			'Kyrgyzstan': '🇰🇬',
-			'Tajikistan': '🇹🇯',
-			'Turkmenistan': '🇹🇲',
-
-			// Asia
-			'China': '🇨🇳',
-			'Japan': '🇯🇵',
-			'South Korea': '🇰🇷',
-			'Korea': '🇰🇷',
-			'North Korea': '🇰🇵',
-			'India': '🇮🇳',
-			'Pakistan': '🇵🇰',
-			'Bangladesh': '🇧🇩',
-			'Sri Lanka': '🇱🇰',
-			'Nepal': '🇳🇵',
-			'Bhutan': '🇧🇹',
-			'Maldives': '🇲🇻',
-			'Afghanistan': '🇦🇫',
-			'Iran': '🇮🇷',
-			'Iraq': '🇮🇶',
-			'Israel': '🇮🇱',
-			'Palestine': '🇵🇸',
-			'Jordan': '🇯🇴',
-			'Lebanon': '🇱🇧',
-			'Syria': '🇸🇾',
-			'Saudi Arabia': '🇸🇦',
-			'United Arab Emirates': '🇦🇪',
-			'UAE': '🇦🇪',
-			'Qatar': '🇶🇦',
-			'Kuwait': '🇰🇼',
-			'Bahrain': '🇧🇭',
-			'Oman': '🇴🇲',
-			'Yemen': '🇾🇪',
-			'Thailand': '🇹🇭',
-			'Vietnam': '🇻🇳',
-			'Cambodia': '🇰🇭',
-			'Laos': '🇱🇦',
-			'Myanmar': '🇲🇲',
-			'Burma': '🇲🇲',
-			'Malaysia': '🇲🇾',
-			'Singapore': '🇸🇬',
-			'Indonesia': '🇮🇩',
-			'Philippines': '🇵🇭',
-			'Brunei': '🇧🇳',
-			'East Timor': '🇹🇱',
-			'Timor-Leste': '🇹🇱',
-			'Mongolia': '🇲🇳',
-			'Taiwan': '🇹🇼',
-			'Hong Kong': '🇭🇰',
-			'Macau': '🇲🇴',
-
-			// Africa
-			'South Africa': '🇿🇦',
-			'Egypt': '🇪🇬',
-			'Libya': '🇱🇾',
-			'Tunisia': '🇹🇳',
-			'Algeria': '🇩🇿',
-			'Morocco': '🇲🇦',
-			'Sudan': '🇸🇩',
-			'South Sudan': '🇸🇸',
-			'Ethiopia': '🇪🇹',
-			'Eritrea': '🇪🇷',
-			'Djibouti': '🇩🇯',
-			'Somalia': '🇸🇴',
-			'Kenya': '🇰🇪',
-			'Uganda': '🇺🇬',
-			'Tanzania': '🇹🇿',
-			'Rwanda': '🇷🇼',
-			'Burundi': '🇧🇮',
-			'Democratic Republic of the Congo': '🇨🇩',
-			'DRC': '🇨🇩',
-			'Congo': '🇨🇬',
-			'Central African Republic': '🇨🇫',
-			'Chad': '🇹🇩',
-			'Niger': '🇳🇪',
-			'Nigeria': '🇳🇬',
-			'Cameroon': '🇨🇲',
-			'Gabon': '🇬🇦',
-			'Equatorial Guinea': '🇬🇶',
-			'São Tomé and Príncipe': '🇸🇹',
-			'Angola': '🇦🇴',
-			'Zambia': '🇿🇲',
-			'Zimbabwe': '🇿🇼',
-			'Botswana': '🇧🇼',
-			'Namibia': '🇳🇦',
-			'Lesotho': '🇱🇸',
-			'Swaziland': '🇸🇿',
-			'Eswatini': '🇸🇿',
-			'Madagascar': '🇲🇬',
-			'Mauritius': '🇲🇺',
-			'Seychelles': '🇸🇨',
-			'Comoros': '🇰🇲',
-			'Cape Verde': '🇨🇻',
-			'Guinea-Bissau': '🇬🇼',
-			'Guinea': '🇬🇳',
-			'Sierra Leone': '🇸🇱',
-			'Liberia': '🇱🇷',
-			'Ivory Coast': '🇨🇮',
-			'Côte d\'Ivoire': '🇨🇮',
-			'Ghana': '🇬🇭',
-			'Togo': '🇹🇬',
-			'Benin': '🇧🇯',
-			'Burkina Faso': '🇧🇫',
-			'Mali': '🇲🇱',
-			'Senegal': '🇸🇳',
-			'Gambia': '🇬🇲',
-			'Mauritania': '🇲🇷',
-			'Western Sahara': '🇪🇭',
-
-			// Oceania
-			'Australia': '🇦🇺',
-			'New Zealand': '🇳🇿',
-			'Papua New Guinea': '🇵🇬',
-			'Fiji': '🇫🇯',
-			'Solomon Islands': '🇸🇧',
-			'Vanuatu': '🇻🇺',
-			'New Caledonia': '🇳🇨',
-			'French Polynesia': '🇵🇫',
-			'Samoa': '🇼🇸',
-			'Tonga': '🇹🇴',
-			'Kiribati': '🇰🇮',
-			'Tuvalu': '🇹🇻',
-			'Nauru': '🇳🇷',
-			'Palau': '🇵🇼',
-			'Marshall Islands': '🇲🇭',
-			'Micronesia': '🇫🇲',
-			'Cook Islands': '🇨🇰',
-			'Niue': '🇳🇺',
-			'Tokelau': '🇹🇰',
-
-			// Special cases and common variations
-			'Test Country': '🧪',
-			'Unknown': '❓',
-			'Other': '🌍',
-			'Global': '🌍',
-			'World': '🌍',
-			'International': '🌍',
-			'Local': '🏠',
-			'Localhost': '🏠',
-			'Development': '🛠️',
-			'Testing': '🧪',
-			'Debug': '🐛'
+		// Try fuzzy match for common variations
+		const lowerName = countryName.toLowerCase();
+		
+		// Country name variations
+		const variations: Record<string, string> = {
+			'united states': 'us',
+			'usa': 'us',
+			'us': 'us',
+			'america': 'us',
+			'united kingdom': 'gb',
+			'uk': 'gb',
+			'great britain': 'gb',
+			'britain': 'gb',
+			'england': 'gb',
+			'russia': 'ru',
+			'south korea': 'kr',
+			'korea': 'kr',
+			'north korea': 'kp',
+			'czech republic': 'cz',
+			'czechia': 'cz',
+			'uae': 'ae',
+			'united arab emirates': 'ae',
+			'congo': 'cd',
+			'drc': 'cd',
+			'democratic republic of the congo': 'cd',
+			'ivory coast': 'ci',
+			'côte d\'ivoire': 'ci',
+			'cote d\'ivoire': 'ci',
+			'timor-leste': 'tl',
+			'east timor': 'tl',
+			'burma': 'mm',
+			'myanmar': 'mm',
+			'swaziland': 'sz',
+			'eswatini': 'sz',
+			'macedonia': 'mk',
+			'north macedonia': 'mk'
 		};
 		
-		// Try exact match first
-		if (flagMap[country]) {
-			return flagMap[country];
+		if (variations[lowerName]) {
+			return variations[lowerName];
 		}
 		
-		// Try case-insensitive match
-		const lowerCountry = country.toLowerCase();
-		for (const [key, flag] of Object.entries(flagMap)) {
-			if (key.toLowerCase() === lowerCountry) {
-				return flag;
+		for (const item of countryData as any[]) {
+			if (item.name.toLowerCase().includes(lowerName) || 
+			    lowerName.includes(item.name.toLowerCase())) {
+				return item.code;
 			}
 		}
 		
-		// Try partial match for common variations
-		if (lowerCountry.includes('united states') || lowerCountry.includes('usa') || lowerCountry.includes('america')) {
-			return '🇺🇸';
-		}
-		if (lowerCountry.includes('united kingdom') || lowerCountry.includes('britain') || lowerCountry.includes('england')) {
-			return '🇬🇧';
-		}
-		if (lowerCountry.includes('south korea') || lowerCountry.includes('korea')) {
-			return '🇰🇷';
-		}
-		if (lowerCountry.includes('czech')) {
-			return '🇨🇿';
-		}
-		if (lowerCountry.includes('macedonia')) {
-			return '🇲🇰';
-		}
-		if (lowerCountry.includes('swaziland') || lowerCountry.includes('eswatini')) {
-			return '🇸🇿';
-		}
-		if (lowerCountry.includes('congo')) {
-			return '🇨🇩';
-		}
-		if (lowerCountry.includes('côte') || lowerCountry.includes('ivory')) {
-			return '🇨🇮';
-		}
-		if (lowerCountry.includes('timor')) {
-			return '🇹🇱';
-		}
-		if (lowerCountry.includes('burma')) {
-			return '🇲🇲';
-		}
-		
-		// Default fallback
-		return '🌍';
+		return 'xx';
+	}
+	
+	// Flag mapping
+	function getCountryFlag(country: string): string {
+		return getCountryCode(country);
 	}
 
 	// Process data for chart
-	const chartData = $derived(data
-		.filter(item => {
-			const visitors = typeof item.visitors === 'number' ? item.visitors : parseInt(item.visitors.toString()) || 0;
-			return item.country !== null && visitors >= 0;
-		})
-		.map((item, index) => {
-			const gradient = getFlagGradient(item.country!);
-			return {
-				country: item.country!,
-				visitors: parseInt(item.visitors.toString()) || 0,
-				vpnVisitors: parseInt(item.vpnVisitors.toString()) || 0,
-				color: colors[index % colors.length],
-				flag: getCountryFlag(item.country!),
-				gradientStart: gradient.start,
-				gradientEnd: gradient.end,
-				gradientId: `gradient-${index}`
-			};
-		}));
+	const chartData = $derived((() => {
+		// Utilities to work with color similarity (hue buckets)
+		function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+			const normalized = hex.replace('#', '');
+			if (normalized.length !== 6) return null;
+			const r = parseInt(normalized.slice(0, 2), 16);
+			const g = parseInt(normalized.slice(2, 4), 16);
+			const b = parseInt(normalized.slice(4, 6), 16);
+			if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return null;
+			return { r, g, b };
+		}
+
+		function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
+			r /= 255; g /= 255; b /= 255;
+			const max = Math.max(r, g, b), min = Math.min(r, g, b);
+			let h = 0, s = 0; const l = (max + min) / 2;
+			if (max !== min) {
+				const d = max - min;
+				s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+				switch (max) {
+					case r: h = (g - b) / d + (g < b ? 6 : 1); break;
+					case g: h = (b - r) / d + 3; break;
+					case b: h = (r - g) / d + 5; break;
+				}
+				h *= 60;
+			}
+			return { h, s, l };
+		}
+
+		function hueFromHex(hex: string): number | null {
+			const rgb = hexToRgb(hex);
+			if (!rgb) return null;
+			return rgbToHsl(rgb.r, rgb.g, rgb.b).h;
+		}
+
+		function hueBucket(hex: string, bucketSize: number = 24): number | null {
+			const h = hueFromHex(hex);
+			if (h === null || Number.isNaN(h)) return null;
+			return Math.floor(h / bucketSize); // 15 buckets
+		}
+
+		const usedHue = new Set<number>();
+		const usedExact = new Set<string>();
+
+		return data
+			.filter(item => {
+				const visitors = typeof item.visitors === 'number' ? item.visitors : parseInt(item.visitors.toString()) || 0;
+				return item.country !== null && visitors >= 0;
+			})
+			.map((item) => {
+				const { primary, secondary } = getFlagColors(item.country!);
+				const pBucket = hueBucket(primary);
+				const sBucket = hueBucket(secondary);
+
+				let chosen = primary;
+				if ((pBucket !== null && usedHue.has(pBucket)) || usedExact.has(primary)) {
+					if ((sBucket !== null && !usedHue.has(sBucket)) && !usedExact.has(secondary)) {
+						chosen = secondary;
+					}
+				}
+
+				const chosenBucket = hueBucket(chosen);
+				if (chosenBucket !== null) usedHue.add(chosenBucket);
+				usedExact.add(chosen);
+
+				return {
+					country: item.country!,
+					visitors: parseInt(item.visitors.toString()) || 0,
+					vpnVisitors: parseInt(item.vpnVisitors.toString()) || 0,
+					color: chosen,
+					flag: getCountryFlag(item.country!),
+					primaryColor: primary,
+					secondaryColor: secondary
+				};
+			});
+	})());
 
 	const totalVisitors = $derived(chartData.reduce((sum, item) => sum + item.visitors, 0));
 
@@ -580,8 +244,6 @@
 
 	// Calculate flag positions
 	const flagPositions = $derived(segments.map(segment => {
-		// For full circles (100% or single segment), position flag at top
-		// Check if it's close to 360 degrees (accounting for near-complete arcs)
 		const angleDiff = segment.endAngle - segment.startAngle;
 		const isFullCircle = angleDiff >= 359;
 		const angle = isFullCircle ? 0 : segment.middleAngle;
@@ -589,7 +251,6 @@
 		const x = centerX + Math.cos(radians) * flagDistance;
 		const y = centerY + Math.sin(radians) * flagDistance;
 		
-		// Calculate segment edge position for leader line
 		const segmentEdgeX = centerX + Math.cos(radians) * radius;
 		const segmentEdgeY = centerY + Math.sin(radians) * radius;
 		
@@ -607,10 +268,7 @@
 	function createArcPath(startAngle: number, endAngle: number, outerRadius: number, innerRadius: number) {
 		const angleDiff = endAngle - startAngle;
 		
-		// If it's a full circle (or very close to it), treat it as almost-full to avoid SVG path issues
 		if (angleDiff >= 359.99) {
-			// Draw as a near-complete arc (359 degrees) to avoid issues with start/end being the same
-			// Use startAngle + 359 so there's a visible but tiny gap
 			const adjustedEndAngle = startAngle + 359;
 			
 			const start = polarToCartesian(centerX, centerY, outerRadius, adjustedEndAngle);
@@ -618,7 +276,6 @@
 			const innerStart = polarToCartesian(centerX, centerY, innerRadius, adjustedEndAngle);
 			const innerEnd = polarToCartesian(centerX, centerY, innerRadius, startAngle);
 			
-			// For near-complete circle, always use large arc flag
 			return [
 				"M", start.x, start.y,
 				"A", outerRadius, outerRadius, 0, "1", "0", end.x, end.y,
@@ -686,22 +343,13 @@
 	<div class="chart-content">
 		<div class="chart-main">
 			<div class="chart-wrapper" style="width: {chartSize}px; height: {chartSize}px; position: relative;">
-				<!-- SVG for pie chart and leader lines -->
+				<!-- SVG for pie chart -->
 				<svg width={chartSize} height={chartSize} class="chart-svg">
-					<!-- Gradient definitions per segment -->
-					<defs>
-						{#each segments as segment}
-							<linearGradient id={segment.gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-								<stop offset="0%" stop-color={segment.gradientStart} />
-								<stop offset="100%" stop-color={segment.gradientEnd} />
-							</linearGradient>
-						{/each}
-					</defs>
 					<!-- Pie chart segments -->
 					{#each segments as segment}
 						<path
 							d={createArcPath(segment.startAngle, segment.endAngle, radius, innerRadius)}
-							fill={`url(#${segment.gradientId})`}
+						fill={segment.color}
 							stroke="#ffffff"
 							stroke-width="2"
 							class="pie-segment"
@@ -738,14 +386,13 @@
 							display: flex;
 							align-items: center;
 							justify-content: center;
-							font-size: 20px;
 							cursor: pointer;
 							z-index: 10;
 						"
 						on:mouseenter={(e) => showTooltip(e, flag)}
 						on:mouseleave={hideTooltip}
 					>
-						{flag.flag}
+						<span class="fi fi-{flag.flag}"></span>
 					</div>
 				{/each}
 			</div>
@@ -760,7 +407,7 @@
 									class="legend-color" 
 									style="background-color: {segment.color};"
 								></div>
-								<span class="legend-flag">{segment.flag}</span>
+								<span class="legend-flag"><span class="fi fi-{segment.flag}"></span></span>
 								<div class="legend-text-container">
 									<span class="legend-text">{segment.country}</span>
 									<span class="legend-percentage">{(segment.percentage * 100).toFixed(1)}%</span>
@@ -780,13 +427,9 @@
 						<div class="legend-item">
 							<div 
 								class="legend-color" 
-								style="background: linear-gradient(135deg, {segment.gradientStart}, {segment.gradientEnd});"
+								style="background-color: {segment.color};"
 							></div>
-							<div 
-								class="legend-color" 
-								style="background: linear-gradient(135deg, {segment.gradientStart}, {segment.gradientEnd});"
-							></div>
-							<span class="legend-flag">{segment.flag}</span>
+							<span class="legend-flag"><span class="fi fi-{segment.flag}"></span></span>
 							<div class="legend-text-container">
 								<span class="legend-text">{segment.country}</span>
 								<span class="legend-percentage">{(segment.percentage * 100).toFixed(1)}%</span>
@@ -811,7 +454,7 @@
 		>
 			<div class="tooltip-content">
 				<div class="tooltip-header">
-					<span class="tooltip-flag">{tooltip.data.flag}</span>
+					<span class="tooltip-flag"><span class="fi fi-{tooltip.data.flag}"></span></span>
 					<span class="tooltip-country">{tooltip.data.country}</span>
 				</div>
 				<div class="tooltip-body">
@@ -897,12 +540,17 @@
 	.flag-item {
 		transition: transform 0.2s ease;
 	}
+	
+	.flag-item .fi {
+		font-size: 24px;
+		line-height: 1;
+		display: block;
+	}
 
 	.flag-item:hover {
 		transform: scale(1.2);
 	}
 
-	/* Desktop Legend - Right side */
 	.chart-legend-desktop {
 		width: 30%;
 		min-width: 250px;
@@ -960,8 +608,17 @@
 	}
 
 	.legend-flag {
-		font-size: 18px;
 		flex-shrink: 0;
+		width: 24px;
+		height: 18px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	
+	.legend-flag .fi {
+		font-size: 20px;
+		line-height: 1;
 	}
 
 	.legend-text-container {
@@ -1042,7 +699,16 @@
 	}
 
 	.tooltip-flag {
-		font-size: 18px;
+		width: 24px;
+		height: 18px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	
+	.tooltip-flag .fi {
+		font-size: 20px;
+		line-height: 1;
 	}
 
 	.tooltip-country {

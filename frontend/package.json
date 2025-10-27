@@ -37,6 +37,8 @@
 		"@iconify/json": "^2.2.391",
 		"@iconify/svelte": "^5.0.2",
 		"chart.js": "^4.5.1",
+		"country-flag-colors": "^0.0.3",
+		"flag-icons": "^7.5.0",
 		"layercake": "^10.0.2",
 		"lucide-svelte": "^0.544.0",
 		"mode-watcher": "^1.1.0",
