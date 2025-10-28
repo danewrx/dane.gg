@@ -156,9 +156,11 @@
 
             <div class="dashboard-row">
                 <div class="panel-left">
-                    {#if countries.length > 0}
-                        <CountryPieChart data={countries} title="Visitor Countries" />
-                    {/if}
+                    <div class="countries-wrapper">
+                        {#if countries.length > 0}
+                            <CountryPieChart data={countries} title="Visitor Countries" />
+                        {/if}
+                    </div>
                 </div>
                 <aside class="panel-right">
                     <div class="browser-section">
@@ -281,35 +283,37 @@
 
 .dashboard-row {
     margin-top: 32px;
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    grid-auto-rows: 1fr;
-    gap: 0;
-    align-items: start;
+    display: flex;
+    gap: 20px;
     width: 100%;
     box-sizing: border-box;
+    align-items: stretch;
 }
 
 .panel-left { 
-    grid-column: 1 / 9; 
-    min-width: 0; 
-    padding-right: 10px;
+    flex: 0 0 65%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.countries-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .panel-right { 
-    grid-column: 9 / 13; 
-    grid-row: 1;
-    min-width: 0; 
-    height: 100%;
-    padding-left: 10px;
-    display: grid;
-    grid-template-rows: 1fr 1fr;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
     gap: 20px;
-    overflow: hidden;
 }
 
 .browser-section {
-    grid-row: 1;
+    flex: 1 1 0;
     min-height: 0;
     overflow: hidden;
     display: flex;
@@ -317,7 +321,7 @@
 }
 
 .os-section {
-    grid-row: 2;
+    flex: 1 1 0;
     min-height: 0;
     overflow: hidden;
     display: flex;
@@ -325,16 +329,48 @@
 }
 
 @media (max-width: 1024px) {
-    .dashboard-row { grid-template-columns: repeat(12, minmax(0, 1fr)); }
-    .panel-left, .panel-right { grid-column: span 12; }
+    .dashboard-row { 
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .panel-left { 
+        flex: 1 1 auto;
+        width: 100%;
+    }
     
     .panel-right {
-        grid-template-rows: auto auto;
+        flex: 1 1 auto;
+        width: 100%;
+        overflow: visible;
+    }
+    
+    .countries-wrapper {
+        overflow: visible;
+        height: auto;
     }
     
     .browser-section,
     .os-section {
-        grid-row: auto;
+        overflow: visible;
+        flex: 1 1 auto;
+        height: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-row {
+        gap: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-page {
+        padding: 16px;
+    }
+    
+    .dashboard-row {
+        gap: 12px;
     }
 }
 

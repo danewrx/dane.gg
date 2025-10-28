@@ -196,5 +196,75 @@
   .pct { font-size: 13px; font-weight: 600; }
 
   .empty { color: var(--text-secondary, #9ca3af); text-align: center; padding: 8px 0; }
+
+  @media (max-width: 1024px) {
+    .os-card {
+      height: auto;
+      min-height: auto;
+    }
+
+    .list {
+      overflow-y: visible;
+      max-height: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .os-card {
+      padding: 16px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .list {
+      gap: 8px;
+    }
+
+    .row {
+      padding: 10px 12px;
+    }
+
+    .left {
+      gap: 10px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .os-card {
+      padding: 12px;
+    }
+
+    .card-title {
+      font-size: 15px;
+    }
+
+    .list {
+      gap: 6px;
+    }
+
+    .row {
+      padding: 8px 10px;
+    }
+
+    .icon-fallback {
+      width: 18px;
+      height: 18px;
+    }
+
+    .name {
+      font-size: 13px;
+    }
+
+    .right {
+      min-width: 80px;
+    }
+
+    .pct {
+      font-size: 12px;
+    }
+  }
 </style>
 

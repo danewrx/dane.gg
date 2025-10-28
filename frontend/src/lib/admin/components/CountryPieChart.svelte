@@ -235,12 +235,53 @@
 	}));
 
 	// Chart dimensions
-	const chartSize = 450;
-	const centerX = chartSize / 2;
-	const centerY = chartSize / 2;
-	const radius = 115;
-	const innerRadius = 58;
-	const flagDistance = 170;
+	let chartSize = $state(450);
+	let centerX = $derived(chartSize / 2);
+	let centerY = $derived(chartSize / 2);
+	let radius = $derived(chartSize * 0.256);
+	let innerRadius = $derived(chartSize * 0.129);
+	let flagDistance = $derived(chartSize * 0.378);
+	
+	let containerElement: HTMLElement | null = $state(null);
+
+	// Update chart size based on window width and available space
+	function updateChartSize() {
+		if (typeof window === 'undefined') return;
+		const width = window.innerWidth;
+		
+		// Mobile/Tablet breakpoints
+		if (width <= 480) {
+			chartSize = 280;
+		} else if (width <= 768) {
+			chartSize = 350;
+		} else if (width <= 1024) {
+			chartSize = 380;
+		} else if (width <= 1508) {
+			chartSize = 420; // Larger size for stacked layout on tablet/desktop
+		} 
+		// Desktop side-by-side layout
+		else {
+			chartSize = 450;
+		}
+	}
+
+	onMount(() => {
+		updateChartSize();
+		window.addEventListener('resize', updateChartSize);
+		
+		if (containerElement) {
+			const resizeObserver = new ResizeObserver(() => {
+				updateChartSize();
+			});
+			resizeObserver.observe(containerElement);
+			return () => {
+				resizeObserver.disconnect();
+				window.removeEventListener('resize', updateChartSize);
+			};
+		}
+		
+		return () => window.removeEventListener('resize', updateChartSize);
+	});
 
 	// Calculate flag positions
 	const flagPositions = $derived(segments.map(segment => {
@@ -337,7 +378,7 @@
 	}
 </script>
 
-<div class="chart-container">
+<div class="chart-container" bind:this={containerElement}>
 	<h3 class="chart-title">{title}</h3>
 	
 	<div class="chart-content">
@@ -489,6 +530,11 @@
 		border: 1px solid var(--border-color, #3a3a3a);
 		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 		transition: background 0.2s ease, border-color 0.2s ease;
+		height: 100%;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		box-sizing: border-box;
 	}
 
 	.chart-title {
@@ -504,6 +550,9 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 16px;
+		flex: 1;
+		min-height: 0;
+		overflow: hidden;
 	}
 
 	.chart-main {
@@ -511,27 +560,37 @@
 		align-items: flex-start;
 		gap: 24px;
 		width: 100%;
-		max-width: 1100px;
+		max-width: 100%;
 		justify-content: space-between;
+		flex: 1;
+		min-height: 0;
+		overflow: hidden;
 	}
 
 	.chart-left {
 		flex: 1;
 		display: flex;
 		justify-content: center;
+		align-items: center;
+		min-height: 0;
+		min-width: 0;
+		overflow: hidden;
 	}
 
 	.chart-wrapper {
 		position: relative;
 		display: flex;
 		justify-content: center;
+		align-items: center;
 		flex: 0 0 auto;
+		max-width: 100%;
+		overflow: visible;
 	}
 
 	.chart-svg {
-		position: absolute;
-		top: 0;
-		left: 0;
+		display: block;
+		max-width: 100%;
+		height: auto;
 	}
 
 	.pie-segment {
@@ -565,13 +624,17 @@
 		width: 30%;
 		min-width: 250px;
 		max-width: 300px;
-		display: block;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+		overflow: hidden;
 	}
 
 	.legend-scroll {
-		max-height: 400px;
+		flex: 1;
 		overflow-y: auto;
 		padding-right: 8px;
+		min-height: 0;
 	}
 
 	.legend-scroll::-webkit-scrollbar {
@@ -755,10 +818,23 @@
 	}
 
 	/* Responsive adjustments */
-	@media (max-width: 1024px) {
+	@media (max-width: 1508px) {
+		.chart-container {
+			height: auto;
+		}
+
+		.chart-content {
+			overflow: visible;
+		}
+
 		.chart-main {
 			flex-direction: column;
 			align-items: center;
+			overflow: visible;
+		}
+
+		.chart-left {
+			overflow: visible;
 		}
 
 		.chart-legend-desktop {
@@ -766,11 +842,12 @@
 		}
 
 		.chart-legend-mobile {
-			display: block;
+			display: flex;
 		}
 
 		.chart-wrapper {
 			justify-content: center;
+			max-width: 100%;
 		}
 	}
 
@@ -781,6 +858,11 @@
 		
 		.chart-title {
 			font-size: 16px;
+			margin-bottom: 12px;
+		}
+
+		.chart-content {
+			gap: 12px;
 		}
 
 		.chart-main {
@@ -789,28 +871,61 @@
 
 		.chart-wrapper {
 			width: 100%;
-			height: 300px;
+			max-width: 100%;
 		}
 
 		.chart-svg {
-			width: 100%;
-			height: 100%;
+			max-width: 100%;
+			height: auto;
 		}
 
 		.flag-item {
-			width: 24px;
-			height: 24px;
-			font-size: 14px;
+			width: 20px;
+			height: 20px;
+		}
+		
+		.flag-item .fi {
+			font-size: 18px;
 		}
 	}
 
 	@media (max-width: 480px) {
+		.chart-container {
+			padding: 12px;
+		}
+
+		.chart-title {
+			font-size: 15px;
+		}
+
 		.chart-wrapper {
-			height: 250px;
+			width: 100%;
+			max-width: 100%;
 		}
 
 		.legend-scroll {
-			max-height: 150px;
+			max-height: 200px;
+		}
+		
+		.flag-item {
+			width: 18px;
+			height: 18px;
+		}
+		
+		.flag-item .fi {
+			font-size: 16px;
+		}
+		
+		.legend-item {
+			padding: 10px 12px;
+		}
+		
+		.legend-text {
+			font-size: 13px;
+		}
+		
+		.legend-percentage {
+			font-size: 11px;
 		}
 	}
 
