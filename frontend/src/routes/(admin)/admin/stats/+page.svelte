@@ -4,11 +4,13 @@
 	import CountryPieChart from '$lib/admin/components/CountryPieChart.svelte';
 	import BrowserList from '$lib/admin/components/BrowserList.svelte';
 	import OperatingSystemList from '$lib/admin/components/OperatingSystemList.svelte';
+	import VisitorTrendsChart from '$lib/admin/components/VisitorTrendsChart.svelte';
 
 	// Time range
 	const timeRanges = [
 		{ value: '12h', label: '12 Hours' },
 		{ value: '24h', label: '24 Hours' },
+		{ value: '48h', label: '48 Hours' },
 		{ value: '7d', label: '7 Days' },
 		{ value: '30d', label: '30 Days' },
 		{ value: '6m', label: '6 Months' },
@@ -26,6 +28,7 @@
 	let countries = $state([]);
 	let browsers = $state([]);
 	let operatingSystems = $state([]);
+	let trends = $state([]);
 	let loading = $state(true);
 	let error = $state('');
 
@@ -84,6 +87,7 @@
 				countries = data.data.countries || [];
 				browsers = data.data.browsers || [];
 				operatingSystems = data.data.os || [];
+				trends = data.data.trends || [];
 			console.log('Stats page - Countries data:', countries);
 			} else {
 				throw new Error(data.message || 'Failed to load stats');
@@ -152,6 +156,10 @@
 						</div>
 					</div>
 				{/each}
+			</div>
+
+			<div class="trends-section">
+				<VisitorTrendsChart data={trends} title="Visitor Trends" />
 			</div>
 
             <div class="dashboard-row">
@@ -279,6 +287,11 @@
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
 		gap: 20px;
+	}
+
+	.trends-section {
+		margin-top: 32px;
+		width: 100%;
 	}
 
 .dashboard-row {

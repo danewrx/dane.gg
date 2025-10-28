@@ -185,16 +185,14 @@ router.get('/request-logs', checkAdmin, async (req: Request, res: Response) => {
   try {
     const timeRange = (req.query.timeRange as string) || '24h';
     const limit = parseInt((req.query.limit as string) || '100');
-    const offset = parseInt((req.query.offset as string) || '0');
     
-    const logs = await StatsService.getRequestLogs(timeRange, limit, offset);
+    const logs = await StatsService.getRequestLogs(timeRange, limit);
     
     res.json({
       success: true,
       data: logs,
       timeRange,
-      limit,
-      offset
+      limit
     });
   } catch (error) {
     console.error('Error fetching request logs:', error);
@@ -222,7 +220,8 @@ router.get('/dashboard', checkAdmin, async (req: Request, res: Response) => {
       countries,
       browsers,
       os,
-      devices
+      devices,
+      trends
     ] = await Promise.all([
       StatsService.getTotalSiteViews(timeRange),
       StatsService.getUniqueVisitors(timeRange),
@@ -232,7 +231,8 @@ router.get('/dashboard', checkAdmin, async (req: Request, res: Response) => {
       StatsService.getVisitorCountries(timeRange, 10),
       StatsService.getVisitorBrowsers(timeRange, 10),
       StatsService.getVisitorOS(timeRange, 10),
-      StatsService.getVisitorDevices(timeRange, 10)
+      StatsService.getVisitorDevices(timeRange, 10),
+      StatsService.getVisitorTrends(timeRange)
     ]);
     
     res.json({
@@ -249,7 +249,8 @@ router.get('/dashboard', checkAdmin, async (req: Request, res: Response) => {
         countries,
         browsers,
         os,
-        devices
+        devices,
+        trends
       }
     });
   } catch (error) {

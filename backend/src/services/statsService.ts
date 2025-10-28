@@ -506,6 +506,93 @@ export class StatsService {
   }
 
   /**
+   * Get visitor trends over time
+   */
+  static async getVisitorTrends(timeRange: string): Promise<Array<{ date: string; visitors: number; views: number }>> {
+    const timeAgo = this.getTimeAgo(timeRange);
+    
+    if (!timeAgo && timeRange !== 'all') {
+      return [];
+    }
+    
+    // 1h, 12h, 24h, 48h - group by hour
+    const useHourly = ['1h', '12h', '24h', '48h'].includes(timeRange);
+    
+    // Use date_trunc for grouping by time intervals
+    const groupByFormat = useHourly 
+      ? sql`date_trunc('hour', ${visitorStats.timestamp})`
+      : sql`date_trunc('day', ${visitorStats.timestamp})`;
+    
+    const conditions = timeAgo ? [gte(visitorStats.timestamp, timeAgo)] : [];
+    
+    const results = await db
+      .select({
+        date: sql<string>`${groupByFormat}`.as('date'),
+        visitors: sql<number>`COUNT(DISTINCT ${visitorStats.visitorId})`.as('visitors'),
+        views: count(visitorStats.id).as('views')
+      })
+      .from(visitorStats)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .groupBy(groupByFormat)
+      .orderBy(sql`${groupByFormat} ASC`);
+    
+    // Fill in missing time periods with zero values
+    if (results.length === 0 || !timeAgo) {
+      return results.map(r => ({
+        date: r.date,
+        visitors: Number(r.visitors),
+        views: Number(r.views)
+      }));
+    }
+    
+    const filled: Array<{ date: string; visitors: number; views: number }> = [];
+    const now = new Date();
+    const start = new Date(timeAgo);
+    
+    if (useHourly) {
+      let current = new Date(start);
+      current.setMinutes(0, 0, 0);
+      
+      while (current <= now) {
+        const hourStr = current.toISOString();
+        const existing = results.find(r => {
+          const rDate = new Date(r.date);
+          return rDate.getTime() === current.getTime();
+        });
+        
+        filled.push({
+          date: hourStr,
+          visitors: existing ? Number(existing.visitors) : 0,
+          views: existing ? Number(existing.views) : 0
+        });
+        
+        current.setHours(current.getHours() + 1);
+      }
+    } else {
+      let current = new Date(start);
+      current.setHours(0, 0, 0, 0);
+      
+      while (current <= now) {
+        const dayStr = current.toISOString().split('T')[0] + 'T00:00:00.000Z';
+        const existing = results.find(r => {
+          const rDate = new Date(r.date);
+          return rDate.toISOString().split('T')[0] === current.toISOString().split('T')[0];
+        });
+        
+        filled.push({
+          date: dayStr,
+          visitors: existing ? Number(existing.visitors) : 0,
+          views: existing ? Number(existing.views) : 0
+        });
+        
+        current.setDate(current.getDate() + 1);
+      }
+    }
+    
+    return filled;
+  }
+
+  /**
    * Get time ago based on time range
    */
   private static getTimeAgo(timeRange: string): Date | null {
@@ -518,6 +605,8 @@ export class StatsService {
         return new Date(now.getTime() - 60 * 60 * 1000);
       case '24h':
         return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      case '48h':
+        return new Date(now.getTime() - 48 * 60 * 60 * 1000);
       case '7d':
         return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       case '30d':
@@ -527,7 +616,7 @@ export class StatsService {
       case '1y':
         return new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
       case 'all':
-        return null; // No time filtering for 'all'
+        return null;
       default:
         return new Date(now.getTime() - 24 * 60 * 60 * 1000);
     }
