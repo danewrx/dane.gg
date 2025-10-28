@@ -363,18 +363,78 @@
 		y: 0, 
 		data: null 
 	});
+	
+	let tooltipElement: HTMLElement | null = $state(null);
+	let hideTooltipTimeout: number | null = null;
 
-	function showTooltip(event: MouseEvent, segment: any) {
+	function calculateTooltipPosition(clientX: number, clientY: number): { x: number; y: number } {
+		if (typeof window === 'undefined' || !tooltipElement) {
+			return { x: clientX, y: clientY };
+		}
+
+		const tooltipWidth = tooltipElement.offsetWidth || 200;
+		const tooltipHeight = tooltipElement.offsetHeight || 100;
+		const padding = 10;
+		const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+		const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+		let x = clientX + scrollX + 15;
+		let y = clientY + scrollY + 15;
+
+		// Check right edge
+		if (x + tooltipWidth + padding > window.innerWidth + scrollX) {
+			x = clientX + scrollX - tooltipWidth - 15;
+		}
+
+		// Check bottom edge
+		if (y + tooltipHeight + padding > window.innerHeight + scrollY) {
+			y = clientY + scrollY - tooltipHeight - 15;
+		}
+
+		// Check left edge
+		if (x < scrollX + padding) {
+			x = scrollX + padding;
+		}
+
+		// Check top edge
+		if (y < scrollY + padding) {
+			y = scrollY + padding;
+		}
+
+		return { x, y };
+	}
+
+	function showTooltip(event: MouseEvent | TouchEvent, segment: any) {
+		if (hideTooltipTimeout) {
+			clearTimeout(hideTooltipTimeout);
+			hideTooltipTimeout = null;
+		}
+
+		const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
+		const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
+
+		const position = calculateTooltipPosition(clientX, clientY);
+
 		tooltip = {
 			show: true,
-			x: event.clientX,
-			y: event.clientY,
+			x: position.x,
+			y: position.y,
 			data: segment
 		};
 	}
 
 	function hideTooltip() {
-		tooltip.show = false;
+		hideTooltipTimeout = window.setTimeout(() => {
+			tooltip.show = false;
+		}, 100);
+	}
+
+	function handleTooltipMove(event: MouseEvent) {
+		if (tooltip.show && tooltip.data) {
+			const position = calculateTooltipPosition(event.clientX, event.clientY);
+			tooltip.x = position.x;
+			tooltip.y = position.y;
+		}
 	}
 </script>
 
@@ -391,12 +451,18 @@
 					{#each segments as segment}
 						<path
 							d={createArcPath(segment.startAngle, segment.endAngle, radius, innerRadius)}
-						fill={segment.color}
+							fill={segment.color}
 							stroke="#ffffff"
 							stroke-width="2"
 							class="pie-segment"
 							on:mouseenter={(e) => showTooltip(e, segment)}
 							on:mouseleave={hideTooltip}
+							on:mousemove={handleTooltipMove}
+							on:touchstart={(e) => {
+								e.preventDefault();
+								showTooltip(e, segment);
+							}}
+							on:touchend={hideTooltip}
 						/>
 					{/each}
 					
@@ -433,6 +499,12 @@
 						"
 						on:mouseenter={(e) => showTooltip(e, flag)}
 						on:mouseleave={hideTooltip}
+						on:mousemove={handleTooltipMove}
+						on:touchstart={(e) => {
+							e.preventDefault();
+							showTooltip(e, flag);
+						}}
+						on:touchend={hideTooltip}
 					>
 						<span class="fi fi-{flag.flag}"></span>
 					</div>
@@ -487,11 +559,12 @@
 	<!-- Tooltip -->
 	{#if tooltip.show && tooltip.data}
 		<div 
+			bind:this={tooltipElement}
 			class="tooltip"
 			style="
 				position: fixed;
-				left: {tooltip.x + 10}px;
-				top: {tooltip.y - 10}px;
+				left: {tooltip.x}px;
+				top: {tooltip.y}px;
 				z-index: 1000;
 			"
 		>
@@ -755,6 +828,8 @@
 
 	.tooltip {
 		pointer-events: none;
+		max-width: calc(100vw - 20px);
+		will-change: transform;
 	}
 
 	.tooltip-content {
@@ -764,7 +839,9 @@
 		padding: 12px;
 		box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
 		min-width: 200px;
+		max-width: 300px;
 		transition: background 0.2s ease, border-color 0.2s ease;
+		word-wrap: break-word;
 	}
 
 	.tooltip-header {
@@ -925,6 +1002,20 @@
 		}
 		
 		.legend-percentage {
+			font-size: 11px;
+		}
+
+		.tooltip-content {
+			padding: 10px;
+			min-width: 180px;
+			max-width: calc(100vw - 40px);
+		}
+
+		.tooltip-country {
+			font-size: 13px;
+		}
+
+		.tooltip-stat {
 			font-size: 11px;
 		}
 	}
