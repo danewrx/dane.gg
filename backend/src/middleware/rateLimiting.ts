@@ -16,18 +16,18 @@ setInterval(() => {
 
 /**
  * General API rate limiting
- * 100 requests per 15 minutes per IP
+ * 1000 requests per 15 minutes per IP
  */
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: 1000,
   message: {
     error: 'Too many requests',
     message: 'Too many requests from this IP, please try again later',
     retryAfter: '15 minutes'
   },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  standardHeaders: true,
+  legacyHeaders: false,
   handler: (req, res) => {
     res.status(429).json({
       error: 'Too many requests',
@@ -43,10 +43,10 @@ export const generalLimiter = rateLimit({
  */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 auth requests per windowMs
+  max: 5,
   message: {
     error: 'Too many authentication attempts',
-    message: 'Too many login attempts from this IP, please try again later',
+    message: 'Too many login attempts from this IP, please try again after 15 minutes',
     retryAfter: '15 minutes'
   },
   standardHeaders: true,
@@ -54,7 +54,7 @@ export const authLimiter = rateLimit({
   handler: (req, res) => {
     res.status(429).json({
       error: 'Too many authentication attempts',
-      message: 'Too many login attempts from this IP, please try again later',
+      message: 'Too many login attempts from this IP, please try again after 15 minutes',
       retryAfter: '15 minutes'
     });
   }
@@ -62,11 +62,11 @@ export const authLimiter = rateLimit({
 
 /**
  * Password change rate limiting
- * 3 attempts per hour per IP
+ * 20 attempts per hour per IP
  */
 export const passwordChangeLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // Limit each IP to 3 password change attempts per hour
+  max: 20,
   message: {
     error: 'Too many password change attempts',
     message: 'Too many password change attempts from this IP, please try again later',
@@ -85,11 +85,11 @@ export const passwordChangeLimiter = rateLimit({
 
 /**
  * User creation rate limiting (admin only)
- * 10 users per hour per IP
+ * 100 users per hour per IP
  */
 export const userCreationLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // Limit each IP to 10 user creations per hour
+  max: 100,
   message: {
     error: 'Too many user creation attempts',
     message: 'Too many user creation attempts from this IP, please try again later',
@@ -173,11 +173,11 @@ export function accountLockoutProtection(req: any, res: any, next: any) {
 
 /**
  * Rate limiting for token refresh
- * 10 refresh attempts per hour per IP
+ * 100 refresh attempts per hour per IP
  */
 export const tokenRefreshLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // Limit each IP to 10 token refresh attempts per hour
+  max: 100,
   message: {
     error: 'Too many token refresh attempts',
     message: 'Too many token refresh attempts from this IP, please try again later',
@@ -196,11 +196,11 @@ export const tokenRefreshLimiter = rateLimit({
 
 /**
  * Admin operations rate limiting
- * 50 admin operations per hour per IP
+ * 500 admin operations per hour per IP
  */
 export const adminLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 50, // Limit each IP to 50 admin operations per hour
+  max: 500,
   message: {
     error: 'Too many admin operations',
     message: 'Too many admin operations from this IP, please try again later',

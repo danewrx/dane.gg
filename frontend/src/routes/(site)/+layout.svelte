@@ -5,6 +5,7 @@
 	import SettingsPanel from '$lib/admin/components/settings/SettingsPanel.svelte';
 	import Header from '$lib/site/components/layout/Header.svelte';
 	import WeatherEffects from '$lib/site/components/effects/WeatherEffects.svelte';
+	import ScrollingBanner from '$lib/site/components/ScrollingBanner.svelte';
 	import { onMount } from 'svelte';
 
 	let { children } = $props();
@@ -41,6 +42,9 @@
 		<div class="content-area">
 			<!-- Header -->
 			<Header />
+			
+			<!-- Scrolling Banner -->
+			<ScrollingBanner />
 			
 			<!-- Page content -->
 			{@render children?.()}
@@ -127,13 +131,13 @@
 	.content-area {
 		background: var(--bg-primary);
 		height: 100%;
-		padding: 2rem;
+		padding: 1rem 2rem 3rem 2rem;
 		overflow-y: auto;
 		transition: all 0.3s ease;
 		position: relative;
 	}
 
-	/* Scanline Effect - behind content container */
+	/* Scanline effect */
 	.scanlines {
 		position: fixed;
 		top: 0;
@@ -182,7 +186,7 @@
 		}
 		
 		.content-area {
-			padding: 1rem;
+			padding: 0.75rem 1rem 2rem 1rem;
 		}
 		
 	}
@@ -194,7 +198,7 @@
 		}
 		
 		.content-area {
-			padding: 0.75rem;
+			padding: 0.5rem 0.75rem 1.5rem 0.75rem;
 		}
 	}
 </style>

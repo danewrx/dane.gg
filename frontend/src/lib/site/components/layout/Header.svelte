@@ -2,8 +2,6 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 
-	// Define the navigation structure
-	// This will automatically generate links based on available routes
 	const navigation = [
 		{ name: 'Home', path: '/' },
 		{ name: 'About', path: '/about' },
@@ -78,7 +76,7 @@
 <style>
 	.header {
 		text-align: left;
-		margin-bottom: 20px;
+		margin-bottom: 16px;
 		padding-bottom: 10px;
 		border-bottom: 1px solid var(--text-primary);
 	}

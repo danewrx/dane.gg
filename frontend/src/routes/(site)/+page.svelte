@@ -82,9 +82,8 @@
 <style>
 	.home-content {
 		max-width: 1200px;
-		margin: 0 auto;
+		margin: 16px auto 0 auto;
 	}
-
 
 	.two-column-layout {
 		display: flex;

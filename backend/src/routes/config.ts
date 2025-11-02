@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { ConfigService } from '../services/config';
+import { requireSession } from '../middleware/auth';
 
 const router = Router();
 
@@ -50,8 +51,8 @@ router.get('/:key', async (req, res) => {
   }
 });
 
-// Update a configuration value (admin only)
-router.put('/:key', async (req, res) => {
+// Update a configuration value (requires authentication)
+router.put('/:key', requireSession, async (req, res) => {
   try {
     const { key } = req.params;
     const { value, dataType = 'string' } = req.body;

@@ -6,7 +6,8 @@
 		CloudRain,
 		Settings as SettingsIcon,
 		ChevronRight,
-		Link
+		Link,
+		MessageSquare
 	} from 'lucide-svelte';
 
 	let { children } = $props();
@@ -31,6 +32,16 @@
 			bgColor: 'rgba(147, 51, 234, 0.1)',
 			borderColor: 'rgba(147, 51, 234, 0.2)',
 			path: '/admin/configuration/social-links'
+		},
+		{
+			id: 'banner',
+			title: 'Scrolling Banner',
+			description: 'Configure the scrolling text banner',
+			icon: MessageSquare,
+			color: 'from-green-500 to-emerald-500',
+			bgColor: 'rgba(34, 197, 94, 0.1)',
+			borderColor: 'rgba(34, 197, 94, 0.2)',
+			path: '/admin/configuration/banner'
 		}
 	];
 
@@ -90,6 +101,10 @@
 				<div class="card-icon" class:icon-gradient={category.color}>
 					{#if category.icon === CloudRain}
 						<CloudRain size={24} />
+					{:else if category.icon === Link}
+						<Link size={24} />
+					{:else if category.icon === MessageSquare}
+						<MessageSquare size={24} />
 					{/if}
 				</div>
 				<div class="card-content">
