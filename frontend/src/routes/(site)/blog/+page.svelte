@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { Calendar } from 'lucide-svelte';
+	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 
 	interface BlogPost {
 		id: string;
@@ -75,6 +76,8 @@
 </svelte:head>
 
 <div class="blog-page">
+	<TypingHeader text="Blog" />
+
 	{#if loading}
 		<div class="loading">
 			<div class="spinner"></div>
