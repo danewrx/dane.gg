@@ -1,108 +1,300 @@
 <script lang="ts">
-	// Blog page
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { Calendar } from 'lucide-svelte';
+
+	interface BlogPost {
+		id: string;
+		title: string;
+		slug: string;
+		content: string;
+		thumbnail: string | null;
+		publishedAt: string;
+		tags: { id: string; name: string }[];
+	}
+
+	let posts = $state<BlogPost[]>([]);
+	let loading = $state(true);
+	let error = $state('');
+
+	onMount(async () => {
+		await loadPosts();
+	});
+
+	async function loadPosts() {
+		try {
+			loading = true;
+			error = '';
+			const response = await fetch('/api/blog');
+			
+			if (!response.ok) {
+				throw new Error('Failed to load blog posts');
+			}
+
+			const result = await response.json();
+			posts = result.data || [];
+		} catch (err) {
+			console.error('Error loading blog posts:', err);
+			error = 'Failed to load blog posts';
+		} finally {
+			loading = false;
+		}
+	}
+
+	function viewPost(slug: string) {
+		goto(`/blog/${slug}`);
+	}
+
+	function formatDate(dateString: string): string {
+		const date = new Date(dateString);
+		return date.toLocaleDateString('en-US', {
+			year: 'numeric',
+			month: 'long',
+			day: 'numeric'
+		});
+	}
+
+	function truncateContent(content: string, maxLength: number = 200): string {
+		const plainText = content
+			.replace(/#{1,6}\s/g, '')
+			.replace(/\*\*(.+?)\*\*/g, '$1')
+			.replace(/\*(.+?)\*/g, '$1')
+			.replace(/\[(.+?)\]\(.+?\)/g, '$1')
+			.replace(/`(.+?)`/g, '$1')
+			.replace(/\n/g, ' ')   
+			.trim();
+
+		if (plainText.length <= maxLength) return plainText;
+		return plainText.substring(0, maxLength) + '...';
+	}
 </script>
 
 <svelte:head>
 	<title>Blog - dane.gg</title>
-	<meta name="description" content="Read Dane's thoughts on software development, design, and technology." />
+	<meta name="description" content="Read my latest blog posts about software development, design, and technology." />
 </svelte:head>
 
-<div class="page-content">
-	<h1>Blog</h1>
-	<p class="subtitle">Thoughts on development and design</p>
-	
-	<div class="blog-posts">
-		<div class="blog-post">
-			<h2>Getting Started with SvelteKit</h2>
-			<p class="post-meta">January 15, 2024 • 5 min read</p>
-			<p class="post-excerpt">Learn how to build modern web applications with SvelteKit, the official Svelte framework.</p>
-			<a href="/blog/getting-started-with-sveltekit" class="read-more">Read More →</a>
+<div class="blog-page">
+	{#if loading}
+		<div class="loading">
+			<div class="spinner"></div>
+			<p>Loading all posts</p>
 		</div>
-		
-		<div class="blog-post">
-			<h2>Building RESTful APIs with Node.js</h2>
-			<p class="post-meta">January 10, 2024 • 7 min read</p>
-			<p class="post-excerpt">A comprehensive guide to creating robust RESTful APIs using Node.js and Express.</p>
-			<a href="/blog/building-restful-apis-nodejs" class="read-more">Read More →</a>
+	{:else if error}
+		<div class="error-message">
+			<p>{error}</p>
 		</div>
-		
-		<div class="blog-post">
-			<h2>Database Design Patterns</h2>
-			<p class="post-meta">January 5, 2024 • 6 min read</p>
-			<p class="post-excerpt">Essential database design patterns for building scalable web applications.</p>
-			<a href="/blog/database-design-patterns" class="read-more">Read More →</a>
+	{:else if posts.length === 0}
+		<div class="empty-state">
+			<p>No blog posts yet. Check back soon!</p>
 		</div>
-	</div>
+	{:else}
+		<div class="posts-masonry">
+			{#each posts as post (post.id)}
+				<article class="post-card">
+					{#if post.thumbnail}
+						<div class="post-thumbnail">
+							<img src={post.thumbnail} alt={post.title} />
+						</div>
+					{/if}
+					<div class="post-content">
+						<button class="post-title" onclick={() => viewPost(post.slug)}>
+							{post.title}
+						</button>
+						<div class="post-date">
+							<Calendar size={14} />
+							<span>{formatDate(post.publishedAt)}</span>
+						</div>
+						{#if post.tags.length > 0}
+							<div class="post-tags">
+								{#each post.tags as tag}
+									<span class="tag">{tag.name}</span>
+								{/each}
+							</div>
+						{/if}
+						<button class="read-more" onclick={() => viewPost(post.slug)}>
+							Read more →
+						</button>
+					</div>
+				</article>
+			{/each}
+		</div>
+	{/if}
 </div>
 
 <style>
-	.page-content {
-		max-width: 800px;
+	.blog-page {
+		max-width: 1200px;
 		margin: 0 auto;
 	}
 
-	h1 {
-		font-size: 2.5rem;
-		font-weight: 700;
-		color: var(--text-primary);
-		margin-bottom: 1rem;
-		text-align: center;
-	}
-
-	.subtitle {
-		font-size: 1.2rem;
-		color: var(--text-secondary);
-		margin-bottom: 2rem;
-		text-align: center;
-	}
-
-	.blog-posts {
+	.loading,
+	.error-message,
+	.empty-state {
 		display: flex;
 		flex-direction: column;
-		gap: 1.5rem;
-		margin-top: 2rem;
+		align-items: center;
+		justify-content: center;
+		padding: 64px 24px;
+		text-align: center;
 	}
 
-	.blog-post {
-		background: var(--bg-secondary);
-		border: 1px solid var(--border-color);
-		border-radius: 8px;
-		padding: 1.5rem;
-		transition: all 0.3s ease;
+	.spinner {
+		width: 40px;
+		height: 40px;
+		border: 3px solid var(--border-color, #3a3a3a);
+		border-top: 3px solid var(--accent-color, #6366f1);
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+		margin-bottom: 16px;
 	}
 
-	.blog-post:hover {
-		background: var(--bg-hover);
-		border-color: var(--accent-color);
-		transform: translateY(-2px);
+	@keyframes spin {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
 	}
 
-	.blog-post h2 {
-		color: var(--accent-color);
-		margin-bottom: 0.5rem;
-		font-size: 1.4rem;
+	.loading p,
+	.error-message p,
+	.empty-state p {
+		color: var(--text-secondary, #a1a1aa);
+		margin: 0;
 	}
 
-	.post-meta {
-		color: var(--text-muted);
-		font-size: 0.9rem;
-		margin-bottom: 1rem;
+	.posts-masonry {
+		column-count: 2;
+		column-gap: 20px;
 	}
 
-	.post-excerpt {
-		color: var(--text-secondary);
-		line-height: 1.6;
-		margin-bottom: 1rem;
+	.post-card {
+		background: var(--bg-secondary, #1a1a1a);
+		border: 2px solid var(--border-color, #ffffff);
+		border-radius: 0;
+		overflow: hidden;
+		margin-bottom: 20px;
+		break-inside: avoid;
+		display: inline-block;
+		width: 100%;
 	}
 
-	.read-more {
-		color: var(--accent-color);
-		text-decoration: none;
-		font-weight: 500;
+	.post-thumbnail {
+		width: 100%;
+		min-height: 200px;
+		overflow: hidden;
+		background: var(--bg-tertiary, #3a3a3a);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.post-thumbnail img {
+		width: 100%;
+		height: auto;
+		object-fit: contain;
+		display: block;
+	}
+
+	.post-content {
+		padding: 20px;
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	.post-title {
+		color: var(--text-primary, #ffffff);
+		font-size: 20px;
+		font-weight: 600;
+		margin: 0;
+		line-height: 1.3;
+		background: none;
+		border: none;
+		padding: 0;
+		text-align: left;
+		cursor: pointer;
 		transition: color 0.2s ease;
 	}
 
+	.post-title:hover {
+		color: var(--accent-color, #6366f1);
+	}
+
+	.post-date {
+		color: var(--text-muted, #9ca3af);
+		font-size: 13px;
+		margin: 0;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.post-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin: 8px 0;
+		padding-top: 12px;
+		border-top: 1px solid var(--border-color, #4a4a4a);
+	}
+
+	.tag {
+		padding: 6px 12px;
+		background: var(--bg-tertiary, #2a2a2a);
+		border-radius: 0;
+		font-size: 12px;
+		color: var(--text-secondary, #d1d5db);
+		border: 1px solid var(--border-color, #4a4a4a);
+	}
+
+	.read-more {
+		margin-top: auto;
+		padding: 0;
+		background: none;
+		border: none;
+		color: var(--text-primary, #ffffff);
+		font-size: 14px;
+		text-align: left;
+		cursor: pointer;
+		transition: color 0.2s ease;
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+	}
+
 	.read-more:hover {
-		color: var(--accent-hover);
+		color: var(--accent-color, #6366f1);
+	}
+
+	@media (max-width: 900px) {
+		.posts-masonry {
+			column-count: 1;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.post-card {
+			margin-bottom: 16px;
+		}
+
+		.post-content {
+			padding: 16px;
+		}
+
+		.post-title {
+			font-size: 18px;
+		}
+
+		.post-date {
+			font-size: 12px;
+		}
+
+		.tag {
+			font-size: 11px;
+			padding: 5px 10px;
+		}
+
+		.read-more {
+			font-size: 13px;
+		}
 	}
 </style>

@@ -68,6 +68,7 @@ import webhooksRoutes from './routes/webhooks';
 import socialLinksRoutes from './routes/socialLinks';
 import statsRoutes from './routes/stats';
 import trackingRoutes from './routes/tracking';
+import blogRoutes from './routes/blog';
 import { generalLimiter } from './middleware/rateLimiting';
 
 // Routes
@@ -127,6 +128,9 @@ app.use('/api/stats', statsRoutes);
 
 // Tracking routes (frontend page view tracking)
 app.use('/api/track', trackingRoutes);
+
+// Blog routes
+app.use('/api/blog', blogRoutes);
 
 // Webhooks routes (for external services to update data)
 app.use('/webhooks', webhooksRoutes);
