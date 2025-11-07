@@ -82,7 +82,8 @@
 		overflow: hidden;
 		position: relative;
 		padding: 4px 0;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		margin-top: 12px;
+		margin-bottom: 12px;
 	}
 
 	.banner-content {
@@ -97,6 +98,8 @@
 	@media (max-width: 768px) {
 		.banner-container {
 			padding: 3px 0;
+			margin-top: 10px;
+			margin-bottom: 10px;
 		}
 
 		.banner-content {
@@ -107,6 +110,8 @@
 	@media (max-width: 480px) {
 		.banner-container {
 			padding: 2px 0;
+			margin-top: 8px;
+			margin-bottom: 8px;
 		}
 
 		.banner-content {
