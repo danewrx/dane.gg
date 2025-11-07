@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { marked } from 'marked';
@@ -18,8 +17,20 @@
 		tags: { id: string; name: string }[];
 	}
 
+	interface NavigationPost {
+		id: string;
+		title: string;
+		slug: string;
+	}
+
+	interface Navigation {
+		previous: NavigationPost | null;
+		next: NavigationPost | null;
+	}
+
 	let slug = $derived($page.params.slug);
 	let post = $state<BlogPost | null>(null);
+	let navigation = $state<Navigation | null>(null);
 	let loading = $state(true);
 	let error = $state('');
 
@@ -33,8 +44,11 @@
 		}
 	});
 
-	onMount(async () => {
-		await loadPost();
+	// React to slug changes
+	$effect(() => {
+		if (slug) {
+			Promise.all([loadPost(), loadNavigation()]);
+		}
 	});
 
 	async function loadPost() {
@@ -59,6 +73,20 @@
 			error = 'Failed to load blog post';
 		} finally {
 			loading = false;
+		}
+	}
+
+	async function loadNavigation() {
+		try {
+			const response = await fetch(`/api/blog/${slug}/navigation`);
+			
+			if (response.ok) {
+				const result = await response.json();
+				navigation = result.data;
+			}
+		} catch (err) {
+			console.error('Error loading navigation:', err);
+			// Don't show error for navigation, just silently fail
 		}
 	}
 
@@ -141,6 +169,27 @@
 				</div>
 			{/if}
 		</article>
+
+		{#if navigation && (navigation.previous || navigation.next)}
+			{@const prev = navigation.previous}
+			{@const next = navigation.next}
+			<nav class="post-navigation">
+				<div class="nav-left">
+					{#if prev}
+						<button onclick={() => goto(`/blog/${prev.slug}`)} class="nav-link nav-previous">
+							← {prev.title}
+						</button>
+					{/if}
+				</div>
+				<div class="nav-right">
+					{#if next}
+						<button onclick={() => goto(`/blog/${next.slug}`)} class="nav-link nav-next">
+							{next.title} →
+						</button>
+					{/if}
+				</div>
+			</nav>
+		{/if}
 	{/if}
 </div>
 
@@ -358,6 +407,49 @@
 		color: var(--text-secondary, #b0b0b0);
 	}
 
+	.post-navigation {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-top: 48px;
+		padding-top: 32px;
+		border-top: 1px solid var(--border-color, #3a3a3a);
+	}
+
+	.nav-left {
+		flex: 1;
+		text-align: left;
+	}
+
+	.nav-right {
+		flex: 1;
+		text-align: right;
+	}
+
+	.nav-link {
+		background: none;
+		border: none;
+		padding: 0;
+		color: var(--text-primary, #ffffff);
+		text-decoration: none;
+		font-size: 16px;
+		cursor: pointer;
+		transition: color 0.2s ease;
+		font-family: inherit;
+	}
+
+	.nav-link:hover {
+		color: var(--accent-color, #6366f1);
+	}
+
+	.nav-previous {
+		text-align: left;
+	}
+
+	.nav-next {
+		text-align: right;
+	}
+
 	@media (max-width: 768px) {
 		.blog-post-page {
 			padding: 0 16px;
@@ -389,6 +481,34 @@
 
 		.post-content :global(h3) {
 			font-size: 1.2em;
+		}
+
+		.post-navigation {
+			flex-direction: column;
+			gap: 16px;
+			margin-top: 32px;
+			padding-top: 24px;
+		}
+
+		.nav-left,
+		.nav-right {
+			flex: none;
+		}
+
+		.nav-left {
+			text-align: left;
+		}
+
+		.nav-right {
+			text-align: left;
+		}
+
+		.nav-link {
+			font-size: 14px;
+		}
+
+		.nav-next {
+			text-align: left;
 		}
 	}
 </style>

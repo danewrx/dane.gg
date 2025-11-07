@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { db } from '../db';
 import { posts, blogTags, postTags } from '../db/schema';
-import { eq, desc, and, sql, inArray } from 'drizzle-orm';
+import { eq, desc, and, sql, inArray, gt, lt, asc } from 'drizzle-orm';
 import { requireAdmin } from '../middleware/auth';
 
 const router = Router();
@@ -543,6 +543,77 @@ router.delete('/admin/tags/:id', requireAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to delete blog tag'
+    });
+  }
+});
+
+/**
+ * Get previous and next posts for navigation (public endpoint)
+ */
+router.get('/:slug/navigation', async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    // Get the current post
+    const [currentPost] = await db
+      .select()
+      .from(posts)
+      .where(and(eq(posts.slug, slug), eq(posts.published, true)))
+      .limit(1);
+
+    if (!currentPost || !currentPost.publishedAt) {
+      return res.status(404).json({
+        success: false,
+        error: 'Blog post not found'
+      });
+    }
+
+    // Get previous post (publishedAt < current)
+    const [previousPost] = await db
+      .select({
+        id: posts.id,
+        title: posts.title,
+        slug: posts.slug
+      })
+      .from(posts)
+      .where(
+        and(
+          eq(posts.published, true),
+          lt(posts.publishedAt, currentPost.publishedAt)
+        )
+      )
+      .orderBy(desc(posts.publishedAt))
+      .limit(1);
+
+    // Get next post (publishedAt > current)
+    const [nextPost] = await db
+      .select({
+        id: posts.id,
+        title: posts.title,
+        slug: posts.slug
+      })
+      .from(posts)
+      .where(
+        and(
+          eq(posts.published, true),
+          gt(posts.publishedAt, currentPost.publishedAt)
+        )
+      )
+      .orderBy(asc(posts.publishedAt))
+      .limit(1);
+
+    res.json({
+      success: true,
+      data: {
+        previous: previousPost || null,
+        next: nextPost || null
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching navigation posts:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch navigation posts'
     });
   }
 });
