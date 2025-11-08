@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { Calendar } from 'lucide-svelte';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
@@ -14,15 +14,28 @@
 		tags: { id: string; name: string }[];
 	}
 
-	let posts = $state<BlogPost[]>([]);
+	const POSTS_PER_BATCH = 8;
+	
+	let allPosts = $state<BlogPost[]>([]);
+	let visiblePosts = $state<BlogPost[]>([]);
 	let loading = $state(true);
+	let loadingMore = $state(false);
 	let error = $state('');
+	let hasMore = $state(true);
+	let loadMoreTrigger = $state<HTMLDivElement | null>(null);
+	let observer: IntersectionObserver | null = null;
 
 	onMount(async () => {
-		await loadPosts();
+		await loadAllPosts();
 	});
 
-	async function loadPosts() {
+	onDestroy(() => {
+		if (observer) {
+			observer.disconnect();
+		}
+	});
+
+	async function loadAllPosts() {
 		try {
 			loading = true;
 			error = '';
@@ -33,7 +46,11 @@
 			}
 
 			const result = await response.json();
-			posts = result.data || [];
+			allPosts = result.data || [];
+			
+			// Load initial batch
+			visiblePosts = allPosts.slice(0, POSTS_PER_BATCH);
+			hasMore = visiblePosts.length < allPosts.length;
 		} catch (err) {
 			console.error('Error loading blog posts:', err);
 			error = 'Failed to load blog posts';
@@ -41,6 +58,52 @@
 			loading = false;
 		}
 	}
+
+	function loadMorePosts() {
+		if (loadingMore || !hasMore) return;
+
+		loadingMore = true;
+		
+		setTimeout(() => {
+			const currentCount = visiblePosts.length;
+			const nextBatch = allPosts.slice(currentCount, currentCount + POSTS_PER_BATCH);
+			
+			if (nextBatch.length > 0) {
+				visiblePosts = [...visiblePosts, ...nextBatch];
+				hasMore = visiblePosts.length < allPosts.length;
+			} else {
+				hasMore = false;
+			}
+			
+			loadingMore = false;
+		}, 300);
+	}
+
+	$effect(() => {
+		if (!loadMoreTrigger) return;
+
+		if (typeof IntersectionObserver === 'undefined') return;
+
+		observer = new IntersectionObserver(
+			(entries) => {
+				const entry = entries[0];
+				if (entry.isIntersecting && hasMore && !loadingMore) {
+					loadMorePosts();
+				}
+			},
+			{
+				rootMargin: '200px' // Start loading 200px before reaching trigger
+			}
+		);
+
+		observer.observe(loadMoreTrigger);
+
+		return () => {
+			if (observer) {
+				observer.disconnect();
+			}
+		};
+	});
 
 	function viewPost(slug: string) {
 		goto(`/blog/${slug}`);
@@ -101,13 +164,13 @@
 		<div class="error-message">
 			<p>{error}</p>
 		</div>
-	{:else if posts.length === 0}
+	{:else if visiblePosts.length === 0}
 		<div class="empty-state">
 			<p>No blog posts yet. Check back soon!</p>
 		</div>
 	{:else}
 		<div class="posts-masonry">
-			{#each posts as post (post.id)}
+			{#each visiblePosts as post (post.id)}
 				<article class="post-card">
 					{#if post.thumbnail}
 						<div class="post-thumbnail">
@@ -136,6 +199,17 @@
 				</article>
 			{/each}
 		</div>
+		
+		{#if hasMore || loadingMore}
+			<div class="load-more-trigger" bind:this={loadMoreTrigger}>
+				{#if loadingMore}
+					<div class="loading-more">
+						<div class="spinner-small"></div>
+						<p>Loading more posts...</p>
+					</div>
+				{/if}
+			</div>
+		{/if}
 	{/if}
 </div>
 
@@ -280,6 +354,38 @@
 
 	.read-more:hover {
 		color: var(--accent-color, #6366f1);
+	}
+
+	.load-more-trigger {
+		width: 100%;
+		height: 100px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-top: 20px;
+	}
+
+	.loading-more {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
+	}
+
+	.spinner-small {
+		width: 24px;
+		height: 24px;
+		border: 2px solid var(--border-color, #3a3a3a);
+		border-top: 2px solid var(--accent-color, #6366f1);
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+	}
+
+	.loading-more p {
+		color: var(--text-secondary, #9ca3af);
+		font-size: 14px;
+		margin: 0;
 	}
 
 	@media (max-width: 900px) {
