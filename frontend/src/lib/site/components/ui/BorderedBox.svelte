@@ -9,6 +9,8 @@
 	export let className: string = '';
 	export let showHeader: boolean = false;
 	export let headerText: string = '';
+	export let subheading: string = '';
+	export let subheadingColor: string = '';
 	export let contentPadding: boolean = false;
 	export let contentBottomPadding: boolean = false;
 	export let dynamicHeight: boolean = false;
@@ -33,6 +35,11 @@
 			<div class="header-text">
 				<slot name="header-icon" />
 				{headerText}
+				{#if subheading}
+					<span class="header-subheading" style:color={subheadingColor || undefined}>
+						{subheading}
+					</span>
+				{/if}
 			</div>
 			<div class="header-divider"></div>
 		</div>
@@ -123,14 +130,20 @@
 
 	.header-text {
 		font-size: 16px;
-		font-weight: 600;
+		font-weight: bold;
 		color: var(--text-primary, #ffffff);
 		margin: 0 0 4px 0;
 		padding: 0;
 		line-height: 1.2;
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: 6px;
+		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
+	}
+
+	.header-subheading {
+		font-weight: bold;
+		margin-left: 0;
 	}
 
 	.header-divider {

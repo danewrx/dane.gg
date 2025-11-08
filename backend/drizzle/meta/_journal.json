@@ -15,6 +15,20 @@
       "when": 1762555532064,
       "tag": "0001_special_black_tom",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1762572298527,
+      "tag": "0002_sweet_nick_fury",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1762574938311,
+      "tag": "0003_spooky_naoko",
+      "breakpoints": true
     }
   ]
 }

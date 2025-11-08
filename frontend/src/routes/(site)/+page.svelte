@@ -8,6 +8,7 @@
 	import ButtonBanner from '$lib/site/components/widgets/ButtonBanner.svelte';
 	import MyButtonWidget from '$lib/site/components/widgets/MyButtonWidget.svelte';
 	import BorderedBox from '$lib/site/components/ui/BorderedBox.svelte';
+	import ServiceStatus from '$lib/site/components/widgets/ServiceStatus.svelte';
 	import { Radio, Twitter } from 'lucide-svelte';
 	import type { PageData } from './$types';
 	
@@ -15,9 +16,25 @@
 	
 	let musicData: any = $state(data.musicData);
 	let tweetData: any = $state(data.tweetData);
+	let overallStatus = $state('UNKNOWN');
 	
 	const musicHeaderText = $derived(musicData?.nowPlaying ? 'Now Playing' : 'Recently Played');
 	const tweetHeaderText = $derived('Status');
+	
+	function getStatusColor(status: string): string {
+		switch (status) {
+			case 'OK':
+				return '#90EE90';
+			case 'DOWN':
+				return '#FFB6C1';
+			case 'MAINTENANCE':
+				return '#FFD700';
+			case 'PENDING':
+				return '#D3D3D3';
+			default:
+				return '#D3D3D3';
+		}
+	}
 
 	interface BlogPost {
 		id: string;
@@ -135,6 +152,19 @@
 							{/each}
 						{/if}
 					</div>
+				</BorderedBox>
+
+				<BorderedBox 
+					padding="8px 16px" 
+					className="service-status-section" 
+					showHeader={true} 
+					headerText="Systems status:" 
+					subheading={overallStatus}
+					subheadingColor={getStatusColor(overallStatus)}
+					dynamicHeight={true} 
+					contentPadding={true}
+				>
+					<ServiceStatus bind:overallStatus={overallStatus} />
 				</BorderedBox>
 			</div>
 		</div>

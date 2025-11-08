@@ -59,7 +59,10 @@ export class ConfigService {
         value = ENV_FALLBACKS[key as keyof SiteConfig];
         
         if (value === undefined) {
-          console.warn(`Configuration key '${key}' not found in database or environment variables`);
+          const silentKeys = ['uptime_kuma_selected_monitors'];
+          if (!silentKeys.includes(key)) {
+            console.warn(`Configuration key '${key}' not found in database or environment variables`);
+          }
           return null;
         }
       }

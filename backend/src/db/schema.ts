@@ -202,6 +202,23 @@ export const userUploads = websiteSchema.table('user_uploads', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
 });
 
+// Uptime Kuma cache table
+export const uptimeKumaMonitors = websiteSchema.table('uptime_kuma_monitors', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  monitorId: integer('monitor_id').notNull().unique(), // monitor ID
+  name: varchar('name', { length: 255 }).notNull(),
+  customName: varchar('custom_name', { length: 255 }), // display name for site
+  url: varchar('url', { length: 500 }),
+  type: varchar('type', { length: 50 }).notNull(),
+  status: varchar('status', { length: 20 }).notNull(), // up, down, pending, maintenance
+  group: varchar('group', { length: 255 }),
+  uptime: integer('uptime'), // Uptime percentage (0-100)
+  avgResponseTime: integer('avg_response_time'), // Response time in milliseconds
+  lastCheck: timestamp('last_check', { withTimezone: true }),
+  lastUpdated: timestamp('last_updated', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
+});
+
 // Relations
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   category: one(projectCategories, {
@@ -301,3 +318,5 @@ export type SocialLink = typeof socialLinks.$inferSelect;
 export type NewSocialLink = typeof socialLinks.$inferInsert;
 export type UserUpload = typeof userUploads.$inferSelect;
 export type NewUserUpload = typeof userUploads.$inferInsert;
+export type UptimeKumaMonitorCache = typeof uptimeKumaMonitors.$inferSelect;
+export type NewUptimeKumaMonitorCache = typeof uptimeKumaMonitors.$inferInsert;

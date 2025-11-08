@@ -7,7 +7,8 @@
 		Settings as SettingsIcon,
 		ChevronRight,
 		Link,
-		MessageSquare
+		MessageSquare,
+		Server
 	} from 'lucide-svelte';
 
 	let { children } = $props();
@@ -42,6 +43,16 @@
 			bgColor: 'rgba(34, 197, 94, 0.1)',
 			borderColor: 'rgba(34, 197, 94, 0.2)',
 			path: '/admin/configuration/banner'
+		},
+		{
+			id: 'service-status',
+			title: 'Service Status',
+			description: 'Configure service status monitoring from Uptime Kuma',
+			icon: Server,
+			color: 'from-orange-500 to-red-500',
+			bgColor: 'rgba(249, 115, 22, 0.1)',
+			borderColor: 'rgba(249, 115, 22, 0.2)',
+			path: '/admin/configuration/service-status'
 		}
 	];
 
@@ -105,6 +116,8 @@
 						<Link size={24} />
 					{:else if category.icon === MessageSquare}
 						<MessageSquare size={24} />
+					{:else if category.icon === Server}
+						<Server size={24} />
 					{/if}
 				</div>
 				<div class="card-content">

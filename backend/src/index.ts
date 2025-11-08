@@ -70,6 +70,7 @@ import statsRoutes from './routes/stats';
 import trackingRoutes from './routes/tracking';
 import blogRoutes from './routes/blog';
 import uploadRoutes from './routes/upload';
+import uptimeKumaRoutes from './routes/uptimeKuma';
 import { generalLimiter } from './middleware/rateLimiting';
 
 // Routes
@@ -135,6 +136,9 @@ app.use('/api/blog', blogRoutes);
 
 // Upload routes
 app.use('/api/upload', uploadRoutes);
+
+// Uptime Kuma routes
+app.use('/api/uptime-kuma', uptimeKumaRoutes);
 
 // Webhooks routes (for external services to update data)
 app.use('/webhooks', webhooksRoutes);
