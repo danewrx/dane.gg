@@ -68,6 +68,20 @@
 		if (plainText.length <= maxLength) return plainText;
 		return plainText.substring(0, maxLength) + '...';
 	}
+
+	function getThumbnailUrl(path: string | null): string {
+		if (!path) return '';
+		// If it's external URL, just return it
+		if (path.startsWith('http://') || path.startsWith('https://')) {
+			return path;
+		}
+		// If starts with /uploads/, serve through the API
+		if (path.startsWith('/uploads/')) {
+			const filename = path.replace('/uploads/', '');
+			return `/api/upload/file/${filename}`;
+		}
+		return path;
+	}
 </script>
 
 <svelte:head>
@@ -97,7 +111,7 @@
 				<article class="post-card">
 					{#if post.thumbnail}
 						<div class="post-thumbnail">
-							<img src={post.thumbnail} alt={post.title} />
+							<img src={getThumbnailUrl(post.thumbnail)} alt={post.title} />
 						</div>
 					{/if}
 					<div class="post-content">

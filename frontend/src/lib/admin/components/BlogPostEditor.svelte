@@ -5,6 +5,7 @@
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	import Toggle from './ui/Toggle.svelte';
 	import TagManager from './TagManager.svelte';
+	import FileUpload, { type UploadedFile } from './ui/FileUpload.svelte';
 	import {
 		getBlogPost,
 		createBlogPost,
@@ -33,6 +34,8 @@
 	let slug = $state('');
 	let content = $state('');
 	let thumbnail = $state('');
+	let thumbnailIsExternal = $state(false);
+	let thumbnailFilename = $state<string | null>(null);
 	let published = $state(false);
 	let tags = $state<string[]>([]);
 	let availableTags = $state<BlogTag[]>([]);
@@ -59,6 +62,8 @@
 			slug = '';
 			content = '';
 			thumbnail = '';
+			thumbnailIsExternal = false;
+			thumbnailFilename = null;
 			published = false;
 			tags = [];
 			autoSlug = true;
@@ -86,6 +91,18 @@
 			slug = post.slug;
 			content = post.content;
 			thumbnail = post.thumbnail || '';
+			// Determine if thumbnail is external or upload
+			if (thumbnail) {
+				thumbnailIsExternal = thumbnail.startsWith('http://') || thumbnail.startsWith('https://');
+				if (!thumbnailIsExternal && thumbnail.startsWith('/uploads/')) {
+					thumbnailFilename = thumbnail.replace('/uploads/', '');
+				} else {
+					thumbnailFilename = null;
+				}
+			} else {
+				thumbnailIsExternal = false;
+				thumbnailFilename = null;
+			}
 			published = post.published;
 			tags = post.tags.map(t => t.name);
 			createdAt = post.createdAt;
@@ -240,6 +257,54 @@
 	function handleClose() {
 		dispatch('close');
 	}
+
+	function handleThumbnailUpload(file: UploadedFile | UploadedFile[]) {
+		// Set thumbnail to the file path
+		const uploadedFile = Array.isArray(file) ? file[0] : file;
+		if (uploadedFile) {
+			thumbnail = uploadedFile.path;
+			thumbnailIsExternal = uploadedFile.isExternal || false;
+			if (!thumbnailIsExternal && uploadedFile.path.startsWith('/uploads/')) {
+				thumbnailFilename = uploadedFile.path.replace('/uploads/', '');
+			} else {
+				thumbnailFilename = null;
+			}
+		}
+	}
+
+	async function handleRemoveThumbnail() {
+		if (!thumbnailIsExternal && thumbnailFilename) {
+			try {
+				const response = await fetch(`/api/upload/${thumbnailFilename}`, {
+					method: 'DELETE',
+					credentials: 'include'
+				});
+
+				if (!response.ok) {
+					console.error('Failed to delete uploaded file');
+				}
+			} catch (error) {
+				console.error('Error deleting uploaded file:', error);
+			}
+		}
+
+		thumbnail = '';
+		thumbnailIsExternal = false;
+		thumbnailFilename = null;
+	}
+
+	function getThumbnailUrl(path: string): string {
+		// If it's an external URL, just return it
+		if (path.startsWith('http://') || path.startsWith('https://')) {
+			return path;
+		}
+		// If it starts with /uploads/, serve through the API
+		if (path.startsWith('/uploads/')) {
+			const filename = path.replace('/uploads/', '');
+			return `/api/upload/file/${filename}`;
+		}
+		return path;
+	}
 </script>
 
 <div class="editor-container">
@@ -321,19 +386,34 @@
 
 			<!-- Thumbnail -->
 			<div class="form-group">
-				<label for="thumbnail">Thumbnail URL</label>
+				<label for="thumbnail">Cover Image</label>
 				<div class="thumbnail-input-group">
-					<input
-						type="text"
-						id="thumbnail"
-						bind:value={thumbnail}
-						placeholder="https://example.com/image.jpg"
-						class="form-input"
-					/>
 					{#if thumbnail}
-						<div class="thumbnail-preview">
-							<img src={thumbnail} alt="Thumbnail preview" />
+						<div class="thumbnail-preview-container">
+							<div class="thumbnail-preview">
+								<img src={getThumbnailUrl(thumbnail)} alt="Thumbnail preview" onerror={(e) => {
+									console.error('Failed to load thumbnail:', thumbnail);
+									(e.target as HTMLImageElement).style.display = 'none';
+								}} />
+								<button
+									type="button"
+									class="remove-thumbnail"
+									onclick={handleRemoveThumbnail}
+									aria-label="Remove thumbnail"
+								>
+									<X size={16} />
+								</button>
+							</div>
 						</div>
+					{:else}
+						<FileUpload
+							acceptedTypes={['image']}
+							maxSize={10 * 1024 * 1024}
+							multiple={false}
+							label="Upload Cover Image"
+							showPreview={false}
+							onUpload={handleThumbnailUpload}
+						/>
 					{/if}
 				</div>
 			</div>
@@ -589,10 +669,17 @@
 		gap: 12px;
 	}
 
+	.thumbnail-preview-container {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
 	.thumbnail-preview {
+		position: relative;
 		width: 100%;
-		max-width: 300px;
-		height: 200px;
+		max-width: 400px;
+		height: 250px;
 		border-radius: 6px;
 		overflow: hidden;
 		background: var(--bg-tertiary, #3a3a3a);
@@ -604,6 +691,29 @@
 		height: 100%;
 		object-fit: cover;
 	}
+
+	.remove-thumbnail {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		background: rgba(0, 0, 0, 0.7);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		color: var(--text-primary, #ffffff);
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.remove-thumbnail:hover {
+		background: rgba(239, 68, 68, 0.9);
+		border-color: #ef4444;
+	}
+
 
 	.tags-header {
 		display: flex;

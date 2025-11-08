@@ -189,6 +189,19 @@ export const socialLinks = websiteSchema.table('social_links', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
 });
 
+// User uploads table
+export const userUploads = websiteSchema.table('user_uploads', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  filename: varchar('filename', { length: 255 }).notNull(),
+  originalName: varchar('original_name', { length: 255 }).notNull(),
+  path: varchar('path', { length: 500 }).notNull(),
+  size: integer('size').notNull(),
+  mimetype: varchar('mimetype', { length: 100 }).notNull(),
+  isExternal: boolean('is_external').default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
+});
+
 // Relations
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   category: one(projectCategories, {
@@ -237,12 +250,20 @@ export const postTagsRelations = relations(postTags, ({ one }) => ({
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
-  totpBackupCodes: many(totpBackupCodes)
+  totpBackupCodes: many(totpBackupCodes),
+  uploads: many(userUploads)
 }));
 
 export const totpBackupCodesRelations = relations(totpBackupCodes, ({ one }) => ({
   user: one(users, {
     fields: [totpBackupCodes.userId],
+    references: [users.id]
+  })
+}));
+
+export const userUploadsRelations = relations(userUploads, ({ one }) => ({
+  user: one(users, {
+    fields: [userUploads.userId],
     references: [users.id]
   })
 }));
@@ -278,3 +299,5 @@ export type Tweet = typeof tweets.$inferSelect;
 export type NewTweet = typeof tweets.$inferInsert;
 export type SocialLink = typeof socialLinks.$inferSelect;
 export type NewSocialLink = typeof socialLinks.$inferInsert;
+export type UserUpload = typeof userUploads.$inferSelect;
+export type NewUserUpload = typeof userUploads.$inferInsert;

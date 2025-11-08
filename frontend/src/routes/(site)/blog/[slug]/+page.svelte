@@ -109,6 +109,20 @@
 	function goBack() {
 		goto('/blog');
 	}
+
+	function getThumbnailUrl(path: string | null): string {
+		if (!path) return '';
+		// If it's an external URL, just return it
+		if (path.startsWith('http://') || path.startsWith('https://')) {
+			return path;
+		}
+		// If it starts with /uploads/, serve through the API
+		if (path.startsWith('/uploads/')) {
+			const filename = path.replace('/uploads/', '');
+			return `/api/upload/file/${filename}`;
+		}
+		return path;
+	}
 </script>
 
 <svelte:head>
@@ -143,6 +157,11 @@
 		</button>
 
 		<article class="blog-post">
+			{#if post.thumbnail}
+				<div class="post-cover-image">
+					<img src={getThumbnailUrl(post.thumbnail)} alt={post.title} />
+				</div>
+			{/if}
 			<h1 class="post-title">{post.title}</h1>
 			
 			<div class="post-meta">
@@ -260,6 +279,27 @@
 
 	.blog-post {
 		padding: 20px 0 40px 0;
+	}
+
+	.post-cover-image {
+		width: 100%;
+		margin-bottom: 32px;
+		overflow: hidden;
+		border-radius: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--bg-tertiary, #2a2a2a);
+		max-height: 400px;
+	}
+
+	.post-cover-image img {
+		width: 100%;
+		height: auto;
+		max-height: 400px;
+		display: block;
+		object-fit: contain;
+		object-position: center;
 	}
 
 	.post-title {
