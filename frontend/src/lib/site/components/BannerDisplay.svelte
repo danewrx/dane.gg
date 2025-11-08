@@ -8,6 +8,27 @@
 
 	let { config }: Props = $props();
 
+	function convertBannerText(text: string): string {
+		// If it's already HTML, return
+		if (/<[a-z][\s\S]*>/i.test(text)) {
+			return text;
+		}
+		
+		let html = text;
+		
+		html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+		html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+		
+		html = html.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, '<em>$1</em>');
+		html = html.replace(/(?<!_)_([^_]+?)_(?!_)/g, '<em>$1</em>');
+		
+		html = html.replace(/~~(.+?)~~/g, '<s>$1</s>');
+		
+		return html;
+	}
+
+	let displayText = $derived(convertBannerText(config.text));
+
 	let bannerContainer: HTMLDivElement;
 	let bannerContent: HTMLDivElement;
 	let animationId: number;
@@ -18,7 +39,7 @@
 		const containerWidth = bannerContainer.offsetWidth;
 		const contentWidth = bannerContent.offsetWidth;
 		
-		// Calculate total distance to travel (from right edge to completely off left)
+		// Calculate total distance to travel
 		const totalDistance = containerWidth + contentWidth;
 		
 		// Calculate duration based on speed (px/s)
@@ -72,7 +93,7 @@
 	bind:this={bannerContainer}
 >
 	<div class="banner-content" bind:this={bannerContent}>
-		{config.text}
+		{@html displayText}
 	</div>
 </div>
 

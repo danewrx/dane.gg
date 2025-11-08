@@ -4,6 +4,7 @@
 		Bold, 
 		Italic, 
 		Strikethrough, 
+		Underline,
 		Code, 
 		Link, 
 		Image, 
@@ -17,25 +18,104 @@
 		EyeOff
 	} from 'lucide-svelte';
 
+	type ToolType = 
+		| 'heading1' | 'heading2' | 'heading3'
+		| 'bold' | 'italic' | 'underline' | 'strikethrough' | 'code'
+		| 'link' | 'image'
+		| 'bulletList' | 'numberedList' | 'quote'
+		| 'preview';
+
 	interface Props {
 		value: string;
 		onchange?: (value: string) => void;
 		placeholder?: string;
 		minHeight?: string;
+		enabledTools?: ToolType[];
+		outputFormat?: 'markdown' | 'html';
 	}
+
+	// Default tools
+	const DEFAULT_TOOLS: ToolType[] = [
+		'heading1', 'heading2', 'heading3',
+		'bold', 'italic', 'strikethrough', 'code',
+		'link', 'image',
+		'bulletList', 'numberedList', 'quote',
+		'preview'
+	];
 
 	let { 
 		value = $bindable(''),
 		onchange,
 		placeholder = 'Write your markdown here...',
-		minHeight = '400px'
+		minHeight = '400px',
+		enabledTools = DEFAULT_TOOLS,
+		outputFormat = 'markdown'
 	}: Props = $props();
 
+	// Check if tools are enabled
+	const hasTool = (tool: ToolType) => enabledTools.includes(tool);
+	const hasAnyTool = (tools: ToolType[]) => tools.some(tool => enabledTools.includes(tool));
+
 	let showPreview = $state(false);
+	
+	$effect(() => {
+		if (!hasTool('preview')) {
+			showPreview = false;
+		}
+	});
+
+	// Convert HTML back to markdown for editing when outputFormat is 'html'
+	function convertHtmlToMarkdown(html: string): string {
+		if (!html) return '';
+		if (!/<[a-z][\s\S]*>/i.test(html)) {
+			return html;
+		}
+		
+		let markdown = html;
+		
+		markdown = markdown.replace(/<strong>(.+?)<\/strong>/gi, '**$1**');
+		markdown = markdown.replace(/<b>(.+?)<\/b>/gi, '**$1**');
+		markdown = markdown.replace(/<em>(.+?)<\/em>/gi, '*$1*');
+		markdown = markdown.replace(/<i>(.+?)<\/i>/gi, '*$1*');
+		markdown = markdown.replace(/<s>(.+?)<\/s>/gi, '~~$1~~');
+		markdown = markdown.replace(/<strike>(.+?)<\/strike>/gi, '~~$1~~');
+		// Keep <u> tags since markdown doesn't have underline
+		
+		return markdown;
+	}
+
+	// Maintain internal markdown state separate from bound value
+	let internalMarkdown = $state('');
+	let isInitialized = $state(false);
+
+	// Convert HTML to markdown when loading
+	$effect(() => {
+		if (outputFormat === 'html' && value && !isInitialized) {
+			internalMarkdown = convertHtmlToMarkdown(value);
+			isInitialized = true;
+		} else if (outputFormat !== 'html') {
+			internalMarkdown = value;
+			isInitialized = true;
+		}
+	});
+
+	// Sync bound value changes to internal markdown
+	$effect(() => {
+		if (outputFormat === 'html' && isInitialized) {
+			const markdownValue = convertHtmlToMarkdown(value);
+			if (markdownValue !== internalMarkdown) {
+				internalMarkdown = markdownValue;
+			}
+		} else if (outputFormat !== 'html') {
+			internalMarkdown = value;
+		}
+	});
+
 	let textarea: HTMLTextAreaElement;
 	let activeFormats = $state({
 		bold: false,
 		italic: false,
+		underline: false,
 		strikethrough: false,
 		code: false,
 		h1: false,
@@ -46,19 +126,61 @@
 		quote: false
 	});
 	
+	const getEditorValue = () => outputFormat === 'html' ? internalMarkdown : value;
+
 	let previewHtml = $derived.by(() => {
 		try {
-			return marked(value);
+			const markdownValue = getEditorValue();
+			return marked(markdownValue);
 		} catch (error) {
 			console.error('Markdown parsing error:', error);
 			return '<p>Error parsing markdown</p>';
 		}
 	});
 
+	// Convert markdown to HTML when outputFormat is 'html'
+	// For banner text, we need inline HTML (no block elements like <p>)
+	function convertToHtml(markdown: string): string {
+		try {
+			// If already HTML, return
+			if (/<[a-z][\s\S]*>/i.test(markdown)) {
+				return markdown;
+			}
+			
+			// Convert inline markdown to HTML
+			let html = markdown;
+			
+			html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+			html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+			
+			html = html.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, '<em>$1</em>');
+			html = html.replace(/(?<!_)_([^_]+?)_(?!_)/g, '<em>$1</em>');
+			
+			html = html.replace(/~~(.+?)~~/g, '<s>$1</s>');
+			
+			return html;
+		} catch (error) {
+			console.error('Error converting to HTML:', error);
+			return markdown;
+		}
+	}
+
+	function handleValueChange(newValue: string) {
+		if (outputFormat === 'html') {
+			internalMarkdown = newValue;
+			const htmlValue = convertToHtml(newValue);
+			value = htmlValue;
+			onchange?.(htmlValue);
+		} else {
+			value = newValue;
+			internalMarkdown = newValue;
+			onchange?.(newValue);
+		}
+	}
+
 	function handleInput(e: Event) {
 		const target = e.target as HTMLTextAreaElement;
-		value = target.value;
-		onchange?.(value);
+		handleValueChange(target.value);
 		updateActiveFormats();
 	}
 
@@ -73,12 +195,14 @@
 		const end = textarea.selectionEnd;
 		const hasSelection = start !== end;
 		
+		const editorValue = getEditorValue();
+		
 		if (hasSelection) {
-			const selectedText = value.substring(start, end);
+			const selectedText = editorValue.substring(start, end);
 			
-			const lineStart = value.lastIndexOf('\n', start - 1) + 1;
-			const lineEnd = value.indexOf('\n', start);
-			const fullLine = value.substring(lineStart, lineEnd === -1 ? value.length : lineEnd);
+			const lineStart = editorValue.lastIndexOf('\n', start - 1) + 1;
+			const lineEnd = editorValue.indexOf('\n', start);
+			const fullLine = editorValue.substring(lineStart, lineEnd === -1 ? editorValue.length : lineEnd);
 			
 			const hasBoldItalic = selectedText.startsWith('***') && selectedText.endsWith('***') && selectedText.length > 6;
 			
@@ -100,6 +224,9 @@
 			
 			const hasStrikethrough = selectedText.startsWith('~~') && selectedText.endsWith('~~') && selectedText.length > 4;
 			activeFormats.strikethrough = hasStrikethrough;
+			
+			const hasUnderline = selectedText.startsWith('<u>') && selectedText.endsWith('</u>') && selectedText.length > 7;
+			activeFormats.underline = hasUnderline;
 			
 			const hasCode = selectedText.startsWith('`') && selectedText.endsWith('`') && selectedText.length > 2;
 			activeFormats.code = hasCode;
@@ -145,8 +272,9 @@
 		if (e.key === 'Enter') {
 			const target = e.target as HTMLTextAreaElement;
 			const cursorPos = target.selectionStart;
-			const textBeforeCursor = value.substring(0, cursorPos);
-			const textAfterCursor = value.substring(cursorPos);
+			const editorValue = getEditorValue();
+			const textBeforeCursor = editorValue.substring(0, cursorPos);
+			const textAfterCursor = editorValue.substring(cursorPos);
 			
 			const lines = textBeforeCursor.split('\n');
 			const currentLine = lines[lines.length - 1];
@@ -158,8 +286,7 @@
 				if (!content.trim()) {
 					e.preventDefault();
 					const newTextBefore = textBeforeCursor.substring(0, textBeforeCursor.lastIndexOf('\n') + 1);
-					value = newTextBefore + textAfterCursor;
-					onchange?.(value);
+					handleValueChange(newTextBefore + textAfterCursor);
 					
 					setTimeout(() => {
 						target.setSelectionRange(newTextBefore.length, newTextBefore.length);
@@ -169,8 +296,7 @@
 				
 				e.preventDefault();
 				const newLine = `\n${indent}${bullet} `;
-				value = textBeforeCursor + newLine + textAfterCursor;
-				onchange?.(value);
+				handleValueChange(textBeforeCursor + newLine + textAfterCursor);
 				
 				setTimeout(() => {
 					const newPos = cursorPos + newLine.length;
@@ -187,8 +313,7 @@
 				if (!content.trim()) {
 					e.preventDefault();
 					const newTextBefore = textBeforeCursor.substring(0, textBeforeCursor.lastIndexOf('\n') + 1);
-					value = newTextBefore + textAfterCursor;
-					onchange?.(value);
+					handleValueChange(newTextBefore + textAfterCursor);
 					
 					setTimeout(() => {
 						target.setSelectionRange(newTextBefore.length, newTextBefore.length);
@@ -199,8 +324,7 @@
 				e.preventDefault();
 				const nextNumber = parseInt(number) + 1;
 				const newLine = `\n${indent}${nextNumber}. `;
-				value = textBeforeCursor + newLine + textAfterCursor;
-				onchange?.(value);
+				handleValueChange(textBeforeCursor + newLine + textAfterCursor);
 				
 				setTimeout(() => {
 					const newPos = cursorPos + newLine.length;
@@ -218,19 +342,20 @@
 	function getSelection(): { start: number; end: number; text: string } {
 		const start = textarea.selectionStart;
 		const end = textarea.selectionEnd;
-		const text = value.substring(start, end);
+		const editorValue = getEditorValue();
+		const text = editorValue.substring(start, end);
 		return { start, end, text };
 	}
 
 	function insertText(before: string, after: string = '') {
 		const { start, end, text } = getSelection();
+		const editorValue = getEditorValue();
 		
 		if (text.startsWith('***') && text.endsWith('***') && text.length > 6) {
 			if (before === '**') {
 				const content = text.substring(3, text.length - 3);
-				const newValue = value.substring(0, start) + '*' + content + '*' + value.substring(end);
-				value = newValue;
-				onchange?.(value);
+				const newValue = editorValue.substring(0, start) + '*' + content + '*' + editorValue.substring(end);
+				handleValueChange(newValue);
 				
 				setTimeout(() => {
 					textarea.focus();
@@ -242,9 +367,8 @@
 				return;
 			} else if (before === '*') {
 				const content = text.substring(3, text.length - 3);
-				const newValue = value.substring(0, start) + '**' + content + '**' + value.substring(end);
-				value = newValue;
-				onchange?.(value);
+				const newValue = editorValue.substring(0, start) + '**' + content + '**' + editorValue.substring(end);
+				handleValueChange(newValue);
 				
 				setTimeout(() => {
 					textarea.focus();
@@ -262,9 +386,8 @@
 			if (before === '**') {
 				const markerLength = text.startsWith('**') ? 2 : 2;
 				const content = text.substring(markerLength, text.length - markerLength);
-				const newValue = value.substring(0, start) + content + value.substring(end);
-				value = newValue;
-				onchange?.(value);
+				const newValue = editorValue.substring(0, start) + content + editorValue.substring(end);
+				handleValueChange(newValue);
 				
 				setTimeout(() => {
 					textarea.focus();
@@ -276,9 +399,8 @@
 				return;
 			} else if (before === '*') {
 				const content = text.substring(2, text.length - 2);
-				const newValue = value.substring(0, start) + '***' + content + '***' + value.substring(end);
-				value = newValue;
-				onchange?.(value);
+				const newValue = editorValue.substring(0, start) + '***' + content + '***' + editorValue.substring(end);
+				handleValueChange(newValue);
 				
 				setTimeout(() => {
 					textarea.focus();
@@ -296,9 +418,8 @@
 		    (text.startsWith('_') && text.endsWith('_') && !text.startsWith('__') && text.length > 2)) {
 			if (before === '*') {
 				const content = text.substring(1, text.length - 1);
-				const newValue = value.substring(0, start) + content + value.substring(end);
-				value = newValue;
-				onchange?.(value);
+				const newValue = editorValue.substring(0, start) + content + editorValue.substring(end);
+				handleValueChange(newValue);
 				
 				setTimeout(() => {
 					textarea.focus();
@@ -310,9 +431,8 @@
 				return;
 			} else if (before === '**') {
 				const content = text.substring(1, text.length - 1);
-				const newValue = value.substring(0, start) + '***' + content + '***' + value.substring(end);
-				value = newValue;
-				onchange?.(value);
+				const newValue = editorValue.substring(0, start) + '***' + content + '***' + editorValue.substring(end);
+				handleValueChange(newValue);
 				
 				setTimeout(() => {
 					textarea.focus();
@@ -328,9 +448,8 @@
 		if (text.startsWith('~~') && text.endsWith('~~') && text.length > 4) {
 			if (before === '~~') {
 				const content = text.substring(2, text.length - 2);
-				const newValue = value.substring(0, start) + content + value.substring(end);
-				value = newValue;
-				onchange?.(value);
+				const newValue = editorValue.substring(0, start) + content + editorValue.substring(end);
+				handleValueChange(newValue);
 				
 				setTimeout(() => {
 					textarea.focus();
@@ -346,9 +465,8 @@
 		if (text.startsWith('`') && text.endsWith('`') && text.length > 2) {
 			if (before === '`') {
 				const content = text.substring(1, text.length - 1);
-				const newValue = value.substring(0, start) + content + value.substring(end);
-				value = newValue;
-				onchange?.(value);
+				const newValue = editorValue.substring(0, start) + content + editorValue.substring(end);
+				handleValueChange(newValue);
 				
 				setTimeout(() => {
 					textarea.focus();
@@ -362,9 +480,9 @@
 		}
 		
 		const newText = before + text + after;
-		const newValue = value.substring(0, start) + newText + value.substring(end);
-		value = newValue;
-		onchange?.(value);
+		const currentValue = getEditorValue();
+		const newValue = currentValue.substring(0, start) + newText + currentValue.substring(end);
+		handleValueChange(newValue);
 		
 		setTimeout(() => {
 			textarea.focus();
@@ -377,6 +495,7 @@
 
 	function insertLine(prefix: string) {
 		const { start, end, text } = getSelection();
+		const editorValue = getEditorValue();
 		
 		const bulletRegex = /^(\s*)([-*])\s+/;
 		const numberedRegex = /^(\s*)\d+\.\s+/;
@@ -403,9 +522,8 @@
 		}
 		
 		if (hasPrefix) {
-			const newValue = value.substring(0, start) + newText + value.substring(end);
-			value = newValue;
-			onchange?.(value);
+			const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
+			handleValueChange(newValue);
 			
 			setTimeout(() => {
 				textarea.focus();
@@ -416,9 +534,8 @@
 			}, 0);
 		} else {
 			newText = prefix + text;
-			const newValue = value.substring(0, start) + newText + value.substring(end);
-			value = newValue;
-			onchange?.(value);
+			const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
+			handleValueChange(newValue);
 			
 			setTimeout(() => {
 				textarea.focus();
@@ -433,15 +550,15 @@
 	function insertHeading(level: number) {
 		const prefix = '#'.repeat(level) + ' ';
 		const { start, end, text } = getSelection();
+		const editorValue = getEditorValue();
 		
 		const headingRegex = /^(#{1,6})\s+/;
 		const match = text.match(headingRegex);
 		
 		if (match && match[1].length === level) {
 			const newText = text.replace(headingRegex, '');
-			const newValue = value.substring(0, start) + newText + value.substring(end);
-			value = newValue;
-			onchange?.(value);
+			const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
+			handleValueChange(newValue);
 			
 			setTimeout(() => {
 				textarea.focus();
@@ -453,9 +570,8 @@
 		} else if (match) {
 			const content = text.replace(headingRegex, '');
 			const newText = prefix + content;
-			const newValue = value.substring(0, start) + newText + value.substring(end);
-			value = newValue;
-			onchange?.(value);
+			const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
+			handleValueChange(newValue);
 			
 			setTimeout(() => {
 				textarea.focus();
@@ -466,9 +582,8 @@
 			}, 0);
 		} else {
 			const newText = prefix + text;
-			const newValue = value.substring(0, start) + newText + value.substring(end);
-			value = newValue;
-			onchange?.(value);
+			const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
+			handleValueChange(newValue);
 			
 			setTimeout(() => {
 				textarea.focus();
@@ -482,11 +597,11 @@
 
 	function insertLink() {
 		const { start, end, text } = getSelection();
+		const editorValue = getEditorValue();
 		const linkText = text || 'link text';
 		const newText = `[${linkText}](url)`;
-		const newValue = value.substring(0, start) + newText + value.substring(end);
-		value = newValue;
-		onchange?.(value);
+		const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
+		handleValueChange(newValue);
 		
 		setTimeout(() => {
 			textarea.focus();
@@ -497,11 +612,11 @@
 
 	function insertImage() {
 		const { start, end, text } = getSelection();
+		const editorValue = getEditorValue();
 		const altText = text || 'image';
 		const newText = `![${altText}](image-url)`;
-		const newValue = value.substring(0, start) + newText + value.substring(end);
-		value = newValue;
-		onchange?.(value);
+		const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
+		handleValueChange(newValue);
 		
 		setTimeout(() => {
 			textarea.focus();
@@ -509,75 +624,147 @@
 			textarea.setSelectionRange(urlStart, urlStart + 9);
 		}, 0);
 	}
+
+	function insertUnderline() {
+		const { start, end, text } = getSelection();
+		const editorValue = getEditorValue();
+		
+		if (text.startsWith('<u>') && text.endsWith('</u>')) {
+			const content = text.substring(3, text.length - 4);
+			const newValue = editorValue.substring(0, start) + content + editorValue.substring(end);
+			handleValueChange(newValue);
+			
+			setTimeout(() => {
+				textarea.focus();
+				const newStart = start;
+				const newEnd = start + content.length;
+				textarea.setSelectionRange(newStart, newEnd);
+				updateActiveFormats();
+			}, 0);
+		} else {
+			const newText = `<u>${text}</u>`;
+			const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
+			handleValueChange(newValue);
+			
+			setTimeout(() => {
+				textarea.focus();
+				const newStart = start;
+				const newEnd = start + newText.length;
+				textarea.setSelectionRange(newStart, newEnd);
+				updateActiveFormats();
+			}, 0);
+		}
+	}
 </script>
 
 <div class="markdown-editor">
 	<!-- Toolbar -->
 	<div class="editor-toolbar">
-		<div class="toolbar-group">
-			<button type="button" onclick={() => insertHeading(1)} title="Heading 1" class="toolbar-btn" class:active={activeFormats.h1}>
-				<Heading1 size={18} />
-			</button>
-			<button type="button" onclick={() => insertHeading(2)} title="Heading 2" class="toolbar-btn" class:active={activeFormats.h2}>
-				<Heading2 size={18} />
-			</button>
-			<button type="button" onclick={() => insertHeading(3)} title="Heading 3" class="toolbar-btn" class:active={activeFormats.h3}>
-				<Heading3 size={18} />
-			</button>
-		</div>
+		{#if hasAnyTool(['heading1', 'heading2', 'heading3'])}
+			<div class="toolbar-group">
+				{#if hasTool('heading1')}
+					<button type="button" onclick={() => insertHeading(1)} title="Heading 1" class="toolbar-btn" class:active={activeFormats.h1}>
+						<Heading1 size={18} />
+					</button>
+				{/if}
+				{#if hasTool('heading2')}
+					<button type="button" onclick={() => insertHeading(2)} title="Heading 2" class="toolbar-btn" class:active={activeFormats.h2}>
+						<Heading2 size={18} />
+					</button>
+				{/if}
+				{#if hasTool('heading3')}
+					<button type="button" onclick={() => insertHeading(3)} title="Heading 3" class="toolbar-btn" class:active={activeFormats.h3}>
+						<Heading3 size={18} />
+					</button>
+				{/if}
+			</div>
 
-		<div class="toolbar-divider"></div>
+			<div class="toolbar-divider"></div>
+		{/if}
 
-		<div class="toolbar-group">
-			<button type="button" onclick={() => insertText('**', '**')} title="Bold" class="toolbar-btn" class:active={activeFormats.bold}>
-				<Bold size={18} />
-			</button>
-			<button type="button" onclick={() => insertText('*', '*')} title="Italic" class="toolbar-btn" class:active={activeFormats.italic}>
-				<Italic size={18} />
-			</button>
-			<button type="button" onclick={() => insertText('~~', '~~')} title="Strikethrough" class="toolbar-btn" class:active={activeFormats.strikethrough}>
-				<Strikethrough size={18} />
-			</button>
-			<button type="button" onclick={() => insertText('`', '`')} title="Inline Code" class="toolbar-btn" class:active={activeFormats.code}>
-				<Code size={18} />
-			</button>
-		</div>
+		{#if hasAnyTool(['bold', 'italic', 'underline', 'strikethrough', 'code'])}
+			<div class="toolbar-group">
+				{#if hasTool('bold')}
+					<button type="button" onclick={() => insertText('**', '**')} title="Bold" class="toolbar-btn" class:active={activeFormats.bold}>
+						<Bold size={18} />
+					</button>
+				{/if}
+				{#if hasTool('italic')}
+					<button type="button" onclick={() => insertText('*', '*')} title="Italic" class="toolbar-btn" class:active={activeFormats.italic}>
+						<Italic size={18} />
+					</button>
+				{/if}
+				{#if hasTool('underline')}
+					<button type="button" onclick={insertUnderline} title="Underline" class="toolbar-btn" class:active={activeFormats.underline}>
+						<Underline size={18} />
+					</button>
+				{/if}
+				{#if hasTool('strikethrough')}
+					<button type="button" onclick={() => insertText('~~', '~~')} title="Strikethrough" class="toolbar-btn" class:active={activeFormats.strikethrough}>
+						<Strikethrough size={18} />
+					</button>
+				{/if}
+				{#if hasTool('code') && outputFormat === 'markdown'}
+					<button type="button" onclick={() => insertText('`', '`')} title="Inline Code" class="toolbar-btn" class:active={activeFormats.code}>
+						<Code size={18} />
+					</button>
+				{/if}
+			</div>
 
-		<div class="toolbar-divider"></div>
+			<div class="toolbar-divider"></div>
+		{/if}
 
-		<div class="toolbar-group">
-			<button type="button" onclick={insertLink} title="Link" class="toolbar-btn">
-				<Link size={18} />
-			</button>
-			<button type="button" onclick={insertImage} title="Image" class="toolbar-btn">
-				<Image size={18} />
-			</button>
-		</div>
+		{#if hasAnyTool(['link', 'image'])}
+			<div class="toolbar-group">
+				{#if hasTool('link')}
+					<button type="button" onclick={insertLink} title="Link" class="toolbar-btn">
+						<Link size={18} />
+					</button>
+				{/if}
+				{#if hasTool('image')}
+					<button type="button" onclick={insertImage} title="Image" class="toolbar-btn">
+						<Image size={18} />
+					</button>
+				{/if}
+			</div>
 
-		<div class="toolbar-divider"></div>
+			<div class="toolbar-divider"></div>
+		{/if}
 
-		<div class="toolbar-group">
-			<button type="button" onclick={() => insertLine('- ')} title="Bullet List" class="toolbar-btn" class:active={activeFormats.bulletList}>
-				<List size={18} />
-			</button>
-			<button type="button" onclick={() => insertLine('1. ')} title="Numbered List" class="toolbar-btn" class:active={activeFormats.numberedList}>
-				<ListOrdered size={18} />
-			</button>
-			<button type="button" onclick={() => insertLine('> ')} title="Quote" class="toolbar-btn" class:active={activeFormats.quote}>
-				<Quote size={18} />
-			</button>
-		</div>
+		{#if hasAnyTool(['bulletList', 'numberedList', 'quote'])}
+			<div class="toolbar-group">
+				{#if hasTool('bulletList')}
+					<button type="button" onclick={() => insertLine('- ')} title="Bullet List" class="toolbar-btn" class:active={activeFormats.bulletList}>
+						<List size={18} />
+					</button>
+				{/if}
+				{#if hasTool('numberedList')}
+					<button type="button" onclick={() => insertLine('1. ')} title="Numbered List" class="toolbar-btn" class:active={activeFormats.numberedList}>
+						<ListOrdered size={18} />
+					</button>
+				{/if}
+				{#if hasTool('quote')}
+					<button type="button" onclick={() => insertLine('> ')} title="Quote" class="toolbar-btn" class:active={activeFormats.quote}>
+						<Quote size={18} />
+					</button>
+				{/if}
+			</div>
+
+			<div class="toolbar-divider"></div>
+		{/if}
 
 		<div class="toolbar-spacer"></div>
 
-		<button type="button" onclick={togglePreview} title={showPreview ? 'Hide Preview' : 'Show Preview'} class="toolbar-btn preview-toggle">
-			{#if showPreview}
-				<EyeOff size={18} />
-			{:else}
-				<Eye size={18} />
-			{/if}
-			<span>{showPreview ? 'Hide' : 'Show'} Preview</span>
-		</button>
+		{#if hasTool('preview')}
+			<button type="button" onclick={togglePreview} title={showPreview ? 'Hide Preview' : 'Show Preview'} class="toolbar-btn preview-toggle">
+				{#if showPreview}
+					<EyeOff size={18} />
+				{:else}
+					<Eye size={18} />
+				{/if}
+				<span>{showPreview ? 'Hide' : 'Show'} Preview</span>
+			</button>
+		{/if}
 	</div>
 
 	<!-- Editor Content -->
@@ -586,7 +773,7 @@
 			<textarea
 				bind:this={textarea}
 				class="editor-textarea"
-				value={value}
+				value={outputFormat === 'html' ? internalMarkdown : value}
 				oninput={handleInput}
 				onkeydown={handleKeyDown}
 				onkeyup={handleSelectionChange}

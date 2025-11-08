@@ -8,6 +8,7 @@
 	} from '$lib/admin/services/bannerService';
 	import BannerDisplay from '$lib/site/components/BannerDisplay.svelte';
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
+	import MarkdownEditor from '$lib/admin/components/MarkdownEditor.svelte';
 
 	let config = $state<BannerConfig>({
 		text: '',
@@ -84,13 +85,14 @@
 					Banner Text
 					<span class="required">*</span>
 				</label>
-				<textarea
-					id="banner-text"
+				<MarkdownEditor
 					bind:value={config.text}
 					placeholder="Enter your scrolling banner text..."
-					rows="3"
-				></textarea>
-				<p class="help-text">This text will scroll across the banner</p>
+					minHeight="100px"
+					enabledTools={['bold', 'italic', 'underline', 'strikethrough']}
+					outputFormat="html"
+				/>
+				<p class="help-text">This text will scroll across the banner. Use the toolbar to format text (bold, italic, underline, strikethrough).</p>
 			</div>
 
 			<!-- Enabled Toggle -->
@@ -293,22 +295,6 @@
 		font-size: 13px;
 	}
 
-	textarea {
-		background: var(--bg-tertiary, #2d2d2d);
-		border: 1px solid var(--border-color, #3a3a3a);
-		border-radius: 8px;
-		padding: 12px;
-		color: var(--text-primary, #ffffff);
-		font-size: 14px;
-		font-family: inherit;
-		resize: vertical;
-		transition: border-color 0.2s ease;
-	}
-
-	textarea:focus {
-		outline: none;
-		border-color: var(--accent-color, #6366f1);
-	}
 
 	.help-text {
 		color: var(--text-secondary, #a1a1aa);
