@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import DiscordStatus from '$lib/site/components/widgets/DiscordStatus.svelte';
 	import MusicWidget from '$lib/site/components/widgets/MusicWidget.svelte';
 	import TweetWidget from '$lib/site/components/widgets/TweetWidget.svelte';
@@ -16,6 +18,48 @@
 	
 	const musicHeaderText = $derived(musicData?.nowPlaying ? 'Now Playing' : 'Recently Played');
 	const tweetHeaderText = $derived('Status');
+
+	interface BlogPost {
+		id: string;
+		title: string;
+		slug: string;
+		publishedAt: string;
+	}
+
+	let recentPosts = $state<BlogPost[]>([]);
+	let loadingPosts = $state(true);
+
+	onMount(async () => {
+		await loadRecentPosts();
+	});
+
+	async function loadRecentPosts() {
+		try {
+			loadingPosts = true;
+			const response = await fetch('/api/blog');
+			
+			if (response.ok) {
+				const result = await response.json();
+				recentPosts = (result.data || []).slice(0, 4);
+			}
+		} catch (err) {
+			console.error('Error loading recent posts:', err);
+		} finally {
+			loadingPosts = false;
+		}
+	}
+
+	function formatDate(dateString: string): string {
+		const date = new Date(dateString);
+		const year = date.getFullYear();
+		const month = String(date.getMonth() + 1).padStart(2, '0');
+		const day = String(date.getDate()).padStart(2, '0');
+		return `${year}-${month}-${day}`;
+	}
+
+	function viewPost(slug: string) {
+		goto(`/blog/${slug}`);
+	}
 </script>
 
 <svelte:head>
@@ -61,20 +105,38 @@
 		
 		<!-- Right Column (70%) -->
 		<div class="right-column">
-			<BorderedBox padding="8px 16px" className="about-section" showHeader={true} headerText="About Me" dynamicHeight={true} contentPadding={true}>
-				<p>Hi, I'm Dane! I'm a software engineer & freelance designer. You can read my full, more professional bio <a href="/about" target="_blank">here</a>!</p>
-				<p><b>Some quick facts about me:</b></p>
-				<ul>
-					<li>I'm from Manchester in the UK.</li>
-					<li>I currently work full-time as a software engineer @ a UK-based Azure Expert MSP</li>
-					<li>My main languages are <span style="color: #9179E4;">C#</span>, <span style="color: #F1E05A;">JavaScript</span> & <span style="color: #3178C6;">TypeScript</span>.</li>
-					<li>I first started coding at age 13, learning <span style="color: #9179E4;">Visual Basic (VB .NET)</span>.</li>
-					<li>In my free time, I design for and run a small clothing brand called Partial Spaces.</li>
-					<li>I'm a big fan of the old early 2000s internet and technology.</li>
-					<li>I like cats!</li>
-					<li>I don't like coffee.</li>
-				</ul>
-			</BorderedBox>
+			<div class="widgets-section">
+				<BorderedBox padding="8px 16px" className="about-section" showHeader={true} headerText="About Me" dynamicHeight={true} contentPadding={true}>
+					<p>Hi, I'm Dane! I'm a software engineer & freelance designer. You can read my full, more professional bio <a href="/about" target="_blank">here</a>!</p>
+					<p><b>Some quick facts about me:</b></p>
+					<ul>
+						<li>I'm from Manchester in the UK.</li>
+						<li>I currently work full-time as a software engineer @ a UK-based Azure Expert MSP</li>
+						<li>My main languages are <span style="color: #9179E4;">C#</span>, <span style="color: #F1E05A;">JavaScript</span> & <span style="color: #3178C6;">TypeScript</span>.</li>
+						<li>I first started coding at age 13, learning <span style="color: #9179E4;">Visual Basic (VB .NET)</span>.</li>
+						<li>In my free time, I design for and run a small clothing brand called Partial Spaces.</li>
+						<li>I'm a big fan of the old early 2000s internet and technology.</li>
+						<li>I like cats!</li>
+						<li>I don't like coffee.</li>
+					</ul>
+				</BorderedBox>
+
+				<BorderedBox padding="8px 16px" className="recent-posts-section" showHeader={true} headerText="Recent posts" dynamicHeight={true} contentPadding={true}>
+					<div class="recent-posts-content">
+						{#if loadingPosts}
+							<p class="recent-posts-empty">Loading...</p>
+						{:else if recentPosts.length === 0}
+							<p class="recent-posts-empty">There are currently no posts</p>
+						{:else}
+							{#each recentPosts as post}
+								<button class="recent-post-item" onclick={() => viewPost(post.slug)}>
+									<span class="post-date">{formatDate(post.publishedAt)}</span> :: {post.title}
+								</button>
+							{/each}
+						{/if}
+					</div>
+				</BorderedBox>
+			</div>
 		</div>
 	</div>
 </div>
@@ -130,6 +192,10 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 120px;
+		margin-top: var(--spacing-md, 16px);
+	}
+
+	:global(.recent-posts-section) {
 		margin-top: var(--spacing-md, 16px);
 	}
 
@@ -237,7 +303,45 @@
 		color: var(--accent-color-light);
 	}
 
-	/* Remove green glow effects from specific interactive elements only */
+	/* Recent Posts section styling */
+	.recent-posts-content {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		padding-top: 12px;
+		padding-bottom: 12px;
+	}
+
+	.recent-post-item {
+		background: none;
+		border: none;
+		padding: 0;
+		color: var(--text-primary, #ffffff);
+		font-size: 14px;
+		text-align: left;
+		cursor: pointer;
+		transition: color 0.2s ease;
+		font-family: inherit;
+		line-height: 1.5;
+	}
+
+	.recent-post-item:hover {
+		color: var(--accent-color, #6366f1);
+	}
+
+	.recent-post-item .post-date {
+		font-weight: 700;
+	}
+
+	.recent-posts-empty {
+		color: var(--text-secondary, #9ca3af);
+		font-size: 14px;
+		margin: 0;
+		text-align: left;
+		padding-top: 12px;
+		padding-bottom: 12px;
+	}
+
 	:global(button),
 	:global(a),
 	:global(input),
@@ -283,7 +387,8 @@
 	:global(.music-widget),
 	:global(.links-widget),
 	:global(.my-button-widget),
-	:global(.about-section) {
+	:global(.about-section),
+	:global(.recent-posts-section) {
 		box-shadow: none !important;
 		outline: none !important;
 		transition: none !important;
@@ -294,7 +399,8 @@
 	:global(.music-widget:hover),
 	:global(.links-widget:hover),
 	:global(.my-button-widget:hover),
-	:global(.about-section:hover) {
+	:global(.about-section:hover),
+	:global(.recent-posts-section:hover) {
 		box-shadow: none !important;
 		outline: none !important;
 	}
@@ -304,7 +410,8 @@
 	:global(.music-widget:focus),
 	:global(.links-widget:focus),
 	:global(.my-button-widget:focus),
-	:global(.about-section:focus) {
+	:global(.about-section:focus),
+	:global(.recent-posts-section:focus) {
 		box-shadow: none !important;
 		outline: none !important;
 	}
@@ -314,7 +421,8 @@
 	:global(.music-widget *),
 	:global(.links-widget *),
 	:global(.my-button-widget *),
-	:global(.about-section *) {
+	:global(.about-section *),
+	:global(.recent-posts-section *) {
 		box-shadow: none !important;
 		outline: none !important;
 		transition: none !important;
@@ -325,7 +433,8 @@
 	:global(.music-widget *:hover),
 	:global(.links-widget *:hover),
 	:global(.my-button-widget *:hover),
-	:global(.about-section *:hover) {
+	:global(.about-section *:hover),
+	:global(.recent-posts-section *:hover) {
 		box-shadow: none !important;
 		outline: none !important;
 	}
@@ -335,7 +444,8 @@
 	:global(.music-widget *:focus),
 	:global(.links-widget *:focus),
 	:global(.my-button-widget *:focus),
-	:global(.about-section *:focus) {
+	:global(.about-section *:focus),
+	:global(.recent-posts-section *:focus) {
 		box-shadow: none !important;
 		outline: none !important;
 	}
@@ -345,7 +455,8 @@
 	:global(.music-widget *:active),
 	:global(.links-widget *:active),
 	:global(.my-button-widget *:active),
-	:global(.about-section *:active) {
+	:global(.about-section *:active),
+	:global(.recent-posts-section *:active) {
 		box-shadow: none !important;
 		outline: none !important;
 	}
