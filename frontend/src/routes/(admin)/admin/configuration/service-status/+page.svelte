@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Save, RefreshCw, Server, CheckCircle2, XCircle, AlertCircle, Wrench, Edit2, Check, X } from 'lucide-svelte';
+	import { Save, RefreshCw, Server, CheckCircle2, XCircle, AlertCircle, Wrench, Edit2, Check, X, Wifi, WifiOff } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 
 	interface Monitor {
@@ -31,6 +31,8 @@
 	let loading = $state(true);
 	let saving = $state(false);
 	let loadingMonitors = $state(false);
+	let testingConnection = $state(false);
+	let connectionStatus = $state<{ connected: boolean; message: string } | null>(null);
 	let error = $state('');
 
 	$effect(() => {
@@ -77,7 +79,10 @@
 			}
 
 			if (config.isConfigured) {
+				await testConnection();
 				await loadMonitors();
+			} else {
+				connectionStatus = null;
 			}
 		} catch (err) {
 			console.error('Error loading config:', err);
@@ -237,6 +242,41 @@
 		}
 	}
 
+	async function testConnection() {
+		if (!config.isConfigured) {
+			connectionStatus = null;
+			return;
+		}
+
+		try {
+			testingConnection = true;
+
+			const response = await fetch('/api/uptime-kuma/test-connection', {
+				credentials: 'include'
+			});
+
+			if (!response.ok) {
+				const result = await response.json();
+				throw new Error(result.message || 'Failed to test connection');
+			}
+
+			const result = await response.json();
+			if (result.success) {
+				connectionStatus = result.data;
+			} else {
+				throw new Error(result.error || 'Failed to test connection');
+			}
+		} catch (err) {
+			console.error('Error testing connection:', err);
+			connectionStatus = {
+				connected: false,
+				message: err instanceof Error ? err.message : 'Failed to test connection'
+			};
+		} finally {
+			testingConnection = false;
+		}
+	}
+
 	onMount(() => {
 		loadConfig();
 	});
@@ -281,6 +321,33 @@
 							<span class="info-label">API Key:</span>
 							<span class="info-value">{config.apiKey ? '***' : 'Not set'}</span>
 						</div>
+						<div class="connection-status-section">
+							<div class="connection-status-header">
+								<span class="info-label">Connection Status:</span>
+								{#if testingConnection}
+									<RefreshCw size={16} class="spinning" />
+								{/if}
+							</div>
+							{#if connectionStatus}
+								<div class="connection-status" class:connected={connectionStatus.connected} class:disconnected={!connectionStatus.connected}>
+									{#if connectionStatus.connected}
+										<Wifi size={16} />
+									{:else}
+										<WifiOff size={16} />
+									{/if}
+									<span class="connection-status-text">
+										{connectionStatus.connected ? 'Connected' : 'Disconnected'}
+									</span>
+									{#if connectionStatus.message}
+										<span class="connection-status-message">{connectionStatus.message}</span>
+									{/if}
+								</div>
+							{:else if !testingConnection}
+								<div class="connection-status-placeholder">
+									<span class="connection-status-text">Not configured</span>
+								</div>
+							{/if}
+						</div>
 						<p class="help-text">Configuration is read from environment variables. To change these values, update your environment configuration and restart the server.</p>
 					</div>
 
@@ -289,7 +356,7 @@
 
 			<!-- Monitor Selection -->
 			{#if config.isConfigured}
-				<div class="form-section">
+				<div class="form-section monitor-selection-section">
 					<h2 class="section-title">
 						Select Monitors to Display
 						<span class="selected-count">({selectedMonitorIds.length} selected)</span>
@@ -308,89 +375,90 @@
 						</button>
 					</h2>
 
-					{#if selectedMonitorIds.length > 0}
-						<div class="selected-monitors-section">
-							<h3 class="subsection-title">Selected Monitors</h3>
-							<div class="selected-monitors-list">
-								{#each selectedMonitorIds as monitorId}
-									{@const monitor = allMonitors.find(m => m.id === monitorId)}
-									{#if monitor}
-										<div class="selected-monitor-item">
-											<div class="selected-monitor-info">
-												{#if editingMonitorId === monitorId}
-													<input
-														type="text"
-														value={editingValue}
-														oninput={(e) => editingValue = e.currentTarget.value}
-														onkeydown={(e) => {
-															if (e.key === 'Enter') {
-																saveEditing();
-															} else if (e.key === 'Escape') {
-																cancelEditing();
-															}
-														}}
-														class="selected-monitor-edit-input"
-														bind:this={editInputRef}
-													/>
-												{:else}
-													<span class="selected-monitor-name">
-														{customNames[monitorId] || monitor.name}
-													</span>
-													{#if customNames[monitorId]}
-														<span class="selected-monitor-original">({monitor.name})</span>
-													{/if}
-												{/if}
-											</div>
-											<div class="selected-monitor-actions">
-												{#if editingMonitorId === monitorId}
-													<button
-														type="button"
-														class="icon-button"
-														onclick={saveEditing}
-														title="Save"
-													>
-														<Check size={16} />
-													</button>
-													<button
-														type="button"
-														class="icon-button"
-														onclick={cancelEditing}
-														title="Cancel"
-													>
-														<X size={16} />
-													</button>
-												{:else}
-													<button
-														type="button"
-														class="icon-button"
-														onclick={() => startEditing(monitorId)}
-														title="Edit custom name"
-													>
-														<Edit2 size={16} />
-													</button>
-												{/if}
-												<div class="selected-monitor-status" style="--status-color: {getStatusColor(monitor.status)}">
-													{#if monitor.status === 'up'}
-														<CheckCircle2 size={14} />
-													{:else if monitor.status === 'down'}
-														<XCircle size={14} />
-													{:else if monitor.status === 'maintenance'}
-														<Wrench size={14} />
+					<div class="monitors-container">
+						{#if selectedMonitorIds.length > 0}
+							<div class="selected-monitors-section">
+								<h3 class="subsection-title">Selected Monitors</h3>
+								<div class="selected-monitors-list">
+									{#each selectedMonitorIds as monitorId}
+										{@const monitor = allMonitors.find(m => m.id === monitorId)}
+										{#if monitor}
+											<div class="selected-monitor-item">
+												<div class="selected-monitor-info">
+													{#if editingMonitorId === monitorId}
+														<input
+															type="text"
+															value={editingValue}
+															oninput={(e) => editingValue = e.currentTarget.value}
+															onkeydown={(e) => {
+																if (e.key === 'Enter') {
+																	saveEditing();
+																} else if (e.key === 'Escape') {
+																	cancelEditing();
+																}
+															}}
+															class="selected-monitor-edit-input"
+															bind:this={editInputRef}
+														/>
 													{:else}
-														<AlertCircle size={14} />
+														<span class="selected-monitor-name">
+															{customNames[monitorId] || monitor.name}
+														</span>
+														{#if customNames[monitorId]}
+															<span class="selected-monitor-original">({monitor.name})</span>
+														{/if}
 													{/if}
-													<span>{monitor.status}</span>
+												</div>
+												<div class="selected-monitor-actions">
+													{#if editingMonitorId === monitorId}
+														<button
+															type="button"
+															class="icon-button"
+															onclick={saveEditing}
+															title="Save"
+														>
+															<Check size={16} />
+														</button>
+														<button
+															type="button"
+															class="icon-button"
+															onclick={cancelEditing}
+															title="Cancel"
+														>
+															<X size={16} />
+														</button>
+													{:else}
+														<button
+															type="button"
+															class="icon-button"
+															onclick={() => startEditing(monitorId)}
+															title="Edit custom name"
+														>
+															<Edit2 size={16} />
+														</button>
+													{/if}
+													<div class="selected-monitor-status" style="--status-color: {getStatusColor(monitor.status)}">
+														{#if monitor.status === 'up'}
+															<CheckCircle2 size={14} />
+														{:else if monitor.status === 'down'}
+															<XCircle size={14} />
+														{:else if monitor.status === 'maintenance'}
+															<Wrench size={14} />
+														{:else}
+															<AlertCircle size={14} />
+														{/if}
+														<span>{monitor.status.charAt(0).toUpperCase() + monitor.status.slice(1)}</span>
+													</div>
 												</div>
 											</div>
-										</div>
-									{/if}
-								{/each}
+										{/if}
+									{/each}
+								</div>
 							</div>
-						</div>
-					{/if}
+						{/if}
 
-					{#if allMonitors.length > 0}
-					<div class="monitors-list">
+						{#if allMonitors.length > 0}
+						<div class="monitors-list">
 						{#each (() => {
 							const groups = new Map<string, Monitor[]>();
 							const ungrouped: Monitor[] = [];
@@ -459,8 +527,9 @@
 								{/each}
 							</div>
 						{/each}
+						</div>
+						{/if}
 					</div>
-					{/if}
 				</div>
 			{:else if !loadingMonitors && config.isConfigured}
 				<div class="empty-state">
@@ -522,12 +591,31 @@
 		display: flex;
 		flex-direction: column;
 		gap: 32px;
+		height: calc(100vh - 200px);
+		min-height: 600px;
 	}
 
 	.form-section {
 		display: flex;
 		flex-direction: column;
 		gap: 20px;
+	}
+
+	.monitor-selection-section {
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.monitors-container {
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 24px;
+		overflow: hidden;
 	}
 
 	.section-title {
@@ -676,6 +764,63 @@
 		font-family: 'Courier New', monospace;
 	}
 
+	.connection-status-section {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		padding: 12px 0;
+	}
+
+	.connection-status-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.connection-status-header :global(.spinning) {
+		animation: spin 1s linear infinite;
+		color: var(--text-secondary, #9ca3af);
+	}
+
+	.connection-status {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 12px;
+		border-radius: 6px;
+		font-size: 14px;
+	}
+
+	.connection-status.connected {
+		background: rgba(16, 185, 129, 0.1);
+		border: 1px solid rgba(16, 185, 129, 0.3);
+		color: #10b981;
+	}
+
+	.connection-status.disconnected {
+		background: rgba(239, 68, 68, 0.1);
+		border: 1px solid rgba(239, 68, 68, 0.3);
+		color: #ef4444;
+	}
+
+	.connection-status-text {
+		font-weight: 500;
+	}
+
+	.connection-status-message {
+		font-size: 12px;
+		opacity: 0.8;
+		margin-left: auto;
+	}
+
+	.connection-status-placeholder {
+		padding: 10px 12px;
+		color: var(--text-secondary, #9ca3af);
+		font-size: 13px;
+		font-style: italic;
+	}
+
 	.btn {
 		display: inline-flex;
 		align-items: center;
@@ -708,9 +853,11 @@
 		display: flex;
 		flex-direction: column;
 		gap: 20px;
-		max-height: 500px;
+		flex: 1;
+		min-height: 0;
 		overflow-y: auto;
 		padding: 4px;
+		padding-right: 8px;
 	}
 
 	.monitor-group-heading {
@@ -815,11 +962,15 @@
 
 
 	.selected-monitors-section {
-		margin-bottom: 24px;
 		padding: 16px;
 		background: var(--bg-secondary, #2d2d2d);
 		border: 1px solid var(--border-color, #3a3a3a);
 		border-radius: 8px;
+		flex: 0 0 auto;
+		max-height: 40%;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
 	}
 
 	.subsection-title {
@@ -833,6 +984,10 @@
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
+		overflow-y: auto;
+		flex: 1;
+		min-height: 0;
+		padding-right: 4px;
 	}
 
 	.selected-monitor-item {
@@ -843,6 +998,12 @@
 		background: var(--bg-primary, #1a1a1a);
 		border: 1px solid var(--border-color, #3a3a3a);
 		border-radius: 6px;
+		gap: 12px;
+	}
+
+	.selected-monitor-item:has(.selected-monitor-edit-input) {
+		gap: 8px;
+		align-items: center;
 	}
 
 	.selected-monitor-info {
@@ -851,6 +1012,12 @@
 		flex-direction: column;
 		gap: 4px;
 		min-width: 0;
+	}
+
+	.selected-monitor-item:has(.selected-monitor-edit-input) .selected-monitor-info {
+		flex: 1 1 auto;
+		min-width: 0;
+		max-width: calc(100% - 70px);
 	}
 
 	.selected-monitor-name {
@@ -874,6 +1041,9 @@
 		color: var(--text-primary, #ffffff);
 		font-size: 14px;
 		font-weight: 500;
+		box-sizing: border-box;
+		height: 32px;
+		line-height: 20px;
 	}
 
 	.selected-monitor-edit-input:focus {
@@ -886,6 +1056,19 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
+		flex-shrink: 0;
+	}
+
+	.selected-monitor-item:has(.selected-monitor-edit-input) .selected-monitor-actions {
+		gap: 4px;
+		margin-left: 0;
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+	}
+
+	.selected-monitor-item:has(.selected-monitor-edit-input) .selected-monitor-status {
+		display: none;
 	}
 
 	.icon-button {
@@ -893,6 +1076,8 @@
 		align-items: center;
 		justify-content: center;
 		padding: 4px;
+		width: 24px;
+		height: 24px;
 		background: transparent;
 		border: 1px solid var(--border-color, #3a3a3a);
 		border-radius: 4px;

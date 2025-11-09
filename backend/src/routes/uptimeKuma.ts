@@ -23,8 +23,8 @@ function initializeUptimeKuma() {
 
 initializeUptimeKuma();
 
-// Get all available monitors (admin only)
-router.get('/monitors', requireSession, requireAdmin, async (req, res) => {
+// Get all available monitors
+router.get('/monitors', requireSession, async (req, res) => {
   try {
     const baseUrl = process.env.UPTIME_KUMA_URL;
     
@@ -99,8 +99,8 @@ router.get('/status', async (req, res) => {
   }
 });
 
-// Get selected monitor IDs (admin only)
-router.get('/selected', requireSession, requireAdmin, async (req, res) => {
+// Get selected monitor IDs
+router.get('/selected', requireSession, async (req, res) => {
   try {
     let selectedMonitorIds = await ConfigService.get('uptime_kuma_selected_monitors');
     
@@ -125,8 +125,8 @@ router.get('/selected', requireSession, requireAdmin, async (req, res) => {
   }
 });
 
-// Update selected monitor IDs (admin only)
-router.put('/selected', requireSession, requireAdmin, async (req, res) => {
+// Update selected monitor IDs
+router.put('/selected', requireSession, async (req, res) => {
   try {
     const { monitorIds, customNames } = req.body;
 
@@ -188,8 +188,8 @@ router.put('/selected', requireSession, requireAdmin, async (req, res) => {
   }
 });
 
-// Update custom names for monitors (admin only)
-router.put('/custom-names', requireSession, requireAdmin, async (req, res) => {
+// Update custom names for monitors
+router.put('/custom-names', requireSession, async (req, res) => {
   try {
     const { customNames } = req.body;
 
@@ -222,8 +222,8 @@ router.put('/custom-names', requireSession, requireAdmin, async (req, res) => {
   }
 });
 
-// Update Uptime Kuma configuration (admin only)
-router.put('/config', requireSession, requireAdmin, async (req, res) => {
+// Update Uptime Kuma configuration
+router.put('/config', requireSession, async (req, res) => {
   try {
     res.status(400).json({
       success: false,
@@ -240,8 +240,8 @@ router.put('/config', requireSession, requireAdmin, async (req, res) => {
   }
 });
 
-// Get Uptime Kuma configuration (admin only)
-router.get('/config', requireSession, requireAdmin, async (req, res) => {
+// Get Uptime Kuma configuration
+router.get('/config', requireSession, async (req, res) => {
   try {
     const baseUrl = process.env.UPTIME_KUMA_URL || '';
     const apiKey = process.env.UPTIME_KUMA_API_KEY || '';
@@ -259,6 +259,39 @@ router.get('/config', requireSession, requireAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch configuration'
+    });
+  }
+});
+
+// Test connection to Uptime Kuma instance
+router.get('/test-connection', requireSession, async (req, res) => {
+  try {
+    const baseUrl = process.env.UPTIME_KUMA_URL;
+    const apiKey = process.env.UPTIME_KUMA_API_KEY;
+
+    if (!baseUrl) {
+      return res.json({
+        success: true,
+        data: {
+          connected: false,
+          message: 'Uptime Kuma URL not configured'
+        }
+      });
+    }
+
+    UptimeKumaService.initialize(baseUrl, apiKey || undefined);
+    const result = await UptimeKumaService.testConnection();
+
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error: any) {
+    console.error('Error testing connection:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to test connection',
+      message: error.message || 'Unknown error'
     });
   }
 });

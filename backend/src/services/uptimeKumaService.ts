@@ -1012,5 +1012,77 @@ export class UptimeKumaService {
       return null;
     }
   }
+
+  /**
+   * Test connection to Uptime Kuma instance
+   * Returns true if connection is successful, false otherwise
+   */
+  static async testConnection(): Promise<{ connected: boolean; message: string }> {
+    if (!this.baseUrl) {
+      return {
+        connected: false,
+        message: 'Uptime Kuma URL not configured'
+      };
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/metrics`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/plain'
+        },
+        signal: AbortSignal.timeout(5000) // 5 second timeout
+      });
+
+      if (response.ok || response.status === 401 || response.status === 403) {
+        // 401/403 means the server is reachable, just needs auth
+        return {
+          connected: true,
+          message: 'Connected successfully'
+        };
+      }
+
+      return {
+        connected: false,
+        message: `Connection failed: ${response.status} ${response.statusText}`
+      };
+    } catch (error: any) {
+      if (this.apiKey) {
+        try {
+          const authHeader = `Basic ${Buffer.from(`api:${this.apiKey}`).toString('base64')}`;
+          const response = await fetch(`${this.baseUrl}/api/monitor`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': authHeader
+            },
+            signal: AbortSignal.timeout(5000)
+          });
+
+          if (response.ok) {
+            return {
+              connected: true,
+              message: 'Connected successfully (REST API)'
+            };
+          }
+
+          return {
+            connected: false,
+            message: `REST API connection failed: ${response.status} ${response.statusText}`
+          };
+        } catch (apiError: any) {
+          return {
+            connected: false,
+            message: `Connection error: ${apiError.message || 'Unable to reach Uptime Kuma instance'}`
+          };
+        }
+      }
+
+      return {
+        connected: false,
+        message: `Connection error: ${error.message || 'Unable to reach Uptime Kuma instance'}`
+      };
+    }
+  }
 }
 
