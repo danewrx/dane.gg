@@ -229,6 +229,10 @@
 		margin-top: var(--spacing-md, 16px);
 	}
 
+	:global(.service-status-section) {
+		margin-top: var(--spacing-md, 16px);
+	}
+
 	:global(.links-widget .bordered-box) {
 		transition: none !important;
 	}
