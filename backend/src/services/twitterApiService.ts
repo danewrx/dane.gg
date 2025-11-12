@@ -501,11 +501,11 @@ export class TwitterApiService {
             ? `${connectionTest.message}\n\nDetails: ${connectionTest.details}\n\nFailure Type: ${connectionTest.failureType || 'unknown'}`
             : connectionTest.message;
           
-          await NotificationService.sendTwitterConnectionFailure(errorDetails);
+          await this.sendConnectionFailureNotification(errorDetails);
           this.lastNotificationTime = now;
           this.lastConnectionStatus = 'disconnected';
         } else {
-          await NotificationService.sendTwitterConnectionRestored();
+          await this.sendConnectionRestoredNotification();
           this.lastNotificationTime = now;
           this.lastConnectionStatus = 'connected';
         }
@@ -530,6 +530,32 @@ export class TwitterApiService {
       console.error('[Twitter API] Error checking connection health:', error.message);
       return false;
     }
+  }
+
+  /**
+   * Send a Twitter API connection failure notification
+   * @private
+   */
+  private static async sendConnectionFailureNotification(error: string): Promise<boolean> {
+    return NotificationService.send(
+      `Twitter API connection failed: ${error}\n\nTime: ${new Date().toISOString()}`,
+      '⚠️ Twitter API Connection Failed',
+      4, // High priority
+      ['warning', 'twitter', 'api']
+    );
+  }
+
+  /**
+   * Send a Twitter API connection restored notification
+   * @private
+   */
+  private static async sendConnectionRestoredNotification(): Promise<boolean> {
+    return NotificationService.send(
+      `Twitter API connection has been restored.\n\nTime: ${new Date().toISOString()}`,
+      '✅ Twitter API Connection Restored',
+      2, // Low priority
+      ['success', 'twitter', 'api']
+    );
   }
 }
 

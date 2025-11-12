@@ -72,6 +72,7 @@ import blogRoutes from './routes/blog';
 import uploadRoutes from './routes/upload';
 import uptimeKumaRoutes from './routes/uptimeKuma';
 import twitterRoutes from './routes/twitter';
+import notificationRoutes from './routes/notifications';
 import { generalLimiter } from './middleware/rateLimiting';
 
 // Routes
@@ -143,6 +144,9 @@ app.use('/api/uptime-kuma', uptimeKumaRoutes);
 
 // Twitter API routes
 app.use('/api/twitter', twitterRoutes);
+
+// Notifications routes (Ntfy integration)
+app.use('/api/notifications', notificationRoutes);
 
 // Webhooks routes (for external services to update data)
 app.use('/webhooks', webhooksRoutes);

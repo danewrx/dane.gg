@@ -7,42 +7,49 @@
 export class NotificationService {
   /**
    * Send a notification to Ntfy
-   * @param topic - Ntfy topic (channel) to send to
    * @param message - Message to send
    * @param title - Optional title
    * @param priority - Priority level (1-5, default: 3)
    * @param tags - Optional tags
+   * @param topic - Optional topic (defaults to NTFY_TOPIC env var)
    */
-  static async sendNotification(
-    topic: string,
+  static async send(
     message: string,
     title?: string,
     priority: number = 3,
-    tags?: string[]
+    tags?: string[],
+    topic?: string
   ): Promise<boolean> {
     try {
-      const ntfyUrl = process.env.NTFY_URL || 'https://ntfy.sh';
-      const url = `${ntfyUrl}/${topic}`;
+      const finalTopic = topic || process.env.NTFY_TOPIC;
+      if (!finalTopic) {
+        console.warn('[Notification] No topic provided and NTFY_TOPIC not configured');
+        return false;
+      }
 
-      const payload: any = {
-        message,
-        priority,
+      const ntfyUrl = process.env.NTFY_URL || 'https://ntfy.sh';
+      const url = `${ntfyUrl}/${finalTopic}`;
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'text/plain',
       };
 
       if (title) {
-        payload.title = title;
+        headers['Title'] = title;
+      }
+
+      if (priority) {
+        headers['Priority'] = priority.toString();
       }
 
       if (tags && tags.length > 0) {
-        payload.tags = tags;
+        headers['Tags'] = tags.join(',');
       }
 
       const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+        headers: headers,
+        body: message,
       });
 
       if (!response.ok) {
@@ -50,49 +57,12 @@ export class NotificationService {
         return false;
       }
 
-      console.log(`[Notification] Notification sent successfully to topic: ${topic}`);
+      console.log(`[Notification] Notification sent successfully to topic: ${finalTopic}`);
       return true;
     } catch (error: any) {
       console.error('[Notification] Error sending notification:', error.message);
       return false;
     }
-  }
-
-  /**
-   * Send a Twitter API connection failure notification
-   */
-  static async sendTwitterConnectionFailure(error: string): Promise<boolean> {
-    const topic = process.env.NTFY_TOPIC;
-    if (!topic) {
-      console.log('[Notification] NTFY_TOPIC not configured, skipping notification');
-      return false;
-    }
-
-    return this.sendNotification(
-      topic,
-      `Twitter API connection failed: ${error}\n\nTime: ${new Date().toISOString()}`,
-      '⚠️ Twitter API Connection Failed',
-      4, // High priority
-      ['warning', 'twitter', 'api']
-    );
-  }
-
-  /**
-   * Send a Twitter API connection restored notification
-   */
-  static async sendTwitterConnectionRestored(): Promise<boolean> {
-    const topic = process.env.NTFY_TOPIC;
-    if (!topic) {
-      return false;
-    }
-
-    return this.sendNotification(
-      topic,
-      `Twitter API connection has been restored.\n\nTime: ${new Date().toISOString()}`,
-      '✅ Twitter API Connection Restored',
-      2, // Low priority
-      ['success', 'twitter', 'api']
-    );
   }
 
   /**
