@@ -90,12 +90,20 @@ router.get('/latest-tweet', async (req, res) => {
       });
     }
 
+    // If profile image exists, convert to proxy URL
+    let profileImageUrl = latestTweet.authorProfileImage;
+    if (profileImageUrl && profileImageUrl.includes('pbs.twimg.com')) {
+      // Use proxy endpoint to bypass tracking protection
+      const imageUrl = encodeURIComponent(profileImageUrl);
+      profileImageUrl = `/api/widgets/tweet-profile-image?url=${imageUrl}`;
+    }
+
     res.json({
       tweetId: latestTweet.tweetId,
       content: latestTweet.content,
       authorName: latestTweet.authorName,
       authorUsername: latestTweet.authorUsername,
-      authorProfileImage: latestTweet.authorProfileImage,
+      authorProfileImage: profileImageUrl,
       authorProfileUrl: latestTweet.authorProfileUrl,
       tweetUrl: latestTweet.tweetUrl,
       createdAt: latestTweet.createdAt,
@@ -104,6 +112,48 @@ router.get('/latest-tweet', async (req, res) => {
   } catch (error) {
     console.error('Error fetching latest tweet:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/widgets/tweet-profile-image
+ * Proxy endpoint to fetch and serve Twitter profile images
+ * Bypasses browser tracking protection by serving images from site domain
+ */
+router.get('/tweet-profile-image', async (req, res) => {
+  try {
+    const imageUrl = req.query.url as string;
+    
+    if (!imageUrl) {
+      return res.status(400).json({ error: 'Missing url parameter' });
+    }
+
+    if (!imageUrl.includes('pbs.twimg.com') && !imageUrl.includes('twimg.com')) {
+      return res.status(400).json({ error: 'Invalid image URL' });
+    }
+
+    const response = await fetch(imageUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Referer': 'https://x.com/'
+      }
+    });
+
+    if (!response.ok) {
+      return res.status(response.status).json({ error: 'Failed to fetch image' });
+    }
+
+    const imageBuffer = await response.arrayBuffer();
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    res.send(Buffer.from(imageBuffer));
+  } catch (error: any) {
+    console.error('Error proxying tweet profile image:', error);
+    res.status(500).json({ error: 'Failed to fetch image' });
   }
 });
 
