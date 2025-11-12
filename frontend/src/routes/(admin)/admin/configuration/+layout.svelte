@@ -8,7 +8,8 @@
 		ChevronRight,
 		Link,
 		MessageSquare,
-		Server
+		Server,
+		Twitter
 	} from 'lucide-svelte';
 
 	let { children } = $props();
@@ -53,6 +54,16 @@
 			bgColor: 'rgba(249, 115, 22, 0.1)',
 			borderColor: 'rgba(249, 115, 22, 0.2)',
 			path: '/admin/configuration/service-status'
+		},
+		{
+			id: 'twitter',
+			title: 'Twitter Integration',
+			description: 'Manage Twitter API connection and view tweets',
+			icon: Twitter,
+			color: 'from-blue-400 to-blue-600',
+			bgColor: 'rgba(59, 130, 246, 0.1)',
+			borderColor: 'rgba(59, 130, 246, 0.2)',
+			path: '/admin/configuration/twitter'
 		}
 	];
 
@@ -118,6 +129,8 @@
 						<MessageSquare size={24} />
 					{:else if category.icon === Server}
 						<Server size={24} />
+					{:else if category.icon === Twitter}
+						<Twitter size={24} />
 					{/if}
 				</div>
 				<div class="card-content">

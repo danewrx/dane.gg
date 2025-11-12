@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { requireSession, requireAdmin } from '../middleware/auth';
 import { TwitterApiService } from '../services/twitterApiService';
+import { TweetService } from '../services/tweetService';
 
 const router = Router();
 
@@ -8,7 +9,7 @@ const router = Router();
  * POST /api/twitter/fetch
  * Manually trigger fetching the latest tweet (admin only)
  */
-router.post('/fetch', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.post('/fetch', requireSession, requireAdmin, async (req: Request, res: Response) => {
   try {
     const username = process.env.TWITTER_USERNAME;
 
@@ -50,7 +51,7 @@ router.post('/fetch', authenticateToken, requireAdmin, async (req: Request, res:
  * GET /api/twitter/status
  * Check Twitter API configuration status (admin only)
  */
-router.get('/status', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.get('/status', requireSession, requireAdmin, async (req: Request, res: Response) => {
   try {
     const isConfigured = TwitterApiService.isConfigured();
     const username = process.env.TWITTER_USERNAME || null;
@@ -80,7 +81,7 @@ router.get('/status', authenticateToken, requireAdmin, async (req: Request, res:
  * GET /api/twitter/health-check
  * Manually trigger a connection health check (admin only)
  */
-router.get('/health-check', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.get('/health-check', requireSession, requireAdmin, async (req: Request, res: Response) => {
   try {
     const username = process.env.TWITTER_USERNAME;
 
@@ -98,6 +99,41 @@ router.get('/health-check', authenticateToken, requireAdmin, async (req: Request
     });
   } catch (error: any) {
     console.error('Twitter health check error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/twitter/tweets
+ * Get all tweets from database (admin only)
+ */
+router.get('/tweets', requireSession, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const tweets = await TweetService.getAllTweets();
+    
+    const tweetsWithProxyImages = tweets.map(tweet => {
+      let profileImageUrl = tweet.authorProfileImage;
+      if (profileImageUrl && profileImageUrl.includes('pbs.twimg.com')) {
+        const imageUrl = encodeURIComponent(profileImageUrl);
+        profileImageUrl = `/api/widgets/tweet-profile-image?url=${imageUrl}`;
+      }
+      
+      return {
+        ...tweet,
+        authorProfileImage: profileImageUrl
+      };
+    });
+
+    res.json({
+      success: true,
+      data: tweetsWithProxyImages,
+      count: tweetsWithProxyImages.length
+    });
+  } catch (error: any) {
+    console.error('Error fetching tweets:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: error.message
