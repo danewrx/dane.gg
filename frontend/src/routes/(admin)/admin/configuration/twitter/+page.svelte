@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { CheckCircle2, XCircle, AlertCircle, RefreshCw, Twitter, ExternalLink, Calendar, User } from 'lucide-svelte';
+	import { CheckCircle2, XCircle, AlertCircle, RefreshCw, Twitter, ExternalLink, Calendar, User, Edit2 } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 
 	interface ConnectionStatus {
@@ -8,11 +8,23 @@
 		message: string;
 		failureType?: string;
 		details?: string;
+		request?: {
+			method: string;
+			endpoint: string;
+			username: string;
+			hasCookies: boolean;
+		};
+		response?: {
+			status?: number;
+			data?: any;
+			error?: string;
+		};
 	}
 
 	interface TwitterStatus {
 		configured: boolean;
 		username: string | null;
+		usernameSource?: 'database' | 'environment';
 		hasCookies: boolean;
 		connection: ConnectionStatus | null;
 		timestamp: string;
@@ -38,6 +50,10 @@
 	let testingConnection = $state(false);
 	let loadingTweets = $state(false);
 	let error = $state('');
+	let showRequestResponse = $state(false);
+	let editingUsername = $state(false);
+	let usernameInput = $state('');
+	let savingUsername = $state(false);
 
 	async function loadStatus() {
 		try {
@@ -143,6 +159,7 @@
 		try {
 			testingConnection = true;
 			error = '';
+			showRequestResponse = false;
 
 			const response = await fetch('/api/twitter/status', {
 				credentials: 'include'
@@ -156,6 +173,7 @@
 			status = result;
 
 			if (result.connection) {
+				showRequestResponse = true;
 				if (result.connection.connected) {
 					toast.success('Connection successful!');
 				} else {
@@ -188,6 +206,56 @@
 		return connection.connected ? '#10b981' : '#ef4444';
 	}
 
+	async function startEditingUsername() {
+		editingUsername = true;
+		usernameInput = status?.username || '';
+	}
+
+	function cancelEditingUsername() {
+		editingUsername = false;
+		usernameInput = '';
+	}
+
+	async function saveUsername() {
+		if (!usernameInput.trim()) {
+			toast.error('Username cannot be empty');
+			return;
+		}
+
+		try {
+			savingUsername = true;
+			error = '';
+
+			const response = await fetch('/api/twitter/username', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				credentials: 'include',
+				body: JSON.stringify({
+					username: usernameInput.trim()
+				})
+			});
+
+			if (!response.ok) {
+				const result = await response.json();
+				throw new Error(result.error || 'Failed to save username');
+			}
+
+			toast.success('Username saved successfully');
+			editingUsername = false;
+			usernameInput = '';
+			
+			await loadStatus();
+		} catch (err) {
+			console.error('Error saving username:', err);
+			error = err instanceof Error ? err.message : 'Failed to save username';
+			toast.error(error);
+		} finally {
+			savingUsername = false;
+		}
+	}
+
 	onMount(() => {
 		loadStatus();
 		setTimeout(() => {
@@ -210,54 +278,134 @@
 			<p>{error}</p>
 		</div>
 	{:else}
-		<div class="config-content">
-			<!-- Connection Details Section -->
-			<div class="config-section">
-				<h2 class="section-title">Connection Details</h2>
+		<div class="config-form">
+			<!-- Twitter Configuration -->
+			<div class="form-section">
+				<h2 class="section-title">Twitter Configuration</h2>
 				
 				{#if !status?.configured}
 					<div class="config-warning">
 						<AlertCircle size={20} />
-						<p>Twitter API is not configured. Please set TWITTER_COOKIES and TWITTER_USERNAME environment variables.</p>
+						<div class="warning-content">
+							<p class="warning-title">Twitter API is not configured</p>
+							<p class="warning-text">
+								Please set the following environment variables:
+							</p>
+							<ul class="env-vars-list">
+								<li><code>TWITTER_COOKIES</code> - Twitter/X authentication cookies (obtained from a logged-in session)</li>
+								<li><code>TWITTER_USERNAME</code> - Your Twitter/X username (without @)</li>
+							</ul>
+							<p class="warning-text">
+								After setting these variables, restart your server for the changes to take effect.
+							</p>
+						</div>
 					</div>
 				{:else}
-					<div class="connection-info">
-						<div class="info-row">
+					<div class="config-info">
+						<div class="info-item">
 							<span class="info-label">Username:</span>
-							<span class="info-value">{status.username || 'Not set'}</span>
+							{#if editingUsername}
+								<div class="username-edit">
+									<input
+										type="text"
+										bind:value={usernameInput}
+										placeholder="Enter username (without @)"
+										class="username-input"
+										disabled={savingUsername}
+										onkeydown={(e) => {
+											if (e.key === 'Enter') {
+												saveUsername();
+											} else if (e.key === 'Escape') {
+												cancelEditingUsername();
+											}
+										}}
+									/>
+									<div class="username-edit-actions">
+										<button
+											type="button"
+											class="icon-button"
+											onclick={saveUsername}
+											disabled={savingUsername}
+											title="Save"
+										>
+											<CheckCircle2 size={16} />
+										</button>
+										<button
+											type="button"
+											class="icon-button"
+											onclick={cancelEditingUsername}
+											disabled={savingUsername}
+											title="Cancel"
+										>
+											<XCircle size={16} />
+										</button>
+									</div>
+								</div>
+							{:else}
+								<div class="username-display">
+									<span class="info-value">{status.username || 'Not set'}</span>
+									{#if status.usernameSource}
+										<span class="username-source" class:database={status.usernameSource === 'database'} class:environment={status.usernameSource === 'environment'}>
+											({status.usernameSource === 'database' ? 'Database' : 'Environment'})
+										</span>
+									{/if}
+									<button
+										type="button"
+										class="icon-button small"
+										onclick={startEditingUsername}
+										title="Edit username"
+									>
+										<Edit2 size={14} />
+									</button>
+								</div>
+							{/if}
 						</div>
-						<div class="info-row">
+						<div class="info-item">
 							<span class="info-label">Cookies:</span>
 							<span class="info-value">{status.hasCookies ? 'Configured' : 'Not configured'}</span>
 						</div>
-						{#if status.connection}
-							<div class="info-row">
-								<span class="info-label">Status:</span>
-								<span class="info-value" style="color: {getConnectionStatusColor(status.connection)}">
-									{status.connection.connected ? 'Connected' : 'Disconnected'}
-								</span>
+						<div class="connection-status-section">
+							<div class="connection-status-header">
+								<span class="info-label">Connection Status:</span>
+								{#if testingConnection}
+									<RefreshCw size={16} class="spinning" />
+								{/if}
 							</div>
-							{#if !status.connection.connected && status.connection.details}
-								<div class="connection-error">
-									<AlertCircle size={16} />
-									<div class="error-details">
-										<p class="error-message">{status.connection.message}</p>
+							{#if status.connection}
+								<div class="connection-status" class:connected={status.connection.connected} class:disconnected={!status.connection.connected}>
+									{#if status.connection.connected}
+										<CheckCircle2 size={16} />
+									{:else}
+										<XCircle size={16} />
+									{/if}
+									<span class="connection-status-text">
+										{status.connection.connected ? 'Connected' : 'Disconnected'}
+									</span>
+									{#if status.connection.message}
+										<span class="connection-status-message">{status.connection.message}</span>
+									{/if}
+								</div>
+								{#if !status.connection.connected && status.connection.details}
+									<div class="connection-error-details">
+										<p class="error-detail-text">{status.connection.details}</p>
 										{#if status.connection.failureType}
-											<p class="error-type">Type: {status.connection.failureType}</p>
-										{/if}
-										{#if status.connection.details}
-											<p class="error-detail">{status.connection.details}</p>
+											<p class="error-type-text">Type: {status.connection.failureType}</p>
 										{/if}
 									</div>
+								{/if}
+							{:else if !testingConnection}
+								<div class="connection-status-placeholder">
+									<span class="connection-status-text">Not tested</span>
 								</div>
 							{/if}
-						{/if}
+						</div>
+						<p class="help-text">Configuration is read from environment variables. To change these values, update your environment configuration and restart the server.</p>
 					</div>
 
 					<!-- Test Button -->
 					<div class="test-section">
 						<button 
-							class="test-button"
+							class="btn btn-primary"
 							onclick={testConnection}
 							disabled={testingConnection}
 						>
@@ -266,15 +414,74 @@
 							{:else}
 								<RefreshCw size={16} />
 							{/if}
-							<span>{testingConnection ? 'Testing...' : 'Test Connection'}</span>
+							{testingConnection ? 'Testing...' : 'Test Connection'}
 						</button>
 					</div>
+
+					<!-- Request/Response Details -->
+					{#if showRequestResponse && status?.connection && (status.connection.request || status.connection.response)}
+						<div class="request-response-section">
+							<h3 class="subsection-title">Request & Response Details</h3>
+							
+							{#if status.connection.request}
+								<div class="request-response-box">
+									<div class="request-response-header">
+										<span class="request-response-label">Request</span>
+										<span class="request-response-method">{status.connection.request.method}</span>
+									</div>
+									<div class="request-response-content">
+										<div class="request-response-item">
+											<span class="request-response-key">Endpoint:</span>
+											<span class="request-response-value">{status.connection.request.endpoint}</span>
+										</div>
+										<div class="request-response-item">
+											<span class="request-response-key">Username:</span>
+											<span class="request-response-value">{status.connection.request.username}</span>
+										</div>
+										<div class="request-response-item">
+											<span class="request-response-key">Cookies Configured:</span>
+											<span class="request-response-value" class:success={status.connection.request.hasCookies} class:error={!status.connection.request.hasCookies}>
+												{status.connection.request.hasCookies ? 'Yes' : 'No'}
+											</span>
+										</div>
+									</div>
+								</div>
+							{/if}
+
+							{#if status.connection.response}
+								<div class="request-response-box">
+									<div class="request-response-header">
+										<span class="request-response-label">Response</span>
+										{#if status.connection.response.status}
+											<span class="request-response-status" class:success={status.connection.response.status >= 200 && status.connection.response.status < 300} class:error={status.connection.response.status >= 400}>
+												{status.connection.response.status}
+											</span>
+										{/if}
+									</div>
+									<div class="request-response-content">
+										{#if status.connection.response.error}
+											<div class="request-response-item">
+												<span class="request-response-key">Error:</span>
+												<span class="request-response-value error-text">{status.connection.response.error}</span>
+											</div>
+										{/if}
+										{#if status.connection.response.data}
+											<div class="request-response-item full-width">
+												<span class="request-response-key">Data:</span>
+												<pre class="request-response-json">{JSON.stringify(status.connection.response.data, null, 2)}</pre>
+											</div>
+										{/if}
+									</div>
+								</div>
+							{/if}
+						</div>
+					{/if}
 				{/if}
 			</div>
 
 			<!-- Latest Tweet Section -->
 			{#if latestTweet}
-				<div class="config-section">
+				<div class="form-section">
 					<h2 class="section-title">Latest Tweet</h2>
 					<div class="tweet-card">
 						<div class="tweet-header">
@@ -318,7 +525,7 @@
 			{/if}
 
 			<!-- Previous Tweets Table -->
-			<div class="config-section">
+			<div class="form-section">
 				<h2 class="section-title">Previous Tweets</h2>
 				{#if loadingTweets}
 					<div class="loading-tweets">
@@ -390,7 +597,7 @@
 
 <style>
 	.twitter-config {
-		padding: 24px;
+		padding: 0;
 	}
 
 	.loading-state,
@@ -399,9 +606,9 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		padding: 48px;
+		padding: 60px 20px;
 		gap: 16px;
-		color: #a1a1aa;
+		color: var(--text-secondary, #9ca3af);
 	}
 
 	.error-state {
@@ -409,12 +616,12 @@
 	}
 
 	.spinner {
-		width: 32px;
-		height: 32px;
-		border: 3px solid rgba(99, 102, 241, 0.2);
-		border-top-color: #6366f1;
+		width: 40px;
+		height: 40px;
+		border: 3px solid var(--border-color, #3a3a3a);
+		border-top-color: var(--accent-color, #6366f1);
 		border-radius: 50%;
-		animation: spin 0.8s linear infinite;
+		animation: spin 1s linear infinite;
 	}
 
 	.spinning {
@@ -425,152 +632,460 @@
 		to { transform: rotate(360deg); }
 	}
 
-	.config-content {
+	.config-form {
 		display: flex;
 		flex-direction: column;
 		gap: 32px;
 	}
 
-	.config-section {
-		background: rgba(255, 255, 255, 0.02);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 12px;
-		padding: 24px;
-	}
-
-	:global(html:not(.dark)) .config-section {
-		background: rgba(0, 0, 0, 0.02);
-		border-color: rgba(0, 0, 0, 0.1);
+	.form-section {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
 	}
 
 	.section-title {
 		font-size: 20px;
 		font-weight: 600;
-		margin: 0 0 20px 0;
-		color: #ffffff;
-	}
-
-	:global(html:not(.dark)) .section-title {
-		color: #1f2937;
-	}
-
-	.config-warning {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		padding: 16px;
-		background: rgba(239, 68, 68, 0.1);
-		border: 1px solid rgba(239, 68, 68, 0.3);
-		border-radius: 8px;
-		color: #fca5a5;
-	}
-
-	.connection-info {
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-		margin-bottom: 20px;
-	}
-
-	.info-row {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-	}
-
-	.info-label {
-		font-weight: 500;
-		color: #a1a1aa;
-		min-width: 120px;
-	}
-
-	:global(html:not(.dark)) .info-label {
-		color: #6b7280;
-	}
-
-	.info-value {
-		color: #ffffff;
-	}
-
-	:global(html:not(.dark)) .info-value {
-		color: #1f2937;
-	}
-
-	.connection-error {
-		display: flex;
-		align-items: flex-start;
-		gap: 12px;
-		padding: 16px;
-		background: rgba(239, 68, 68, 0.1);
-		border: 1px solid rgba(239, 68, 68, 0.3);
-		border-radius: 8px;
-		margin-top: 12px;
-		color: #fca5a5;
-	}
-
-	.error-details {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-	}
-
-	.error-message {
-		font-weight: 500;
+		color: var(--text-primary, #ffffff);
 		margin: 0;
-	}
-
-	.error-type {
-		font-size: 14px;
-		opacity: 0.8;
-		margin: 0;
-	}
-
-	.error-detail {
-		font-size: 13px;
-		opacity: 0.7;
-		margin: 0;
-	}
-
-	.test-section {
-		margin-top: 20px;
-	}
-
-	.test-button {
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		padding: 10px 20px;
-		background: #6366f1;
-		color: #ffffff;
-		border: none;
+	}
+
+	.config-warning {
+		padding: 20px;
+		border: 2px solid #f59e0b;
 		border-radius: 8px;
+		background: rgba(245, 158, 11, 0.1);
+		display: flex;
+		gap: 16px;
+		margin-bottom: 20px;
+	}
+
+	.config-warning :global(svg) {
+		color: #f59e0b;
+		flex-shrink: 0;
+		margin-top: 2px;
+	}
+
+	.warning-content {
+		flex: 1;
+	}
+
+	.warning-title {
+		font-size: 16px;
+		font-weight: 600;
+		color: var(--text-primary, #ffffff);
+		margin: 0 0 12px 0;
+	}
+
+	.warning-text {
+		font-size: 14px;
+		color: var(--text-secondary, #9ca3af);
+		margin: 0 0 8px 0;
+		line-height: 1.5;
+	}
+
+	.env-vars-list {
+		margin: 12px 0;
+		padding-left: 20px;
+		color: var(--text-secondary, #9ca3af);
+	}
+
+	.env-vars-list li {
+		margin: 8px 0;
+		line-height: 1.5;
+	}
+
+	.env-vars-list code {
+		background: rgba(245, 158, 11, 0.2);
+		padding: 2px 6px;
+		border-radius: 4px;
+		font-family: 'Courier New', monospace;
+		font-size: 13px;
+		color: #fbbf24;
+	}
+
+	.config-info {
+		padding: 16px;
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 8px;
+		background: var(--bg-secondary, #2d2d2d);
+		margin-bottom: 20px;
+	}
+
+	.info-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 12px 0;
+		border-bottom: 1px solid var(--border-color, #3a3a3a);
+	}
+
+	.info-item:last-child {
+		border-bottom: none;
+	}
+
+	.info-label {
 		font-size: 14px;
 		font-weight: 500;
+		color: var(--text-primary, #ffffff);
+	}
+
+	.info-value {
+		font-size: 14px;
+		color: var(--text-secondary, #9ca3af);
+		font-family: 'Courier New', monospace;
+	}
+
+	.username-display {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex: 1;
+	}
+
+	.username-source {
+		font-size: 12px;
+		padding: 2px 6px;
+		border-radius: 4px;
+		font-weight: 500;
+	}
+
+	.username-source.database {
+		background: rgba(99, 102, 241, 0.2);
+		color: #818cf8;
+	}
+
+	.username-source.environment {
+		background: rgba(156, 163, 175, 0.2);
+		color: #9ca3af;
+	}
+
+	.icon-button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 4px;
+		width: 24px;
+		height: 24px;
+		background: transparent;
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 4px;
+		color: var(--text-secondary, #9ca3af);
 		cursor: pointer;
-		transition: all 0.2s ease;
+		transition: all 0.2s;
 	}
 
-	.test-button:hover:not(:disabled) {
-		background: #4f46e5;
-		transform: translateY(-1px);
+	.icon-button.small {
+		width: 20px;
+		height: 20px;
+		padding: 2px;
 	}
 
-	.test-button:disabled {
+	.icon-button:hover {
+		background: var(--bg-secondary, #2d2d2d);
+		border-color: var(--accent-color, #6366f1);
+		color: var(--accent-color, #6366f1);
+	}
+
+	.icon-button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.username-edit {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex: 1;
+	}
+
+	.username-input {
+		flex: 1;
+		padding: 6px 10px;
+		background: var(--bg-secondary, #2d2d2d);
+		border: 1px solid var(--accent-color, #6366f1);
+		border-radius: 4px;
+		color: var(--text-primary, #ffffff);
+		font-size: 14px;
+		font-family: 'Courier New', monospace;
+	}
+
+	.username-input:focus {
+		outline: none;
+		border-color: var(--accent-color, #6366f1);
+		box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+	}
+
+	.username-input:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
 	}
 
-	.tweet-card {
-		background: rgba(255, 255, 255, 0.03);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 12px;
-		padding: 20px;
+	.username-edit-actions {
+		display: flex;
+		align-items: center;
+		gap: 4px;
 	}
 
-	:global(html:not(.dark)) .tweet-card {
-		background: rgba(0, 0, 0, 0.03);
-		border-color: rgba(0, 0, 0, 0.1);
+	.connection-status-section {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		padding: 12px 0;
+	}
+
+	.connection-status-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.connection-status-header :global(.spinning) {
+		animation: spin 1s linear infinite;
+		color: var(--text-secondary, #9ca3af);
+	}
+
+	.connection-status {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 12px;
+		border-radius: 6px;
+		font-size: 14px;
+	}
+
+	.connection-status.connected {
+		background: rgba(16, 185, 129, 0.1);
+		border: 1px solid rgba(16, 185, 129, 0.3);
+		color: #10b981;
+	}
+
+	.connection-status.disconnected {
+		background: rgba(239, 68, 68, 0.1);
+		border: 1px solid rgba(239, 68, 68, 0.3);
+		color: #ef4444;
+	}
+
+	.connection-status-text {
+		font-weight: 500;
+	}
+
+	.connection-status-message {
+		font-size: 12px;
+		opacity: 0.8;
+		margin-left: auto;
+	}
+
+	.connection-status-placeholder {
+		padding: 10px 12px;
+		color: var(--text-secondary, #9ca3af);
+		font-size: 13px;
+		font-style: italic;
+	}
+
+	.connection-error-details {
+		padding: 12px;
+		background: rgba(239, 68, 68, 0.05);
+		border: 1px solid rgba(239, 68, 68, 0.2);
+		border-radius: 6px;
+		margin-top: 8px;
+	}
+
+	.error-detail-text {
+		font-size: 13px;
+		color: #fca5a5;
+		margin: 0 0 4px 0;
+		line-height: 1.4;
+	}
+
+	.error-type-text {
+		font-size: 12px;
+		color: #fca5a5;
+		opacity: 0.8;
+		margin: 0;
+	}
+
+	.help-text {
+		font-size: 12px;
+		color: var(--text-secondary, #9ca3af);
+		margin: 0;
+		margin-top: 12px;
+	}
+
+	.test-section {
+		margin-top: 20px;
+		padding-top: 20px;
+		border-top: 1px solid var(--border-color, #3a3a3a);
+	}
+
+	.btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 20px;
+		border: none;
+		border-radius: 6px;
+		font-size: 14px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.btn-primary {
+		background: var(--accent-color, #6366f1);
+		color: #ffffff;
+	}
+
+	.btn-primary:hover:not(:disabled) {
+		background: var(--accent-color-hover, #4f46e5);
+	}
+
+	.btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.request-response-section {
+		margin-top: 24px;
+		padding-top: 24px;
+		border-top: 1px solid var(--border-color, #3a3a3a);
+	}
+
+	.subsection-title {
+		font-size: 14px;
+		font-weight: 600;
+		color: var(--text-primary, #ffffff);
+		margin: 0 0 12px 0;
+	}
+
+	.request-response-box {
+		background: var(--bg-secondary, #2d2d2d);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 8px;
+		padding: 16px;
+		margin-bottom: 16px;
+	}
+
+	.request-response-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 12px;
+		padding-bottom: 12px;
+		border-bottom: 1px solid var(--border-color, #3a3a3a);
+	}
+
+	.request-response-label {
+		font-weight: 600;
+		font-size: 14px;
+		color: var(--text-primary, #ffffff);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.request-response-method {
+		padding: 4px 10px;
+		background: rgba(99, 102, 241, 0.2);
+		border: 1px solid rgba(99, 102, 241, 0.4);
+		border-radius: 4px;
+		font-size: 12px;
+		font-weight: 600;
+		color: #818cf8;
+		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+	}
+
+	.request-response-status {
+		padding: 4px 10px;
+		border-radius: 4px;
+		font-size: 12px;
+		font-weight: 600;
+		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+	}
+
+	.request-response-status.success {
+		background: rgba(16, 185, 129, 0.2);
+		border: 1px solid rgba(16, 185, 129, 0.4);
+		color: #34d399;
+	}
+
+	.request-response-status.error {
+		background: rgba(239, 68, 68, 0.2);
+		border: 1px solid rgba(239, 68, 68, 0.4);
+		color: #fca5a5;
+	}
+
+	.request-response-content {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	.request-response-item {
+		display: flex;
+		align-items: flex-start;
+		gap: 12px;
+	}
+
+	.request-response-item.full-width {
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.request-response-key {
+		font-weight: 500;
+		font-size: 13px;
+		color: var(--text-secondary, #9ca3af);
+		min-width: 140px;
+		flex-shrink: 0;
+	}
+
+	.request-response-value {
+		font-size: 13px;
+		color: var(--text-primary, #ffffff);
+		font-family: 'Courier New', monospace;
+		word-break: break-word;
+		flex: 1;
+	}
+
+	.request-response-value.success {
+		color: #34d399;
+		font-weight: 600;
+	}
+
+	.request-response-value.error {
+		color: #fca5a5;
+		font-weight: 600;
+	}
+
+	.request-response-value.error-text {
+		color: #fca5a5;
+	}
+
+	.request-response-json {
+		background: var(--bg-primary, #1a1a1a);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		padding: 12px;
+		margin: 0;
+		font-size: 12px;
+		line-height: 1.6;
+		color: var(--text-primary, #ffffff);
+		overflow-x: auto;
+		font-family: 'Courier New', monospace;
+		max-height: 400px;
+		overflow-y: auto;
+	}
+
+	.tweet-card {
+		background: var(--bg-secondary, #2d2d2d);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 8px;
+		padding: 20px;
 	}
 
 	.tweet-header {
@@ -605,21 +1120,13 @@
 
 	.author-name {
 		font-weight: 600;
-		color: #ffffff;
+		color: var(--text-primary, #ffffff);
 		font-size: 16px;
 	}
 
-	:global(html:not(.dark)) .author-name {
-		color: #1f2937;
-	}
-
 	.author-username {
-		color: #a1a1aa;
+		color: var(--text-secondary, #9ca3af);
 		font-size: 14px;
-	}
-
-	:global(html:not(.dark)) .author-username {
-		color: #6b7280;
 	}
 
 	.tweet-link {
@@ -634,26 +1141,18 @@
 
 	.tweet-content {
 		margin-bottom: 16px;
-		color: #ffffff;
+		color: var(--text-primary, #ffffff);
 		line-height: 1.6;
 		white-space: pre-wrap;
 		word-wrap: break-word;
-	}
-
-	:global(html:not(.dark)) .tweet-content {
-		color: #1f2937;
 	}
 
 	.tweet-footer {
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		color: #a1a1aa;
+		color: var(--text-secondary, #9ca3af);
 		font-size: 14px;
-	}
-
-	:global(html:not(.dark)) .tweet-footer {
-		color: #6b7280;
 	}
 
 	.tweet-date {
@@ -676,11 +1175,7 @@
 	.tweets-table-container {
 		overflow-x: auto;
 		border-radius: 8px;
-		border: 1px solid rgba(255, 255, 255, 0.1);
-	}
-
-	:global(html:not(.dark)) .tweets-table-container {
-		border-color: rgba(0, 0, 0, 0.1);
+		border: 1px solid var(--border-color, #3a3a3a);
 	}
 
 	.tweets-table {
@@ -689,11 +1184,7 @@
 	}
 
 	.tweets-table thead {
-		background: rgba(255, 255, 255, 0.05);
-	}
-
-	:global(html:not(.dark)) .tweets-table thead {
-		background: rgba(0, 0, 0, 0.05);
+		background: var(--bg-secondary, #2d2d2d);
 	}
 
 	.tweets-table th {
@@ -701,42 +1192,24 @@
 		text-align: left;
 		font-weight: 600;
 		font-size: 14px;
-		color: #ffffff;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-	}
-
-	:global(html:not(.dark)) .tweets-table th {
-		color: #1f2937;
-		border-bottom-color: rgba(0, 0, 0, 0.1);
+		color: var(--text-primary, #ffffff);
+		border-bottom: 1px solid var(--border-color, #3a3a3a);
 	}
 
 	.tweets-table td {
 		padding: 12px 16px;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-		color: #ffffff;
+		border-bottom: 1px solid var(--border-color, #3a3a3a);
+		color: var(--text-primary, #ffffff);
 		font-size: 14px;
 	}
 
-	:global(html:not(.dark)) .tweets-table td {
-		color: #1f2937;
-		border-bottom-color: rgba(0, 0, 0, 0.05);
-	}
-
 	.tweets-table tbody tr:hover {
-		background: rgba(255, 255, 255, 0.03);
-	}
-
-	:global(html:not(.dark)) .tweets-table tbody tr:hover {
-		background: rgba(0, 0, 0, 0.03);
+		background: var(--bg-secondary, #2d2d2d);
 	}
 
 	.date-cell {
 		white-space: nowrap;
-		color: #a1a1aa;
-	}
-
-	:global(html:not(.dark)) .date-cell {
-		color: #6b7280;
+		color: var(--text-secondary, #9ca3af);
 	}
 
 	.content-cell {
@@ -782,4 +1255,5 @@
 		color: #4f46e5;
 	}
 </style>
+
 

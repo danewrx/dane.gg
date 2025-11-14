@@ -170,52 +170,11 @@ async function initializeApp() {
   try {
     await createDefaultAdmin();
     
-    // Twitter API scheduled task
-    if (process.env.TWITTER_COOKIES && process.env.TWITTER_USERNAME) {
-      const { TwitterApiService } = await import('./services/twitterApiService');
-      const username = process.env.TWITTER_USERNAME;
-      
-      const connectionTest = await TwitterApiService.testConnection(username);
-      if (connectionTest.connected) {
-        console.log(`[Twitter API] ✅ Connection test successful`);
-      } else {
-        console.error(`[Twitter API] ❌ Connection test failed: ${connectionTest.message}`);
-      }
-      
-      TwitterApiService.fetchAndUpdateLatestTweet(username).catch(err => {
-        console.error('[Twitter API] Initial fetch failed:', err.message);
-      });
-      
-      // Fetch at configured interval
-      // WARNING: Too frequent polling can trigger Twitter rate limits or account restrictions
-      // Minimum: 30 seconds
-      const pollInterval = Math.max(
-        parseInt(process.env.TWITTER_POLL_INTERVAL || '120000', 10), // Default 2 minutes
-        30000
-      );
-      
-      setInterval(() => {
-        TwitterApiService.fetchAndUpdateLatestTweet(username).catch(err => {
-          console.error('[Twitter API] Scheduled fetch failed:', err.message);
-        });
-      }, pollInterval);
-      
-      // Health check
-      const healthCheckInterval = 2 * 60 * 60 * 1000; // 2 hours
-      setInterval(() => {
-        TwitterApiService.checkConnectionHealth(username).catch(err => {
-          console.error('[Twitter API] Health check failed:', err.message);
-        });
-      }, healthCheckInterval);
-      
-      const intervalMinutes = pollInterval / 60000;
-      const healthCheckHours = healthCheckInterval / (60 * 60 * 1000);
-      console.log(`[Twitter API] Scheduled task initialized for @${username} (every ${intervalMinutes} minutes)`);
-      console.log(`[Twitter API] Health checks enabled (every ${healthCheckHours} hours)`);
-      console.log(`[Twitter API] ⚠️  WARNING: Polling too frequently may trigger Twitter rate limits or account restrictions`);
-    }
+    // Initialize Twitter scheduler
+    const { TwitterScheduler } = await import('./services/twitterScheduler');
+    await TwitterScheduler.initialize();
   } catch (error) {
-    console.error('❌ Failed to initialize default admin:', error);
+    console.error('❌ Failed to initialize app:', error);
   }
 }
 

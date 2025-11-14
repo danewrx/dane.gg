@@ -1,6 +1,7 @@
 import { TwitterOpenApi } from 'twitter-openapi-typescript';
 import { TweetService, type TweetData } from './tweetService';
 import { NotificationService } from './notificationService';
+import { ConfigService } from './config';
 
 export class TwitterApiService {
   private static api: TwitterOpenApi | null = null;
@@ -12,6 +13,20 @@ export class TwitterApiService {
   private static readonly MIN_FETCH_INTERVAL = 30000; // Minimum 30 seconds
   private static readonly MAX_CONSECUTIVE_ERRORS = 5; // 5 consecutive errors
   private static readonly NOTIFICATION_COOLDOWN = 30 * 60 * 1000; // 30 minutes
+
+  /**
+   * Get Twitter username from database - fallback to env variable
+   */
+  private static async getUsername(): Promise<string | null> {
+    try {
+      const dbUsername = await ConfigService.get('twitter_username');
+      if (dbUsername && typeof dbUsername === 'string' && dbUsername.trim()) {
+        return dbUsername.trim();
+      }
+    } catch (error) {}
+    
+    return process.env.TWITTER_USERNAME || null;
+  }
 
   /**
    * Initialize the Twitter API client with authentication cookies
@@ -308,7 +323,7 @@ export class TwitterApiService {
       
       // Trigger health check if multiple consecutive errors
       if (this.consecutiveErrors >= 3) {
-        const username = process.env.TWITTER_USERNAME;
+        const username = await this.getUsername();
         if (username) {
           this.checkConnectionHealth(username).catch(err => {
             console.error('[Twitter API] Health check failed during error handling:', err.message);
@@ -321,9 +336,18 @@ export class TwitterApiService {
   }
 
   /**
-   * Check if service is configured
+   * Check if service is configured (checks database first)
    */
-  static isConfigured(): boolean {
+  static async isConfigured(): Promise<boolean> {
+    const cookies = process.env.TWITTER_COOKIES;
+    const username = await this.getUsername();
+    return !!cookies && !!username;
+  }
+
+  /**
+   * Synchronous check (for backwards compatibility)
+   */
+  static isConfiguredSync(): boolean {
     return !!process.env.TWITTER_COOKIES && !!process.env.TWITTER_USERNAME;
   }
 
@@ -336,24 +360,47 @@ export class TwitterApiService {
     message: string;
     failureType?: 'authentication' | 'rate_limit' | 'network' | 'api_error' | 'configuration' | 'unknown';
     details?: string;
+    request?: {
+      method: string;
+      endpoint: string;
+      username: string;
+      hasCookies: boolean;
+    };
+    response?: {
+      status?: number;
+      data?: any;
+      error?: string;
+    };
   }> {
-    try {
-      const testUsername = username || process.env.TWITTER_USERNAME;
-      if (!testUsername) {
-        return {
-          connected: false,
-          message: 'Twitter username not configured',
-          failureType: 'configuration',
-          details: 'TWITTER_USERNAME environment variable is not set'
-        };
-      }
+      try {
+        const testUsername = username || await this.getUsername();
+        if (!testUsername) {
+          return {
+            connected: false,
+            message: 'Twitter username not configured',
+            failureType: 'configuration',
+            details: 'Twitter username is not set in database or TWITTER_USERNAME environment variable',
+            request: {
+              method: 'GET',
+              endpoint: 'getUserByScreenName',
+              username: 'N/A',
+              hasCookies: !!process.env.TWITTER_COOKIES
+            }
+          };
+        }
 
       if (!process.env.TWITTER_COOKIES) {
         return {
           connected: false,
           message: 'Twitter cookies not configured',
           failureType: 'configuration',
-          details: 'TWITTER_COOKIES environment variable is not set'
+          details: 'TWITTER_COOKIES environment variable is not set',
+          request: {
+            method: 'GET',
+            endpoint: 'getUserByScreenName',
+            username: testUsername,
+            hasCookies: false
+          }
         };
       }
 
@@ -365,7 +412,16 @@ export class TwitterApiService {
               connected: false,
               message: 'Failed to initialize Twitter API client',
               failureType: 'authentication',
-              details: 'Client initialization failed - cookies may be invalid or expired'
+              details: 'Client initialization failed - cookies may be invalid or expired',
+              request: {
+                method: 'GET',
+                endpoint: 'getUserByScreenName',
+                username: testUsername,
+                hasCookies: true
+              },
+              response: {
+                error: 'Client initialization failed'
+              }
             };
           }
         } catch (initError: any) {
@@ -373,7 +429,16 @@ export class TwitterApiService {
             connected: false,
             message: 'Failed to initialize client',
             failureType: 'authentication',
-            details: initError.message || 'Authentication failed - cookies may be expired'
+            details: initError.message || 'Authentication failed - cookies may be expired',
+            request: {
+              method: 'GET',
+              endpoint: 'getUserByScreenName',
+              username: testUsername,
+              hasCookies: true
+            },
+            response: {
+              error: initError.message || 'Initialization error'
+            }
           };
         }
       }
@@ -383,31 +448,89 @@ export class TwitterApiService {
           connected: false,
           message: 'Client is not initialized',
           failureType: 'configuration',
-          details: 'Client initialization did not complete'
+          details: 'Client initialization did not complete',
+          request: {
+            method: 'GET',
+            endpoint: 'getUserByScreenName',
+            username: testUsername,
+            hasCookies: true
+          },
+          response: {
+            error: 'Client not initialized'
+          }
         };
       }
 
       try {
+        const requestInfo = {
+          method: 'GET',
+          endpoint: 'getUserByScreenName',
+          username: testUsername,
+          hasCookies: !!process.env.TWITTER_COOKIES
+        };
+
         const userResult = await this.client.getUserApi().getUserByScreenName({ 
           screenName: testUsername 
         });
 
         if (userResult.data?.user || userResult.data?.raw?.result) {
+          // Extract relevant response data (remove sensitive info)
+          const responseData = {
+            hasUser: !!userResult.data?.user,
+            hasRawResult: !!userResult.data?.raw?.result,
+            userData: userResult.data?.user ? {
+              restId: userResult.data.user.restId,
+              legacy: userResult.data.user.legacy ? {
+                screenName: userResult.data.user.legacy.screenName,
+                name: userResult.data.user.legacy.name
+              } : null
+            } : null,
+            rawResult: userResult.data?.raw?.result ? {
+              restId: userResult.data.raw.result.restId,
+              legacy: userResult.data.raw.result.legacy ? {
+                screenName: userResult.data.raw.result.legacy.screenName,
+                name: userResult.data.raw.result.legacy.name
+              } : null
+            } : null
+          };
+
           return {
             connected: true,
-            message: 'Connection successful'
+            message: 'Connection successful',
+            request: requestInfo,
+            response: {
+              status: 200,
+              data: responseData
+            }
           };
         } else {
           return {
             connected: false,
             message: 'Failed to fetch user data',
             failureType: 'api_error',
-            details: 'API returned empty or invalid response'
+            details: 'API returned empty or invalid response',
+            request: requestInfo,
+            response: {
+              data: userResult.data || null,
+              error: 'No user data in response'
+            }
           };
         }
       } catch (apiError: any) {
         const errorMessage = apiError.message || String(apiError);
         const errorString = errorMessage.toLowerCase();
+
+        const requestInfo = {
+          method: 'GET',
+          endpoint: 'getUserByScreenName',
+          username: testUsername,
+          hasCookies: !!process.env.TWITTER_COOKIES
+        };
+
+        const responseInfo = {
+          error: errorMessage,
+          stack: apiError.stack ? apiError.stack.substring(0, 500) : undefined
+        };
 
         // Detect specific error types
         if (errorString.includes('rate limit') || 
@@ -418,7 +541,12 @@ export class TwitterApiService {
             connected: false,
             message: 'Rate limit exceeded',
             failureType: 'rate_limit',
-            details: 'Twitter API rate limit has been reached. Please wait before retrying.'
+            details: 'Twitter API rate limit has been reached. Please wait before retrying.',
+            request: requestInfo,
+            response: {
+              status: 429,
+              ...responseInfo
+            }
           };
         }
 
@@ -433,7 +561,12 @@ export class TwitterApiService {
             connected: false,
             message: 'Authentication failed',
             failureType: 'authentication',
-            details: 'Cookies may be expired or invalid. Please update TWITTER_COOKIES in your .env file.'
+            details: 'Cookies may be expired or invalid. Please update TWITTER_COOKIES in your .env file.',
+            request: requestInfo,
+            response: {
+              status: errorString.includes('401') ? 401 : errorString.includes('403') ? 403 : undefined,
+              ...responseInfo
+            }
           };
         }
 
@@ -445,14 +578,18 @@ export class TwitterApiService {
             connected: false,
             message: 'Network error',
             failureType: 'network',
-            details: 'Unable to reach Twitter API. Check your internet connection.'
+            details: 'Unable to reach Twitter API. Check your internet connection.',
+            request: requestInfo,
+            response: responseInfo
           };
         }
         return {
           connected: false,
           message: 'API request failed',
           failureType: 'api_error',
-          details: errorMessage
+          details: errorMessage,
+          request: requestInfo,
+          response: responseInfo
         };
       }
     } catch (error: any) {
@@ -462,19 +599,39 @@ export class TwitterApiService {
       if (errorString.includes('network') || 
           errorString.includes('timeout') ||
           errorString.includes('econnrefused')) {
+        const fallbackUsername = username || await this.getUsername() || 'N/A';
         return {
           connected: false,
           message: 'Network error',
           failureType: 'network',
-          details: errorMessage
+          details: errorMessage,
+          request: {
+            method: 'GET',
+            endpoint: 'getUserByScreenName',
+            username: fallbackUsername,
+            hasCookies: !!process.env.TWITTER_COOKIES
+          },
+          response: {
+            error: errorMessage
+          }
         };
       }
 
+      const fallbackUsername = username || await this.getUsername() || 'N/A';
       return {
         connected: false,
         message: 'Connection test failed',
         failureType: 'unknown',
-        details: errorMessage
+        details: errorMessage,
+        request: {
+          method: 'GET',
+          endpoint: 'getUserByScreenName',
+          username: fallbackUsername,
+          hasCookies: !!process.env.TWITTER_COOKIES
+        },
+        response: {
+          error: errorMessage
+        }
       };
     }
   }
