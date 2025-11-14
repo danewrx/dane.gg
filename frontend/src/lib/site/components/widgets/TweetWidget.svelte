@@ -115,7 +115,7 @@
 								<img src={tweetData.authorProfileImage} alt="{tweetData.authorName}" />
 							{:else}
 								<div class="no-image">
-									{tweetData.authorName?.charAt(0)?.toLowerCase() || 'd'}
+									{tweetData.authorName?.toLowerCase() || 'dane'}
 								</div>
 							{/if}
 						</div>
@@ -162,7 +162,7 @@
 		{:else if !hasReceivedApiResponse}
 			<div class="default-placeholder">
 				<div class="profile-image">
-					<div class="no-image">d</div>
+					<div class="no-image">dane</div>
 				</div>
 				<div class="tweet-details">
 					<div class="tweet-title">No recent tweets</div>
@@ -173,7 +173,7 @@
 		{:else}
 			<div class="default-placeholder">
 				<div class="profile-image">
-					<div class="no-image">d</div>
+					<div class="no-image">dane</div>
 				</div>
 				<div class="tweet-details">
 					<div class="tweet-title">No recent tweets</div>
@@ -219,37 +219,45 @@
 		font-family: var(--font-family-primary, 'Inter', system-ui, sans-serif);
 		color: var(--text-primary, #ffffff);
 		width: 100%;
+		overflow: hidden;
 	}
 
 	.tweet-info {
 		display: flex;
 		align-items: flex-start;
 		gap: 8px;
+		width: 100%;
+		min-width: 0;
 	}
 
 	.tweet-header {
 		display: flex;
 		align-items: flex-start;
 		gap: 8px;
+		width: 100%;
+		min-width: 0;
 	}
 
 	.author-info {
 		display: flex;
-		align-items: flex-start;
-		gap: 8px;
+		align-items: center;
+		gap: 12px;
 		flex: 1;
 		min-width: 0;
+		width: 100%;
+		overflow: hidden;
 	}
 
 	.profile-image {
 		flex-shrink: 0;
-		width: 64px;
-		height: 64px;
-		border: 1px solid rgba(255, 255, 255, 0.2);
+		width: 52px;
+		height: 52px;
+		border: 1px solid rgba(255, 255, 255, 0.15);
 		background: var(--background-secondary, #2a2a2a);
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		border-radius: 0;
 	}
 
 	.profile-image img {
@@ -262,11 +270,16 @@
 		width: 100%;
 		height: 100%;
 		display: flex;
-		align-items: center;
-		justify-content: center;
+		align-items: flex-start;
+		justify-content: flex-start;
+		padding: 6px 8px;
 		color: var(--text-primary, #ffffff);
-		font-size: 18px;
+		font-size: 11px;
 		font-weight: 500;
+		line-height: 1.2;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		text-transform: lowercase;
 	}
 
 	.author-details {
@@ -276,42 +289,46 @@
 		gap: 4px;
 		min-width: 0;
 		flex: 1;
-		height: 64px;
-		padding-top: 2px;
+		padding-top: 0;
+		width: 100%;
+		overflow: hidden;
 	}
 
 	.author-header {
 		display: flex;
-		align-items: center;
-		gap: 0;
-		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 4px;
+		flex-wrap: nowrap;
+		line-height: 1.4;
+		min-width: 0;
+		width: 100%;
+		overflow: hidden;
 	}
 
 	.author-name {
-		font-weight: 500;
-		font-size: 14px;
+		font-weight: 600;
+		font-size: 15px;
 		color: var(--text-primary, #ffffff);
 		text-decoration: none;
 		white-space: nowrap;
 		transition: color 0.2s ease;
-		margin-right: 6px;
+		flex-shrink: 0;
 	}
 
 	.author-name:hover {
 		color: var(--accent-color, #4a9eff);
 	}
 
-	.username-separator {
-		font-size: 14px;
-		color: var(--text-muted, #999999);
-	}
-
 	.author-username {
-		font-size: 14px;
-		color: var(--text-muted, #999999);
+		font-size: 12px;
+		color: var(--text-muted, #71767a);
 		text-decoration: none;
 		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 		transition: color 0.2s ease;
+		flex-shrink: 1;
+		min-width: 0;
 	}
 
 	.username-text {
@@ -323,27 +340,32 @@
 	}
 
 	.time-separator {
-		font-size: 14px;
-		color: var(--text-muted, #999999);
-		margin: 0 1px;
+		font-size: 12px;
+		color: var(--text-muted, #71767a);
+		flex-shrink: 0;
+		margin: 0 2px;
 	}
 
 	.tweet-time {
-		font-size: 14px;
-		color: var(--text-muted, #999999);
+		font-size: 12px;
+		color: var(--text-primary, #ffffff);
 		white-space: nowrap;
+		flex-shrink: 0;
 	}
 
 	.tweet-content {
 		flex: 1;
 		display: flex;
 		align-items: flex-start;
-		overflow: visible;
+		overflow: hidden;
+		margin-top: 2px;
+		width: 100%;
+		min-width: 0;
 	}
 
 	.tweet-text {
-		font-size: 14px;
-		line-height: 1.3;
+		font-size: 15px;
+		line-height: 1.4;
 		color: var(--text-primary, #ffffff);
 		text-decoration: none;
 		word-wrap: break-word;
@@ -355,7 +377,6 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		width: 100%;
-		max-height: 100%;
 		min-height: 0;
 		flex: 1;
 	}
@@ -372,8 +393,8 @@
 	}
 
 	.default-placeholder .profile-image {
-		width: 64px;
-		height: 64px;
+		width: 52px;
+		height: 52px;
 	}
 
 	.tweet-details {
@@ -411,18 +432,14 @@
 
 	/* Responsive design */
 	@media (max-width: 1024px) {
-		.author-details {
-			height: 60px;
-		}
-
 		.profile-image {
-			width: 60px;
-			height: 60px;
+			width: 48px;
+			height: 48px;
 		}
 
 		.default-placeholder .profile-image {
-			width: 60px;
-			height: 60px;
+			width: 48px;
+			height: 48px;
 		}
 
 		.no-image {
@@ -434,11 +451,15 @@
 		}
 
 		.author-username {
-			font-size: 13px;
+			font-size: 11px;
+		}
+
+		.time-separator {
+			font-size: 11px;
 		}
 
 		.tweet-time {
-			font-size: 13px;
+			font-size: 11px;
 		}
 
 		.tweet-text {
@@ -461,18 +482,14 @@
 	}
 
 	@media (max-width: 900px) {
-		.author-details {
-			height: 58px;
-		}
-
 		.profile-image {
-			width: 58px;
-			height: 58px;
+			width: 46px;
+			height: 46px;
 		}
 
 		.default-placeholder .profile-image {
-			width: 58px;
-			height: 58px;
+			width: 46px;
+			height: 46px;
 		}
 
 		.no-image {
@@ -484,11 +501,15 @@
 		}
 
 		.author-username {
-			font-size: 12px;
+			font-size: 10px;
+		}
+
+		.time-separator {
+			font-size: 10px;
 		}
 
 		.tweet-time {
-			font-size: 12px;
+			font-size: 10px;
 		}
 
 		.tweet-text {
@@ -511,18 +532,14 @@
 	}
 
 	@media (max-width: 768px) {
-		.author-details {
-			height: 56px;
-		}
-
 		.profile-image {
-			width: 56px;
-			height: 56px;
+			width: 44px;
+			height: 44px;
 		}
 
 		.default-placeholder .profile-image {
-			width: 56px;
-			height: 56px;
+			width: 44px;
+			height: 44px;
 		}
 
 		.no-image {
@@ -534,11 +551,15 @@
 		}
 
 		.author-username {
-			font-size: 13px;
+			font-size: 11px;
+		}
+
+		.time-separator {
+			font-size: 11px;
 		}
 
 		.tweet-time {
-			font-size: 13px;
+			font-size: 11px;
 		}
 
 		.tweet-text {
@@ -561,18 +582,14 @@
 	}
 
 	@media (max-width: 600px) {
-		.author-details {
-			height: 52px;
-		}
-
 		.profile-image {
-			width: 52px;
-			height: 52px;
+			width: 40px;
+			height: 40px;
 		}
 
 		.default-placeholder .profile-image {
-			width: 52px;
-			height: 52px;
+			width: 40px;
+			height: 40px;
 		}
 
 		.no-image {
@@ -584,11 +601,15 @@
 		}
 
 		.author-username {
-			font-size: 11px;
+			font-size: 9px;
+		}
+
+		.time-separator {
+			font-size: 9px;
 		}
 
 		.tweet-time {
-			font-size: 11px;
+			font-size: 9px;
 		}
 
 		.tweet-text {
@@ -611,18 +632,14 @@
 	}
 
 	@media (max-width: 480px) {
-		.author-details {
-			height: 48px;
-		}
-
 		.profile-image {
-			width: 48px;
-			height: 48px;
+			width: 38px;
+			height: 38px;
 		}
 
 		.default-placeholder .profile-image {
-			width: 48px;
-			height: 48px;
+			width: 38px;
+			height: 38px;
 		}
 
 		.no-image {
@@ -634,11 +651,15 @@
 		}
 
 		.author-username {
-			font-size: 12px;
+			font-size: 10px;
+		}
+
+		.time-separator {
+			font-size: 10px;
 		}
 
 		.tweet-time {
-			font-size: 12px;
+			font-size: 10px;
 		}
 
 		.tweet-text {
