@@ -17,16 +17,36 @@
 	let { tweetData = $bindable() }: { tweetData?: TweetData | null } = $props();
 	let error: string | null = $state(null);
 	let hasReceivedApiResponse = $state(!!tweetData);
+	let lastTweetId: string | null = $state(tweetData?.tweetId || null);
+	let isPageVisible = $state(true);
 
 	onMount(() => {
-		// Always fetch data on mount
+		// Set initial lastTweetId from props
+		if (tweetData?.tweetId) {
+			lastTweetId = tweetData.tweetId;
+		}
+
 		fetchTweetData();
 		
-		// Set up polling for new tweets every 5 minutes
-		const pollInterval = setInterval(fetchTweetData, 5 * 60 * 1000);
+		const pollInterval = setInterval(() => {
+			if (isPageVisible) {
+				fetchTweetData();
+			}
+		}, 30000);
+		
+		function handleVisibilityChange() {
+			isPageVisible = !document.hidden;
+			
+			if (isPageVisible) {
+				fetchTweetData();
+			}
+		}
+
+		document.addEventListener('visibilitychange', handleVisibilityChange);
 		
 		return () => {
 			clearInterval(pollInterval);
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
 		};
 	});
 
@@ -34,7 +54,6 @@
 		try {
 			error = null;
 			
-			console.log('Fetching tweet data...');
 			const response = await fetch('/api/widgets/latest-tweet');
 			
 			if (!response.ok) {
@@ -42,19 +61,57 @@
 			}
 			
 			const data = await response.json();
-			tweetData = data;
 			hasReceivedApiResponse = true;
 			
 			if (data.tweetId) {
-				console.log(`Latest tweet: ${data.authorName} (@${data.authorUsername}) - ${data.content?.substring(0, 50)}...`);
+				// Check if new tweet
+				if (lastTweetId !== data.tweetId) {
+					lastTweetId = data.tweetId;
+					tweetData = data;
+					console.log(`[TweetWidget] New tweet detected: @${data.authorUsername} - ${data.content?.substring(0, 50)}...`);
+				} else if (tweetData && tweetData.tweetId === data.tweetId) {
+					if (tweetData.lastUpdate !== data.lastUpdate) {
+						tweetData = data;
+					}
+				} else {
+					// First time loading or tweetData is null
+					tweetData = data;
+					lastTweetId = data.tweetId;
+				}
 			} else {
-				console.log('No tweet data available');
+				// No tweet available
+				if (tweetData?.tweetId) {
+					tweetData = {
+						tweetId: null,
+						content: null,
+						authorName: null,
+						authorUsername: null,
+						authorProfileImage: null,
+						authorProfileUrl: null,
+						tweetUrl: null,
+						createdAt: null,
+						lastUpdate: new Date().toISOString()
+					};
+					lastTweetId = null;
+				} else if (!hasReceivedApiResponse) {
+					tweetData = {
+						tweetId: null,
+						content: null,
+						authorName: null,
+						authorUsername: null,
+						authorProfileImage: null,
+						authorProfileUrl: null,
+						tweetUrl: null,
+						createdAt: null,
+						lastUpdate: new Date().toISOString()
+					};
+				}
 			}
 			
 		} catch (err) {
 			console.error('Error fetching tweet data:', err);
 			error = err instanceof Error ? err.message : 'Failed to fetch tweet data';
-			// Only set default data if we haven't received any API response yet
+			// Only set default data if no API response received
 			if (!hasReceivedApiResponse) {
 				tweetData = {
 					tweetId: null,
