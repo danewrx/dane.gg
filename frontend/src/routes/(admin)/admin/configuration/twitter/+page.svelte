@@ -79,6 +79,9 @@
 
 			if (result.configured) {
 				await loadLatestTweet();
+				if (latestTweet?.tweetId) {
+					lastTweetId = latestTweet.tweetId;
+				}
 			}
 		} catch (err) {
 			console.error('Error loading status:', err);
@@ -109,6 +112,10 @@
 						createdAt: result.createdAt,
 						updatedAt: result.lastUpdate
 					};
+					lastTweetId = result.tweetId;
+				} else {
+					latestTweet = null;
+					lastTweetId = null;
 				}
 			}
 		} catch (err) {
@@ -256,13 +263,109 @@
 		}
 	}
 
+	let pollInterval: ReturnType<typeof setInterval> | null = null;
+	let lastTweetId: string | null = null;
+	let isPageVisible = $state(true);
+
+	async function pollForUpdates() {
+		if (!isPageVisible || !status?.configured) {
+			return;
+		}
+
+		try {
+			const statusResponse = await fetch('/api/twitter/status', {
+				credentials: 'include'
+			});
+
+			if (statusResponse.ok) {
+				const statusResult = await statusResponse.json();
+				
+				if (status && statusResult.connection) {
+					const oldConnected = status.connection?.connected;
+					const newConnected = statusResult.connection.connected;
+					
+					if (oldConnected !== newConnected || statusResult.username !== status.username) {
+						status = statusResult;
+					}
+				}
+			}
+
+			// Check for new latest tweet
+			const tweetResponse = await fetch('/api/widgets/latest-tweet', {
+				credentials: 'include'
+			});
+
+			if (tweetResponse.ok) {
+				const tweetResult = await tweetResponse.json();
+				
+				if (tweetResult.tweetId) {
+					// Check if tweet ID changed
+					if (lastTweetId !== tweetResult.tweetId) {
+						lastTweetId = tweetResult.tweetId;
+						
+						// Update latest tweet
+						latestTweet = {
+							id: tweetResult.tweetId,
+							tweetId: tweetResult.tweetId,
+							content: tweetResult.content,
+							authorName: tweetResult.authorName,
+							authorUsername: tweetResult.authorUsername,
+							authorProfileImage: tweetResult.authorProfileImage,
+							authorProfileUrl: tweetResult.authorProfileUrl,
+							tweetUrl: tweetResult.tweetUrl,
+							createdAt: tweetResult.createdAt,
+							updatedAt: tweetResult.lastUpdate
+						};
+						await loadAllTweets();
+					} else if (latestTweet && latestTweet.tweetId === tweetResult.tweetId) {
+						if (latestTweet.updatedAt !== tweetResult.lastUpdate) {
+							latestTweet = {
+								...latestTweet,
+								content: tweetResult.content,
+								updatedAt: tweetResult.lastUpdate
+							};
+						}
+					}
+				} else if (latestTweet) {
+					latestTweet = null;
+					lastTweetId = null;
+				}
+			}
+		} catch (err) {
+			console.debug('Polling update failed:', err);
+		}
+	}
+
+	// Handle page visibility changes
+	function handleVisibilityChange() {
+		isPageVisible = !document.hidden;
+		
+		if (isPageVisible && status?.configured) {
+			pollForUpdates();
+		}
+	}
+
 	onMount(() => {
 		loadStatus();
 		setTimeout(() => {
 			if (status?.configured) {
 				loadAllTweets();
+				if (latestTweet?.tweetId) {
+					lastTweetId = latestTweet.tweetId;
+				}
 			}
 		}, 1000);
+
+		pollInterval = setInterval(pollForUpdates, 30000);
+
+		document.addEventListener('visibilitychange', handleVisibilityChange);
+
+		return () => {
+			if (pollInterval) {
+				clearInterval(pollInterval);
+			}
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
+		};
 	});
 </script>
 
