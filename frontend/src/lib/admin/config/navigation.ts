@@ -33,6 +33,13 @@ export const adminNavigation: NavigationItem[] = [
 		description: 'Site configuration and settings'
 	},
 	{
+		id: 'blog',
+		label: 'Blog',
+		icon: FileText,
+		path: '/admin/blog',
+		description: 'Manage blog posts'
+	},
+	{
 		id: 'settings',
 		label: 'Settings',
 		icon: Sliders,

@@ -578,7 +578,7 @@
 		width: 40px;
 		height: 40px;
 		border: 3px solid var(--border-color, #3a3a3a);
-		border-top-color: var(--accent-color, #6366f1);
+		border-top-color: var(--accent-color);
 		border-radius: 50%;
 		animation: spin 1s linear infinite;
 	}
@@ -644,8 +644,8 @@
 
 	.refresh-button:hover:not(:disabled) {
 		background: var(--bg-secondary, #2d2d2d);
-		border-color: var(--accent-color, #6366f1);
-		color: var(--accent-color, #6366f1);
+		border-color: var(--accent-color);
+		color: var(--accent-color);
 	}
 
 	.refresh-button:disabled {
@@ -835,12 +835,13 @@
 	}
 
 	.btn-primary {
-		background: var(--accent-color, #6366f1);
-		color: #ffffff;
+		background: var(--accent-color);
+		color: var(--accent-color-contrast, #ffffff);
 	}
 
 	.btn-primary:hover:not(:disabled) {
-		background: var(--accent-color-hover, #4f46e5);
+		background: var(--accent-color-dark);
+		color: var(--accent-color-dark-contrast, #ffffff);
 	}
 
 	.btn:disabled {
@@ -895,13 +896,13 @@
 	}
 
 	.monitor-item:hover {
-		border-color: var(--accent-color, #6366f1);
+		border-color: var(--accent-color);
 		background: var(--bg-tertiary, #3a3a3a);
 	}
 
 	.monitor-item.selected {
-		border-color: var(--accent-color, #6366f1);
-		background: rgba(99, 102, 241, 0.1);
+		border-color: var(--accent-color);
+		background: var(--accent-color-light);
 	}
 
 	.monitor-checkbox {
@@ -1036,7 +1037,7 @@
 		width: 100%;
 		padding: 6px 10px;
 		background: var(--bg-secondary, #2d2d2d);
-		border: 1px solid var(--accent-color, #6366f1);
+		border: 1px solid var(--accent-color);
 		border-radius: 4px;
 		color: var(--text-primary, #ffffff);
 		font-size: 14px;
@@ -1048,8 +1049,8 @@
 
 	.selected-monitor-edit-input:focus {
 		outline: none;
-		border-color: var(--accent-color, #6366f1);
-		box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+		border-color: var(--accent-color);
+		box-shadow: 0 0 0 2px var(--accent-color-medium);
 	}
 
 	.selected-monitor-actions {
@@ -1088,8 +1089,8 @@
 
 	.icon-button:hover {
 		background: var(--bg-secondary, #2d2d2d);
-		border-color: var(--accent-color, #6366f1);
-		color: var(--accent-color, #6366f1);
+		border-color: var(--accent-color);
+		color: var(--accent-color);
 	}
 
 	.icon-button:active {
