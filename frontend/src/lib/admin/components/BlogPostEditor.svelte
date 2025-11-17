@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { Save, Upload, X, Settings, ChevronDown } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import MarkdownEditor from './MarkdownEditor.svelte';
@@ -50,14 +50,49 @@
 	let saving = $state(false);
 	let autoSlug = $state(true);
 
+	// Autosave state
+	let autosaveStatus = $state<'idle' | 'saving' | 'saved' | 'error'>('idle');
+	let lastSavedAt = $state<Date | null>(null); // Last remote save
+	let lastLocalSaveAt = $state<Date | null>(null); // Last local autosave
+	let autosaveTimer: ReturnType<typeof setTimeout> | null = null;
+	let countdownTimer: ReturnType<typeof setInterval> | null = null;
+	let countdownSeconds = $state<number | null>(null);
+	let draftPostId = $state<string | null>(null);
+	let hasUnsavedChanges = $state(false);
+	let isInitialLoad = $state(true);
+	let isLoadingFromDatabase = $state(false);
+	let loadedBaseline = $state<{ title: string; slug: string; content: string; thumbnail: string; published: boolean; tags: string[] } | null>(null);
+	
+	// Track restore prompt state
+	let showRestorePrompt = $state(false);
+	let databasePostData = $state<BlogPost | null>(null);
+
 	onMount(async () => {
 		await loadAvailableTags();
 	});
 
 	$effect(() => {
 		if (postId && postId !== 'new') {
+			isInitialLoad = true;
+			isLoadingFromDatabase = true;
+			
+			// Clear any existing autosave timers
+			if (autosaveTimer) {
+				clearTimeout(autosaveTimer);
+				autosaveTimer = null;
+			}
+			if (countdownTimer) {
+				clearInterval(countdownTimer);
+				countdownTimer = null;
+			}
+			countdownSeconds = null;
+			
 			loadPost();
+			draftPostId = postId;
+			showRestorePrompt = false;
+			databasePostData = null;
 		} else {
+			isInitialLoad = true;
 			title = '';
 			slug = '';
 			content = '';
@@ -71,7 +106,99 @@
 			overwriteCreatedDate = false;
 			newCreatedDate = '';
 			newCreatedTime = '';
+			draftPostId = null;
+			autosaveStatus = 'idle';
+			lastSavedAt = null;
+			lastLocalSaveAt = null;
+			hasUnsavedChanges = false;
+			showRestorePrompt = false;
+			databasePostData = null;
+			loadedBaseline = null;
+			countdownSeconds = null;
+			if (countdownTimer) {
+				clearInterval(countdownTimer);
+				countdownTimer = null;
+			}
+			
+			setTimeout(() => {
+				isInitialLoad = false;
+			}, 100);
 		}
+	});
+
+	// Autosave effect - watches for changes to form fields
+                       
+	$effect(() => {
+		// Skip autosave if loading, saving manually, during initial load, loading from database
+		if (loading || saving || isInitialLoad || isLoadingFromDatabase) return;
+
+		// Reference all form fields to ensure tracked
+		const _ = title + slug + content + thumbnail + published + tags.join(',');
+
+		if (!title.trim() && !content.trim()) return;
+
+		if (loadedBaseline) {
+			const tagsChanged = JSON.stringify([...tags].sort()) !== JSON.stringify([...loadedBaseline.tags].sort());
+			const valuesChanged = 
+				title !== loadedBaseline.title ||
+				slug !== loadedBaseline.slug ||
+				content !== loadedBaseline.content ||
+				(thumbnail || '') !== loadedBaseline.thumbnail ||
+				published !== loadedBaseline.published ||
+				tagsChanged;
+			
+			if (!valuesChanged) return;
+		}
+
+		// For new posts, use a temporary key. For existing posts, use the post ID
+		const saveId = draftPostId || postId || 'new';
+
+		hasUnsavedChanges = true;
+
+		// Clear existing timers
+		if (autosaveTimer) {
+			clearTimeout(autosaveTimer);
+		}
+		if (countdownTimer) {
+			clearInterval(countdownTimer);
+			countdownTimer = null;
+		}
+
+		// Start countdown from 3 seconds
+		countdownSeconds = 3;
+		
+		// Update countdown every second
+		countdownTimer = setInterval(() => {
+			if (countdownSeconds !== null && countdownSeconds > 0) {
+				countdownSeconds--;
+			} else {
+				// Countdown finished, clear it
+				if (countdownTimer) {
+					clearInterval(countdownTimer);
+					countdownTimer = null;
+				}
+				countdownSeconds = null;
+			}
+		}, 1000);
+
+		// Set new timer for autosave (3 second debounce to match countdown)
+		autosaveTimer = setTimeout(() => {
+			if (countdownTimer) {
+				clearInterval(countdownTimer);
+				countdownTimer = null;
+			}
+			countdownSeconds = null;
+			performAutosave();
+		}, 3000);
+
+		return () => {
+			if (autosaveTimer) {
+				clearTimeout(autosaveTimer);
+			}
+			if (countdownTimer) {
+				clearInterval(countdownTimer);
+			}
+		};
 	});
 
 	async function loadAvailableTags() {
@@ -87,11 +214,140 @@
 			loading = true;
 			if (!postId) return;
 			const post = await getBlogPost(postId);
-			title = post.title;
-			slug = post.slug;
-			content = post.content;
-			thumbnail = post.thumbnail || '';
-			// Determine if thumbnail is external or upload
+			
+			// Check localStorage for autosaved version
+			const autosaveKey = `blog_autosave_${post.id}`;
+			let autosaveData: any = null;
+			try {
+				const autosaveStr = localStorage.getItem(autosaveKey);
+				if (autosaveStr) {
+					autosaveData = JSON.parse(autosaveStr);
+					
+					const dbTags = [...post.tags.map(t => t.name)].sort().join(',');
+					const autosaveTags = [...(autosaveData.tags || [])].sort().join(',');
+					
+					const contentMatches = 
+						autosaveData.title === post.title &&
+						autosaveData.slug === post.slug &&
+						autosaveData.content === post.content &&
+						(autosaveData.thumbnail || '') === (post.thumbnail || '') &&
+						autosaveData.published === post.published &&
+						dbTags === autosaveTags;
+					
+					if (contentMatches) {
+						localStorage.removeItem(autosaveKey);
+						lastLocalSaveAt = null;
+					} else {
+						lastLocalSaveAt = new Date(autosaveData.timestamp);
+						const autosaveTime = new Date(autosaveData.timestamp).getTime();
+						const dbUpdateTime = new Date(post.updatedAt).getTime();
+						
+						// If localStorage has a newer autosave than the database, prompt to restore
+						if (autosaveTime > dbUpdateTime) {
+							databasePostData = {
+								...post,
+								title: autosaveData.title,
+								slug: autosaveData.slug,
+								content: autosaveData.content,
+								thumbnail: autosaveData.thumbnail,
+								published: autosaveData.published,
+								tags: autosaveData.tags.map((name: string) => ({ id: '', name })),
+								updatedAt: autosaveData.timestamp
+							};
+							showRestorePrompt = true;
+						} else {
+							localStorage.removeItem(autosaveKey);
+							lastLocalSaveAt = null;
+						}
+					}
+				} else {
+					lastLocalSaveAt = null;
+				}
+			} catch (e) {
+				// Ignore localStorage errors
+				console.warn('Could not check localStorage for autosave:', e);
+				lastLocalSaveAt = null;
+			}
+			
+			// Always load the post data from database (not from autosave)
+			// User will see the prompt if there's a newer autosave
+			untrack(() => {
+				title = post.title;
+				slug = post.slug;
+				content = post.content;
+				thumbnail = post.thumbnail || '';
+				// Determine if thumbnail is external or upload
+				if (thumbnail) {
+					thumbnailIsExternal = thumbnail.startsWith('http://') || thumbnail.startsWith('https://');
+					if (!thumbnailIsExternal && thumbnail.startsWith('/uploads/')) {
+						thumbnailFilename = thumbnail.replace('/uploads/', '');
+					} else {
+						thumbnailFilename = null;
+					}
+				} else {
+					thumbnailIsExternal = false;
+					thumbnailFilename = null;
+				}
+				published = post.published;
+				tags = post.tags.map(t => t.name);
+				createdAt = post.createdAt;
+				const { date, time } = splitDateTime(post.createdAt);
+				newCreatedDate = date;
+				newCreatedTime = time;
+				autoSlug = false;
+				draftPostId = post.id;
+				hasUnsavedChanges = false;
+				autosaveStatus = 'idle';
+				lastSavedAt = new Date(post.updatedAt);
+				
+				// Store baseline values to compare against for autosave
+				loadedBaseline = {
+					title: post.title,
+					slug: post.slug,
+					content: post.content,
+					thumbnail: post.thumbnail || '',
+					published: post.published,
+					tags: post.tags.map(t => t.name)
+				};
+			});
+			
+			setTimeout(() => {
+				isInitialLoad = false;
+				setTimeout(() => {
+					isLoadingFromDatabase = false;
+				}, 100);
+			}, 300);
+		} catch (err) {
+			console.error('Error loading post:', err);
+			toast.error('Failed to load post', {
+				description: 'Please try again'
+			});
+			isInitialLoad = false;
+			isLoadingFromDatabase = false;
+		} finally {
+			loading = false;
+		}
+	}
+	
+	async function handleRestoreAutosave() {
+		if (!databasePostData || !postId) return;
+		
+		try {
+			saving = true;
+			
+			await updateBlogPost(postId, {
+				title: databasePostData.title,
+				slug: databasePostData.slug,
+				content: databasePostData.content,
+				thumbnail: databasePostData.thumbnail || undefined,
+				published: databasePostData.published,
+				tags: databasePostData.tags.map(t => t.name)
+			});
+			
+			title = databasePostData.title;
+			slug = databasePostData.slug;
+			content = databasePostData.content;
+			thumbnail = databasePostData.thumbnail || '';
 			if (thumbnail) {
 				thumbnailIsExternal = thumbnail.startsWith('http://') || thumbnail.startsWith('https://');
 				if (!thumbnailIsExternal && thumbnail.startsWith('/uploads/')) {
@@ -103,20 +359,115 @@
 				thumbnailIsExternal = false;
 				thumbnailFilename = null;
 			}
-			published = post.published;
-			tags = post.tags.map(t => t.name);
-			createdAt = post.createdAt;
-			const { date, time } = splitDateTime(post.createdAt);
-			newCreatedDate = date;
-			newCreatedTime = time;
-			autoSlug = false;
-		} catch (err) {
-			console.error('Error loading post:', err);
-			toast.error('Failed to load post', {
-				description: 'Please try again'
+			published = databasePostData.published;
+			tags = databasePostData.tags.map(t => t.name);
+			
+			try {
+				localStorage.removeItem(`blog_autosave_${postId}`);
+			} catch (e) {
+				// Ignore localStorage errors
+			}
+			
+			lastSavedAt = new Date();
+			lastLocalSaveAt = null;
+			hasUnsavedChanges = false;
+			showRestorePrompt = false;
+			databasePostData = null;
+			
+			toast.success('Autosave restored and saved', {
+				description: 'Your last autosave has been restored and saved to the database'
+			});
+		} catch (err: any) {
+			console.error('Error restoring autosave:', err);
+			toast.error('Failed to restore autosave', {
+				description: err.message || 'Please try again'
 			});
 		} finally {
-			loading = false;
+			saving = false;
+		}
+	}
+	
+	function handleDismissRestore() {
+		const saveId = postId || draftPostId;
+		if (saveId) {
+			try {
+				localStorage.removeItem(`blog_autosave_${saveId}`);
+				lastLocalSaveAt = null;
+			} catch (e) {
+				// Ignore localStorage errors
+				console.warn('Could not clear localStorage autosave:', e);
+			}
+		}
+		showRestorePrompt = false;
+		databasePostData = null;
+	}
+
+	function performAutosave() {
+		if (!hasUnsavedChanges) return;
+
+		if (saving) return;
+
+		// For new posts, use a temporary key. For existing posts, use the post ID
+		const saveId = draftPostId || postId || 'new';
+
+		// Clear countdown
+		if (countdownTimer) {
+			clearInterval(countdownTimer);
+			countdownTimer = null;
+		}
+		countdownSeconds = null;
+
+		try {
+			autosaveStatus = 'saving';
+
+			// Generate slug for new posts if autoSlug is enabled and slug is empty
+			let finalSlug = slug.trim();
+			if (isNewPost && autoSlug && !finalSlug && title.trim()) {
+				finalSlug = generateSlug(title);
+			}
+
+			// Save to localStorage only
+			const autosaveData = {
+				title: title.trim(),
+				slug: finalSlug,
+				content: content.trim(),
+				thumbnail: thumbnail.trim() || '',
+				published: published,
+				tags: tags,
+				timestamp: new Date().toISOString()
+			};
+			
+			try {
+				localStorage.setItem(`blog_autosave_${saveId}`, JSON.stringify(autosaveData));
+				autosaveStatus = 'saved';
+				lastLocalSaveAt = new Date(); // Update local save time
+				hasUnsavedChanges = false;
+
+				// Reset status to idle after 3 seconds
+				setTimeout(() => {
+					if (autosaveStatus === 'saved') {
+						autosaveStatus = 'idle';
+					}
+				}, 3000);
+			} catch (e) {
+				console.warn('Could not save to localStorage:', e);
+				autosaveStatus = 'error';
+				// Reset error status after 5 seconds
+				setTimeout(() => {
+					if (autosaveStatus === 'error') {
+						autosaveStatus = 'idle';
+					}
+				}, 5000);
+			}
+		} catch (err: any) {
+			console.error('Error autosaving:', err);
+			autosaveStatus = 'error';
+			// Reset error status after 5 seconds
+			setTimeout(() => {
+				if (autosaveStatus === 'error') {
+					autosaveStatus = 'idle';
+				}
+			}, 5000);
 		}
 	}
 
@@ -193,26 +544,36 @@
 	}
 
 	async function handleSave() {
+		// Clear autosave timer
+		if (autosaveTimer) {
+			clearTimeout(autosaveTimer);
+			autosaveTimer = null;
+		}
+
 		try {
 			saving = true;
+			autosaveStatus = 'saving';
 
 			// Validation
 			if (!title.trim()) {
 				toast.error('Title is required', {
 					description: 'Please enter a title for your post'
 				});
+				autosaveStatus = 'idle';
 				return;
 			}
 			if (!slug.trim()) {
 				toast.error('Slug is required', {
 					description: 'Please enter a URL slug for your post'
 				});
+				autosaveStatus = 'idle';
 				return;
 			}
 			if (!content.trim()) {
 				toast.error('Content is required', {
 					description: 'Please add some content to your post'
 				});
+				autosaveStatus = 'idle';
 				return;
 			}
 
@@ -229,17 +590,54 @@
 				postData.createdAt = combineDateTime(newCreatedDate, newCreatedTime);
 			}
 
-			if (isNewPost) {
-				await createBlogPost(postData);
+			const saveId = draftPostId || postId;
+
+			if (isNewPost && !draftPostId) {
+				const savedPost = await createBlogPost(postData);
+				draftPostId = savedPost.id;
+				
+				try {
+					const newAutosave = localStorage.getItem('blog_autosave_new');
+					if (newAutosave) {
+						localStorage.setItem(`blog_autosave_${savedPost.id}`, newAutosave);
+						localStorage.removeItem('blog_autosave_new');
+					}
+				} catch (e) {
+					// Ignore localStorage errors
+				}
+				
 				toast.success('Post created!', {
 					description: `"${title}" has been created successfully`
 				});
 			} else {
-				if (!postId) return;
-				await updateBlogPost(postId, postData);
+				if (!saveId) return;
+				await updateBlogPost(saveId, postData);
 				toast.success('Post updated!', {
 					description: `"${title}" has been updated successfully`
 				});
+			}
+
+			autosaveStatus = 'saved';
+			lastSavedAt = new Date();
+			hasUnsavedChanges = false;
+
+			// Update baseline to current values after manual save
+			loadedBaseline = {
+				title: title.trim(),
+				slug: slug.trim(),
+				content: content.trim(),
+				thumbnail: thumbnail.trim() || '',
+				published: published,
+				tags: [...tags]
+			};
+
+			// Clear localStorage autosave
+			const autosaveKey = draftPostId || postId || 'new';
+			try {
+				localStorage.removeItem(`blog_autosave_${autosaveKey}`);
+				lastLocalSaveAt = null;
+			} catch (e) {
+				// Ignore localStorage errors
 			}
 
 			dispatch('save');
@@ -249,6 +647,7 @@
 			toast.error('Failed to save post', {
 				description: err.message || 'Please try again'
 			});
+			autosaveStatus = 'error';
 		} finally {
 			saving = false;
 		}
@@ -315,6 +714,83 @@
 		</div>
 	{:else}
 		<div class="editor-form">
+			<!-- Autosave Status -->
+			<div class="autosave-status">
+				{#if autosaveStatus === 'saving'}
+					<span class="status-indicator saving">
+						<div class="status-spinner"></div>
+						<span>Saving...</span>
+					</span>
+				{:else if autosaveStatus === 'error'}
+					<span class="status-indicator error">
+						<span>Save failed</span>
+						<div class="status-times">
+							{#if lastSavedAt}
+								<span class="status-time">
+									Remote: {new Date(lastSavedAt).toLocaleString()}
+								</span>
+							{/if}
+							{#if lastLocalSaveAt}
+								<span class="status-time">
+									Local: {new Date(lastLocalSaveAt).toLocaleString()}
+								</span>
+							{/if}
+						</div>
+					</span>
+				{:else if countdownSeconds !== null && countdownSeconds > 0}
+					<span class="status-indicator countdown">
+						<span>Saving in {countdownSeconds}...</span>
+						<div class="status-times">
+							{#if lastSavedAt}
+								<span class="status-time">
+									Remote: {new Date(lastSavedAt).toLocaleString()}
+								</span>
+							{/if}
+							{#if lastLocalSaveAt}
+								<span class="status-time">
+									Local: {new Date(lastLocalSaveAt).toLocaleString()}
+								</span>
+							{/if}
+						</div>
+					</span>
+				{:else if hasUnsavedChanges}
+					<span class="status-indicator idle">
+						<span>Unsaved changes</span>
+						<div class="status-times">
+							{#if lastSavedAt}
+								<span class="status-time">
+									Remote: {new Date(lastSavedAt).toLocaleString()}
+								</span>
+							{/if}
+							{#if lastLocalSaveAt}
+								<span class="status-time">
+									Local: {new Date(lastLocalSaveAt).toLocaleString()}
+								</span>
+							{/if}
+						</div>
+					</span>
+				{:else if lastSavedAt || lastLocalSaveAt}
+					<span class="status-indicator saved">
+						<div class="status-times">
+							{#if lastSavedAt}
+								<span class="status-time">
+									Remote: {new Date(lastSavedAt).toLocaleString()}
+								</span>
+							{/if}
+							{#if lastLocalSaveAt}
+								<span class="status-time">
+									Local: {new Date(lastLocalSaveAt).toLocaleString()}
+								</span>
+							{/if}
+						</div>
+					</span>
+				{:else}
+					<span class="status-indicator idle">
+						<span>Not saved yet</span>
+					</span>
+				{/if}
+			</div>
+
 			<!-- Title -->
 			<div class="form-group">
 				<label for="title">Title</label>
@@ -509,6 +985,44 @@
 <!-- Tag Manager Dialog -->
 {#if showTagManager}
 	<TagManager on:close={closeTagManager} on:tagsUpdated={handleTagsUpdated} />
+{/if}
+
+<!-- Restore Autosave Prompt -->
+{#if showRestorePrompt && databasePostData}
+	<div 
+		class="restore-prompt-overlay" 
+		onclick={handleDismissRestore}
+		onkeydown={(e) => e.key === 'Enter' && handleDismissRestore()}
+		role="button"
+		tabindex="0"
+		aria-label="Close restore prompt"
+	>
+		<div 
+			class="restore-prompt" 
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="restore-prompt-title"
+			tabindex="0"
+		>
+			<div class="prompt-header">
+				<h3 id="restore-prompt-title">Unsaved Changes Detected</h3>
+			</div>
+			<div class="prompt-content">
+				<p>This post was autosaved locally on <strong>{new Date(databasePostData.updatedAt).toLocaleString()}</strong>.</p>
+				<p>Would you like to restore and save the autosaved version to the database?</p>
+			</div>
+			<div class="prompt-actions">
+				<button type="button" class="button button-secondary" onclick={handleDismissRestore}>
+					Continue with current version
+				</button>
+				<button type="button" class="button button-primary" onclick={handleRestoreAutosave}>
+					Restore autosave
+				</button>
+			</div>
+		</div>
+	</div>
 {/if}
 
 <style>
@@ -926,6 +1440,128 @@
 		border-top: 2px solid white;
 		border-radius: 50%;
 		animation: spin 0.8s linear infinite;
+	}
+
+	.autosave-status {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		padding: 8px 0;
+		min-height: 32px;
+	}
+
+	.status-indicator {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 4px;
+		font-size: 13px;
+		color: var(--text-secondary, #a1a1aa);
+	}
+
+	.status-indicator.saving {
+		flex-direction: row;
+		color: var(--accent-color, #6366f1);
+	}
+
+	.status-times {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 2px;
+		margin-top: 2px;
+	}
+
+	.status-indicator.saved {
+		color: #10b981;
+	}
+
+	.status-indicator.error {
+		color: #ef4444;
+	}
+
+	.status-indicator.idle {
+		color: var(--text-secondary, #a1a1aa);
+	}
+
+	.status-indicator.countdown {
+		color: var(--accent-color, #6366f1);
+		font-weight: 500;
+	}
+
+	.status-spinner {
+		width: 12px;
+		height: 12px;
+		border: 2px solid var(--accent-color, #6366f1);
+		border-top: 2px solid transparent;
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	.status-time {
+		font-size: 11px;
+		opacity: 0.7;
+	}
+
+	.restore-prompt-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.7);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 1000;
+		backdrop-filter: blur(4px);
+	}
+
+	.restore-prompt {
+		background: var(--bg-secondary, #2d2d2d);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 12px;
+		padding: 24px;
+		max-width: 500px;
+		width: 90%;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+	}
+
+	.prompt-header {
+		margin-bottom: 16px;
+	}
+
+	.prompt-header h3 {
+		color: var(--text-primary, #ffffff);
+		font-size: 20px;
+		font-weight: 600;
+		margin: 0;
+	}
+
+	.prompt-content {
+		margin-bottom: 24px;
+	}
+
+	.prompt-content p {
+		color: var(--text-secondary, #a1a1aa);
+		font-size: 14px;
+		line-height: 1.6;
+		margin: 0 0 12px 0;
+	}
+
+	.prompt-content p:last-child {
+		margin-bottom: 0;
+	}
+
+	.prompt-content strong {
+		color: var(--text-primary, #ffffff);
+		font-weight: 600;
+	}
+
+	.prompt-actions {
+		display: flex;
+		gap: 12px;
+		justify-content: flex-end;
 	}
 </style>
 

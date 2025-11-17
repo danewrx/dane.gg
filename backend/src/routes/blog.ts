@@ -74,7 +74,17 @@ router.get('/', async (req, res) => {
 router.get('/admin/all', requireAdmin, async (req, res) => {
   try {
     const allPosts = await db
-      .select()
+      .select({
+        id: posts.id,
+        title: posts.title,
+        slug: posts.slug,
+        content: posts.content,
+        thumbnail: posts.thumbnail,
+        published: posts.published,
+        publishedAt: posts.publishedAt,
+        createdAt: posts.createdAt,
+        updatedAt: posts.updatedAt
+      })
       .from(posts)
       .orderBy(desc(posts.createdAt));
 
@@ -118,7 +128,17 @@ router.get('/admin/:id', requireAdmin, async (req, res) => {
     const { id } = req.params;
 
     const [post] = await db
-      .select()
+      .select({
+        id: posts.id,
+        title: posts.title,
+        slug: posts.slug,
+        content: posts.content,
+        thumbnail: posts.thumbnail,
+        published: posts.published,
+        publishedAt: posts.publishedAt,
+        createdAt: posts.createdAt,
+        updatedAt: posts.updatedAt
+      })
       .from(posts)
       .where(eq(posts.id, id))
       .limit(1);
@@ -163,18 +183,34 @@ router.post('/admin', requireAdmin, async (req, res) => {
   try {
     const { title, slug, content, thumbnail, published, tags: tagNames } = req.body;
 
-    if (!title || !slug || !content) {
+    if (!title?.trim()) {
       return res.status(400).json({
         success: false,
-        error: 'Title, slug, and content are required'
+        error: 'Title is required'
       });
     }
+    if (!slug?.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Slug is required'
+      });
+    }
+    if (!content?.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Content is required'
+      });
+    }
+
+    const finalTitle = title.trim();
+    const finalSlug = slug.trim();
+    const finalContent = content.trim();
 
     // Check if slug exists
     const [existingPost] = await db
       .select()
       .from(posts)
-      .where(eq(posts.slug, slug))
+      .where(eq(posts.slug, finalSlug))
       .limit(1);
 
     if (existingPost) {
@@ -184,16 +220,17 @@ router.post('/admin', requireAdmin, async (req, res) => {
       });
     }
 
+    const now = new Date();
     const [newPost] = await db
       .insert(posts)
       .values({
-        title,
-        slug,
-        content,
+        title: finalTitle,
+        slug: finalSlug,
+        content: finalContent,
         thumbnail: thumbnail || null,
         published: published || false,
-        publishedAt: published ? new Date() : null,
-        updatedAt: new Date()
+        publishedAt: published ? now : null,
+        updatedAt: now
       })
       .returning();
 
