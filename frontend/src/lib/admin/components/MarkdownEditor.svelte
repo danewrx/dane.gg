@@ -15,8 +15,10 @@
 		Heading3,
 		Quote,
 		Eye,
-		EyeOff
+		EyeOff,
+		X
 	} from 'lucide-svelte';
+	import FileUpload, { type UploadedFile } from './ui/FileUpload.svelte';
 
 	type ToolType = 
 		| 'heading1' | 'heading2' | 'heading3'
@@ -57,6 +59,9 @@
 	const hasAnyTool = (tools: ToolType[]) => tools.some(tool => enabledTools.includes(tool));
 
 	let showPreview = $state(false);
+	let showImageUploadModal = $state(false);
+	let imageAltText = $state('');
+	let imageInsertPosition = $state<{ start: number; end: number } | null>(null);
 	
 	$effect(() => {
 		if (!hasTool('preview')) {
@@ -612,17 +617,53 @@
 
 	function insertImage() {
 		const { start, end, text } = getSelection();
+		imageAltText = text || '';
+		imageInsertPosition = { start, end };
+		showImageUploadModal = true;
+	}
+
+	function formatImagePath(path: string, isExternal: boolean): string {
+		if (isExternal || path.startsWith('http://') || path.startsWith('https://')) {
+			return path;
+		}
+		// If starts with /uploads/, serve through the API
+		if (path.startsWith('/uploads/')) {
+			const filename = path.replace('/uploads/', '');
+			return `/api/upload/file/${filename}`;
+		}
+		return path;
+	}
+
+	function handleImageUpload(file: UploadedFile | UploadedFile[]) {
+		const uploadedFile = Array.isArray(file) ? file[0] : file;
+		if (!uploadedFile || !imageInsertPosition) return;
+
+		const { start, end } = imageInsertPosition;
 		const editorValue = getEditorValue();
-		const altText = text || 'image';
-		const newText = `![${altText}](image-url)`;
+		const altText = imageAltText || uploadedFile.originalName || 'image';
+		
+		const imagePath = formatImagePath(uploadedFile.path, uploadedFile.isExternal || false);
+		
+		const newText = `![${altText}](${imagePath})`;
 		const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
 		handleValueChange(newValue);
 		
+		showImageUploadModal = false;
+		imageAltText = '';
+		imageInsertPosition = null;
+		
 		setTimeout(() => {
 			textarea.focus();
-			const urlStart = start + altText.length + 4;
-			textarea.setSelectionRange(urlStart, urlStart + 9);
+			const newStart = start + newText.length;
+			textarea.setSelectionRange(newStart, newStart);
+			updateActiveFormats();
 		}, 0);
+	}
+
+	function closeImageUploadModal() {
+		showImageUploadModal = false;
+		imageAltText = '';
+		imageInsertPosition = null;
 	}
 
 	function insertUnderline() {
@@ -792,6 +833,61 @@
 		{/if}
 	</div>
 </div>
+
+<!-- Image Upload Modal -->
+{#if showImageUploadModal}
+	<div 
+		class="image-upload-modal-overlay" 
+		onclick={closeImageUploadModal}
+		onkeydown={(e) => e.key === 'Escape' && closeImageUploadModal()}
+		role="button"
+		tabindex="0"
+		aria-label="Close image upload modal"
+	>
+		<div 
+			class="image-upload-modal" 
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="image-upload-title"
+			tabindex="0"
+		>
+			<div class="modal-header">
+				<h3 id="image-upload-title">Upload Image</h3>
+				<button
+					type="button"
+					class="modal-close-button"
+					onclick={closeImageUploadModal}
+					aria-label="Close"
+				>
+					<X size={20} />
+				</button>
+			</div>
+			<div class="modal-content">
+				<div class="form-group">
+					<label for="image-alt-text">Alt Text (optional)</label>
+					<input
+						type="text"
+						id="image-alt-text"
+						class="form-input"
+						bind:value={imageAltText}
+						placeholder="Describe the image"
+					/>
+				</div>
+				<FileUpload
+					acceptedTypes={['image']}
+					maxSize={10 * 1024 * 1024}
+					multiple={false}
+					label="Upload Image"
+					showPreview={true}
+					onUpload={handleImageUpload}
+					allowExternalUrl={true}
+				/>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <style>
 	.markdown-editor {
@@ -1062,6 +1158,101 @@
 
 	.preview-content :global(del) {
 		text-decoration: line-through;
+	}
+
+	/* Image Upload Modal */
+	.image-upload-modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.7);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 1000;
+		backdrop-filter: blur(4px);
+	}
+
+	.image-upload-modal {
+		background: var(--bg-secondary, #2d2d2d);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 12px;
+		padding: 24px;
+		max-width: 600px;
+		width: 90%;
+		max-height: 90vh;
+		overflow-y: auto;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+	}
+
+	.modal-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 20px;
+	}
+
+	.modal-header h3 {
+		color: var(--text-primary, #ffffff);
+		font-size: 20px;
+		font-weight: 600;
+		margin: 0;
+	}
+
+	.modal-close-button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		background: transparent;
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		color: var(--text-secondary, #a1a1aa);
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.modal-close-button:hover {
+		background: var(--bg-tertiary, #3a3a3a);
+		border-color: var(--accent-color, #6366f1);
+		color: var(--text-primary, #ffffff);
+	}
+
+	.modal-content {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+	}
+
+	.modal-content .form-group {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.modal-content .form-group label {
+		color: var(--text-primary, #ffffff);
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	.modal-content .form-input {
+		padding: 10px 14px;
+		background: var(--bg-tertiary, #3a3a3a);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		color: var(--text-primary, #ffffff);
+		font-size: 14px;
+		transition: all 0.2s ease;
+	}
+
+	.modal-content .form-input:focus {
+		outline: none;
+		border-color: var(--accent-color, #6366f1);
+		background: var(--bg-secondary, #2d2d2d);
 	}
 
 	/* Responsive */
