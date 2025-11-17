@@ -481,7 +481,22 @@
 
 	function handleSlugChange(e: Event) {
 		const target = e.target as HTMLInputElement;
-		slug = target.value;
+		let value = target.value;
+		
+		// Replace spaces with hyphens
+		value = value.replace(/\s+/g, '-');
+		
+		// Only allow alphanumeric characters and hyphens
+		// Remove any invalid characters
+		value = value.replace(/[^a-zA-Z0-9-]/g, '');
+		
+		// Remove consecutive hyphens
+		value = value.replace(/-+/g, '-');
+		
+		// Remove leading and trailing hyphens
+		value = value.replace(/^-+|-+$/g, '');
+		
+		slug = value;
 		autoSlug = false;
 	}
 
