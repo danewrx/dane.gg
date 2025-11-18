@@ -76,7 +76,8 @@
 
 	// Check if a nav item is active
 	function isActive(path: string): boolean {
-		return $page.url.pathname === path;
+		const currentPath = $page.url.pathname;
+		return currentPath === path || currentPath.startsWith(path + '/');
 	}
 
 	// Handle navigation

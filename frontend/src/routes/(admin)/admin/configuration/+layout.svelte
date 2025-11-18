@@ -89,6 +89,16 @@
 			selectedCategory = category;
 			// Only open panel on mobile (will be hidden on desktop via CSS)
 			isPanelOpen = true;
+		} else if (currentPath === '/admin/configuration') {
+			if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+				const firstCategory = settingsCategories[0];
+				if (firstCategory) {
+					goto(firstCategory.path);
+					return;
+				}
+			}
+			selectedCategory = null;
+			isPanelOpen = false;
 		} else {
 			selectedCategory = null;
 			isPanelOpen = false;
