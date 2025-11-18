@@ -236,7 +236,6 @@
 <style>
 	.banner-config {
 		padding: 24px;
-		max-width: 800px;
 	}
 
 	.loading-state {

@@ -438,8 +438,6 @@
 
 <style>
 	.social-links-page {
-		max-width: 1000px;
-		margin: 0 auto;
 		background: #1a1a1a;
 		color: #ffffff;
 		min-height: 100vh;

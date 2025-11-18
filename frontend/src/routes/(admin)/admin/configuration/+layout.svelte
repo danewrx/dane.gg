@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import SlideInPanel from '$lib/admin/components/ui/SlideInPanel.svelte';
+	import ConfigurationSidebar, { type ConfigurationCategory } from '$lib/admin/components/ui/ConfigurationSidebar.svelte';
 	import { 
 		CloudRain,
 		Settings as SettingsIcon,
@@ -14,7 +15,7 @@
 
 	let { children } = $props();
 
-	const settingsCategories = [
+	const settingsCategories: ConfigurationCategory[] = [
 		{
 			id: 'weather',
 			title: 'Weather Effects',
@@ -23,6 +24,7 @@
 			color: 'from-blue-500 to-cyan-500',
 			bgColor: 'rgba(59, 130, 246, 0.1)',
 			borderColor: 'rgba(59, 130, 246, 0.2)',
+			iconBgColor: '#3b82f6', // Blue
 			path: '/admin/configuration/weather'
 		},
 		{
@@ -33,6 +35,7 @@
 			color: 'from-purple-500 to-pink-500',
 			bgColor: 'rgba(147, 51, 234, 0.1)',
 			borderColor: 'rgba(147, 51, 234, 0.2)',
+			iconBgColor: '#9333ea', // Purple
 			path: '/admin/configuration/social-links'
 		},
 		{
@@ -43,6 +46,7 @@
 			color: 'from-green-500 to-emerald-500',
 			bgColor: 'rgba(34, 197, 94, 0.1)',
 			borderColor: 'rgba(34, 197, 94, 0.2)',
+			iconBgColor: '#22c55e', // Green
 			path: '/admin/configuration/banner'
 		},
 		{
@@ -53,6 +57,7 @@
 			color: 'from-orange-500 to-red-500',
 			bgColor: 'rgba(249, 115, 22, 0.1)',
 			borderColor: 'rgba(249, 115, 22, 0.2)',
+			iconBgColor: '#f97316', // Orange
 			path: '/admin/configuration/service-status'
 		},
 		{
@@ -63,6 +68,7 @@
 			color: 'from-blue-400 to-blue-600',
 			bgColor: 'rgba(59, 130, 246, 0.1)',
 			borderColor: 'rgba(59, 130, 246, 0.2)',
+			iconBgColor: '#60a5fa', // Light blue
 			path: '/admin/configuration/twitter'
 		}
 	];
@@ -81,6 +87,7 @@
 		
 		if (category) {
 			selectedCategory = category;
+			// Only open panel on mobile (will be hidden on desktop via CSS)
 			isPanelOpen = true;
 		} else {
 			selectedCategory = null;
@@ -99,228 +106,180 @@
 	}
 </script>
 
-<!-- Main Settings Page Content -->
-<div class="settings-page">
-	<header class="page-header">
-		<div class="header-content">
-			<div class="header-text">
-				<h1>Site Settings</h1>
-				<p>Configure your website settings and preferences</p>
-			</div>
-			<div class="header-icon">
-				<SettingsIcon size={24} />
-			</div>
-		</div>
-	</header>
+<div class="settings-container desktop-layout">
+	<!-- Sidebar -->
+	<ConfigurationSidebar 
+		categories={settingsCategories}
+		selectedCategoryId={selectedCategory?.id || null}
+		onItemClick={openSettingsPanel}
+	/>
 
-	<div class="settings-grid">
-		{#each settingsCategories as category (category.id)}
-			<button 
-				class="settings-card"
-				onclick={() => openSettingsPanel(category)}
-				style="--bg-color: {category.bgColor}; --border-color: {category.borderColor};"
-			>
-				<div class="card-icon" class:icon-gradient={category.color}>
-					{#if category.icon === CloudRain}
-						<CloudRain size={24} />
-					{:else if category.icon === Link}
-						<Link size={24} />
-					{:else if category.icon === MessageSquare}
-						<MessageSquare size={24} />
-					{:else if category.icon === Server}
-						<Server size={24} />
-					{:else if category.icon === Twitter}
-						<Twitter size={24} />
+	<!-- Content Area -->
+	<main class="settings-content">
+		{#if selectedCategory}
+			<div class="settings-page-content">
+				<h1 class="page-title">
+					{#if selectedCategory.icon === CloudRain}
+						<CloudRain size={18} />
+					{:else if selectedCategory.icon === Link}
+						<Link size={18} />
+					{:else if selectedCategory.icon === MessageSquare}
+						<MessageSquare size={18} />
+					{:else if selectedCategory.icon === Server}
+						<Server size={18} />
+					{:else if selectedCategory.icon === Twitter}
+						<Twitter size={18} />
 					{/if}
-				</div>
-				<div class="card-content">
-					<h3>{category.title}</h3>
-					<p>{category.description}</p>
-				</div>
-				<div class="card-arrow">
-					<ChevronRight size={20} />
-				</div>
-			</button>
-		{/each}
+					{selectedCategory.title}
+				</h1>
+				{@render children?.()}
+			</div>
+		{:else}
+			<div class="empty-state">
+				<SettingsIcon size={48} />
+				<h2>Select a setting category</h2>
+				<p>Choose an option from the sidebar to configure</p>
+			</div>
+		{/if}
+	</main>
+</div>
+
+
+<div class="mobile-layout">
+	<div class="mobile-settings-container">
+		<ConfigurationSidebar 
+			categories={settingsCategories}
+			selectedCategoryId={selectedCategory?.id || null}
+			onItemClick={openSettingsPanel}
+		/>
 	</div>
 </div>
 
-<!-- Settings Panel -->
-<SlideInPanel 
-	isOpen={isPanelOpen}
-	title={selectedCategory?.title || ''}
-	icon={selectedCategory?.icon || null}
-	showCloseButton={true}
-	on:close={closeSettingsPanel}
->
-	{#if selectedCategory}
-		<!-- Render the specific settings page content -->
-		<div class="settings-page-content">
-			{@render children?.()}
-		</div>
-	{/if}
-</SlideInPanel>
+<div class="mobile-panel">
+	<SlideInPanel 
+		isOpen={isPanelOpen}
+		title={selectedCategory?.title || ''}
+		icon={selectedCategory?.icon || null}
+		showCloseButton={true}
+		on:close={closeSettingsPanel}
+	>
+		{#if selectedCategory}
+			<!-- Render the specific settings page content -->
+			<div class="settings-page-content">
+				{@render children?.()}
+			</div>
+		{/if}
+	</SlideInPanel>
+</div>
 
 <style>
-	.settings-page {
-		max-width: 1200px;
-		margin: 0 auto;
+	.desktop-layout {
+		display: none !important;
 	}
 
-	.page-header {
-		margin-bottom: 32px;
-	}
-
-	.header-content {
+	.settings-container {
 		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	.header-text h1 {
-		color: #ffffff;
-		margin: 0 0 8px 0;
-		font-size: 28px;
-		font-weight: 600;
-		transition: color 0.2s ease;
-	}
-
-	
-	:global(html:not(.dark)) .header-text h1 {
-		color: #1f2937;
-	}
-
-	.header-text p {
-		color: #a1a1aa;
-		margin: 0;
-		font-size: 16px;
-		transition: color 0.2s ease;
-	}
-
-	
-	:global(html:not(.dark)) .header-text p {
-		color: #6b7280;
-	}
-
-	.header-icon {
-		color: #6366f1;
-	}
-
-	.settings-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-		gap: 20px;
-	}
-
-	.settings-card {
-		background: var(--bg-color);
-		border: 1px solid var(--border-color);
-		border-radius: 12px;
-		padding: 24px;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		text-align: left;
-		display: flex;
-		align-items: center;
-		gap: 16px;
-		position: relative;
+		height: calc(100vh - var(--admin-header-height, 64px));
 		overflow: hidden;
+		margin: -24px;
+		padding: 0;
+		width: calc(100% + 48px);
+		position: relative;
 	}
 
-	.settings-card::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-		pointer-events: none;
+
+	.settings-content {
+		flex: 1;
+		overflow-y: auto;
+		background: var(--bg-primary, #1a1a1a);
+		padding: 32px;
 	}
 
-	.settings-card:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-	}
-
-	.card-icon {
-		width: 48px;
-		height: 48px;
-		border-radius: 10px;
+	.page-title {
+		color: var(--text-primary, #ffffff);
+		margin: 0 0 24px 0;
+		font-size: 20px;
+		font-weight: 600;
+		line-height: 1.4;
 		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.page-title :global(svg) {
+		color: var(--text-secondary, #a1a1aa);
+		flex-shrink: 0;
+	}
+
+	.empty-state {
+		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		color: #ffffff;
-		flex-shrink: 0;
-		position: relative;
-		z-index: 1;
+		height: 100%;
+		text-align: center;
+		color: var(--text-secondary, #a1a1aa);
 	}
 
-	.card-icon.icon-gradient {
-		background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-		box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+	.empty-state :global(svg) {
+		margin-bottom: 16px;
+		opacity: 0.5;
 	}
 
-	.card-content {
-		flex: 1;
-		position: relative;
-		z-index: 1;
-	}
-
-	.card-content h3 {
-		margin: 0 0 4px 0;
-		font-size: 18px;
+	.empty-state h2 {
+		color: var(--text-primary, #ffffff);
+		margin: 0 0 8px 0;
+		font-size: 24px;
 		font-weight: 600;
-		color: #ffffff;
-		transition: color 0.2s ease;
 	}
 
-	
-	:global(html:not(.dark)) .card-content h3 {
-		color: #1f2937;
-	}
-
-	.card-content p {
+	.empty-state p {
 		margin: 0;
-		color: #a1a1aa;
-		font-size: 14px;
-		line-height: 1.4;
-		transition: color 0.2s ease;
+		font-size: 16px;
 	}
 
-	
-	:global(html:not(.dark)) .card-content p {
-		color: #6b7280;
+	.mobile-layout {
+		display: block;
 	}
 
-	.card-arrow {
-		color: #a1a1aa;
-		transition: transform 0.2s ease, color 0.2s ease;
-		position: relative;
-		z-index: 1;
-	}
-
-	
-	:global(html:not(.dark)) .card-arrow {
-		color: #6b7280;
-	}
-
-	.settings-card:hover .card-arrow {
-		transform: translateX(4px);
+	.mobile-settings-container {
+		width: 100%;
+		max-width: 100%;
 	}
 
 	.settings-page-content {
 		padding: 0;
+		max-width: 1200px;
+		margin: 0 auto;
+		width: 100%;
 	}
 
-	/* Responsive design */
-	@media (max-width: 768px) {
-		.settings-grid {
-			grid-template-columns: 1fr;
+	.mobile-panel {
+		display: block;
+	}
+
+	@media (min-width: 1024px) {
+		.desktop-layout {
+			display: flex !important;
 		}
 
-		.settings-card {
-			padding: 20px;
+		.mobile-layout {
+			display: none !important;
+		}
+
+		.mobile-panel {
+			display: none !important;
+		}
+	}
+
+	/* Mobile: List menu + slide-in panel */
+	@media (max-width: 1023px) {
+		.desktop-layout {
+			display: none !important;
+		}
+
+		.mobile-layout {
+			display: block !important;
 		}
 	}
 </style>
