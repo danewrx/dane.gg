@@ -2,9 +2,17 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { adminNavigation } from '$lib/admin/config/navigation';
+	import { user } from '$lib/admin/stores/auth';
 
-	// Use shared navigation configuration
-	const navItems = adminNavigation;
+	// Filter navigation items based on user admin status
+	const navItems = $derived(
+		adminNavigation.filter(item => {
+			if (item.id === 'users') {
+				return $user?.isAdmin ?? false;
+			}
+			return true;
+		})
+	);
 
 	// Calculate how many items can fit based on screen width
 	function calculateMaxItems() {

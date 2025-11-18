@@ -2,11 +2,19 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { adminNavigation } from '$lib/admin/config/navigation';
+	import { user } from '$lib/admin/stores/auth';
 
 	let { isCollapsed = false } = $props();
 
-	// Use shared navigation configuration
-	const navItems = adminNavigation;
+	// Filter navigation items based on user admin status
+	const navItems = $derived(
+		adminNavigation.filter(item => {
+			if (item.id === 'users') {
+				return $user?.isAdmin ?? false;
+			}
+			return true;
+		})
+	);
 
 	// Check if a nav item is active
 	function isActive(path: string): boolean {
