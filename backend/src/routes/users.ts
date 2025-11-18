@@ -1,15 +1,15 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
-import { users } from '../db/schema';
+import { users, totpBackupCodes } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { hashPassword, validatePasswordStrength } from '../utils/password';
-import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { requireSession, requireAdmin } from '../middleware/auth';
 import { adminLimiter, userCreationLimiter } from '../middleware/rateLimiting';
 
 const router = Router();
 
 // Get all users (admin only) with rate limiting
-router.get('/', adminLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.get('/', adminLimiter, requireSession, requireAdmin, async (req: Request, res: Response) => {
   try {
     const allUsers = await db.select({
       id: users.id,
@@ -34,7 +34,7 @@ router.get('/', adminLimiter, authenticateToken, requireAdmin, async (req: Reque
 });
 
 // Get user by ID (admin only)
-router.get('/:id', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.get('/:id', requireSession, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -67,7 +67,7 @@ router.get('/:id', authenticateToken, requireAdmin, async (req: Request, res: Re
 });
 
 // Create new user (admin only) with rate limiting
-router.post('/', userCreationLimiter, authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.post('/', userCreationLimiter, requireSession, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { username, password, isAdmin = false } = req.body;
 
@@ -132,10 +132,10 @@ router.post('/', userCreationLimiter, authenticateToken, requireAdmin, async (re
 });
 
 // Update user (admin only)
-router.put('/:id', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.put('/:id', requireSession, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { username, isAdmin, totpEnabled } = req.body;
+    const { username, password, isAdmin, totpEnabled } = req.body;
 
     // Check if user exists
     const existingUser = await db.select({ id: users.id })
@@ -165,9 +165,23 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: Request, res: Re
       }
     }
 
+    // Validate and hash password if provided
+    if (password) {
+      const passwordValidation = validatePasswordStrength(password);
+      if (!passwordValidation.isValid) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          message: passwordValidation.message
+        });
+      }
+    }
+
     // Update user
     const updateData: any = {};
     if (username !== undefined) updateData.username = username;
+    if (password !== undefined) {
+      updateData.passwordHash = await hashPassword(password);
+    }
     if (isAdmin !== undefined) updateData.isAdmin = isAdmin;
     if (totpEnabled !== undefined) updateData.totpEnabled = totpEnabled;
 
@@ -198,7 +212,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: Request, res: Re
 });
 
 // Delete user (admin only)
-router.delete('/:id', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.delete('/:id', requireSession, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -241,7 +255,7 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req: Request, res:
 });
 
 // Reset user password (admin only)
-router.post('/:id/reset-password', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.post('/:id/reset-password', requireSession, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { newPassword } = req.body;
@@ -293,6 +307,48 @@ router.post('/:id/reset-password', authenticateToken, requireAdmin, async (req: 
     res.status(500).json({
       error: 'Internal server error',
       message: 'Failed to reset password'
+    });
+  }
+});
+
+// Reset user 2FA (admin only)
+router.post('/:id/reset-2fa', requireSession, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Check if user exists
+    const existingUser = await db.select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+
+    if (existingUser.length === 0) {
+      return res.status(404).json({
+        error: 'User not found',
+        message: 'User does not exist'
+      });
+    }
+
+    // Reset 2FA
+    await db.update(users)
+      .set({
+        totpSecret: null,
+        totpEnabled: false
+      })
+      .where(eq(users.id, id));
+
+    await db.delete(totpBackupCodes).where(eq(totpBackupCodes.userId, id));
+
+    res.json({
+      success: true,
+      message: '2FA reset successfully'
+    });
+
+  } catch (error) {
+    console.error('Reset 2FA error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to reset 2FA'
     });
   }
 });

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { requireSession, requireAdmin } from '../middleware/auth';
+import { requireSession } from '../middleware/auth';
 import { TwitterApiService } from '../services/twitterApiService';
 import { TweetService } from '../services/tweetService';
 import { ConfigService } from '../services/config';
@@ -8,9 +8,9 @@ const router = Router();
 
 /**
  * POST /api/twitter/fetch
- * Manually trigger fetching the latest tweet (admin only)
+ * Manually trigger fetching the latest tweet (authenticated users only)
  */
-router.post('/fetch', requireSession, requireAdmin, async (req: Request, res: Response) => {
+router.post('/fetch', requireSession, async (req: Request, res: Response) => {
   try {
     // Get username from database - fallback to env variable
     const dbUsername = await ConfigService.get('twitter_username');
@@ -55,9 +55,9 @@ router.post('/fetch', requireSession, requireAdmin, async (req: Request, res: Re
 
 /**
  * GET /api/twitter/status
- * Check Twitter API configuration status (admin only)
+ * Check Twitter API configuration status (authenticated users only)
  */
-router.get('/status', requireSession, requireAdmin, async (req: Request, res: Response) => {
+router.get('/status', requireSession, async (req: Request, res: Response) => {
   try {
     const isConfigured = await TwitterApiService.isConfigured();
     
@@ -91,9 +91,9 @@ router.get('/status', requireSession, requireAdmin, async (req: Request, res: Re
 
 /**
  * GET /api/twitter/health-check
- * Manually trigger a connection health check (admin only)
+ * Manually trigger a connection health check (authenticated users only)
  */
-router.get('/health-check', requireSession, requireAdmin, async (req: Request, res: Response) => {
+router.get('/health-check', requireSession, async (req: Request, res: Response) => {
   try {
     // Get username from database first, then env
     const dbUsername = await ConfigService.get('twitter_username');
@@ -124,9 +124,9 @@ router.get('/health-check', requireSession, requireAdmin, async (req: Request, r
 
 /**
  * PUT /api/twitter/username
- * Update Twitter username in database (admin only)
+ * Update Twitter username in database (authenticated users only)
  */
-router.put('/username', requireSession, requireAdmin, async (req: Request, res: Response) => {
+router.put('/username', requireSession, async (req: Request, res: Response) => {
   try {
     const { username } = req.body;
 
@@ -168,9 +168,9 @@ router.put('/username', requireSession, requireAdmin, async (req: Request, res: 
 
 /**
  * GET /api/twitter/tweets
- * Get all tweets from database (admin only)
+ * Get all tweets from database (authenticated users only)
  */
-router.get('/tweets', requireSession, requireAdmin, async (req: Request, res: Response) => {
+router.get('/tweets', requireSession, async (req: Request, res: Response) => {
   try {
     const tweets = await TweetService.getAllTweets();
     

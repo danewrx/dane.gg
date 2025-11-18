@@ -1,12 +1,12 @@
 import { Router, Request, Response } from 'express';
-import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { requireSession } from '../middleware/auth';
 import { NotificationService } from '../services/notificationService';
 
 const router = Router();
 
 /**
  * POST /api/notifications/send
- * Send a notification to Ntfy (admin only)
+ * Send a notification to Ntfy (authenticated users only)
  * 
  * Request body:
  * {
@@ -17,7 +17,7 @@ const router = Router();
  *   "topic": "optional-topic" // optional, defaults to NTFY_TOPIC env var
  * }
  */
-router.post('/send', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.post('/send', requireSession, async (req: Request, res: Response) => {
   try {
     const { message, title, priority, tags, topic } = req.body;
 
@@ -82,9 +82,9 @@ router.post('/send', authenticateToken, requireAdmin, async (req: Request, res: 
 
 /**
  * GET /api/notifications/status
- * Check if notification service is configured (admin only)
+ * Check if notification service is configured (authenticated users only)
  */
-router.get('/status', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.get('/status', requireSession, async (req: Request, res: Response) => {
   try {
     const isConfigured = NotificationService.isConfigured();
     const defaultTopic = process.env.NTFY_TOPIC || null;

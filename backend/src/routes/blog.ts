@@ -1,20 +1,10 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import { db } from '../db';
 import { posts, blogTags, postTags } from '../db/schema';
 import { eq, desc, and, sql, inArray, gt, lt, asc } from 'drizzle-orm';
-import { requireAdmin } from '../middleware/auth';
+import { requireSession } from '../middleware/auth';
 
 const router = Router();
-
-// Optional session middleware - populates req.user if session exists
-function optionalSession(req: Request, res: Response, next: NextFunction) {
-  if (req.session && req.session.user) {
-    req.user = req.session.user;
-  }
-  next();
-}
-
-router.use(optionalSession);
 
 /**
  * Get all published blog posts (public endpoint)
@@ -69,9 +59,9 @@ router.get('/', async (req, res) => {
 });
 
 /**
- * Get all blog posts (admin only)
+ * Get all blog posts (authenticated users only)
  */
-router.get('/admin/all', requireAdmin, async (req, res) => {
+router.get('/admin/all', requireSession, async (req, res) => {
   try {
     const allPosts = await db
       .select({
@@ -121,9 +111,9 @@ router.get('/admin/all', requireAdmin, async (req, res) => {
 });
 
 /**
- * Get a single blog post by ID (admin only)
+ * Get a single blog post by ID (authenticated users only)
  */
-router.get('/admin/:id', requireAdmin, async (req, res) => {
+router.get('/admin/:id', requireSession, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -177,9 +167,9 @@ router.get('/admin/:id', requireAdmin, async (req, res) => {
 });
 
 /**
- * Create a new blog post (admin only)
+ * Create a new blog post (authenticated users only)
  */
-router.post('/admin', requireAdmin, async (req, res) => {
+router.post('/admin', requireSession, async (req, res) => {
   try {
     const { title, slug, content, thumbnail, published, tags: tagNames } = req.body;
 
@@ -284,9 +274,9 @@ router.post('/admin', requireAdmin, async (req, res) => {
 });
 
 /**
- * Update a blog post (admin only)
+ * Update a blog post (authenticated users only)
  */
-router.put('/admin/:id', requireAdmin, async (req, res) => {
+router.put('/admin/:id', requireSession, async (req, res) => {
   try {
     const { id } = req.params;
     const { title, slug, content, thumbnail, published, tags: tagNames, createdAt } = req.body;
@@ -393,9 +383,9 @@ router.put('/admin/:id', requireAdmin, async (req, res) => {
 });
 
 /**
- * Delete a blog post (admin only)
+ * Delete a blog post (authenticated users only)
  */
-router.delete('/admin/:id', requireAdmin, async (req, res) => {
+router.delete('/admin/:id', requireSession, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -425,9 +415,9 @@ router.delete('/admin/:id', requireAdmin, async (req, res) => {
 });
 
 /**
- * Get all blog tags (admin only)
+ * Get all blog tags (authenticated users only)
  */
-router.get('/admin/tags/all', requireAdmin, async (req, res) => {
+router.get('/admin/tags/all', requireSession, async (req, res) => {
   try {
     const allTags = await db
       .select()
@@ -448,9 +438,9 @@ router.get('/admin/tags/all', requireAdmin, async (req, res) => {
 });
 
 /**
- * Create a new blog tag (admin only)
+ * Create a new blog tag (authenticated users only)
  */
-router.post('/admin/tags', requireAdmin, async (req, res) => {
+router.post('/admin/tags', requireSession, async (req, res) => {
   try {
     const { name } = req.body;
 
@@ -493,9 +483,9 @@ router.post('/admin/tags', requireAdmin, async (req, res) => {
 });
 
 /**
- * Update a blog tag (admin only)
+ * Update a blog tag (authenticated users only)
  */
-router.put('/admin/tags/:id', requireAdmin, async (req, res) => {
+router.put('/admin/tags/:id', requireSession, async (req, res) => {
   try {
     const { id } = req.params;
     const { name } = req.body;
@@ -553,9 +543,9 @@ router.put('/admin/tags/:id', requireAdmin, async (req, res) => {
 });
 
 /**
- * Delete a blog tag (admin only)
+ * Delete a blog tag (authenticated users only)
  */
-router.delete('/admin/tags/:id', requireAdmin, async (req, res) => {
+router.delete('/admin/tags/:id', requireSession, async (req, res) => {
   try {
     const { id } = req.params;
 

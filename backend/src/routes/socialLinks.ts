@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { SocialLinksService } from '../services/socialLinksService';
-import { requireSession, requireAdmin } from '../middleware/auth';
+import { requireSession } from '../middleware/auth';
 
 const router = Router();
 
@@ -23,7 +23,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get all social links for admin
-router.get('/admin', requireSession, requireAdmin, async (req, res) => {
+router.get('/admin', requireSession, async (req, res) => {
   try {
     const links = await SocialLinksService.getAllForAdmin();
 
@@ -41,7 +41,7 @@ router.get('/admin', requireSession, requireAdmin, async (req, res) => {
 });
 
 // Get single social link by ID
-router.get('/:id', requireSession, requireAdmin, async (req, res) => {
+router.get('/:id', requireSession, async (req, res) => {
   try {
     const { id } = req.params;
     const link = await SocialLinksService.getById(id);
@@ -67,7 +67,7 @@ router.get('/:id', requireSession, requireAdmin, async (req, res) => {
 });
 
 // Create a new social link
-router.post('/', requireSession, requireAdmin, async (req, res) => {
+router.post('/', requireSession, async (req, res) => {
   try {
     const { name, url, iconType, iconName, iconText, svgUrl, displayOrder, isActive } = req.body;
 
@@ -132,7 +132,7 @@ router.post('/', requireSession, requireAdmin, async (req, res) => {
 });
 
 // Update a social link
-router.put('/:id', requireSession, requireAdmin, async (req, res) => {
+router.put('/:id', requireSession, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, url, iconType, iconName, iconText, svgUrl, displayOrder, isActive } = req.body;
@@ -200,7 +200,7 @@ router.put('/:id', requireSession, requireAdmin, async (req, res) => {
 });
 
 // Delete a social link
-router.delete('/:id', requireSession, requireAdmin, async (req, res) => {
+router.delete('/:id', requireSession, async (req, res) => {
   try {
     const { id } = req.params;
     const deleted = await SocialLinksService.delete(id);
@@ -226,7 +226,7 @@ router.delete('/:id', requireSession, requireAdmin, async (req, res) => {
 });
 
 // Toggle active status
-router.patch('/:id/toggle', requireSession, requireAdmin, async (req, res) => {
+router.patch('/:id/toggle', requireSession, async (req, res) => {
   try {
     const { id } = req.params;
     const link = await SocialLinksService.toggleActive(id);
@@ -245,7 +245,7 @@ router.patch('/:id/toggle', requireSession, requireAdmin, async (req, res) => {
 });
 
 // Update display order
-router.patch('/reorder', requireSession, requireAdmin, async (req, res) => {
+router.patch('/reorder', requireSession, async (req, res) => {
   try {
     const { updates } = req.body;
 

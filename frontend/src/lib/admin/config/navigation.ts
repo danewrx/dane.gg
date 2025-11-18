@@ -40,6 +40,13 @@ export const adminNavigation: NavigationItem[] = [
 		description: 'Manage blog posts'
 	},
 	{
+		id: 'users',
+		label: 'Users',
+		icon: Users,
+		path: '/admin/users',
+		description: 'Manage user accounts'
+	},
+	{
 		id: 'settings',
 		label: 'Settings',
 		icon: Sliders,

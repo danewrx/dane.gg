@@ -1,10 +1,10 @@
 import { Router, Request, Response } from 'express';
-import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { requireSession } from '../middleware/auth';
 
 const router = Router();
 
-// Rate limiting status endpoint (admin only)
-router.get('/rate-limits', authenticateToken, requireAdmin, (req: Request, res: Response) => {
+// Rate limiting status endpoint (authenticated users only)
+router.get('/rate-limits', requireSession, (req: Request, res: Response) => {
   try {
     // This would typically come from a database or cache
     // For now, we'll return the current rate limiting configuration

@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { db } from '../db';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
-import { requireSession, requireAdmin } from '../middleware/auth';
+import { requireSession } from '../middleware/auth';
 
 const router = Router();
 
@@ -131,8 +131,8 @@ router.post('/accent-color', requireSession, async (req: Request, res: Response)
   }
 });
 
-// Get all admin settings (admin only)
-router.get('/admin', requireSession, requireAdmin, async (req: Request, res: Response) => {
+// Get all admin settings (authenticated users only)
+router.get('/admin', requireSession, async (req: Request, res: Response) => {
   try {
     // Future: Return system-wide admin settings
     res.json({
@@ -155,8 +155,8 @@ router.get('/admin', requireSession, requireAdmin, async (req: Request, res: Res
   }
 });
 
-// Update admin settings (admin only)
-router.post('/admin', requireSession, requireAdmin, async (req: Request, res: Response) => {
+// Update admin settings (authenticated users only)
+router.post('/admin', requireSession, async (req: Request, res: Response) => {
   try {
     const { settings } = req.body;
 

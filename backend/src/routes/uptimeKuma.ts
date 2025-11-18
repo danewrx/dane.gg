@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { UptimeKumaService } from '../services/uptimeKumaService';
 import { ConfigService } from '../services/config';
-import { requireSession, requireAdmin } from '../middleware/auth';
+import { requireSession } from '../middleware/auth';
 
 const router = Router();
 
