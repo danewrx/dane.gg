@@ -7,13 +7,20 @@
 	let { isCollapsed = false } = $props();
 
 	// Filter navigation items based on user admin status
-	const navItems = $derived(
+	const allNavItems = $derived(
 		adminNavigation.filter(item => {
 			if (item.id === 'users') {
 				return $user?.isAdmin ?? false;
 			}
 			return true;
 		})
+	);
+
+	const navItems = $derived(
+		allNavItems.filter(item => item.id !== 'settings')
+	);
+	const settingsItem = $derived(
+		allNavItems.find(item => item.id === 'settings')
 	);
 
 	// Check if a nav item is active
@@ -51,6 +58,27 @@
 				</li>
 			{/each}
 		</ul>
+		{#if settingsItem}
+			{@const SettingsIcon = settingsItem.icon}
+			<ul class="nav-list settings-list">
+				<li class="nav-item">
+					<button
+						class="nav-link"
+						class:active={isActive(settingsItem.path)}
+						onclick={() => handleNavigation(settingsItem.path)}
+						aria-current={isActive(settingsItem.path) ? 'page' : undefined}
+						title={isCollapsed ? settingsItem.label : undefined}
+					>
+						<div class="nav-icon">
+							<SettingsIcon size={20} />
+						</div>
+						{#if !isCollapsed}
+							<span class="nav-label">{settingsItem.label}</span>
+						{/if}
+					</button>
+				</li>
+			</ul>
+		{/if}
 	</nav>
 </aside>
 
@@ -90,7 +118,20 @@
 		list-style: none;
 		margin: 0;
 		padding: 0;
+	}
+
+	.nav-list:first-child {
 		flex: 1;
+	}
+
+	.settings-list {
+		margin-top: auto;
+		border-top: 1px solid #2a2a2a;
+		padding-top: 0;
+	}
+
+	:global(html:not(.dark)) .settings-list {
+		border-top-color: #e5e7eb;
 	}
 
 	.nav-item {

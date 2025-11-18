@@ -18,7 +18,14 @@
 	let { isOpen = false, onClose, items = [] } = $props();
 
 	// Use the dynamic items passed from the app bar
-	const navItems = $derived(items || []);
+	const allNavItems = $derived(items || []);
+
+	const navItems = $derived(
+		allNavItems.filter(item => item.id !== 'settings')
+	);
+	const settingsItem = $derived(
+		allNavItems.find(item => item.id === 'settings')
+	);
 	
 
 	let isClosing = $state(false);
@@ -224,6 +231,24 @@
 				</li>
 			{/if}
 		</ul>
+		{#if settingsItem}
+			{@const SettingsIcon = settingsItem.icon}
+			<ul class="nav-list settings-list">
+				<li class="nav-item">
+					<button
+						class="nav-link"
+						class:active={isActive(settingsItem.path)}
+						onclick={() => handleNavigation(settingsItem.path)}
+						aria-current={isActive(settingsItem.path) ? 'page' : undefined}
+					>
+						<div class="nav-icon">
+							<SettingsIcon size={20} />
+						</div>
+						<span class="nav-label">{settingsItem.label}</span>
+					</button>
+				</li>
+			</ul>
+		{/if}
 	</nav>
 </aside>
 
@@ -341,12 +366,28 @@
 		flex: 1;
 		overflow-y: auto;
 		padding: 0;
+		display: flex;
+		flex-direction: column;
 	}
 
 	.nav-list {
 		list-style: none;
 		margin: 0;
 		padding: 0;
+	}
+
+	.nav-list:first-child {
+		flex: 1;
+	}
+
+	.settings-list {
+		margin-top: auto;
+		border-top: 1px solid #2a2a2a;
+		padding-top: 0;
+	}
+
+	:global(html:not(.dark)) .settings-list {
+		border-top-color: #e5e7eb;
 	}
 
 	.nav-item {
