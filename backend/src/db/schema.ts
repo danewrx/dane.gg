@@ -76,6 +76,8 @@ export const projects = websiteSchema.table('projects', {
   categoryId: uuid('category_id').notNull().references(() => projectCategories.id),
   featured: boolean('featured').default(false),
   imageUrl: varchar('image_url', { length: 255 }),
+  active: varchar('active', { length: 20 }).notNull().default('Active'),
+  published: boolean('published').default(false),
   projectUrl: varchar('project_url', { length: 255 }),
   projectText: varchar('project_text', { length: 50 }).default('View Project'),
   repoUrl: varchar('repo_url', { length: 255 }),

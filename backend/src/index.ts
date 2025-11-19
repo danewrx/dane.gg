@@ -73,6 +73,7 @@ import uploadRoutes from './routes/upload';
 import uptimeKumaRoutes from './routes/uptimeKuma';
 import twitterRoutes from './routes/twitter';
 import notificationRoutes from './routes/notifications';
+import projectsRoutes from './routes/projects';
 import { generalLimiter } from './middleware/rateLimiting';
 
 // Routes
@@ -135,6 +136,9 @@ app.use('/api/track', trackingRoutes);
 
 // Blog routes
 app.use('/api/blog', blogRoutes);
+
+// Projects routes
+app.use('/api/projects', projectsRoutes);
 
 // Upload routes
 app.use('/api/upload', uploadRoutes);
