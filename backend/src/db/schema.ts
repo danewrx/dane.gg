@@ -92,6 +92,7 @@ export const tags = websiteSchema.table('tags', {
   id: uuid('id').primaryKey().defaultRandom(),
   title: varchar('title', { length: 50 }).notNull(),
   color: varchar('color', { length: 7 }).notNull(), // Hex code
+  categoryId: uuid('category_id').references(() => projectCategories.id, { onDelete: 'set null' }), // Optional category grouping
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
 });
 

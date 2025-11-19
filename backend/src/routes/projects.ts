@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
-import { projects, projectCategories } from '../db/schema';
-import { eq, desc, and, sql, asc } from 'drizzle-orm';
+import { projects, projectCategories, tags, projectTags } from '../db/schema';
+import { eq, desc, and, sql, asc, inArray } from 'drizzle-orm';
 import { requireSession } from '../middleware/auth';
 import { generalLimiter } from '../middleware/rateLimiting';
 
@@ -50,8 +50,35 @@ router.get('/', generalLimiter, async (req, res) => {
       .where(and(...whereConditions))
       .orderBy(asc(projects.displayOrder), desc(projects.createdAt));
 
+    // Get tags for each project
+    const projectsWithTags = await Promise.all(
+      allProjects.map(async (project) => {
+        const projectTagsList = await db
+          .select({
+            id: tags.id,
+            title: tags.title,
+            color: tags.color,
+            categoryId: tags.categoryId,
+            category: {
+              id: projectCategories.id,
+              name: projectCategories.name,
+              createdAt: projectCategories.createdAt
+            }
+          })
+          .from(projectTags)
+          .innerJoin(tags, eq(projectTags.tagId, tags.id))
+          .leftJoin(projectCategories, eq(tags.categoryId, projectCategories.id))
+          .where(eq(projectTags.projectId, project.id));
+
+        return {
+          ...project,
+          tags: projectTagsList
+        };
+      })
+    );
+
     // Group projects by category
-    const projectsByCategory = allProjects.reduce((acc, project) => {
+    const projectsByCategory = projectsWithTags.reduce((acc, project) => {
       const categoryName = project.category.name;
       if (!acc[categoryName]) {
         acc[categoryName] = {
@@ -72,7 +99,8 @@ router.get('/', generalLimiter, async (req, res) => {
         repoText: project.repoText,
         displayOrder: project.displayOrder,
         createdAt: project.createdAt,
-        updatedAt: project.updatedAt
+        updatedAt: project.updatedAt,
+        tags: project.tags
       });
       return acc;
     }, {} as Record<string, { category: typeof projectCategories.$inferSelect; projects: any[] }>);
@@ -122,9 +150,36 @@ router.get('/admin/all', requireSession, async (req, res) => {
       .innerJoin(projectCategories, eq(projects.categoryId, projectCategories.id))
       .orderBy(asc(projects.displayOrder), desc(projects.createdAt));
 
+    // Get tags for each project
+    const projectsWithTags = await Promise.all(
+      allProjects.map(async (project) => {
+        const projectTagsList = await db
+          .select({
+            id: tags.id,
+            title: tags.title,
+            color: tags.color,
+            categoryId: tags.categoryId,
+            category: {
+              id: projectCategories.id,
+              name: projectCategories.name,
+              createdAt: projectCategories.createdAt
+            }
+          })
+          .from(projectTags)
+          .innerJoin(tags, eq(projectTags.tagId, tags.id))
+          .leftJoin(projectCategories, eq(tags.categoryId, projectCategories.id))
+          .where(eq(projectTags.projectId, project.id));
+
+        return {
+          ...project,
+          tags: projectTagsList
+        };
+      })
+    );
+
     res.json({
       success: true,
-      data: allProjects
+      data: projectsWithTags
     });
   } catch (error) {
     console.error('Error fetching all projects:', error);
@@ -177,9 +232,23 @@ router.get('/admin/:id', requireSession, async (req, res) => {
       });
     }
 
+    // Get tags for project
+    const projectTagsList = await db
+      .select({
+        id: tags.id,
+        title: tags.title,
+        color: tags.color
+      })
+      .from(projectTags)
+      .innerJoin(tags, eq(projectTags.tagId, tags.id))
+      .where(eq(projectTags.projectId, id));
+
     res.json({
       success: true,
-      data: project
+      data: {
+        ...project,
+        tags: projectTagsList
+      }
     });
   } catch (error) {
     console.error('Error fetching project:', error);
@@ -207,7 +276,8 @@ router.post('/admin', requireSession, async (req, res) => {
       repoUrl,
       repoText,
       displayOrder,
-      featured
+      featured,
+      tagIds
     } = req.body;
 
     if (!title?.trim()) {
@@ -296,9 +366,46 @@ router.post('/admin', requireSession, async (req, res) => {
       .where(eq(projects.id, newProject.id))
       .limit(1);
 
+    // Handle tags
+    if (tagIds && Array.isArray(tagIds) && tagIds.length > 0) {
+      // Validate that all tag IDs exist
+      const existingTags = await db
+        .select()
+        .from(tags)
+        .where(inArray(tags.id, tagIds));
+
+      if (existingTags.length !== tagIds.length) {
+        return res.status(400).json({
+          success: false,
+          error: 'One or more tag IDs are invalid'
+        });
+      }
+
+      await db.insert(projectTags).values(
+        tagIds.map(tagId => ({
+          projectId: newProject.id,
+          tagId: tagId
+        }))
+      );
+    }
+
+    // Fetch project with tags
+    const projectTagsList = await db
+      .select({
+        id: tags.id,
+        title: tags.title,
+        color: tags.color
+      })
+      .from(projectTags)
+      .innerJoin(tags, eq(projectTags.tagId, tags.id))
+      .where(eq(projectTags.projectId, newProject.id));
+
     res.json({
       success: true,
-      data: projectWithCategory
+      data: {
+        ...projectWithCategory,
+        tags: projectTagsList
+      }
     });
   } catch (error) {
     console.error('Error creating project:', error);
@@ -328,7 +435,8 @@ router.put('/admin/:id', requireSession, async (req, res) => {
       repoText,
       displayOrder,
       featured,
-      createdAt
+      createdAt,
+      tagIds
     } = req.body;
 
     const [existingProject] = await db
@@ -422,9 +530,51 @@ router.put('/admin/:id', requireSession, async (req, res) => {
       .where(eq(projects.id, id))
       .limit(1);
 
+    // Handle tags
+    if (tagIds !== undefined) {
+      await db.delete(projectTags).where(eq(projectTags.projectId, id));
+
+      // Add new tags
+      if (Array.isArray(tagIds) && tagIds.length > 0) {
+        // Validate that tag IDs exist
+        const existingTags = await db
+          .select()
+          .from(tags)
+          .where(inArray(tags.id, tagIds));
+
+        if (existingTags.length !== tagIds.length) {
+          return res.status(400).json({
+            success: false,
+            error: 'One or more tag IDs are invalid'
+          });
+        }
+
+        await db.insert(projectTags).values(
+          tagIds.map(tagId => ({
+            projectId: id,
+            tagId: tagId
+          }))
+        );
+      }
+    }
+
+    // Fetch project with tags
+    const projectTagsList = await db
+      .select({
+        id: tags.id,
+        title: tags.title,
+        color: tags.color
+      })
+      .from(projectTags)
+      .innerJoin(tags, eq(projectTags.tagId, tags.id))
+      .where(eq(projectTags.projectId, id));
+
     res.json({
       success: true,
-      data: projectWithCategory
+      data: {
+        ...projectWithCategory,
+        tags: projectTagsList
+      }
     });
   } catch (error) {
     console.error('Error updating project:', error);
@@ -660,6 +810,323 @@ router.delete('/admin/categories/:id', requireSession, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to delete project category'
+    });
+  }
+});
+
+/**
+ * Get all project tags (authenticated users only)
+ * Query params:
+ *   - grouped: boolean - if true, returns tags grouped by category
+ *   - categoryId: string - filter tags by category ID
+ */
+router.get('/admin/tags/all', requireSession, async (req, res) => {
+  try {
+    const grouped = req.query.grouped === 'true';
+    const categoryIdFilter = req.query.categoryId as string | undefined;
+
+    const whereConditions = [];
+    if (categoryIdFilter) {
+      whereConditions.push(eq(tags.categoryId, categoryIdFilter));
+    }
+
+    const allTags = await db
+      .select({
+        id: tags.id,
+        title: tags.title,
+        color: tags.color,
+        categoryId: tags.categoryId,
+        createdAt: tags.createdAt,
+        category: {
+          id: projectCategories.id,
+          name: projectCategories.name,
+          createdAt: projectCategories.createdAt
+        }
+      })
+      .from(tags)
+      .leftJoin(projectCategories, eq(tags.categoryId, projectCategories.id))
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+      .orderBy(asc(projectCategories.name), asc(tags.title));
+
+    if (grouped) {
+      // Group tags by category
+      const tagsByCategory = allTags.reduce((acc, tag) => {
+        const categoryName = tag.category?.name || 'Uncategorized';
+        const categoryId = tag.categoryId || 'uncategorized';
+        
+        if (!acc[categoryId]) {
+          acc[categoryId] = {
+            category: tag.category || null,
+            tags: []
+          };
+        }
+        acc[categoryId].tags.push({
+          id: tag.id,
+          title: tag.title,
+          color: tag.color,
+          categoryId: tag.categoryId,
+          createdAt: tag.createdAt
+        });
+        return acc;
+      }, {} as Record<string, { category: typeof projectCategories.$inferSelect | null; tags: any[] }>);
+
+      res.json({
+        success: true,
+        data: Object.values(tagsByCategory)
+      });
+    } else {
+      res.json({
+        success: true,
+        data: allTags.map(tag => ({
+          id: tag.id,
+          title: tag.title,
+          color: tag.color,
+          categoryId: tag.categoryId,
+          createdAt: tag.createdAt,
+          category: tag.category
+        }))
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching project tags:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch project tags'
+    });
+  }
+});
+
+/**
+ * Create a new project tag (authenticated users only)
+ */
+router.post('/admin/tags', requireSession, async (req, res) => {
+  try {
+    const { title, color, categoryId } = req.body;
+
+    if (!title || !title.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Tag title is required'
+      });
+    }
+    if (!color || !color.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Tag color is required'
+      });
+    }
+
+    // Validate color format (hex code)
+    const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+    if (!hexColorRegex.test(color.trim())) {
+      return res.status(400).json({
+        success: false,
+        error: 'Color must be a valid hex code (e.g., #FF5733)'
+      });
+    }
+
+    // Validate category
+    if (categoryId) {
+      const [category] = await db
+        .select()
+        .from(projectCategories)
+        .where(eq(projectCategories.id, categoryId))
+        .limit(1);
+
+      if (!category) {
+        return res.status(400).json({
+          success: false,
+          error: 'Category not found'
+        });
+      }
+    }
+
+    const [existingTag] = await db
+      .select()
+      .from(tags)
+      .where(eq(tags.title, title.trim()))
+      .limit(1);
+
+    if (existingTag) {
+      return res.status(400).json({
+        success: false,
+        error: 'A tag with this title already exists'
+      });
+    }
+
+    const [newTag] = await db
+      .insert(tags)
+      .values({
+        title: title.trim(),
+        color: color.trim(),
+        categoryId: categoryId || null
+      })
+      .returning();
+
+    res.json({
+      success: true,
+      data: newTag
+    });
+  } catch (error) {
+    console.error('Error creating project tag:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create project tag'
+    });
+  }
+});
+
+/**
+ * Update a project tag (authenticated users only)
+ */
+router.put('/admin/tags/:id', requireSession, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, color, categoryId } = req.body;
+
+    const [existingTag] = await db
+      .select()
+      .from(tags)
+      .where(eq(tags.id, id))
+      .limit(1);
+
+    if (!existingTag) {
+      return res.status(404).json({
+        success: false,
+        error: 'Tag not found'
+      });
+    }
+
+    const updateData: any = {};
+
+    if (title !== undefined) {
+      if (!title.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Tag title cannot be empty'
+        });
+      }
+
+      // Check for duplicate title
+      const [conflictingTag] = await db
+        .select()
+        .from(tags)
+        .where(and(eq(tags.title, title.trim()), sql`${tags.id} != ${id}`))
+        .limit(1);
+
+      if (conflictingTag) {
+        return res.status(400).json({
+          success: false,
+          error: 'A tag with this title already exists'
+        });
+      }
+
+      updateData.title = title.trim();
+    }
+
+    if (color !== undefined) {
+      if (!color.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Tag color cannot be empty'
+        });
+      }
+
+      // Validate color format (hex code)
+      const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+      if (!hexColorRegex.test(color.trim())) {
+        return res.status(400).json({
+          success: false,
+          error: 'Color must be a valid hex code (e.g., #FF5733)'
+        });
+      }
+
+      updateData.color = color.trim();
+    }
+
+    if (categoryId !== undefined) {
+      if (categoryId === null || categoryId === '') {
+        updateData.categoryId = null;
+      } else {
+        // Validate category
+        const [category] = await db
+          .select()
+          .from(projectCategories)
+          .where(eq(projectCategories.id, categoryId))
+          .limit(1);
+
+        if (!category) {
+          return res.status(400).json({
+            success: false,
+            error: 'Category not found'
+          });
+        }
+
+        updateData.categoryId = categoryId;
+      }
+    }
+
+    const [updatedTag] = await db
+      .update(tags)
+      .set(updateData)
+      .where(eq(tags.id, id))
+      .returning();
+
+    res.json({
+      success: true,
+      data: updatedTag
+    });
+  } catch (error) {
+    console.error('Error updating project tag:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update project tag'
+    });
+  }
+});
+
+/**
+ * Delete a project tag (authenticated users only)
+ */
+router.delete('/admin/tags/:id', requireSession, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if tag is used by projects
+    const [projectUsingTag] = await db
+      .select()
+      .from(projectTags)
+      .where(eq(projectTags.tagId, id))
+      .limit(1);
+
+    if (projectUsingTag) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot delete tag that is in use by projects'
+      });
+    }
+
+    const [deletedTag] = await db
+      .delete(tags)
+      .where(eq(tags.id, id))
+      .returning();
+
+    if (!deletedTag) {
+      return res.status(404).json({
+        success: false,
+        error: 'Tag not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: deletedTag
+    });
+  } catch (error) {
+    console.error('Error deleting project tag:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete project tag'
     });
   }
 });
