@@ -40,29 +40,27 @@ export async function seed() {
     // Seed project categories
     console.log('📁 Seeding project categories...');
     const categories = await db.insert(projectCategories).values([
-      { name: 'Web Development' },
-      { name: 'Mobile Apps' },
-      { name: 'Desktop Applications' },
-      { name: 'DevOps & Infrastructure' },
-      { name: 'Machine Learning' },
-      { name: 'Game Development' }
+      { name: 'Development' },
+      { name: 'Graphics' },
+      { name: 'Videos' }
     ]).returning();
 
-    // Seed tags
+    // Seed tags (with category assignments)
     console.log('🏷️ Seeding tags...');
     const seededTags = await db.insert(tags).values([
-      { title: 'JavaScript', color: '#F0DB4F' },
-      { title: 'Node.js', color: '#43853D' },
-      { title: 'Express', color: '#000000' },
-      { title: 'React', color: '#61DAFB' },
-      { title: 'CSS', color: '#2965f1' },
-      { title: 'HTML', color: '#e34c26' },
-      { title: 'TypeScript', color: '#3178c6' },
-      { title: 'Svelte', color: '#ff3e00' },
-      { title: 'Vue.js', color: '#4fc08d' },
-      { title: 'Python', color: '#3776ab' },
-      { title: 'PostgreSQL', color: '#336791' },
-      { title: 'Docker', color: '#2496ed' }
+      // Development category tags
+      { title: 'JavaScript', color: '#F0DB4F', categoryId: categories[0].id },
+      { title: 'Express', color: '#000000', categoryId: categories[0].id },
+      { title: 'React', color: '#61DAFB', categoryId: categories[0].id },
+      { title: 'CSS', color: '#2965f1', categoryId: categories[0].id },
+      { title: 'HTML', color: '#e34c26', categoryId: categories[0].id },
+      { title: 'TypeScript', color: '#3178c6', categoryId: categories[0].id },
+      { title: 'Svelte', color: '#ff3e00', categoryId: categories[0].id },
+      { title: 'Node.js', color: '#43853D', categoryId: categories[0].id },
+      { title: 'Vue.js', color: '#4fc08d', categoryId: categories[0].id },
+      { title: 'Python', color: '#3776ab', categoryId: categories[0].id },
+      { title: 'PostgreSQL', color: '#336791', categoryId: categories[0].id },
+      { title: 'Docker', color: '#2496ed', categoryId: categories[0].id }
     ]).returning();
 
     // Seed blog tags
@@ -84,75 +82,101 @@ export async function seed() {
     console.log('🚀 Seeding projects...');
     const projectSeeds = await db.insert(projects).values([
       {
-        title: 'Personal Portfolio Website',
-        description: 'A modern, responsive portfolio website built with SvelteKit and TypeScript. Features a clean design, blog functionality, and project showcase.',
-        categoryId: categories[0].id,
+        title: 'dane.gg',
+        description: 'My personal website which you\'re on right now!\nJQuery-only frontend + React (Vite) admin CMS.',
+        categoryId: categories[0].id, // Development
         featured: true,
-        imageUrl: '/images/portfolio-preview.jpg',
+        published: true,
+        imageUrl: null,
+        active: 'Active',
         projectUrl: 'https://dane.gg',
-        projectText: 'Visit Site',
+        projectText: 'Visit Website',
         repoUrl: 'https://github.com/dane/dane.gg',
-        repoText: 'View Code',
+        repoText: 'View on GitHub',
         displayOrder: 1
+      },
+      {
+        title: 'dane.lol',
+        description: 'A website where i make games and random other things when I\'m bored!',
+        categoryId: categories[0].id, // Development
+        featured: true,
+        published: true,
+        imageUrl: null,
+        active: 'Active',
+        projectUrl: 'https://dane.lol',
+        projectText: 'Visit Website',
+        repoUrl: 'https://github.com/dane/dane.lol',
+        repoText: 'View on GitHub',
+        displayOrder: 2
       },
       {
         title: 'Task Management App',
         description: 'A full-stack task management application with real-time collaboration features. Built with React, Node.js, and PostgreSQL.',
-        categoryId: categories[0].id,
-        featured: true,
-        imageUrl: '/images/task-app-preview.jpg',
+        categoryId: categories[0].id, // Development
+        featured: false,
+        published: true,
+        imageUrl: null,
+        active: 'Active',
         projectUrl: 'https://tasks.dane.gg',
         projectText: 'Try Demo',
         repoUrl: 'https://github.com/dane/task-manager',
-        repoText: 'View Code',
-        displayOrder: 2
+        repoText: 'View on GitHub',
+        displayOrder: 3
       },
       {
         title: 'Weather Dashboard',
         description: 'A beautiful weather dashboard with location-based forecasts and interactive charts. Built with Vue.js and Chart.js.',
-        categoryId: categories[0].id,
+        categoryId: categories[0].id, // Development
         featured: false,
-        imageUrl: '/images/weather-dashboard.jpg',
+        published: true,
+        imageUrl: null,
+        active: 'Complete',
         projectUrl: 'https://weather.dane.gg',
         projectText: 'View App',
         repoUrl: 'https://github.com/dane/weather-dashboard',
-        repoText: 'View Code',
-        displayOrder: 3
+        repoText: 'View on GitHub',
+        displayOrder: 4
       },
       {
-        title: 'Mobile Recipe App',
-        description: 'A cross-platform mobile app for managing recipes with photo uploads and meal planning. Built with React Native.',
-        categoryId: categories[1].id,
+        title: 'Logo Design Collection',
+        description: 'A collection of logo designs I\'ve created for various clients and personal projects.',
+        categoryId: categories[1].id, // Graphics
         featured: true,
-        imageUrl: '/images/recipe-app.jpg',
-        projectUrl: 'https://apps.apple.com/recipe-app',
-        projectText: 'Download',
-        repoUrl: 'https://github.com/dane/recipe-app',
-        repoText: 'View Code',
+        published: true,
+        imageUrl: null,
+        active: 'Active',
+        projectUrl: null,
+        projectText: 'View Portfolio',
+        repoUrl: null,
+        repoText: null,
         displayOrder: 1
       },
       {
-        title: 'Desktop File Organizer',
-        description: 'A desktop application for automatically organizing files by type, date, and content. Built with Electron and Python.',
-        categoryId: categories[2].id,
+        title: 'Brand Identity Package',
+        description: 'Complete brand identity design including logo, color palette, typography, and brand guidelines.',
+        categoryId: categories[1].id, // Graphics
         featured: false,
-        imageUrl: '/images/file-organizer.jpg',
-        projectUrl: 'https://github.com/dane/file-organizer/releases',
-        projectText: 'Download',
-        repoUrl: 'https://github.com/dane/file-organizer',
-        repoText: 'View Code',
-        displayOrder: 1
+        published: true,
+        imageUrl: null,
+        active: 'Complete',
+        projectUrl: null,
+        projectText: 'View Case Study',
+        repoUrl: null,
+        repoText: null,
+        displayOrder: 2
       },
       {
-        title: 'Docker Deployment Pipeline',
-        description: 'Automated CI/CD pipeline for containerized applications with multi-environment support and rollback capabilities.',
-        categoryId: categories[3].id,
-        featured: false,
-        imageUrl: '/images/docker-pipeline.jpg',
-        projectUrl: 'https://github.com/dane/docker-pipeline',
-        projectText: 'View Docs',
-        repoUrl: 'https://github.com/dane/docker-pipeline',
-        repoText: 'View Code',
+        title: 'Tutorial Series',
+        description: 'A comprehensive video tutorial series covering web development fundamentals and advanced techniques.',
+        categoryId: categories[2].id, // Videos
+        featured: true,
+        published: true,
+        imageUrl: null,
+        active: 'Active',
+        projectUrl: 'https://youtube.com/@dane',
+        projectText: 'Watch on YouTube',
+        repoUrl: null,
+        repoText: null,
         displayOrder: 1
       }
     ]).returning();
@@ -160,30 +184,28 @@ export async function seed() {
     // Link projects with tags
     console.log('🔗 Linking projects with tags...');
     const projectTagLinks = [
-      // Portfolio website
-      { projectId: projectSeeds[0].id, tagId: seededTags.find(t => t.title === 'Svelte')?.id! },
-      { projectId: projectSeeds[0].id, tagId: seededTags.find(t => t.title === 'TypeScript')?.id! },
+      // dane.gg
+      { projectId: projectSeeds[0].id, tagId: seededTags.find(t => t.title === 'JavaScript')?.id! },
+      { projectId: projectSeeds[0].id, tagId: seededTags.find(t => t.title === 'Express')?.id! },
+      { projectId: projectSeeds[0].id, tagId: seededTags.find(t => t.title === 'React')?.id! },
       { projectId: projectSeeds[0].id, tagId: seededTags.find(t => t.title === 'CSS')?.id! },
+      { projectId: projectSeeds[0].id, tagId: seededTags.find(t => t.title === 'HTML')?.id! },
+      { projectId: projectSeeds[0].id, tagId: seededTags.find(t => t.title === 'TypeScript')?.id! },
+      
+      // dane.lol
+      { projectId: projectSeeds[1].id, tagId: seededTags.find(t => t.title === 'JavaScript')?.id! },
+      { projectId: projectSeeds[1].id, tagId: seededTags.find(t => t.title === 'Express')?.id! },
+      { projectId: projectSeeds[1].id, tagId: seededTags.find(t => t.title === 'CSS')?.id! },
+      { projectId: projectSeeds[1].id, tagId: seededTags.find(t => t.title === 'HTML')?.id! },
       
       // Task management app
-      { projectId: projectSeeds[1].id, tagId: seededTags.find(t => t.title === 'React')?.id! },
-      { projectId: projectSeeds[1].id, tagId: seededTags.find(t => t.title === 'Node.js')?.id! },
-      { projectId: projectSeeds[1].id, tagId: seededTags.find(t => t.title === 'PostgreSQL')?.id! },
+      { projectId: projectSeeds[2].id, tagId: seededTags.find(t => t.title === 'React')?.id! },
+      { projectId: projectSeeds[2].id, tagId: seededTags.find(t => t.title === 'Node.js')?.id! },
+      { projectId: projectSeeds[2].id, tagId: seededTags.find(t => t.title === 'PostgreSQL')?.id! },
       
       // Weather dashboard
-      { projectId: projectSeeds[2].id, tagId: seededTags.find(t => t.title === 'Vue.js')?.id! },
-      { projectId: projectSeeds[2].id, tagId: seededTags.find(t => t.title === 'JavaScript')?.id! },
-      
-      // Mobile recipe app
-      { projectId: projectSeeds[3].id, tagId: seededTags.find(t => t.title === 'React')?.id! },
-      { projectId: projectSeeds[3].id, tagId: seededTags.find(t => t.title === 'JavaScript')?.id! },
-      
-      // Desktop file organizer
-      { projectId: projectSeeds[4].id, tagId: seededTags.find(t => t.title === 'Python')?.id! },
-      
-      // Docker pipeline
-      { projectId: projectSeeds[5].id, tagId: seededTags.find(t => t.title === 'Docker')?.id! },
-      { projectId: projectSeeds[5].id, tagId: seededTags.find(t => t.title === 'Node.js')?.id! }
+      { projectId: projectSeeds[3].id, tagId: seededTags.find(t => t.title === 'Vue.js')?.id! },
+      { projectId: projectSeeds[3].id, tagId: seededTags.find(t => t.title === 'JavaScript')?.id! }
     ].filter(link => link.tagId); // Filter out any undefined tag IDs
 
     await db.insert(projectTags).values(projectTagLinks);
