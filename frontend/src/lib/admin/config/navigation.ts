@@ -5,7 +5,8 @@ import {
 	BarChart3, 
 	FileText,
 	Sliders,
-	TrendingUp
+	TrendingUp,
+	FolderKanban
 } from 'lucide-svelte';
 
 export interface NavigationItem {
@@ -38,6 +39,13 @@ export const adminNavigation: NavigationItem[] = [
 		icon: FileText,
 		path: '/admin/blog',
 		description: 'Manage blog posts'
+	},
+	{
+		id: 'projects',
+		label: 'Projects',
+		icon: FolderKanban,
+		path: '/admin/projects',
+		description: 'Manage projects'
 	},
 	{
 		id: 'users',
