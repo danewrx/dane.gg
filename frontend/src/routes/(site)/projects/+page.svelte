@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
-	import * as LucideIcons from 'lucide-svelte';
 	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
 
 	interface ProjectTag {
@@ -181,7 +180,7 @@
 											rel="noopener noreferrer"
 											class="action-button"
 										>
-											{#if projectIconInfo.type === 'lucide' && projectIconInfo.component}
+											{#if projectIconInfo.type === 'component' && projectIconInfo.component}
 												{@const IconComponent = projectIconInfo.component}
 												<IconComponent size={16} />
 											{:else if projectIconInfo.type === 'iconify' && projectIconInfo.icon}
@@ -191,8 +190,12 @@
 											{:else if projectIconInfo.type === 'text' && projectIconInfo.text}
 												<span class="text-icon">{projectIconInfo.text}</span>
 											{:else}
-												{@const DefaultIcon = projectIconInfo.component || LucideIcons.ExternalLink}
-												<DefaultIcon size={16} />
+												{#if projectIconInfo.component}
+													{@const DefaultIcon = projectIconInfo.component}
+													<DefaultIcon size={16} />
+												{:else}
+													<Icon icon="lucide:external-link" width="16" height="16" />
+												{/if}
 											{/if}
 											{project.projectText || 'Visit Website'}
 										</a>
@@ -206,7 +209,7 @@
 											rel="noopener noreferrer"
 											class="action-button"
 										>
-											{#if repoIconInfo.type === 'lucide' && repoIconInfo.component}
+											{#if repoIconInfo.type === 'component' && repoIconInfo.component}
 												{@const IconComponent = repoIconInfo.component}
 												<IconComponent size={16} />
 											{:else if repoIconInfo.type === 'iconify' && repoIconInfo.icon}
@@ -216,8 +219,12 @@
 											{:else if repoIconInfo.type === 'text' && repoIconInfo.text}
 												<span class="text-icon">{repoIconInfo.text}</span>
 											{:else}
-												{@const DefaultIcon = repoIconInfo.component || LucideIcons.ExternalLink}
-												<DefaultIcon size={16} />
+												{#if repoIconInfo.component}
+													{@const DefaultIcon = repoIconInfo.component}
+													<DefaultIcon size={16} />
+												{:else}
+													<Icon icon="lucide:external-link" width="16" height="16" />
+												{/if}
 											{/if}
 											{project.repoText || 'View on GitHub'}
 										</a>

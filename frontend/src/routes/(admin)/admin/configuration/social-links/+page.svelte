@@ -336,9 +336,9 @@
 								<Icon icon={`cib:${link.iconName.replace('cb-', '')}`} width="20" height="20" />
 							{:else if link.iconType === 'lucide' && link.iconName}
 								{@const iconInfo = getIconRenderInfo(link.iconName)}
-								{#if iconInfo.type === 'lucide' && iconInfo.component}
-									{@const LucideIcon = iconInfo.component}
-									<LucideIcon size={20} />
+								{#if iconInfo.type === 'component' && iconInfo.component}
+									{@const IconComponent = iconInfo.component}
+									<IconComponent size={20} />
 								{:else}
 									<Icon icon="lucide:external-link" width="20" height="20" />
 								{/if}
@@ -434,7 +434,7 @@
 								{#if selectedIcon}
 									{@const iconName = getIconNameFromOption(selectedIcon)}
 									{@const iconInfo = getIconRenderInfo(iconName)}
-									{#if iconInfo.type === 'lucide' && iconInfo.component}
+									{#if iconInfo.type === 'component' && iconInfo.component}
 										{@const IconComponent = iconInfo.component}
 										<IconComponent size={20} />
 									{:else if iconInfo.type === 'iconify' && iconInfo.icon}
