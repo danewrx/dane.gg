@@ -854,7 +854,7 @@
 	{#if showCategoryManager}
 		<div class="category-manager-overlay" onclick={handleCategoryManagerClose}>
 			<div class="category-manager-container" onclick={(e) => e.stopPropagation()}>
-				<ProjectCategoryManager />
+				<ProjectCategoryManager on:close={handleCategoryManagerClose} />
 			</div>
 		</div>
 	{/if}

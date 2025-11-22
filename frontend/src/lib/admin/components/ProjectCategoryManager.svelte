@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { Plus, Edit, Trash2, GripVertical, X } from 'lucide-svelte';
+	import { createEventDispatcher } from 'svelte';
 	import {
 		getAllProjectCategories,
 		createProjectCategory,
@@ -10,6 +11,10 @@
 		updateCategoryOrder,
 		type ProjectCategory
 	} from '$lib/admin/services/projectsService';
+
+	const dispatch = createEventDispatcher<{
+		close: void;
+	}>();
 
 	let categories = $state<ProjectCategory[]>([]);
 	let loading = $state(true);
@@ -192,10 +197,15 @@
 <div class="category-manager">
 	<div class="header">
 		<h2>Manage Categories</h2>
-		<button class="add-button" onclick={startAdd} type="button">
-			<Plus size={18} />
-			Add Category
-		</button>
+		<div class="header-actions">
+			<button class="add-button" onclick={startAdd} type="button">
+				<Plus size={18} />
+				Add Category
+			</button>
+			<button class="close-button" onclick={() => dispatch('close')} type="button" title="Close">
+				<X size={20} />
+			</button>
+		</div>
 	</div>
 
 	{#if loading}
@@ -313,6 +323,12 @@
 		color: var(--text-primary, #ffffff);
 	}
 
+	.header-actions {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
 	.add-button {
 		display: flex;
 		align-items: center;
@@ -331,6 +347,27 @@
 	.add-button:hover {
 		background: var(--accent-color-hover, #4f46e5);
 		transform: translateY(-1px);
+	}
+
+	.close-button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		padding: 0;
+		background: transparent;
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		color: var(--text-secondary, #a1a1aa);
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.close-button:hover {
+		background: var(--bg-secondary, #2d2d2d);
+		border-color: var(--text-primary, #ffffff);
+		color: var(--text-primary, #ffffff);
 	}
 
 	.loading,
