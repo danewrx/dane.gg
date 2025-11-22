@@ -85,8 +85,8 @@
 						projects: visibleProjects
 					};
 				})
-				// Remove categories with no visible projects
-				.filter(categoryGroup => categoryGroup.projects.length > 0);
+				.filter(categoryGroup => categoryGroup.projects.length > 0)
+				.sort((a, b) => b.projects.length - a.projects.length);
 
 			categories = filteredCategories;
 		} catch (err) {
