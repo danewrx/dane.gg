@@ -101,7 +101,7 @@
 		if (!iconName) return null;
 		const allIcons = await getAllIconLibraryIcons();
 		const lucideIcon = allIcons.find(icon => icon.type === 'lucide' && icon.iconName === iconName);
-		if (lucideIcon) return lucideIcon;ch
+		if (lucideIcon) return lucideIcon;
 		return allIcons.find(icon => icon.name === iconName) || null;
 	}
 
@@ -136,37 +136,43 @@
 		]);
 	});
 
+	let lastProjectId = $state<string | null>(null);
+	
 	$effect(() => {
-		if (projectId && projectId !== 'new') {
-			loadProject();
-		} else {
-			// Reset form for new project
-			title = '';
-			description = '';
-			categoryId = '';
-			imageUrl = '';
-			imageUrlIsExternal = false;
-			imageUrlFilename = null;
-			active = 'Active';
-			published = false;
-			featured = false;
-			projectUrl = '';
-			projectText = 'View Project';
-			projectTextCustom = false;
-			projectTextDropdown = 'View Project';
-			projectIcon = null;
-			projectIconOption = null;
-			repoUrl = '';
-			repoText = 'View Repository';
-			repoTextCustom = false;
-			repoTextDropdown = 'View Repository';
-			repoIcon = null;
-			repoIconOption = null;
-			tagIds = [];
-			createdAt = '';
-			overwriteCreatedDate = false;
-			newCreatedDate = '';
-			newCreatedTime = '';
+		if (projectId !== lastProjectId) {
+			lastProjectId = projectId;
+			
+			if (projectId && projectId !== 'new') {
+				loadProject();
+			} else {
+				// Reset form for new project
+				title = '';
+				description = '';
+				categoryId = '';
+				imageUrl = '';
+				imageUrlIsExternal = false;
+				imageUrlFilename = null;
+				active = 'Active';
+				published = false;
+				featured = false;
+				projectUrl = '';
+				projectText = 'View Project';
+				projectTextCustom = false;
+				projectTextDropdown = 'View Project';
+				projectIcon = null;
+				projectIconOption = null;
+				repoUrl = '';
+				repoText = 'View Repository';
+				repoTextCustom = false;
+				repoTextDropdown = 'View Repository';
+				repoIcon = null;
+				repoIconOption = null;
+				tagIds = [];
+				createdAt = '';
+				overwriteCreatedDate = false;
+				newCreatedDate = '';
+				newCreatedTime = '';
+			}
 		}
 	});
 
