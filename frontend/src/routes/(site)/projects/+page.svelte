@@ -38,6 +38,7 @@
 		category: {
 			id: string;
 			name: string;
+			displayOrder: number;
 			createdAt: string;
 		};
 		projects: Project[];
@@ -86,7 +87,12 @@
 					};
 				})
 				.filter(categoryGroup => categoryGroup.projects.length > 0)
-				.sort((a, b) => b.projects.length - a.projects.length);
+				// Sort by category displayOrder
+				.sort((a, b) => {
+					const orderDiff = (a.category.displayOrder || 0) - (b.category.displayOrder || 0);
+					if (orderDiff !== 0) return orderDiff;
+					return b.projects.length - a.projects.length;
+				});
 
 			categories = filteredCategories;
 		} catch (err) {
