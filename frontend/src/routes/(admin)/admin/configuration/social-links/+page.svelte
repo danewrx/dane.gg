@@ -5,7 +5,8 @@
 	import Icon from '@iconify/svelte';
 	import UnifiedIconPicker from '$lib/admin/components/ui/UnifiedIconPicker.svelte';
 	import { getIconCategories, getCustomOptions, type IconOption } from '$lib/admin/services/iconLibraryService';
-	import { getIconComponent } from '$lib/site/utils/iconHelper';
+	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
+	import type { ComponentType } from 'svelte';
 
 	interface SocialLink {
 		id: string;
@@ -41,6 +42,7 @@
 	});
 
 	let selectedIcon: IconOption | null = $state(null);
+	let iconPickerOpen = $state(false);
 	let customSvgUrl = $state('');
 	let customText = $state('');
 
@@ -260,6 +262,23 @@
 	function handleIconSelect(icon: IconOption | null) {
 		selectedIcon = icon;
 	}
+
+	function getIconNameFromOption(icon: IconOption | null): string | null {
+		if (!icon) return null;
+		if (icon.type === 'lucide' && icon.iconName) {
+			return icon.iconName;
+		}
+		if (icon.type === 'svg-url' && icon.svgUrl) {
+			return icon.svgUrl;
+		}
+		if (icon.type === 'custom-text' && icon.text) {
+			return icon.text;
+		}
+		if (icon.type === 'coreui-brand' && icon.iconName) {
+			return `cib-${icon.iconName}`;
+		}
+		return icon.name || null;
+	}
 </script>
 
 <svelte:head>
@@ -316,8 +335,13 @@
 							{:else if link.iconType === 'coreui-brand' && link.iconName}
 								<Icon icon={`cib:${link.iconName.replace('cb-', '')}`} width="20" height="20" />
 							{:else if link.iconType === 'lucide' && link.iconName}
-								{@const LucideIcon = getIconComponent(link.iconName)}
-								<LucideIcon size={20} />
+								{@const iconInfo = getIconRenderInfo(link.iconName)}
+								{#if iconInfo.type === 'lucide' && iconInfo.component}
+									{@const LucideIcon = iconInfo.component}
+									<LucideIcon size={20} />
+								{:else}
+									<Icon icon="lucide:external-link" width="20" height="20" />
+								{/if}
 							{:else}
 								<!-- Default icon when no specific icon is set -->
 								<Icon icon="lucide:external-link" width="20" height="20" class="default-icon" />
@@ -394,19 +418,54 @@
 							bind:value={formData.url}
 							placeholder="https://example.com"
 							required
+							class="form-input"
 						/>
 					</div>
 
 					<div class="form-group">
-						<label>Select Icon</label>
-						<UnifiedIconPicker 
-							selectedIcon={selectedIcon}
-							onIconSelect={handleIconSelect}
-							placeholder="Choose from icon library..."
-							showPreview={true}
-							previewLabel="Preview"
-							previewText={formData.name || 'Link Name'}
-						/>
+						<label>Icon</label>
+						<div class="icon-selection-section">
+							<button
+								type="button"
+								class="icon-button"
+								onclick={() => iconPickerOpen = true}
+								title="Choose icon"
+							>
+								{#if selectedIcon}
+									{@const iconName = getIconNameFromOption(selectedIcon)}
+									{@const iconInfo = getIconRenderInfo(iconName)}
+									{#if iconInfo.type === 'lucide' && iconInfo.component}
+										{@const IconComponent = iconInfo.component}
+										<IconComponent size={20} />
+									{:else if iconInfo.type === 'iconify' && iconInfo.icon}
+										<Icon icon={iconInfo.icon} width="20" height="20" />
+									{:else if iconInfo.type === 'svg' && iconInfo.url}
+										<img src={iconInfo.url} alt="Icon" width="20" height="20" />
+									{:else if iconInfo.type === 'text' && iconInfo.text}
+										<span class="text-icon-small">{iconInfo.text}</span>
+									{:else}
+										<Icon icon="lucide:image" width="20" height="20" />
+									{/if}
+								{:else}
+									<Icon icon="lucide:image" width="20" height="20" />
+								{/if}
+							</button>
+							<div class="icon-info">
+								{#if selectedIcon}
+									<div class="icon-name">{selectedIcon.displayName}</div>
+									<div class="icon-pack">
+										{selectedIcon.type === 'coreui-brand' ? 'CoreUI' : 
+										 selectedIcon.type === 'lucide' ? 'Lucide' : 
+										 selectedIcon.type === 'svg-url' ? 'Custom SVG' : 
+										 selectedIcon.type === 'custom-text' ? 'Custom Text' : 
+										 'Unknown'}
+									</div>
+								{:else}
+									<div class="icon-name">No icon selected</div>
+									<div class="icon-pack">Click to choose</div>
+								{/if}
+							</div>
+						</div>
 					</div>
 
 					<div class="form-group">
@@ -440,6 +499,18 @@
 				</form>
 			</div>
 		</div>
+	{/if}
+
+	{#if iconPickerOpen}
+		<UnifiedIconPicker
+			selectedIcon={selectedIcon}
+			onIconSelect={(icon) => {
+				handleIconSelect(icon);
+				iconPickerOpen = false;
+			}}
+			triggerless={true}
+			bind:open={iconPickerOpen}
+		/>
 	{/if}
 </div>
 
@@ -815,6 +886,66 @@
 
 	:global(html:not(.dark)) .form-group label {
 		color: #1f2937;
+	}
+
+	.icon-selection-section {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.icon-button {
+		width: 48px;
+		height: 48px;
+		min-width: 48px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		background: var(--bg-secondary, #2d2d2d);
+		cursor: pointer;
+		transition: all 0.2s ease;
+		padding: 0;
+		flex-shrink: 0;
+	}
+
+	.icon-button:hover {
+		border-color: var(--accent-color, #6366f1);
+		background: rgba(99, 102, 241, 0.1);
+	}
+
+	.icon-button:focus {
+		outline: 2px solid var(--accent-color, #6366f1);
+		outline-offset: 2px;
+	}
+
+	.icon-info {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.icon-name {
+		font-size: 14px;
+		font-weight: 500;
+		color: var(--text-primary, #ffffff);
+		line-height: 1.2;
+	}
+
+	.icon-pack {
+		font-size: 12px;
+		color: var(--text-secondary, #a1a1aa);
+		line-height: 1.2;
+	}
+
+	.text-icon-small {
+		font-size: 10px;
+		font-weight: 600;
+		color: var(--text-primary, #ffffff);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
 	}
 
 	.form-group input,
