@@ -4,9 +4,10 @@
 export interface IconOption {
   name: string;
   displayName: string;
-  type: 'coreui-brand' | 'svg-url' | 'custom-text';
+  type: 'coreui-brand' | 'lucide' | 'svg-url' | 'custom-text';
   iconSet?: string;
   iconName?: string; 
+  lucideComponent?: any; // For Lucide icons
   text?: string; // For text-based icons
   svgUrl?: string; // For custom SVG URLs
   category: string;
@@ -68,36 +69,35 @@ async function fetchCoreUIBrandIcons(): Promise<IconOption[]> {
       cachedIcons = icons;
       return icons;
     } else {
-      // Fallback to a basic set if API fails
+      // Fallback
       const fallbackIcons: IconOption[] = [
-        { name: 'cib-twitter', displayName: 'Twitter', type: 'coreui-brand', iconSet: 'cib', iconName: 'twitter', category: 'coreui-brands' },
-        { name: 'cib-facebook', displayName: 'Facebook', type: 'coreui-brand', iconSet: 'cib', iconName: 'facebook', category: 'coreui-brands' },
-        { name: 'cib-instagram', displayName: 'Instagram', type: 'coreui-brand', iconSet: 'cib', iconName: 'instagram', category: 'coreui-brands' },
-        { name: 'cib-github', displayName: 'GitHub', type: 'coreui-brand', iconSet: 'cib', iconName: 'github', category: 'coreui-brands' },
-        { name: 'cib-youtube', displayName: 'YouTube', type: 'coreui-brand', iconSet: 'cib', iconName: 'youtube', category: 'coreui-brands' },
-        { name: 'cib-discord', displayName: 'Discord', type: 'coreui-brand', iconSet: 'cib', iconName: 'discord', category: 'coreui-brands' },
-        { name: 'cib-twitch', displayName: 'Twitch', type: 'coreui-brand', iconSet: 'cib', iconName: 'twitch', category: 'coreui-brands' },
-        { name: 'cib-steam', displayName: 'Steam', type: 'coreui-brand', iconSet: 'cib', iconName: 'steam', category: 'coreui-brands' },
-        { name: 'cib-spotify', displayName: 'Spotify', type: 'coreui-brand', iconSet: 'cib', iconName: 'spotify', category: 'coreui-brands' },
-        { name: 'cib-linkedin', displayName: 'LinkedIn', type: 'coreui-brand', iconSet: 'cib', iconName: 'linkedin', category: 'coreui-brands' }
+        { name: 'cib-twitter', displayName: 'Twitter (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'twitter', category: 'coreui-brands' },
+        { name: 'cib-facebook', displayName: 'Facebook (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'facebook', category: 'coreui-brands' },
+        { name: 'cib-instagram', displayName: 'Instagram (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'instagram', category: 'coreui-brands' },
+        { name: 'cib-github', displayName: 'GitHub (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'github', category: 'coreui-brands' },
+        { name: 'cib-youtube', displayName: 'YouTube (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'youtube', category: 'coreui-brands' },
+        { name: 'cib-discord', displayName: 'Discord (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'discord', category: 'coreui-brands' },
+        { name: 'cib-twitch', displayName: 'Twitch (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'twitch', category: 'coreui-brands' },
+        { name: 'cib-steam', displayName: 'Steam (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'steam', category: 'coreui-brands' },
+        { name: 'cib-spotify', displayName: 'Spotify (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'spotify', category: 'coreui-brands' },
+        { name: 'cib-linkedin', displayName: 'LinkedIn (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'linkedin', category: 'coreui-brands' }
       ];
       cachedIcons = fallbackIcons;
       return fallbackIcons;
     }
   } catch (error) {
     console.error('Failed to fetch CoreUI brand icons:', error);
-    // Return fallback icons on error
     const fallbackIcons: IconOption[] = [
-      { name: 'cib-twitter', displayName: 'Twitter', type: 'coreui-brand', iconSet: 'cib', iconName: 'twitter', category: 'coreui-brands' },
-      { name: 'cib-facebook', displayName: 'Facebook', type: 'coreui-brand', iconSet: 'cib', iconName: 'facebook', category: 'coreui-brands' },
-      { name: 'cib-instagram', displayName: 'Instagram', type: 'coreui-brand', iconSet: 'cib', iconName: 'instagram', category: 'coreui-brands' },
-      { name: 'cib-github', displayName: 'GitHub', type: 'coreui-brand', iconSet: 'cib', iconName: 'github', category: 'coreui-brands' },
-      { name: 'cib-youtube', displayName: 'YouTube', type: 'coreui-brand', iconSet: 'cib', iconName: 'youtube', category: 'coreui-brands' },
-      { name: 'cib-discord', displayName: 'Discord', type: 'coreui-brand', iconSet: 'cib', iconName: 'discord', category: 'coreui-brands' },
-      { name: 'cib-twitch', displayName: 'Twitch', type: 'coreui-brand', iconSet: 'cib', iconName: 'twitch', category: 'coreui-brands' },
-      { name: 'cib-steam', displayName: 'Steam', type: 'coreui-brand', iconSet: 'cib', iconName: 'steam', category: 'coreui-brands' },
-      { name: 'cib-spotify', displayName: 'Spotify', type: 'coreui-brand', iconSet: 'cib', iconName: 'spotify', category: 'coreui-brands' },
-      { name: 'cib-linkedin', displayName: 'LinkedIn', type: 'coreui-brand', iconSet: 'cib', iconName: 'linkedin', category: 'coreui-brands' }
+      { name: 'cib-twitter', displayName: 'Twitter (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'twitter', category: 'coreui-brands' },
+      { name: 'cib-facebook', displayName: 'Facebook (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'facebook', category: 'coreui-brands' },
+      { name: 'cib-instagram', displayName: 'Instagram (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'instagram', category: 'coreui-brands' },
+      { name: 'cib-github', displayName: 'GitHub (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'github', category: 'coreui-brands' },
+      { name: 'cib-youtube', displayName: 'YouTube (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'youtube', category: 'coreui-brands' },
+      { name: 'cib-discord', displayName: 'Discord (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'discord', category: 'coreui-brands' },
+      { name: 'cib-twitch', displayName: 'Twitch (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'twitch', category: 'coreui-brands' },
+      { name: 'cib-steam', displayName: 'Steam (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'steam', category: 'coreui-brands' },
+      { name: 'cib-spotify', displayName: 'Spotify (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'spotify', category: 'coreui-brands' },
+      { name: 'cib-linkedin', displayName: 'LinkedIn (CoreUI)', type: 'coreui-brand', iconSet: 'cib', iconName: 'linkedin', category: 'coreui-brands' }
     ];
     cachedIcons = fallbackIcons;
     return fallbackIcons;
@@ -106,15 +106,83 @@ async function fetchCoreUIBrandIcons(): Promise<IconOption[]> {
   }
 }
 
+async function fetchLucideIcons(): Promise<IconOption[]> {
+  try {
+    const lucideModule = await import('lucide-svelte');
+    const lucideIcons: IconOption[] = [];
+    
+    // Common Lucide icons
+    const commonIcons = [
+      'ExternalLink', 'Github', 'Globe', 'Link', 'ArrowRight', 'Play', 'Eye',
+      'Download', 'FileText', 'Package', 'Code', 'Code2', 'Server', 'GitBranch',
+      'Zap', 'Rocket', 'Star', 'Heart', 'Book', 'Video', 'Music', 'Image',
+      'File', 'Folder', 'Box', 'Layers', 'Grid', 'Layout', 'Monitor'
+    ];
+    
+    commonIcons.forEach(name => {
+      const component = (lucideModule as any)[name];
+      if (component) {
+        lucideIcons.push({
+          name: `lucide-${name}`,
+          displayName: `${name.replace(/([A-Z])/g, ' $1').trim()} (Lucide)`,
+          type: 'lucide',
+          iconName: name,
+          lucideComponent: component,
+          category: 'lucide-common'
+        });
+      }
+    });
+    
+    // Add other Lucide icons
+    Object.keys(lucideModule).forEach(name => {
+      if (name !== 'default' && 
+          name !== 'createLucideIcon' && 
+          !commonIcons.includes(name)) {
+        const component = (lucideModule as any)[name];
+        if (component && typeof component === 'function') {
+          lucideIcons.push({
+            name: `lucide-${name}`,
+            displayName: `${name.replace(/([A-Z])/g, ' $1').trim()} (Lucide)`,
+            type: 'lucide',
+            iconName: name,
+            lucideComponent: component,
+            category: 'lucide'
+          });
+        }
+      }
+    });
+    
+    return lucideIcons.sort((a, b) => a.displayName.localeCompare(b.displayName));
+  } catch (error) {
+    console.error('Failed to load Lucide icons:', error);
+    return [];
+  }
+}
+
 // Get icon categories dynamically
 export async function getIconCategories(): Promise<IconCategory[]> {
-  const coreuiIcons = await fetchCoreUIBrandIcons();
+  const [coreuiIcons, lucideIcons] = await Promise.all([
+    fetchCoreUIBrandIcons(),
+    fetchLucideIcons()
+  ]);
+  
+  const customOptions = getCustomOptions();
   
   return [
     {
       name: 'coreui-brands',
       displayName: 'CoreUI Brand Icons',
       icons: coreuiIcons
+    },
+    {
+      name: 'lucide',
+      displayName: 'Lucide Icons',
+      icons: lucideIcons
+    },
+    {
+      name: 'custom',
+      displayName: 'Custom Options',
+      icons: customOptions
     }
   ];
 }
@@ -147,7 +215,8 @@ export async function searchIcons(query: string): Promise<IconOption[]> {
   
   return allIcons.filter(icon => 
     icon.name.toLowerCase().includes(lowercaseQuery) ||
-    icon.displayName.toLowerCase().includes(lowercaseQuery)
+    icon.displayName.toLowerCase().includes(lowercaseQuery) ||
+    (icon.iconName && icon.iconName.toLowerCase().includes(lowercaseQuery))
   );
 }
 

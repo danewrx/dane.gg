@@ -27,8 +27,10 @@ export interface Project {
 	published: boolean;
 	projectUrl: string | null;
 	projectText: string;
+	projectIcon: string | null;
 	repoUrl: string | null;
 	repoText: string;
+	repoIcon: string | null;
 	displayOrder: number;
 	createdAt: string;
 	updatedAt: string;
@@ -45,8 +47,10 @@ export interface CreateProject {
 	published?: boolean;
 	projectUrl?: string;
 	projectText?: string;
+	projectIcon?: string | null;
 	repoUrl?: string;
 	repoText?: string;
+	repoIcon?: string | null;
 	displayOrder?: number;
 	featured?: boolean;
 	tagIds?: string[];
@@ -61,8 +65,10 @@ export interface UpdateProject {
 	published?: boolean;
 	projectUrl?: string;
 	projectText?: string;
+	projectIcon?: string | null;
 	repoUrl?: string;
 	repoText?: string;
+	repoIcon?: string | null;
 	displayOrder?: number;
 	featured?: boolean;
 	tagIds?: string[];

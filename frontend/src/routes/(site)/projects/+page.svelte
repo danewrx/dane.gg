@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { ExternalLink, Github } from 'lucide-svelte';
+	import Icon from '@iconify/svelte';
+	import * as LucideIcons from 'lucide-svelte';
+	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
 
 	interface ProjectTag {
 		id: string;
@@ -23,8 +25,10 @@
 		active: string;
 		projectUrl: string | null;
 		projectText: string;
+		projectIcon: string | null;
 		repoUrl: string | null;
 		repoText: string;
+		repoIcon: string | null;
 		displayOrder: number;
 		createdAt: string;
 		updatedAt: string;
@@ -170,25 +174,51 @@
 								
 								<div class="project-actions">
 									{#if project.projectUrl}
+										{@const projectIconInfo = getIconRenderInfo(project.projectIcon)}
 										<a 
 											href={project.projectUrl} 
 											target="_blank" 
 											rel="noopener noreferrer"
 											class="action-button"
 										>
-											<ExternalLink size={16} />
+											{#if projectIconInfo.type === 'lucide' && projectIconInfo.component}
+												{@const IconComponent = projectIconInfo.component}
+												<IconComponent size={16} />
+											{:else if projectIconInfo.type === 'iconify' && projectIconInfo.icon}
+												<Icon icon={projectIconInfo.icon} width="16" height="16" />
+											{:else if projectIconInfo.type === 'svg' && projectIconInfo.url}
+												<img src={projectIconInfo.url} alt="Icon" width="16" height="16" />
+											{:else if projectIconInfo.type === 'text' && projectIconInfo.text}
+												<span class="text-icon">{projectIconInfo.text}</span>
+											{:else}
+												{@const DefaultIcon = projectIconInfo.component || LucideIcons.ExternalLink}
+												<DefaultIcon size={16} />
+											{/if}
 											{project.projectText || 'Visit Website'}
 										</a>
 									{/if}
 									
 									{#if project.repoUrl}
+										{@const repoIconInfo = getIconRenderInfo(project.repoIcon)}
 										<a 
 											href={project.repoUrl} 
 											target="_blank" 
 											rel="noopener noreferrer"
 											class="action-button"
 										>
-											<Github size={16} />
+											{#if repoIconInfo.type === 'lucide' && repoIconInfo.component}
+												{@const IconComponent = repoIconInfo.component}
+												<IconComponent size={16} />
+											{:else if repoIconInfo.type === 'iconify' && repoIconInfo.icon}
+												<Icon icon={repoIconInfo.icon} width="16" height="16" />
+											{:else if repoIconInfo.type === 'svg' && repoIconInfo.url}
+												<img src={repoIconInfo.url} alt="Icon" width="16" height="16" />
+											{:else if repoIconInfo.type === 'text' && repoIconInfo.text}
+												<span class="text-icon">{repoIconInfo.text}</span>
+											{:else}
+												{@const DefaultIcon = repoIconInfo.component || LucideIcons.ExternalLink}
+												<DefaultIcon size={16} />
+											{/if}
 											{project.repoText || 'View on GitHub'}
 										</a>
 									{/if}
@@ -225,9 +255,9 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-bottom: 2rem;
-		padding-bottom: 1rem;
-		border-bottom: 2px solid var(--border-color);
+		margin-bottom: 1.5rem;
+		padding-bottom: 0.75rem;
+		border-bottom: 1px solid var(--border-color);
 	}
 
 	.category-title {
@@ -238,30 +268,31 @@
 	}
 
 	.projects-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-		gap: 2rem;
+		columns: 2;
+		column-gap: 2rem;
+		column-fill: balance;
 	}
 
 	.project-card {
 		background: var(--bg-secondary);
 		border: 1px solid var(--border-color);
-		border-radius: 12px;
+		border-radius: 0;
 		overflow: hidden;
-		transition: all 0.3s ease;
+		transition: all 0.2s ease;
 		display: flex;
 		flex-direction: column;
+		margin-bottom: 2rem;
+		break-inside: avoid;
+		page-break-inside: avoid;
 	}
 
 	.project-card:hover {
 		border-color: var(--accent-color);
-		transform: translateY(-4px);
-		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 	}
 
 	.project-image {
 		width: 100%;
-		height: 200px;
 		overflow: hidden;
 		background: var(--bg-tertiary);
 		position: relative;
@@ -269,8 +300,7 @@
 
 	.project-image img {
 		width: 100%;
-		height: 100%;
-		object-fit: cover;
+		height: auto;
 		display: block;
 	}
 
@@ -292,17 +322,28 @@
 
 	.project-tags {
 		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
+		flex-wrap: nowrap;
+		gap: 0.375rem;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+	}
+
+	.project-tags::-webkit-scrollbar {
+		display: none;
 	}
 
 	.tag {
-		padding: 0.375rem 0.75rem;
-		border-radius: 16px;
-		font-size: 0.875rem;
+		padding: 0.2rem 0.45rem;
+		border-radius: 0;
+		font-size: 0.7rem;
 		font-weight: 500;
 		border: 1px solid;
 		display: inline-block;
+		line-height: 1.2;
+		white-space: nowrap;
+		flex-shrink: 0;
 	}
 
 	.project-description {
@@ -325,31 +366,41 @@
 	.action-button {
 		display: inline-flex;
 		align-items: center;
+		justify-content: center;
 		gap: 0.5rem;
-		padding: 0.625rem 1.25rem;
+		padding: 0.75rem 1.25rem;
 		background: var(--bg-tertiary);
 		color: var(--text-primary);
 		border: 1px solid var(--border-color);
-		border-radius: 6px;
+		border-radius: 0;
 		text-decoration: none;
 		font-size: 0.875rem;
 		font-weight: 500;
 		transition: all 0.2s ease;
+		flex: 1;
+		min-width: 0;
 	}
 
 	.action-button:hover {
-		background: var(--accent-color);
-		color: var(--accent-color-contrast, #ffffff);
+		background: var(--bg-hover);
 		border-color: var(--accent-color);
+		color: var(--accent-color);
 	}
 
-	.action-button svg {
+	.action-button svg,
+	.action-button img {
 		flex-shrink: 0;
+	}
+
+	.action-button .text-icon {
+		font-size: 12px;
+		font-weight: 600;
+		line-height: 1;
 	}
 
 	@media (max-width: 768px) {
 		.projects-grid {
-			grid-template-columns: 1fr;
+			columns: 1;
 		}
 
 		.category-title {
@@ -358,6 +409,18 @@
 
 		.project-content {
 			padding: 1.25rem;
+		}
+	}
+
+	@media (min-width: 769px) and (max-width: 1024px) {
+		.projects-grid {
+			columns: 2;
+		}
+	}
+
+	@media (min-width: 1025px) {
+		.projects-grid {
+			columns: 2;
 		}
 	}
 </style>

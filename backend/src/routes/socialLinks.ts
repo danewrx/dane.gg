@@ -79,10 +79,10 @@ router.post('/', requireSession, async (req, res) => {
       });
     }
 
-    if (!iconType || !['coreui-brand', 'svg-url', 'custom-text'].includes(iconType)) {
+    if (!iconType || !['coreui-brand', 'lucide', 'svg-url', 'custom-text'].includes(iconType)) {
       return res.status(400).json({
         success: false,
-        error: 'Valid icon type is required (coreui-brand, svg-url, or custom-text)'
+        error: 'Valid icon type is required (coreui-brand, lucide, svg-url, or custom-text)'
       });
     }
 
@@ -93,10 +93,10 @@ router.post('/', requireSession, async (req, res) => {
       });
     }
 
-    if (iconType === 'coreui-brand' && !iconName) {
+    if ((iconType === 'coreui-brand' || iconType === 'lucide') && !iconName) {
       return res.status(400).json({
         success: false,
-        error: 'Icon name is required when icon type is coreui-brand'
+        error: 'Icon name is required when icon type is coreui-brand or lucide'
       });
     }
 
@@ -111,7 +111,7 @@ router.post('/', requireSession, async (req, res) => {
       name,
       url,
       iconType,
-      iconName: iconType === 'coreui-brand' ? iconName : null,
+      iconName: (iconType === 'coreui-brand' || iconType === 'lucide') ? iconName : null,
       iconText: iconType === 'custom-text' ? iconText : null,
       svgUrl: iconType === 'svg-url' ? svgUrl : null,
       displayOrder: displayOrder || 0,
@@ -147,10 +147,10 @@ router.put('/:id', requireSession, async (req, res) => {
     }
 
     // Validation
-    if (iconType && !['coreui-brand', 'svg-url', 'custom-text'].includes(iconType)) {
+    if (iconType && !['coreui-brand', 'lucide', 'svg-url', 'custom-text'].includes(iconType)) {
       return res.status(400).json({
         success: false,
-        error: 'Valid icon type is required (coreui-brand, svg-url, or custom-text)'
+        error: 'Valid icon type is required (coreui-brand, lucide, svg-url, or custom-text)'
       });
     }
 
@@ -161,10 +161,10 @@ router.put('/:id', requireSession, async (req, res) => {
       });
     }
 
-    if (iconType === 'coreui-brand' && !iconName) {
+    if ((iconType === 'coreui-brand' || iconType === 'lucide') && !iconName) {
       return res.status(400).json({
         success: false,
-        error: 'Icon name is required when icon type is coreui-brand'
+        error: 'Icon name is required when icon type is coreui-brand or lucide'
       });
     }
 
@@ -179,7 +179,7 @@ router.put('/:id', requireSession, async (req, res) => {
       name,
       url,
       iconType,
-      iconName: iconType === 'coreui-brand' ? iconName : null,
+      iconName: (iconType === 'coreui-brand' || iconType === 'lucide') ? iconName : null,
       iconText: iconType === 'custom-text' ? iconText : null,
       svgUrl: iconType === 'svg-url' ? svgUrl : null,
       displayOrder,

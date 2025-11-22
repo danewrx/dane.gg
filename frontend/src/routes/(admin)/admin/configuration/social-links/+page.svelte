@@ -3,14 +3,15 @@
 	import { toast } from 'svelte-sonner';
 	import { Link, Plus, Edit, Trash2, Eye, EyeOff, GripVertical } from 'lucide-svelte';
 	import Icon from '@iconify/svelte';
-	import IconPicker from '$lib/admin/components/ui/IconPicker.svelte';
+	import UnifiedIconPicker from '$lib/admin/components/ui/UnifiedIconPicker.svelte';
 	import { getIconCategories, getCustomOptions, type IconOption } from '$lib/admin/services/iconLibraryService';
+	import { getIconComponent } from '$lib/site/utils/iconHelper';
 
 	interface SocialLink {
 		id: string;
 		name: string;
 		url: string;
-		iconType: 'coreui-brand' | 'svg-url' | 'custom-text';
+		iconType: 'coreui-brand' | 'lucide' | 'svg-url' | 'custom-text';
 		iconName?: string;
 		iconText?: string;
 		svgUrl?: string;
@@ -31,7 +32,7 @@
 	let formData = $state({
 		name: '',
 		url: '',
-		iconType: 'coreui-brand' as 'coreui-brand' | 'svg-url' | 'custom-text',
+		iconType: 'coreui-brand' as 'coreui-brand' | 'lucide' | 'svg-url' | 'custom-text',
 		iconName: '',
 		iconText: '',
 		svgUrl: '',
@@ -78,11 +79,41 @@
 		try {
 			isSaving = true;
 
+			// Determine icon type and values from selectedIcon
+			let iconType: 'coreui-brand' | 'lucide' | 'svg-url' | 'custom-text' = 'coreui-brand';
+			let iconName: string | null = null;
+			let iconText: string | null = null;
+			let svgUrl: string | null = null;
+
+			if (selectedIcon) {
+				iconType = selectedIcon.type as 'coreui-brand' | 'lucide' | 'svg-url' | 'custom-text';
+				
+				if (selectedIcon.type === 'svg-url') {
+					svgUrl = selectedIcon.svgUrl || selectedIcon.name; // Use name if it's the URL
+					iconName = null;
+					iconText = null;
+				} else if (selectedIcon.type === 'custom-text') {
+					iconText = selectedIcon.text || selectedIcon.name.replace('custom-text-', '');
+					iconName = null;
+					svgUrl = null;
+				} else if (selectedIcon.type === 'lucide') {
+					iconName = selectedIcon.iconName || selectedIcon.name.replace('lucide-', '');
+					iconText = null;
+					svgUrl = null;
+				} else {
+					// CoreUI brand icon
+					iconName = selectedIcon.iconName || selectedIcon.name.replace('cib-', '');
+					iconText = null;
+					svgUrl = null;
+				}
+			}
+
 			const linkData = {
 				...formData,
-				iconName: formData.iconType === 'custom-text' ? null : selectedIcon?.iconName || formData.iconName,
-				iconText: formData.iconType === 'custom-text' ? formData.iconText : null,
-				svgUrl: formData.iconType === 'svg-url' ? formData.svgUrl : null
+				iconType,
+				iconName,
+				iconText,
+				svgUrl
 			};
 
 			const url = editingLink ? `/api/social-links/${editingLink.id}` : '/api/social-links';
@@ -167,7 +198,7 @@
 		}
 	}
 
-	function editLink(link: SocialLink) {
+	async function editLink(link: SocialLink) {
 		editingLink = link;
 		formData = {
 			name: link.name,
@@ -180,10 +211,29 @@
 			isActive: link.isActive
 		};
 
-		// Find the selected icon
-		if (link.iconType !== 'custom-text' && link.iconName) {
+		// Find or create the selected icon based on type
+		if (link.iconType === 'svg-url' && link.svgUrl) {
+			selectedIcon = {
+				name: link.svgUrl,
+				displayName: 'Custom SVG URL',
+				type: 'svg-url',
+				svgUrl: link.svgUrl,
+				category: 'custom'
+			};
+		} else if (link.iconType === 'custom-text' && link.iconText) {
+			selectedIcon = {
+				name: `custom-text-${link.iconText}`,
+				displayName: 'Custom Text',
+				type: 'custom-text',
+				text: link.iconText,
+				category: 'custom'
+			};
+		} else if (link.iconType === 'lucide' && link.iconName) {
 			const allIcons = iconCategories.flatMap(cat => cat.icons);
-			selectedIcon = allIcons.find(icon => icon.iconName === link.iconName) || null;
+			selectedIcon = allIcons.find(icon => icon.type === 'lucide' && icon.iconName === link.iconName) || null;
+		} else if (link.iconType === 'coreui-brand' && link.iconName) {
+			const allIcons = iconCategories.flatMap(cat => cat.icons);
+			selectedIcon = allIcons.find(icon => icon.type === 'coreui-brand' && icon.iconName === link.iconName) || null;
 		} else {
 			selectedIcon = null;
 		}
@@ -209,21 +259,6 @@
 
 	function handleIconSelect(icon: IconOption | null) {
 		selectedIcon = icon;
-		if (icon) {
-			formData.iconType = icon.type;
-			formData.iconName = icon.iconName || '';
-			formData.iconText = icon.text || '';
-			formData.svgUrl = icon.svgUrl || '';
-		}
-	}
-
-	function handleIconTypeChange() {
-		selectedIcon = null;
-		formData.iconName = '';
-		formData.iconText = '';
-		formData.svgUrl = '';
-		customSvgUrl = '';
-		customText = '';
 	}
 </script>
 
@@ -280,6 +315,9 @@
 								<img src={link.svgUrl} alt={link.name} width="20" height="20" />
 							{:else if link.iconType === 'coreui-brand' && link.iconName}
 								<Icon icon={`cib:${link.iconName.replace('cb-', '')}`} width="20" height="20" />
+							{:else if link.iconType === 'lucide' && link.iconName}
+								{@const LucideIcon = getIconComponent(link.iconName)}
+								<LucideIcon size={20} />
 							{:else}
 								<!-- Default icon when no specific icon is set -->
 								<Icon icon="lucide:external-link" width="20" height="20" class="default-icon" />
@@ -360,47 +398,16 @@
 					</div>
 
 					<div class="form-group">
-						<label for="iconType">Icon Type</label>
-						<select id="iconType" bind:value={formData.iconType} onchange={handleIconTypeChange}>
-							<option value="coreui-brand">CoreUI Brand Icon</option>
-							<option value="svg-url">Custom SVG URL</option>
-							<option value="custom-text">Custom Text</option>
-						</select>
+						<label>Select Icon</label>
+						<UnifiedIconPicker 
+							selectedIcon={selectedIcon}
+							onIconSelect={handleIconSelect}
+							placeholder="Choose from icon library..."
+							showPreview={true}
+							previewLabel="Preview"
+							previewText={formData.name || 'Link Name'}
+						/>
 					</div>
-
-					{#if formData.iconType === 'svg-url'}
-						<div class="form-group">
-							<label for="svgUrl">SVG URL</label>
-							<input 
-								type="url" 
-								id="svgUrl"
-								bind:value={formData.svgUrl}
-								placeholder="https://example.com/icon.svg"
-							/>
-							<small>Enter a direct URL to an SVG file</small>
-						</div>
-					{:else if formData.iconType === 'custom-text'}
-						<div class="form-group">
-							<label for="customText">Custom Text</label>
-							<input 
-								type="text" 
-								id="customText"
-								bind:value={formData.iconText}
-								placeholder="e.g., Custom, Logo, etc."
-								maxlength="20"
-							/>
-							<small>This will be displayed as a styled text badge</small>
-						</div>
-					{:else}
-						<div class="form-group">
-							<label>Select Icon</label>
-							<IconPicker 
-								selectedIcon={selectedIcon}
-								onIconSelect={handleIconSelect}
-								placeholder="Choose from icon library..."
-							/>
-						</div>
-					{/if}
 
 					<div class="form-group">
 						<label for="displayOrder">Display Order</label>

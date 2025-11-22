@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Save, Upload, X, Settings, ChevronDown } from 'lucide-svelte';
+	import { Save, Upload, X, Settings, ChevronDown, Image } from 'lucide-svelte';
+	import Icon from '@iconify/svelte';
+	import type { ComponentType } from 'svelte';
+	import UnifiedIconPicker from './ui/UnifiedIconPicker.svelte';
+	import { getAllIcons as getAllIconLibraryIcons, type IconOption } from '$lib/admin/services/iconLibraryService';
 	import { toast } from 'svelte-sonner';
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	import Toggle from './ui/Toggle.svelte';
@@ -42,10 +46,16 @@
 	let projectText = $state('View Project');
 	let projectTextCustom = $state(false);
 	let projectTextDropdown = $state('View Project');
+	let projectIcon = $state<string | null>(null);
+	let projectIconOption = $state<IconOption | null>(null);
+	let projectIconPickerOpen = $state(false);
 	let repoUrl = $state('');
 	let repoText = $state('View Repository');
 	let repoTextCustom = $state(false);
 	let repoTextDropdown = $state('View Repository');
+	let repoIcon = $state<string | null>(null);
+	let repoIconOption = $state<IconOption | null>(null);
+	let repoIconPickerOpen = $state(false);
 	let tagIds = $state<string[]>([]);
 
 	// Predefined button text options
@@ -86,6 +96,39 @@
 
 	const activeStates = ['Active', 'Complete', 'Abandoned', 'Archived'];
 
+	// Helper to convert icon name string to IconOption
+	async function iconNameToOption(iconName: string | null): Promise<IconOption | null> {
+		if (!iconName) return null;
+		const allIcons = await getAllIconLibraryIcons();
+		const lucideIcon = allIcons.find(icon => icon.type === 'lucide' && icon.iconName === iconName);
+		if (lucideIcon) return lucideIcon;ch
+		return allIcons.find(icon => icon.name === iconName) || null;
+	}
+
+	function iconOptionToName(icon: IconOption | null): string | null {
+		if (!icon) return null;
+		if (icon.type === 'lucide' && icon.iconName) {
+			return icon.iconName;
+		}
+		return icon.name;
+	}
+
+	function getIconRenderInfo(icon: IconOption | null): { type: 'lucide' | 'iconify' | 'svg' | 'text' | null; component?: ComponentType; icon?: string; url?: string; text?: string } {
+		if (!icon) return { type: null };
+		
+		if (icon.type === 'lucide' && icon.lucideComponent) {
+			return { type: 'lucide', component: icon.lucideComponent as ComponentType };
+		} else if (icon.type === 'coreui-brand' && icon.iconSet && icon.iconName) {
+			return { type: 'iconify', icon: `${icon.iconSet}:${icon.iconName}` };
+		} else if (icon.type === 'svg-url' && icon.svgUrl) {
+			return { type: 'svg', url: icon.svgUrl };
+		} else if (icon.type === 'custom-text' && icon.text) {
+			return { type: 'text', text: icon.text };
+		}
+		
+		return { type: null };
+	}
+
 	onMount(async () => {
 		await Promise.all([
 			loadCategories(),
@@ -111,10 +154,14 @@
 			projectText = 'View Project';
 			projectTextCustom = false;
 			projectTextDropdown = 'View Project';
+			projectIcon = null;
+			projectIconOption = null;
 			repoUrl = '';
 			repoText = 'View Repository';
 			repoTextCustom = false;
 			repoTextDropdown = 'View Repository';
+			repoIcon = null;
+			repoIconOption = null;
 			tagIds = [];
 			createdAt = '';
 			overwriteCreatedDate = false;
@@ -179,6 +226,8 @@
 				projectTextDropdown = 'Custom...';
 				projectTextCustom = true;
 			}
+			projectIcon = project.projectIcon || null;
+			projectIconOption = await iconNameToOption(project.projectIcon || null);
 			repoUrl = project.repoUrl || '';
 			const savedRepoText = project.repoText || 'View Repository';
 			if (repoButtonOptions.slice(0, -1).includes(savedRepoText)) {
@@ -190,6 +239,8 @@
 				repoTextDropdown = 'Custom...';
 				repoTextCustom = true;
 			}
+			repoIcon = project.repoIcon || null;
+			repoIconOption = await iconNameToOption(project.repoIcon || null);
 			tagIds = project.tags.map(t => t.id);
 			createdAt = project.createdAt;
 		} catch (err) {
@@ -355,8 +406,10 @@
 				featured: featured,
 				projectUrl: projectUrl.trim() || undefined,
 				projectText: projectText.trim() || 'View Project',
+				projectIcon: iconOptionToName(projectIconOption),
 				repoUrl: repoUrl.trim() || undefined,
 				repoText: repoText.trim() || 'View Repository',
+				repoIcon: iconOptionToName(repoIconOption),
 				tagIds: tagIds.length > 0 ? tagIds : undefined
 			};
 
@@ -497,15 +550,41 @@
 
 			<!-- Project URL & Button Text -->
 			<div class="form-group inline-fields">
-				<div class="inline-field">
+				<div class="inline-field with-icon-button">
 					<label for="project-url">Project URL</label>
-					<input
-						type="url"
-						id="project-url"
-						bind:value={projectUrl}
-						placeholder="https://example.com"
-						class="form-input"
-					/>
+					<div class="input-with-icon">
+						<button
+							type="button"
+							class="icon-button"
+							onclick={() => projectIconPickerOpen = true}
+							title="Choose project icon"
+						>
+							{#if projectIconOption}
+								{@const iconInfo = getIconRenderInfo(projectIconOption)}
+								{#if iconInfo.type === 'lucide' && iconInfo.component}
+									{@const IconComponent = iconInfo.component}
+									<IconComponent size={16} />
+								{:else if iconInfo.type === 'iconify' && iconInfo.icon}
+									<Icon icon={iconInfo.icon} width="16" height="16" />
+								{:else if iconInfo.type === 'svg' && iconInfo.url}
+									<img src={iconInfo.url} alt="Icon" width="16" height="16" />
+								{:else if iconInfo.type === 'text' && iconInfo.text}
+									<span class="text-icon-small">{iconInfo.text}</span>
+								{:else}
+									<Icon icon="lucide:image" width="16" height="16" />
+								{/if}
+							{:else}
+								<Icon icon="lucide:image" width="16" height="16" />
+							{/if}
+						</button>
+						<input
+							type="url"
+							id="project-url"
+							bind:value={projectUrl}
+							placeholder="https://example.com"
+							class="form-input"
+						/>
+					</div>
 				</div>
 				<div class="inline-field">
 					<label for="project-text">Project Button Text</label>
@@ -545,15 +624,41 @@
 
 			<!-- Repository URL & Button Text -->
 			<div class="form-group inline-fields">
-				<div class="inline-field">
+				<div class="inline-field with-icon-button">
 					<label for="repo-url">Repository URL</label>
-					<input
-						type="url"
-						id="repo-url"
-						bind:value={repoUrl}
-						placeholder="https://github.com/user/repo"
-						class="form-input"
-					/>
+					<div class="input-with-icon">
+						<button
+							type="button"
+							class="icon-button"
+							onclick={() => repoIconPickerOpen = true}
+							title="Choose repository icon"
+						>
+							{#if repoIconOption}
+								{@const iconInfo = getIconRenderInfo(repoIconOption)}
+								{#if iconInfo.type === 'lucide' && iconInfo.component}
+									{@const IconComponent = iconInfo.component}
+									<IconComponent size={16} />
+								{:else if iconInfo.type === 'iconify' && iconInfo.icon}
+									<Icon icon={iconInfo.icon} width="16" height="16" />
+								{:else if iconInfo.type === 'svg' && iconInfo.url}
+									<img src={iconInfo.url} alt="Icon" width="16" height="16" />
+								{:else if iconInfo.type === 'text' && iconInfo.text}
+									<span class="text-icon-small">{iconInfo.text}</span>
+								{:else}
+									<Icon icon="lucide:image" width="16" height="16" />
+								{/if}
+							{:else}
+								<Icon icon="lucide:image" width="16" height="16" />
+							{/if}
+						</button>
+						<input
+							type="url"
+							id="repo-url"
+							bind:value={repoUrl}
+							placeholder="https://github.com/user/repo"
+							class="form-input"
+						/>
+					</div>
 				</div>
 				<div class="inline-field">
 					<label for="repo-text">Repository Button Text</label>
@@ -699,6 +804,33 @@
 			</div>
 		</div>
 	{/if}
+
+	<!-- Icon Picker Modals -->
+	{#if projectIconPickerOpen}
+		<UnifiedIconPicker
+			selectedIcon={projectIconOption}
+			onIconSelect={(icon) => {
+				projectIconOption = icon;
+				projectIcon = iconOptionToName(icon);
+				projectIconPickerOpen = false;
+			}}
+			triggerless={true}
+			bind:open={projectIconPickerOpen}
+		/>
+	{/if}
+
+	{#if repoIconPickerOpen}
+		<UnifiedIconPicker
+			selectedIcon={repoIconOption}
+			onIconSelect={(icon) => {
+				repoIconOption = icon;
+				repoIcon = iconOptionToName(icon);
+				repoIconPickerOpen = false;
+			}}
+			triggerless={true}
+			bind:open={repoIconPickerOpen}
+		/>
+	{/if}
 </div>
 
 <style>
@@ -747,6 +879,53 @@
 	.form-group.inline-fields {
 		flex-direction: row;
 		gap: 12px;
+	}
+
+	.with-icon-button {
+		position: relative;
+	}
+
+	.input-with-icon {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.icon-button {
+		width: 40px;
+		height: 40px;
+		min-width: 40px;
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		background: var(--bg-tertiary, #3a3a3a);
+		color: var(--text-primary, #ffffff);
+		cursor: pointer;
+		transition: all 0.2s ease;
+		padding: 0;
+	}
+
+	.icon-button:hover {
+		border-color: var(--accent-color, #6366f1);
+		background: rgba(99, 102, 241, 0.1);
+	}
+
+	.icon-button:focus {
+		outline: 2px solid var(--accent-color, #6366f1);
+		outline-offset: 2px;
+	}
+
+	.text-icon-small {
+		font-size: 10px;
+		font-weight: 500;
+		line-height: 1;
+	}
+
+	.input-with-icon .form-input {
+		flex: 1;
 	}
 
 	.inline-field {

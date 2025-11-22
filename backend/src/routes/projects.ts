@@ -34,8 +34,10 @@ router.get('/', generalLimiter, async (req, res) => {
         active: projects.active,
         projectUrl: projects.projectUrl,
         projectText: projects.projectText,
+        projectIcon: projects.projectIcon,
         repoUrl: projects.repoUrl,
         repoText: projects.repoText,
+        repoIcon: projects.repoIcon,
         displayOrder: projects.displayOrder,
         createdAt: projects.createdAt,
         updatedAt: projects.updatedAt,
@@ -95,8 +97,10 @@ router.get('/', generalLimiter, async (req, res) => {
         active: project.active,
         projectUrl: project.projectUrl,
         projectText: project.projectText,
+        projectIcon: project.projectIcon,
         repoUrl: project.repoUrl,
         repoText: project.repoText,
+        repoIcon: project.repoIcon,
         displayOrder: project.displayOrder,
         createdAt: project.createdAt,
         updatedAt: project.updatedAt,
@@ -135,8 +139,10 @@ router.get('/admin/all', requireSession, async (req, res) => {
         published: projects.published,
         projectUrl: projects.projectUrl,
         projectText: projects.projectText,
+        projectIcon: projects.projectIcon,
         repoUrl: projects.repoUrl,
         repoText: projects.repoText,
+        repoIcon: projects.repoIcon,
         displayOrder: projects.displayOrder,
         createdAt: projects.createdAt,
         updatedAt: projects.updatedAt,
@@ -209,8 +215,10 @@ router.get('/admin/:id', requireSession, async (req, res) => {
         published: projects.published,
         projectUrl: projects.projectUrl,
         projectText: projects.projectText,
+        projectIcon: projects.projectIcon,
         repoUrl: projects.repoUrl,
         repoText: projects.repoText,
+        repoIcon: projects.repoIcon,
         displayOrder: projects.displayOrder,
         createdAt: projects.createdAt,
         updatedAt: projects.updatedAt,
@@ -273,8 +281,10 @@ router.post('/admin', requireSession, async (req, res) => {
       published,
       projectUrl,
       projectText,
+      projectIcon,
       repoUrl,
       repoText,
+      repoIcon,
       displayOrder,
       featured,
       tagIds
@@ -329,8 +339,10 @@ router.post('/admin', requireSession, async (req, res) => {
         published: published || false,
         projectUrl: projectUrl || null,
         projectText: projectText || 'View Project',
+        projectIcon: projectIcon || null,
         repoUrl: repoUrl || null,
         repoText: repoText || 'View Repository',
+        repoIcon: repoIcon || null,
         displayOrder: displayOrder ?? 0,
         featured: featured || false,
         updatedAt: now
@@ -350,8 +362,10 @@ router.post('/admin', requireSession, async (req, res) => {
         published: projects.published,
         projectUrl: projects.projectUrl,
         projectText: projects.projectText,
+        projectIcon: projects.projectIcon,
         repoUrl: projects.repoUrl,
         repoText: projects.repoText,
+        repoIcon: projects.repoIcon,
         displayOrder: projects.displayOrder,
         createdAt: projects.createdAt,
         updatedAt: projects.updatedAt,
@@ -431,8 +445,10 @@ router.put('/admin/:id', requireSession, async (req, res) => {
       published,
       projectUrl,
       projectText,
+      projectIcon,
       repoUrl,
       repoText,
+      repoIcon,
       displayOrder,
       featured,
       createdAt,
@@ -489,8 +505,10 @@ router.put('/admin/:id', requireSession, async (req, res) => {
     if (published !== undefined) updateData.published = published;
     if (projectUrl !== undefined) updateData.projectUrl = projectUrl || null;
     if (projectText !== undefined) updateData.projectText = projectText || 'View Project';
+    if (projectIcon !== undefined) updateData.projectIcon = projectIcon || null;
     if (repoUrl !== undefined) updateData.repoUrl = repoUrl || null;
     if (repoText !== undefined) updateData.repoText = repoText || 'View Repository';
+    if (repoIcon !== undefined) updateData.repoIcon = repoIcon || null;
     if (displayOrder !== undefined) updateData.displayOrder = displayOrder;
     if (featured !== undefined) updateData.featured = featured;
     if (createdAt !== undefined) updateData.createdAt = new Date(createdAt);
@@ -514,8 +532,10 @@ router.put('/admin/:id', requireSession, async (req, res) => {
         published: projects.published,
         projectUrl: projects.projectUrl,
         projectText: projects.projectText,
+        projectIcon: projects.projectIcon,
         repoUrl: projects.repoUrl,
         repoText: projects.repoText,
+        repoIcon: projects.repoIcon,
         displayOrder: projects.displayOrder,
         createdAt: projects.createdAt,
         updatedAt: projects.updatedAt,

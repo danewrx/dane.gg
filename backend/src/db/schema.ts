@@ -80,8 +80,10 @@ export const projects = websiteSchema.table('projects', {
   published: boolean('published').default(false),
   projectUrl: varchar('project_url', { length: 255 }),
   projectText: varchar('project_text', { length: 50 }).default('View Project'),
+  projectIcon: varchar('project_icon', { length: 50 }),
   repoUrl: varchar('repo_url', { length: 255 }),
   repoText: varchar('repo_text', { length: 50 }).default('View Repository'),
+  repoIcon: varchar('repo_icon', { length: 50 }),
   displayOrder: integer('display_order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
