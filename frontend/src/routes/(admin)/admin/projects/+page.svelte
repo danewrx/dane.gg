@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Plus, Edit, Trash2, Eye, EyeOff, FolderKanban, Calendar, Clock, Star } from 'lucide-svelte';
+	import { Plus, Edit, Trash2, Eye, EyeOff, FolderKanban, Calendar, Clock, Star, FolderTree } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { getAllProjects, deleteProject, type Project } from '$lib/admin/services/projectsService';
 	import SlideInPanel from '$lib/admin/components/ui/SlideInPanel.svelte';
 	import ProjectEditor from '$lib/admin/components/ProjectEditor.svelte';
+	import ProjectCategoryManager from '$lib/admin/components/ProjectCategoryManager.svelte';
 
 	let projects = $state<Project[]>([]);
 	let loading = $state(true);
@@ -12,6 +13,7 @@
 	let isPanelOpen = $state(false);
 	let editingProjectId = $state<string | null>(null);
 	let sortBy = $state<'created' | 'updated'>('updated');
+	let showCategoryManager = $state(false);
 
 	let sortedProjects = $derived.by(() => {
 		const projectsCopy = [...projects];
@@ -121,6 +123,10 @@
 					Updated
 				{/if}
 			</button>
+			<button class="category-button" onclick={() => showCategoryManager = true} title="Manage Categories">
+				<FolderTree size={18} />
+				Categories
+			</button>
 			<button class="create-button" onclick={createProject}>
 				<Plus size={20} />
 				New Project
@@ -221,6 +227,14 @@
 	<ProjectEditor projectId={editingProjectId} on:save={handleProjectSave} on:close={closePanel} />
 </SlideInPanel>
 
+{#if showCategoryManager}
+	<div class="category-manager-overlay" onclick={() => showCategoryManager = false}>
+		<div class="category-manager-container" onclick={(e) => e.stopPropagation()}>
+			<ProjectCategoryManager />
+		</div>
+	</div>
+{/if}
+
 <style>
 	.projects-list {
 		padding: 24px;
@@ -269,6 +283,26 @@
 	}
 
 	.sort-toggle:hover {
+		background: var(--bg-tertiary, #3a3a3a);
+		border-color: var(--accent-color, #6366f1);
+	}
+
+	.category-button {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 20px;
+		background: var(--bg-secondary, #2d2d2d);
+		color: var(--text-primary, #ffffff);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 8px;
+		font-size: 14px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.category-button:hover {
 		background: var(--bg-tertiary, #3a3a3a);
 		border-color: var(--accent-color, #6366f1);
 	}
@@ -573,6 +607,30 @@
 			font-size: 12px;
 			min-width: 150px;
 		}
+	}
+
+	.category-manager-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.7);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 1000;
+		padding: 16px;
+	}
+
+	.category-manager-container {
+		width: 100%;
+		max-width: 800px;
+		max-height: 90vh;
+		overflow-y: auto;
+		background: var(--bg-primary, #1a1a1a);
+		border-radius: 8px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 	}
 </style>
 

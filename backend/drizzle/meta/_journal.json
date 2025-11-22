@@ -43,6 +43,13 @@
       "when": 1763765845885,
       "tag": "0005_silky_sway",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1763778973939,
+      "tag": "0006_shocking_satana",
+      "breakpoints": true
     }
   ]
 }

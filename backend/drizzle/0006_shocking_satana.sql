@@ -1,0 +1,1 @@
+ALTER TABLE "website"."project_categories" ADD COLUMN "display_order" integer DEFAULT 0 NOT NULL;

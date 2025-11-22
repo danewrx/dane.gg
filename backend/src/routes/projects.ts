@@ -44,6 +44,7 @@ router.get('/', generalLimiter, async (req, res) => {
         category: {
           id: projectCategories.id,
           name: projectCategories.name,
+          displayOrder: projectCategories.displayOrder,
           createdAt: projectCategories.createdAt
         }
       })
@@ -64,6 +65,7 @@ router.get('/', generalLimiter, async (req, res) => {
             category: {
               id: projectCategories.id,
               name: projectCategories.name,
+              displayOrder: projectCategories.displayOrder,
               createdAt: projectCategories.createdAt
             }
           })
@@ -149,6 +151,7 @@ router.get('/admin/all', requireSession, async (req, res) => {
         category: {
           id: projectCategories.id,
           name: projectCategories.name,
+          displayOrder: projectCategories.displayOrder,
           createdAt: projectCategories.createdAt
         }
       })
@@ -168,6 +171,7 @@ router.get('/admin/all', requireSession, async (req, res) => {
             category: {
               id: projectCategories.id,
               name: projectCategories.name,
+              displayOrder: projectCategories.displayOrder,
               createdAt: projectCategories.createdAt
             }
           })
@@ -645,7 +649,7 @@ router.get('/categories', generalLimiter, async (req, res) => {
     const categories = await db
       .select()
       .from(projectCategories)
-      .orderBy(projectCategories.name);
+      .orderBy(asc(projectCategories.displayOrder), asc(projectCategories.name));
 
     res.json({
       success: true,
@@ -668,7 +672,7 @@ router.get('/admin/categories/all', requireSession, async (req, res) => {
     const categories = await db
       .select()
       .from(projectCategories)
-      .orderBy(projectCategories.name);
+      .orderBy(asc(projectCategories.displayOrder), asc(projectCategories.name));
 
     res.json({
       success: true,
@@ -710,9 +714,18 @@ router.post('/admin/categories', requireSession, async (req, res) => {
       });
     }
 
+    const [maxOrderResult] = await db
+      .select({ maxOrder: sql<number>`COALESCE(MAX(${projectCategories.displayOrder}), 0)` })
+      .from(projectCategories);
+    
+    const newDisplayOrder = (maxOrderResult?.maxOrder || 0) + 1;
+
     const [newCategory] = await db
       .insert(projectCategories)
-      .values({ name: name.trim() })
+      .values({ 
+        name: name.trim(),
+        displayOrder: newDisplayOrder
+      })
       .returning();
 
     res.json({
@@ -724,6 +737,43 @@ router.post('/admin/categories', requireSession, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to create project category'
+    });
+  }
+});
+
+/**
+ * Update category display order (authenticated users only)
+ * NOTE: This must be defined BEFORE /admin/categories/:id to avoid route conflicts
+ */
+router.put('/admin/categories/order', requireSession, async (req, res) => {
+  try {
+    const { categoryOrders } = req.body;
+
+    if (!Array.isArray(categoryOrders)) {
+      return res.status(400).json({
+        success: false,
+        error: 'categoryOrders must be an array'
+      });
+    }
+
+    await Promise.all(
+      categoryOrders.map(({ id, displayOrder }: { id: string; displayOrder: number }) =>
+        db
+          .update(projectCategories)
+          .set({ displayOrder: parseInt(displayOrder.toString(), 10) })
+          .where(eq(projectCategories.id, id))
+      )
+    );
+
+    res.json({
+      success: true,
+      message: 'Category order updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating category order:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update category order'
     });
   }
 });
@@ -769,9 +819,16 @@ router.put('/admin/categories/:id', requireSession, async (req, res) => {
       });
     }
 
+    const { displayOrder } = req.body;
+    const updateData: any = { name: name.trim() };
+    
+    if (displayOrder !== undefined) {
+      updateData.displayOrder = parseInt(displayOrder, 10);
+    }
+
     const [updatedCategory] = await db
       .update(projectCategories)
-      .set({ name: name.trim() })
+      .set(updateData)
       .where(eq(projectCategories.id, id))
       .returning();
 
@@ -860,6 +917,7 @@ router.get('/admin/tags/all', requireSession, async (req, res) => {
         category: {
           id: projectCategories.id,
           name: projectCategories.name,
+          displayOrder: projectCategories.displayOrder,
           createdAt: projectCategories.createdAt
         }
       })

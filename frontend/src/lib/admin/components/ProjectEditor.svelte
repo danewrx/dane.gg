@@ -9,6 +9,7 @@
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	import Toggle from './ui/Toggle.svelte';
 	import FileUpload, { type UploadedFile } from './ui/FileUpload.svelte';
+	import ProjectCategoryManager from './ProjectCategoryManager.svelte';
 	import {
 		getProject,
 		createProject,
@@ -90,6 +91,7 @@
 	let categories = $state<ProjectCategory[]>([]);
 	let availableTags = $state<ProjectTag[]>([]);
 	let showTagDropdown = $state(false);
+	let showCategoryManager = $state(false);
 
 	let loading = $state(false);
 	let saving = $state(false);
@@ -183,6 +185,11 @@
 			console.error('Error loading categories:', err);
 			toast.error('Failed to load categories');
 		}
+	}
+
+	async function handleCategoryManagerClose() {
+		showCategoryManager = false;
+		await loadCategories();
 	}
 
 	async function loadAvailableTags() {
@@ -495,7 +502,13 @@
 
 			<!-- Category -->
 			<div class="form-group">
-				<label for="category">Category</label>
+				<div class="category-header">
+					<label for="category">Category</label>
+					<button type="button" onclick={() => showCategoryManager = true} class="manage-categories-button">
+						<Settings size={16} />
+						Manage Categories
+					</button>
+				</div>
 				<select id="category" bind:value={categoryId} class="form-input">
 					<option value="">Select a category</option>
 					{#each categories as category}
@@ -837,6 +850,14 @@
 			bind:open={repoIconPickerOpen}
 		/>
 	{/if}
+
+	{#if showCategoryManager}
+		<div class="category-manager-overlay" onclick={handleCategoryManagerClose}>
+			<div class="category-manager-container" onclick={(e) => e.stopPropagation()}>
+				<ProjectCategoryManager />
+			</div>
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -1056,12 +1077,14 @@
 		background: rgba(239, 68, 68, 0.9);
 	}
 
+	.category-header,
 	.tags-header {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
 	}
 
+	.manage-categories-button,
 	.manage-tags-button {
 		display: flex;
 		align-items: center;
@@ -1268,6 +1291,30 @@
 		border-top: 2px solid white;
 		border-radius: 50%;
 		animation: spin 0.8s linear infinite;
+	}
+
+	.category-manager-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.7);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 1000;
+		padding: 16px;
+	}
+
+	.category-manager-container {
+		width: 100%;
+		max-width: 800px;
+		max-height: 90vh;
+		overflow-y: auto;
+		background: var(--bg-primary, #1a1a1a);
+		border-radius: 8px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 	}
 
 	@media (max-width: 768px) {

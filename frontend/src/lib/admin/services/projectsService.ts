@@ -13,6 +13,7 @@ export interface ProjectTag {
 export interface ProjectCategory {
 	id: string;
 	name: string;
+	displayOrder: number;
 	createdAt: string;
 }
 
@@ -209,6 +210,104 @@ export async function getAllProjectCategories(): Promise<ProjectCategory[]> {
 		return result.data || [];
 	} catch (error) {
 		console.error('Error fetching project categories:', error);
+		throw error;
+	}
+}
+
+/**
+ * Create a new project category
+ */
+export async function createProjectCategory(name: string): Promise<ProjectCategory> {
+	try {
+		const response = await fetch(`${API_BASE}/admin/categories`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			credentials: 'include',
+			body: JSON.stringify({ name })
+		});
+
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.error || 'Failed to create category');
+		}
+
+		const result = await response.json();
+		return result.data;
+	} catch (error) {
+		console.error('Error creating project category:', error);
+		throw error;
+	}
+}
+
+/**
+ * Update a project category
+ */
+export async function updateProjectCategory(id: string, name: string, displayOrder?: number): Promise<ProjectCategory> {
+	try {
+		const response = await fetch(`${API_BASE}/admin/categories/${id}`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			credentials: 'include',
+			body: JSON.stringify({ name, displayOrder })
+		});
+
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.error || 'Failed to update category');
+		}
+
+		const result = await response.json();
+		return result.data;
+	} catch (error) {
+		console.error('Error updating project category:', error);
+		throw error;
+	}
+}
+
+/**
+ * Delete a project category
+ */
+export async function deleteProjectCategory(id: string): Promise<void> {
+	try {
+		const response = await fetch(`${API_BASE}/admin/categories/${id}`, {
+			method: 'DELETE',
+			credentials: 'include'
+		});
+
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.error || 'Failed to delete category');
+		}
+	} catch (error) {
+		console.error('Error deleting project category:', error);
+		throw error;
+	}
+}
+
+/**
+ * Update category display order
+ */
+export async function updateCategoryOrder(categoryOrders: { id: string; displayOrder: number }[]): Promise<void> {
+	try {
+		const response = await fetch(`${API_BASE}/admin/categories/order`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			credentials: 'include',
+			body: JSON.stringify({ categoryOrders })
+		});
+
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.error || 'Failed to update category order');
+		}
+	} catch (error) {
+		console.error('Error updating category order:', error);
 		throw error;
 	}
 }

@@ -40,9 +40,9 @@ export async function seed() {
     // Seed project categories
     console.log('📁 Seeding project categories...');
     const categories = await db.insert(projectCategories).values([
-      { name: 'Development' },
-      { name: 'Graphics' },
-      { name: 'Videos' }
+      { name: 'Development', displayOrder: 1 },
+      { name: 'Graphics', displayOrder: 2 },
+      { name: 'Videos', displayOrder: 3 }
     ]).returning();
 
     // Seed tags (with category assignments)

@@ -65,6 +65,7 @@ export const messages = websiteSchema.table('messages', {
 export const projectCategories = websiteSchema.table('project_categories', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 50 }).notNull().unique(),
+  displayOrder: integer('display_order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
 });
 
