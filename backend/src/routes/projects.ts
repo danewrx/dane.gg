@@ -924,7 +924,7 @@ router.get('/admin/tags/all', requireSession, async (req, res) => {
       .from(tags)
       .leftJoin(projectCategories, eq(tags.categoryId, projectCategories.id))
       .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
-      .orderBy(asc(projectCategories.name), asc(tags.title));
+      .orderBy(asc(projectCategories.displayOrder), asc(projectCategories.name), asc(tags.title));
 
     if (grouped) {
       // Group tags by category
@@ -943,7 +943,8 @@ router.get('/admin/tags/all', requireSession, async (req, res) => {
           title: tag.title,
           color: tag.color,
           categoryId: tag.categoryId,
-          createdAt: tag.createdAt
+          createdAt: tag.createdAt,
+          category: tag.category
         });
         return acc;
       }, {} as Record<string, { category: typeof projectCategories.$inferSelect | null; tags: any[] }>);
@@ -1164,25 +1165,41 @@ router.put('/admin/tags/:id', requireSession, async (req, res) => {
 });
 
 /**
- * Delete a project tag (authenticated users only)
+ * Get projects using a specific tag (authenticated users only)
  */
-router.delete('/admin/tags/:id', requireSession, async (req, res) => {
+router.get('/admin/tags/:id/projects', requireSession, async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check if tag is used by projects
-    const [projectUsingTag] = await db
-      .select()
+    const projectsUsingTag = await db
+      .select({
+        id: projects.id,
+        title: projects.title
+      })
       .from(projectTags)
+      .innerJoin(projects, eq(projectTags.projectId, projects.id))
       .where(eq(projectTags.tagId, id))
-      .limit(1);
+      .orderBy(asc(projects.title));
 
-    if (projectUsingTag) {
-      return res.status(400).json({
-        success: false,
-        error: 'Cannot delete tag that is in use by projects'
-      });
-    }
+    res.json({
+      success: true,
+      data: projectsUsingTag
+    });
+  } catch (error) {
+    console.error('Error fetching projects using tag:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch projects using tag'
+    });
+  }
+});
+
+router.delete('/admin/tags/:id', requireSession, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db
+      .delete(projectTags)
+      .where(eq(projectTags.tagId, id));
 
     const [deletedTag] = await db
       .delete(tags)

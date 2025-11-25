@@ -84,12 +84,11 @@
 		markdown = markdown.replace(/<i>(.+?)<\/i>/gi, '*$1*');
 		markdown = markdown.replace(/<s>(.+?)<\/s>/gi, '~~$1~~');
 		markdown = markdown.replace(/<strike>(.+?)<\/strike>/gi, '~~$1~~');
-		// Keep <u> tags since markdown doesn't have underline
 		
 		return markdown;
 	}
 
-	// Maintain internal markdown state separate from bound value
+	// Maintain internal markdown state
 	let internalMarkdown = $state('');
 	let isInitialized = $state(false);
 
@@ -133,10 +132,24 @@
 	
 	const getEditorValue = () => outputFormat === 'html' ? internalMarkdown : value;
 
+	// Configure marked to not render images
+	const markedRenderer = new marked.Renderer();
+	markedRenderer.image = () => '';
+
 	let previewHtml = $derived.by(() => {
 		try {
 			const markdownValue = getEditorValue();
-			return marked(markdownValue);
+			// Strip only image markdown syntax
+			const cleanedMarkdown = markdownValue
+				// Remove inline images
+				.replace(/!\[([^\]]*)\]\([^\)]+\)/g, '')
+				// Remove reference-style images
+				.replace(/!\[([^\]]*)\]\[[^\]]+\]/g, '');
+			return marked(cleanedMarkdown, {
+				renderer: markedRenderer,
+				breaks: true,
+				gfm: true
+			});
 		} catch (error) {
 			console.error('Markdown parsing error:', error);
 			return '<p>Error parsing markdown</p>';
@@ -144,15 +157,12 @@
 	});
 
 	// Convert markdown to HTML when outputFormat is 'html'
-	// For banner text, we need inline HTML (no block elements like <p>)
 	function convertToHtml(markdown: string): string {
 		try {
-			// If already HTML, return
 			if (/<[a-z][\s\S]*>/i.test(markdown)) {
 				return markdown;
 			}
 			
-			// Convert inline markdown to HTML
 			let html = markdown;
 			
 			html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');

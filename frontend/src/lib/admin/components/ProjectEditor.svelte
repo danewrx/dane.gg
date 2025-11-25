@@ -10,6 +10,7 @@
 	import Toggle from './ui/Toggle.svelte';
 	import FileUpload, { type UploadedFile } from './ui/FileUpload.svelte';
 	import ProjectCategoryManager from './ProjectCategoryManager.svelte';
+	import ProjectTagManager from './ProjectTagManager.svelte';
 	import {
 		getProject,
 		createProject,
@@ -92,6 +93,7 @@
 	let availableTags = $state<ProjectTag[]>([]);
 	let showTagDropdown = $state(false);
 	let showCategoryManager = $state(false);
+	let showTagManager = $state(false);
 
 	let loading = $state(false);
 	let saving = $state(false);
@@ -192,19 +194,35 @@
 		await loadCategories();
 	}
 
+	async function handleTagManagerClose() {
+		showTagManager = false;
+		await loadAvailableTags();
+	}
+
+	function handleTagsUpdated() {
+		loadAvailableTags();
+	}
+
 	async function loadAvailableTags() {
 		try {
 			const response = await fetch('/api/projects/admin/tags/all?grouped=true', {
 				credentials: 'include'
 			});
-			if (response.ok) {
-				const result = await response.json();
-				const allTags: ProjectTag[] = [];
-				result.data.forEach((group: { tags: ProjectTag[] }) => {
-					allTags.push(...group.tags);
+		if (response.ok) {
+			const result = await response.json();
+			const allTags: ProjectTag[] = [];
+			if (result.data && Array.isArray(result.data)) {
+				result.data.forEach((group: { category: any; tags: ProjectTag[] }) => {
+					group.tags.forEach(tag => {
+						allTags.push({
+							...tag,
+							category: tag.category || group.category
+						});
+					});
 				});
-				availableTags = allTags;
 			}
+			availableTags = allTags;
+		}
 		} catch (err) {
 			console.error('Error loading tags:', err);
 		}
@@ -460,18 +478,49 @@
 
 	// Get tags grouped by category for display
 	let groupedTags = $derived.by(() => {
-		const groups: Record<string, { category: { name: string } | null; tags: ProjectTag[] }> = {};
+		const groups: Record<string, { category: { name: string; id: string; displayOrder?: number } | null; tags: ProjectTag[] }> = {};
 		availableTags.forEach(tag => {
 			const categoryName = tag.category?.name || 'Uncategorized';
 			if (!groups[categoryName]) {
 				groups[categoryName] = {
-					category: tag.category,
+					category: tag.category ? { 
+						name: tag.category.name, 
+						id: tag.category.id,
+						displayOrder: tag.category.displayOrder ?? (tag.category as any).displayOrder
+					} : null,
 					tags: []
 				};
 			}
 			groups[categoryName].tags.push(tag);
 		});
-		return Object.values(groups);
+		
+		const groupsArray = Object.values(groups);
+		
+		// Sort: current project's category
+		groupsArray.sort((a, b) => {
+			if (categoryId) {
+				const aMatches = a.category?.id === categoryId;
+				const bMatches = b.category?.id === categoryId;
+				
+				if (aMatches && !bMatches) return -1;
+				if (!aMatches && bMatches) return 1;
+			}
+			
+			// Second priority: category displayOrder
+			if (a.category && b.category) {
+				const aOrder = a.category.displayOrder ?? 999;
+				const bOrder = b.category.displayOrder ?? 999;
+				if (aOrder !== bOrder) return aOrder - bOrder;
+			}
+			
+			// Uncategorized
+			if (!a.category && b.category) return 1;
+			if (a.category && !b.category) return -1;
+			
+			return 0;
+		});
+		
+		return groupsArray;
 	});
 
 	// Get selected tags for display
@@ -520,7 +569,18 @@
 			<!-- Description -->
 			<div class="form-group">
 				<label for="description">Description (Markdown)</label>
-				<MarkdownEditor bind:value={description} minHeight="400px" placeholder="Write your project description in Markdown..." />
+				<MarkdownEditor 
+					bind:value={description} 
+					minHeight="400px" 
+					placeholder="Write your project description in Markdown..."
+					enabledTools={[
+						'heading1', 'heading2', 'heading3',
+						'bold', 'italic', 'strikethrough', 'code',
+						'link',
+						'bulletList', 'numberedList', 'quote',
+						'preview'
+					]}
+				/>
 			</div>
 
 			<!-- Project Image -->
@@ -719,7 +779,7 @@
 			<div class="form-group">
 				<div class="tags-header">
 					<label for="tags">Tags</label>
-					<button type="button" onclick={() => toast.info('Tag manager coming soon')} class="manage-tags-button">
+					<button type="button" onclick={() => showTagManager = true} class="manage-tags-button">
 						<Settings size={16} />
 						Manage Tags
 					</button>
@@ -736,7 +796,7 @@
 							{#if availableTags.length === 0}
 								<div class="dropdown-empty">
 									<p>No tags available</p>
-									<button type="button" onclick={() => toast.info('Tag manager coming soon')} class="create-tag-button">
+									<button type="button" onclick={() => showTagManager = true} class="create-tag-button">
 										Create Tag
 									</button>
 								</div>
@@ -855,6 +915,14 @@
 		<div class="category-manager-overlay" onclick={handleCategoryManagerClose}>
 			<div class="category-manager-container" onclick={(e) => e.stopPropagation()}>
 				<ProjectCategoryManager on:close={handleCategoryManagerClose} />
+			</div>
+		</div>
+	{/if}
+
+	{#if showTagManager}
+		<div class="category-manager-overlay" onclick={handleTagManagerClose}>
+			<div class="category-manager-container" onclick={(e) => e.stopPropagation()}>
+				<ProjectTagManager on:close={handleTagManagerClose} on:tagsUpdated={handleTagsUpdated} />
 			</div>
 		</div>
 	{/if}

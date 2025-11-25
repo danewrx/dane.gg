@@ -6,6 +6,7 @@ export interface ProjectTag {
 	category: {
 		id: string;
 		name: string;
+		displayOrder?: number;
 		createdAt: string;
 	} | null;
 }
@@ -308,6 +309,122 @@ export async function updateCategoryOrder(categoryOrders: { id: string; displayO
 		}
 	} catch (error) {
 		console.error('Error updating category order:', error);
+		throw error;
+	}
+}
+
+/**
+ * Get all project tags (admin)
+ */
+export async function getAllProjectTags(): Promise<ProjectTag[]> {
+	try {
+		const response = await fetch(`${API_BASE}/admin/tags/all`, {
+			credentials: 'include'
+		});
+
+		if (!response.ok) {
+			throw new Error('Failed to fetch project tags');
+		}
+
+		const result = await response.json();
+		return result.data || [];
+	} catch (error) {
+		console.error('Error fetching project tags:', error);
+		throw error;
+	}
+}
+
+/**
+ * Create a new project tag
+ */
+export async function createProjectTag(title: string, color: string, categoryId: string | null = null): Promise<ProjectTag> {
+	try {
+		const response = await fetch(`${API_BASE}/admin/tags`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			credentials: 'include',
+			body: JSON.stringify({ title, color, categoryId })
+		});
+
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.error || 'Failed to create tag');
+		}
+
+		const result = await response.json();
+		return result.data;
+	} catch (error) {
+		console.error('Error creating project tag:', error);
+		throw error;
+	}
+}
+
+/**
+ * Update a project tag
+ */
+export async function updateProjectTag(id: string, title: string, color: string, categoryId: string | null = null): Promise<ProjectTag> {
+	try {
+		const response = await fetch(`${API_BASE}/admin/tags/${id}`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			credentials: 'include',
+			body: JSON.stringify({ title, color, categoryId })
+		});
+
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.error || 'Failed to update tag');
+		}
+
+		const result = await response.json();
+		return result.data;
+	} catch (error) {
+		console.error('Error updating project tag:', error);
+		throw error;
+	}
+}
+
+/**
+ * Get projects using a specific tag (admin)
+ */
+export async function getProjectsUsingTag(tagId: string): Promise<{ id: string; title: string }[]> {
+	try {
+		const response = await fetch(`${API_BASE}/admin/tags/${tagId}/projects`, {
+			credentials: 'include'
+		});
+
+		if (!response.ok) {
+			throw new Error('Failed to fetch projects using tag');
+		}
+
+		const result = await response.json();
+		return result.data || [];
+	} catch (error) {
+		console.error('Error fetching projects using tag:', error);
+		throw error;
+	}
+}
+
+/**
+ * Delete a project tag
+ */
+export async function deleteProjectTag(id: string): Promise<void> {
+	try {
+		const response = await fetch(`${API_BASE}/admin/tags/${id}`, {
+			method: 'DELETE',
+			credentials: 'include'
+		});
+
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.error || 'Failed to delete tag');
+		}
+	} catch (error) {
+		console.error('Error deleting project tag:', error);
 		throw error;
 	}
 }
