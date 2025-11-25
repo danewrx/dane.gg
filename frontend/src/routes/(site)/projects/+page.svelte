@@ -316,6 +316,9 @@
 		margin-bottom: 2rem;
 		break-inside: avoid;
 		page-break-inside: avoid;
+		width: 100%;
+		max-width: 100%;
+		box-sizing: border-box;
 	}
 
 	.project-card:hover {
@@ -328,12 +331,18 @@
 		overflow: hidden;
 		background: var(--bg-tertiary);
 		position: relative;
+		max-height: 200px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.project-image img {
 		width: 100%;
 		height: auto;
+		max-height: 400px;
 		display: block;
+		object-fit: cover;
 	}
 
 	.project-content {
@@ -342,6 +351,10 @@
 		flex-direction: column;
 		flex: 1;
 		gap: 1rem;
+		width: 100%;
+		min-width: 0;
+		box-sizing: border-box;
+		overflow: hidden;
 	}
 
 	.project-header {
@@ -350,6 +363,8 @@
 		align-items: flex-start;
 		gap: 1rem;
 		flex-wrap: wrap;
+		width: 100%;
+		min-width: 0;
 	}
 
 	.project-title {
@@ -360,6 +375,17 @@
 		line-height: 1.2;
 		flex: 1;
 		min-width: 0;
+		max-width: 100%;
+		width: 100%;
+		word-wrap: break-word;
+		overflow-wrap: break-word;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		box-sizing: border-box;
 	}
 
 	.project-status {
@@ -371,6 +397,7 @@
 		background: var(--bg-tertiary);
 		border: 1px solid var(--border-color);
 		border-radius: 0;
+		white-space: nowrap;
 	}
 
 	.status-indicator {
@@ -477,7 +504,36 @@
 		.project-content {
 			padding: 1.25rem;
 		}
+
+		.project-title {
+			font-size: 1.25rem;
+		}
+
+		.project-header {
+			flex-direction: column;
+			align-items: flex-start;
+			width: 100%;
+		}
+
+		.project-status {
+			align-self: flex-start;
+		}
 	}
+
+	@media (max-width: 480px) {
+		.project-title {
+			font-size: 1.125rem;
+		}
+
+		.project-header {
+			gap: 0.75rem;
+		}
+
+		.project-content {
+			padding: 1rem;
+		}
+	}
+
 
 	@media (min-width: 769px) and (max-width: 1024px) {
 		.projects-grid {
