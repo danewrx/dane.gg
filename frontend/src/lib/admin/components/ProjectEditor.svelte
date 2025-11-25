@@ -99,6 +99,19 @@
 	let saving = $state(false);
 
 	const activeStates = ['Active', 'In Progress', 'Complete', 'Abandoned', 'Archived'];
+	
+	// Color mapping for status options
+	const statusColors: Record<string, string> = {
+		'Active': '#10b981',      // Green
+		'In Progress': '#f97316',  // Orange
+		'Complete': '#10b981',      // Green
+		'Abandoned': '#ef4444',    // Red
+		'Archived': '#eab308'      // Yellow
+	};
+	
+	function getStatusColor(status: string): string {
+		return statusColors[status] || '#6b7280';
+	}
 
 	// Helper to convert icon name string to IconOption
 	async function iconNameToOption(iconName: string | null): Promise<IconOption | null> {
@@ -620,11 +633,14 @@
 			<!-- Active State -->
 			<div class="form-group">
 				<label for="active">Status</label>
-				<select id="active" bind:value={active} class="form-input">
-					{#each activeStates as state}
-						<option value={state}>{state}</option>
-					{/each}
-				</select>
+				<div class="status-select-wrapper">
+					<span class="status-indicator" style="background-color: {getStatusColor(active)};"></span>
+					<select id="active" bind:value={active} class="form-input status-select">
+						{#each activeStates as state}
+							<option value={state} style="color: {getStatusColor(state)};">{state}</option>
+						{/each}
+					</select>
+				</div>
 			</div>
 
 			<!-- Project URL & Button Text -->
@@ -1086,6 +1102,26 @@
 		outline: none;
 		border-color: var(--accent-color, #6366f1);
 		box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+	}
+
+	.status-select-wrapper {
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.status-indicator {
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		flex-shrink: 0;
+		box-shadow: 0 0 0 2px var(--bg-secondary, #2d2d2d);
+	}
+
+	.status-select {
+		flex: 1;
+		padding-left: 12px;
 	}
 
 	.form-input::placeholder {
