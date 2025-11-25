@@ -328,7 +328,7 @@ router.post('/admin', requireSession, async (req, res) => {
     }
 
     // Validate active state
-    const validStates = ['Active', 'Complete', 'Abandoned', 'Archived'];
+    const validStates = ['Active', 'In Progress', 'Complete', 'Abandoned', 'Archived'];
     const projectActive = active && validStates.includes(active) ? active : 'Active';
 
     const now = new Date();
@@ -489,7 +489,7 @@ router.put('/admin/:id', requireSession, async (req, res) => {
     }
 
     // Validate active state if provided
-    const validStates = ['Active', 'Complete', 'Abandoned', 'Archived'];
+    const validStates = ['Active', 'In Progress', 'Complete', 'Abandoned', 'Archived'];
     if (active && !validStates.includes(active)) {
       return res.status(400).json({
         success: false,

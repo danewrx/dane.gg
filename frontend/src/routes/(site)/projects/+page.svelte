@@ -119,6 +119,19 @@
 		
 		return imageUrl;
 	}
+
+	// Color mapping for status options (matching admin editor)
+	const statusColors: Record<string, string> = {
+		'Active': '#10b981',      // Green
+		'In Progress': '#f97316',  // Orange
+		'Complete': '#10b981',      // Green
+		'Abandoned': '#ef4444',    // Red
+		'Archived': '#eab308'      // Yellow
+	};
+	
+	function getStatusColor(status: string): string {
+		return statusColors[status] || '#6b7280';
+	}
 </script>
 
 <svelte:head>
@@ -160,7 +173,13 @@
 							{/if}
 							
 							<div class="project-content">
-								<h3 class="project-title">{project.title}</h3>
+								<div class="project-header">
+									<h3 class="project-title">{project.title}</h3>
+									<div class="project-status">
+										<span class="status-indicator" style="background-color: {getStatusColor(project.active)};"></span>
+										<span class="status-text">{project.active}</span>
+									</div>
+								</div>
 								
 								{#if project.tags && project.tags.length > 0}
 									<div class="project-tags">
@@ -325,12 +344,47 @@
 		gap: 1rem;
 	}
 
+	.project-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+
 	.project-title {
 		font-size: 1.5rem;
 		font-weight: 700;
 		color: var(--text-primary);
 		margin: 0;
 		line-height: 1.2;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.project-status {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-shrink: 0;
+		padding: 0.25rem 0.75rem;
+		background: var(--bg-tertiary);
+		border: 1px solid var(--border-color);
+		border-radius: 0;
+	}
+
+	.status-indicator {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		flex-shrink: 0;
+	}
+
+	.status-text {
+		font-size: 0.75rem;
+		font-weight: 500;
+		color: var(--text-secondary);
+		white-space: nowrap;
 	}
 
 	.project-tags {
