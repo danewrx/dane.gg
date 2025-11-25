@@ -599,6 +599,9 @@
 			<!-- Project Image -->
 			<div class="form-group">
 				<label for="image">Project Image</label>
+				<p class="help-text image-dimensions-help">
+					Recommended: 800×400px (2:1 aspect ratio) or wider. Max height: 200px on display.
+				</p>
 				<div class="image-input-group">
 					{#if imageUrl}
 						<div class="image-preview-container">
@@ -1132,6 +1135,11 @@
 		color: var(--text-secondary, #a1a1aa);
 		font-size: 12px;
 		margin: 0;
+	}
+
+	.image-dimensions-help {
+		margin-top: 4px;
+		margin-bottom: 8px;
 	}
 
 
