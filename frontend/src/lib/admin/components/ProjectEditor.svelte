@@ -98,7 +98,7 @@
 	let loading = $state(false);
 	let saving = $state(false);
 
-	const activeStates = ['Active', 'Complete', 'Abandoned', 'Archived'];
+	const activeStates = ['Active', 'In Progress', 'Complete', 'Abandoned', 'Archived'];
 
 	// Helper to convert icon name string to IconOption
 	async function iconNameToOption(iconName: string | null): Promise<IconOption | null> {
