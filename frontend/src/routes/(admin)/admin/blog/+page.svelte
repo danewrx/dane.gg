@@ -191,7 +191,7 @@
 
 						{#if deleteConfirmId === post.id}
 							<tr class="delete-confirm-row">
-								<td colspan="4">
+								<td colspan="5">
 									<div class="delete-confirm">
 										<p>Delete this post?</p>
 										<div class="confirm-actions">
