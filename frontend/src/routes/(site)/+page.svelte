@@ -119,7 +119,7 @@
 					<MyButtonWidget />
 				</BorderedBox>
 
-				<BorderedBox padding="6px 10px" className="site-stats-widget" showHeader={true} headerText="Site Stats" contentPadding={true}>
+				<BorderedBox padding="8px 16px" className="site-stats-widget" showHeader={true} headerText="Site Stats" contentPadding={true}>
 					<SiteStats />
 				</BorderedBox>
 			</div>
@@ -423,14 +423,6 @@
 
 	:global(.site-stats-widget) {
 		margin-top: var(--spacing-md, 16px);
-	}
-
-	:global(.site-stats-widget .bordered-box-header) {
-		padding: 6px 0 0 0;
-	}
-
-	:global(.site-stats-widget .bordered-box-content) {
-		padding-top: 0;
 	}
 
 	:global(.discord-widget),

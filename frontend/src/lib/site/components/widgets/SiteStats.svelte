@@ -109,7 +109,7 @@
 		align-items: center;
 		width: 100%;
 		background: rgba(144, 238, 144, 0.015);
-		padding: 4px 6px;
+		padding: 4px 8px;
 		border-radius: 2px;
 	}
 
