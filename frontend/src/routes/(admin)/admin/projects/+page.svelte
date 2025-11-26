@@ -202,9 +202,6 @@
 										<td class="title-cell">
 											<div class="title-content">
 												<span class="title-text">{project.title}</span>
-												{#if project.featured}
-													<Star size={14} class="featured-icon" />
-												{/if}
 											</div>
 										</td>
 										<td class="timestamp-cell">
@@ -213,7 +210,6 @@
 										<td class="featured-cell">
 											{#if project.featured}
 												<span class="featured-badge" title="Featured on frontpage">
-													<Star size={16} />
 													Yes
 												</span>
 											{:else}
@@ -485,6 +481,7 @@
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
 		border-bottom: 1px solid var(--border-color, #3a3a3a);
+		vertical-align: middle;
 	}
 
 	.projects-table tbody tr.project-row {
@@ -504,11 +501,18 @@
 		padding: 16px 20px;
 		color: var(--text-primary, #ffffff);
 		font-size: 14px;
+		vertical-align: middle;
+		text-align: left;
 	}
 
 	.title-cell {
 		font-weight: 500;
 		max-width: 400px;
+		text-align: left;
+	}
+
+	.title-content {
+		justify-content: flex-start;
 	}
 
 	.title-content {
@@ -525,27 +529,19 @@
 		white-space: nowrap;
 	}
 
-	.featured-icon {
-		color: var(--accent-color, #6366f1);
-		flex-shrink: 0;
-	}
-
-
 	.timestamp-cell {
 		color: var(--text-secondary, #a1a1aa);
 		font-size: 13px;
 		white-space: nowrap;
 		min-width: 180px;
+		text-align: left;
 	}
 
 	.featured-cell {
-		text-align: center;
+		text-align: left;
 	}
 
 	.featured-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
 		color: var(--accent-color, #6366f1);
 		font-weight: 500;
 		font-size: 13px;
@@ -558,6 +554,11 @@
 
 	.status-cell {
 		width: 140px;
+		text-align: left;
+	}
+
+	.status-badges {
+		justify-content: flex-start;
 	}
 
 	.status-badges {
@@ -597,7 +598,7 @@
 
 	.actions-cell {
 		width: 120px;
-		text-align: right;
+		text-align: left;
 	}
 
 	.action-icon {
