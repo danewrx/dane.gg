@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Plus, Edit, Trash2, Eye, EyeOff, FolderKanban, Calendar, Clock, Star, FolderTree } from 'lucide-svelte';
+	import { Plus, Edit, Trash2, Eye, EyeOff, FolderKanban, Calendar, Clock, Star, FolderTree, Tag } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { getAllProjects, deleteProject, type Project } from '$lib/admin/services/projectsService';
 	import SlideInPanel from '$lib/admin/components/ui/SlideInPanel.svelte';
 	import ProjectEditor from '$lib/admin/components/ProjectEditor.svelte';
 	import ProjectCategoryManager from '$lib/admin/components/ProjectCategoryManager.svelte';
+	import ProjectTagManager from '$lib/admin/components/ProjectTagManager.svelte';
 
 	let projects = $state<Project[]>([]);
 	let loading = $state(true);
@@ -14,6 +15,7 @@
 	let editingProjectId = $state<string | null>(null);
 	let sortBy = $state<'created' | 'updated'>('updated');
 	let showCategoryManager = $state(false);
+	let showTagManager = $state(false);
 
 	let sortedProjects = $derived.by(() => {
 		const projectsCopy = [...projects];
@@ -114,6 +116,15 @@
 			<p class="subtitle">Manage your projects</p>
 		</div>
 		<div class="header-actions">
+			<button class="category-button" onclick={() => showCategoryManager = true} title="Manage Categories">
+				<FolderTree size={18} />
+				Manage Categories
+			</button>
+			<button class="tag-button" onclick={() => showTagManager = true} title="Manage Tags">
+				<Tag size={18} />
+				Manage Tags
+			</button>
+			<div class="divider"></div>
 			<button class="sort-toggle" onclick={toggleSort} title={sortBy === 'created' ? 'Sorted by creation date' : 'Sorted by last updated'}>
 				{#if sortBy === 'created'}
 					<Calendar size={18} />
@@ -122,10 +133,6 @@
 					<Clock size={18} />
 					Updated
 				{/if}
-			</button>
-			<button class="category-button" onclick={() => showCategoryManager = true} title="Manage Categories">
-				<FolderTree size={18} />
-				Categories
 			</button>
 			<button class="create-button" onclick={createProject}>
 				<Plus size={20} />
@@ -230,7 +237,15 @@
 {#if showCategoryManager}
 	<div class="category-manager-overlay" onclick={() => showCategoryManager = false}>
 		<div class="category-manager-container" onclick={(e) => e.stopPropagation()}>
-			<ProjectCategoryManager />
+			<ProjectCategoryManager on:close={() => showCategoryManager = false} />
+		</div>
+	</div>
+{/if}
+
+{#if showTagManager}
+	<div class="category-manager-overlay" onclick={() => showTagManager = false}>
+		<div class="category-manager-container" onclick={(e) => e.stopPropagation()}>
+			<ProjectTagManager on:close={() => showTagManager = false} />
 		</div>
 	</div>
 {/if}
@@ -265,6 +280,13 @@
 		display: flex;
 		align-items: center;
 		gap: 12px;
+	}
+
+	.divider {
+		width: 1px;
+		height: 24px;
+		background: var(--border-color, #3a3a3a);
+		flex-shrink: 0;
 	}
 
 	.sort-toggle {
@@ -303,6 +325,26 @@
 	}
 
 	.category-button:hover {
+		background: var(--bg-tertiary, #3a3a3a);
+		border-color: var(--accent-color, #6366f1);
+	}
+
+	.tag-button {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 20px;
+		background: var(--bg-secondary, #2d2d2d);
+		color: var(--text-primary, #ffffff);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 8px;
+		font-size: 14px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.tag-button:hover {
 		background: var(--bg-tertiary, #3a3a3a);
 		border-color: var(--accent-color, #6366f1);
 	}
