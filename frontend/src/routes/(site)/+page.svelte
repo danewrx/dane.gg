@@ -9,6 +9,7 @@
 	import MyButtonWidget from '$lib/site/components/widgets/MyButtonWidget.svelte';
 	import BorderedBox from '$lib/site/components/ui/BorderedBox.svelte';
 	import ServiceStatus from '$lib/site/components/widgets/ServiceStatus.svelte';
+	import SiteStats from '$lib/site/components/widgets/SiteStats.svelte';
 	import { Radio, Twitter } from 'lucide-svelte';
 	import type { PageData } from './$types';
 	
@@ -116,6 +117,10 @@
 				
 				<BorderedBox padding="0 16px" className="my-button-widget" showHeader={true} headerText="My Button" dynamicHeight={true}>
 					<MyButtonWidget />
+				</BorderedBox>
+
+				<BorderedBox padding="8px 16px" className="site-stats-widget" showHeader={true} headerText="Site Stats" contentPadding={true}>
+					<SiteStats />
 				</BorderedBox>
 			</div>
 		</div>
@@ -414,6 +419,10 @@
 	:global([role="button"]:active) {
 		box-shadow: none !important;
 		outline: none !important;
+	}
+
+	:global(.site-stats-widget) {
+		margin-top: var(--spacing-md, 16px);
 	}
 
 	:global(.discord-widget),
