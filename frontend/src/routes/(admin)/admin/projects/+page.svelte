@@ -26,6 +26,30 @@
 		});
 	});
 
+	// Group projects by category
+	let projectsByCategory = $derived.by(() => {
+		const grouped: Record<string, { category: { id: string; name: string; displayOrder: number }; projects: typeof sortedProjects }> = {};
+		
+		sortedProjects.forEach(project => {
+			const categoryId = project.category.id;
+			if (!grouped[categoryId]) {
+				grouped[categoryId] = {
+					category: {
+						id: project.category.id,
+						name: project.category.name,
+						displayOrder: project.category.displayOrder
+					},
+					projects: []
+				};
+			}
+			grouped[categoryId].projects.push(project);
+		});
+		
+		return Object.values(grouped).sort((a, b) => {
+			return a.category.displayOrder - b.category.displayOrder;
+		});
+	});
+
 	onMount(async () => {
 		await loadProjects();
 	});
@@ -60,6 +84,11 @@
 	}
 
 	async function handleProjectSave() {
+		await loadProjects();
+	}
+
+	async function handleCategoryManagerClose() {
+		showCategoryManager = false;
 		await loadProjects();
 	}
 
@@ -152,74 +181,79 @@
 			<button onclick={createProject}>Create your first project</button>
 		</div>
 	{:else}
-		<div class="table-container">
-			<table class="projects-table">
-				<thead>
-					<tr>
-						<th>Title</th>
-						<th>Category</th>
-						<th>{sortBy === 'created' ? 'Created' : 'Updated'}</th>
-						<th>Status</th>
-						<th>Actions</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each sortedProjects as project (project.id)}
-						<tr class="project-row">
-							<td class="title-cell">
-								<div class="title-content">
-									<span class="title-text">{project.title}</span>
-									{#if project.featured}
-										<Star size={14} class="featured-icon" />
-									{/if}
-								</div>
-							</td>
-							<td class="category-cell">{project.category.name}</td>
-							<td class="timestamp-cell">
-								{formatDateTime(sortBy === 'created' ? project.createdAt : project.updatedAt)}
-							</td>
-							<td class="status-cell">
-								<div class="status-badges">
-									{#if project.published}
-										<span class="status-badge published" title="Published">
-											<Eye size={14} />
-										</span>
-									{:else}
-										<span class="status-badge draft" title="Draft">
-											<EyeOff size={14} />
-										</span>
-									{/if}
-									<span class="status-badge active" title="Status: {project.active}">
-										{project.active}
-									</span>
-								</div>
-							</td>
-							<td class="actions-cell">
-								<button class="action-icon edit" onclick={() => editProject(project.id)} title="Edit project">
-									<Edit size={18} />
-								</button>
-								<button class="action-icon delete" onclick={() => confirmDelete(project.id)} title="Delete project">
-									<Trash2 size={18} />
-								</button>
-							</td>
-						</tr>
+		<div class="categories-container">
+			{#each projectsByCategory as categoryGroup (categoryGroup.category.id)}
+				<div class="category-section">
+					<h2 class="category-header">{categoryGroup.category.name}</h2>
+					<div class="table-container">
+						<table class="projects-table">
+							<thead>
+								<tr>
+									<th>Title</th>
+									<th>{sortBy === 'created' ? 'Created' : 'Updated'}</th>
+									<th>Status</th>
+									<th>Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each categoryGroup.projects as project (project.id)}
+									<tr class="project-row">
+										<td class="title-cell">
+											<div class="title-content">
+												<span class="title-text">{project.title}</span>
+												{#if project.featured}
+													<Star size={14} class="featured-icon" />
+												{/if}
+											</div>
+										</td>
+										<td class="timestamp-cell">
+											{formatDateTime(sortBy === 'created' ? project.createdAt : project.updatedAt)}
+										</td>
+										<td class="status-cell">
+											<div class="status-badges">
+												{#if project.published}
+													<span class="status-badge published" title="Published">
+														<Eye size={14} />
+													</span>
+												{:else}
+													<span class="status-badge draft" title="Draft">
+														<EyeOff size={14} />
+													</span>
+												{/if}
+												<span class="status-badge active" title="Status: {project.active}">
+													{project.active}
+												</span>
+											</div>
+										</td>
+										<td class="actions-cell">
+											<button class="action-icon edit" onclick={() => editProject(project.id)} title="Edit project">
+												<Edit size={18} />
+											</button>
+											<button class="action-icon delete" onclick={() => confirmDelete(project.id)} title="Delete project">
+												<Trash2 size={18} />
+											</button>
+										</td>
+									</tr>
 
-						{#if deleteConfirmId === project.id}
-							<tr class="delete-confirm-row">
-								<td colspan="5">
-									<div class="delete-confirm">
-										<p>Delete this project?</p>
-										<div class="confirm-actions">
-											<button class="confirm-button" onclick={() => handleDelete(project.id)}>Delete</button>
-											<button class="cancel-button" onclick={cancelDelete}>Cancel</button>
-										</div>
-									</div>
-								</td>
-							</tr>
-						{/if}
-					{/each}
-				</tbody>
-			</table>
+									{#if deleteConfirmId === project.id}
+										<tr class="delete-confirm-row">
+											<td colspan="4">
+												<div class="delete-confirm">
+													<p>Delete this project?</p>
+													<div class="confirm-actions">
+														<button class="confirm-button" onclick={() => handleDelete(project.id)}>Delete</button>
+														<button class="cancel-button" onclick={cancelDelete}>Cancel</button>
+													</div>
+												</div>
+											</td>
+										</tr>
+									{/if}
+								{/each}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			{/each}
 		</div>
 	{/if}
 </div>
@@ -235,9 +269,9 @@
 </SlideInPanel>
 
 {#if showCategoryManager}
-	<div class="category-manager-overlay" onclick={() => showCategoryManager = false}>
+	<div class="category-manager-overlay" onclick={handleCategoryManagerClose}>
 		<div class="category-manager-container" onclick={(e) => e.stopPropagation()}>
-			<ProjectCategoryManager on:close={() => showCategoryManager = false} />
+			<ProjectCategoryManager on:close={handleCategoryManagerClose} />
 		</div>
 	</div>
 {/if}
@@ -394,6 +428,27 @@
 		100% { transform: rotate(360deg); }
 	}
 
+	.categories-container {
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
+	}
+
+	.category-section {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.category-header {
+		font-size: 1.5rem;
+		font-weight: 600;
+		color: var(--text-primary, #ffffff);
+		margin: 0;
+		padding-bottom: 0.75rem;
+		border-bottom: 2px solid var(--border-color, #3a3a3a);
+	}
+
 	.table-container {
 		background: var(--bg-secondary, #2d2d2d);
 		border: 1px solid var(--border-color, #3a3a3a);
@@ -464,10 +519,6 @@
 		flex-shrink: 0;
 	}
 
-	.category-cell {
-		color: var(--text-secondary, #a1a1aa);
-		font-size: 13px;
-	}
 
 	.timestamp-cell {
 		color: var(--text-secondary, #a1a1aa);
