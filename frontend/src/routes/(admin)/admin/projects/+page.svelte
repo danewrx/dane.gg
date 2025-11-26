@@ -191,6 +191,7 @@
 								<tr>
 									<th>Title</th>
 									<th>{sortBy === 'created' ? 'Created' : 'Updated'}</th>
+									<th>Featured</th>
 									<th>Status</th>
 									<th>Actions</th>
 								</tr>
@@ -208,6 +209,16 @@
 										</td>
 										<td class="timestamp-cell">
 											{formatDateTime(sortBy === 'created' ? project.createdAt : project.updatedAt)}
+										</td>
+										<td class="featured-cell">
+											{#if project.featured}
+												<span class="featured-badge" title="Featured on frontpage">
+													<Star size={16} />
+													Yes
+												</span>
+											{:else}
+												<span class="not-featured" title="Not featured">No</span>
+											{/if}
 										</td>
 										<td class="status-cell">
 											<div class="status-badges">
@@ -237,7 +248,7 @@
 
 									{#if deleteConfirmId === project.id}
 										<tr class="delete-confirm-row">
-											<td colspan="4">
+											<td colspan="5">
 												<div class="delete-confirm">
 													<p>Delete this project?</p>
 													<div class="confirm-actions">
@@ -525,6 +536,24 @@
 		font-size: 13px;
 		white-space: nowrap;
 		min-width: 180px;
+	}
+
+	.featured-cell {
+		text-align: center;
+	}
+
+	.featured-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		color: var(--accent-color, #6366f1);
+		font-weight: 500;
+		font-size: 13px;
+	}
+
+	.not-featured {
+		color: var(--text-secondary, #a1a1aa);
+		font-size: 13px;
 	}
 
 	.status-cell {
