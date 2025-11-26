@@ -16,6 +16,7 @@ interface ChatMessage {
 	data?: any;
 	message?: string;
 	messageId?: string;
+	displayName?: string;
 	user?: {
 		displayName: string;
 		visitorId: string;
@@ -101,7 +102,7 @@ export class ChatWebSocketServer {
 				const message: ChatMessage = JSON.parse(data.toString());
 
 				if (message.type === 'message' && message.message) {
-					await this.handleMessage(ws, message.message, visitorId);
+					await this.handleMessage(ws, message.message, visitorId, message.displayName);
 				}
 			} catch (error) {
 				console.error('Error handling chat message:', error);
@@ -122,7 +123,7 @@ export class ChatWebSocketServer {
 		});
 	}
 
-	private async handleMessage(ws: ChatClient, messageText: string, visitorId: string) {
+	private async handleMessage(ws: ChatClient, messageText: string, visitorId: string, clientDisplayName?: string) {
 		const trimmedMessage = messageText.trim();
 		if (!trimmedMessage || trimmedMessage.length === 0) {
 			return;
@@ -164,7 +165,11 @@ export class ChatWebSocketServer {
 			return;
 		}
 
-		const displayName = `User_${visitorId.substring(0, 8)}`;
+		// Use client-provided display name, or default to "Anonymous"
+		const displayName = clientDisplayName && clientDisplayName.trim() 
+			? clientDisplayName.trim().substring(0, 50)
+			: 'Anonymous';
+		
 		const savedMessage = await ChatService.saveMessage(visitorId, displayName, trimmedMessage);
 
 		// Broadcast

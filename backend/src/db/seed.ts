@@ -425,31 +425,111 @@ Stay tuned for the full article!`,
 
     await db.insert(postTags).values(postTagLinks);
 
-    // Seed some sample messages
-    console.log('💬 Seeding messages...');
-    await db.insert(messages).values([
+    // Seed some sample chat messages
+    console.log('💬 Seeding chat messages...');
+    const now = Date.now();
+    const sampleMessages = [
       {
-        username: 'dane',
-        content: 'Welcome to the chat! 🎉',
-        messageType: 'system',
-        messageColor: '#4CAF50',
-        clientUuid: '550e8400-e29b-41d4-a716-446655440000'
+        username: 'User_a1b2c3d4',
+        content: 'Hey! This website looks really cool! 👋',
+        messageType: 'chat',
+        visitorId: 'visitor-001',
+        timestamp: new Date(now - 20 * 60 * 60 * 1000) // 20 hours ago
       },
       {
-        username: 'visitor',
-        content: 'This is a really cool website!',
-        messageType: 'user',
-        messageColor: '#2196F3',
-        clientUuid: '550e8400-e29b-41d4-a716-446655440001'
+        username: 'User_e5f6g7h8',
+        content: 'Thanks! I just discovered it today. The design is really clean.',
+        messageType: 'chat',
+        visitorId: 'visitor-002',
+        timestamp: new Date(now - 19 * 60 * 60 * 1000) // 19 hours ago
       },
       {
-        username: 'dane',
-        content: 'Thanks! I put a lot of work into it 😊',
-        messageType: 'user',
-        messageColor: '#FF9800',
-        clientUuid: '550e8400-e29b-41d4-a716-446655440000'
+        username: 'User_a1b2c3d4',
+        content: 'Yeah, I love the projects section. Some really interesting work here!',
+        messageType: 'chat',
+        visitorId: 'visitor-001',
+        timestamp: new Date(now - 18 * 60 * 60 * 1000) // 18 hours ago
+      },
+      {
+        username: 'User_i9j0k1l2',
+        content: 'Is this built with SvelteKit? I saw it mentioned in the blog.',
+        messageType: 'chat',
+        visitorId: 'visitor-003',
+        timestamp: new Date(now - 15 * 60 * 60 * 1000) // 15 hours ago
+      },
+      {
+        username: 'User_m3n4o5p6',
+        content: 'Yes! The frontend is SvelteKit and the backend is Node.js with Express.',
+        messageType: 'chat',
+        visitorId: 'visitor-004',
+        timestamp: new Date(now - 14 * 60 * 60 * 1000) // 14 hours ago
+      },
+      {
+        username: 'User_q7r8s9t0',
+        content: 'Nice! The real-time chat feature is working great too 🚀',
+        messageType: 'chat',
+        visitorId: 'visitor-005',
+        timestamp: new Date(now - 12 * 60 * 60 * 1000) // 12 hours ago
+      },
+      {
+        username: 'User_u1v2w3x4',
+        content: 'Has anyone checked out the projects? The dane.gg one is really impressive.',
+        messageType: 'chat',
+        visitorId: 'visitor-006',
+        timestamp: new Date(now - 10 * 60 * 60 * 1000) // 10 hours ago
+      },
+      {
+        username: 'User_y5z6a7b8',
+        content: 'I did! The admin panel looks really well designed.',
+        messageType: 'chat',
+        visitorId: 'visitor-007',
+        timestamp: new Date(now - 8 * 60 * 60 * 1000) // 8 hours ago
+      },
+      {
+        username: 'User_c9d0e1f2',
+        content: 'The blog posts are helpful too. Just read the SvelteKit tutorial.',
+        messageType: 'chat',
+        visitorId: 'visitor-008',
+        timestamp: new Date(now - 6 * 60 * 60 * 1000) // 6 hours ago
+      },
+      {
+        username: 'User_g3h4i5j6',
+        content: 'Hello everyone! First time here, really liking the vibe ✨',
+        messageType: 'chat',
+        visitorId: 'visitor-009',
+        timestamp: new Date(now - 4 * 60 * 60 * 1000) // 4 hours ago
+      },
+      {
+        username: 'User_k7l8m9n0',
+        content: 'Welcome! This is a great community space.',
+        messageType: 'chat',
+        visitorId: 'visitor-010',
+        timestamp: new Date(now - 3 * 60 * 60 * 1000) // 3 hours ago
+      },
+      {
+        username: 'User_o1p2q3r4',
+        content: 'Does anyone know if the site owner is active here?',
+        messageType: 'chat',
+        visitorId: 'visitor-011',
+        timestamp: new Date(now - 2 * 60 * 60 * 1000) // 2 hours ago
+      },
+      {
+        username: 'User_s5t6u7v8',
+        content: 'I think they check in occasionally. You can always reach out via the contact page!',
+        messageType: 'chat',
+        visitorId: 'visitor-012',
+        timestamp: new Date(now - 1 * 60 * 60 * 1000) // 1 hour ago
+      },
+      {
+        username: 'User_w9x0y1z2',
+        content: 'Thanks for the tip! The site stats widget is pretty cool too 📊',
+        messageType: 'chat',
+        visitorId: 'visitor-013',
+        timestamp: new Date(now - 30 * 60 * 1000) // 30 minutes ago
       }
-    ]);
+    ];
+    
+    await db.insert(messages).values(sampleMessages);
 
 
     // Seed site configuration
@@ -665,8 +745,7 @@ Stay tuned for the full article!`,
 
     console.log(`   - ${projectTagLinks.length} project-tag relationships`);
     console.log(`   - ${postTagLinks.length} post-tag relationships`);
-    console.log(`   - 3 sample messages`);
-    console.log(`   - 3 sample page views`);
+    console.log(`   - ${sampleMessages.length} sample chat messages`);
     console.log(`   - 5 site configuration settings`);
     console.log(`   - ${testVisitorData.length} visitor statistics records`);
 
