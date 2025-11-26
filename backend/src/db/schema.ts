@@ -58,7 +58,19 @@ export const messages = websiteSchema.table('messages', {
   timestamp: timestamp('timestamp', { withTimezone: true }).defaultNow(),
   messageType: varchar('message_type', { length: 50 }).notNull(),
   messageColor: varchar('message_color', { length: 50 }),
-  clientUuid: uuid('client_uuid')
+  clientUuid: uuid('client_uuid'),
+  visitorId: varchar('visitor_id', { length: 36 })
+});
+
+// Chat moderation rules table (configurable block lists)
+export const chatModerationRules = websiteSchema.table('chat_moderation_rules', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	type: varchar('type', { length: 20 }).notNull(), // 'word' or 'pattern'
+	value: text('value').notNull(), // The word or regex pattern
+	description: text('description'), // Optional description
+	createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+	updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
 });
 
 // Project categories table
@@ -306,6 +318,7 @@ export type Tag = typeof tags.$inferSelect;
 export type NewTag = typeof tags.$inferInsert;
 export type ProjectTag = typeof projectTags.$inferSelect;
 export type NewProjectTag = typeof projectTags.$inferInsert;
+
 export type VisitorStat = typeof visitorStats.$inferSelect;
 export type NewVisitorStat = typeof visitorStats.$inferInsert;
 export type BlogTag = typeof blogTags.$inferSelect;
@@ -314,6 +327,8 @@ export type PostTag = typeof postTags.$inferSelect;
 export type NewPostTag = typeof postTags.$inferInsert;
 export type SiteConfig = typeof siteConfig.$inferSelect;
 export type NewSiteConfig = typeof siteConfig.$inferInsert;
+export type ChatModerationRule = typeof chatModerationRules.$inferSelect;
+export type NewChatModerationRule = typeof chatModerationRules.$inferInsert;
 export type TotpBackupCode = typeof totpBackupCodes.$inferSelect;
 export type NewTotpBackupCode = typeof totpBackupCodes.$inferInsert;
 export type DiscordStatus = typeof discordStatus.$inferSelect;
