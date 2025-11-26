@@ -1,8 +1,37 @@
 import { Router, Request, Response } from 'express';
 import { StatsService } from '../services/statsService';
 import { requireSession } from '../middleware/auth';
+import { generalLimiter } from '../middleware/rateLimiting';
 
 const router = Router();
+
+/**
+ * GET /api/stats/public
+ * Get public statistics (total visits and unique visitors)
+ */
+router.get('/public', generalLimiter, async (req: Request, res: Response) => {
+  try {
+    const [totalViews, uniqueVisitors] = await Promise.all([
+      StatsService.getTotalSiteViews('all'),
+      StatsService.getUniqueVisitors('all')
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        totalVisits: totalViews,
+        uniqueVisitors
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching public stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to fetch public statistics'
+    });
+  }
+});
 
 /**
  * GET /api/stats/overview
