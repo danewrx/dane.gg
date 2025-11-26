@@ -75,10 +75,8 @@ import uptimeKumaRoutes from './routes/uptimeKuma';
 import twitterRoutes from './routes/twitter';
 import notificationRoutes from './routes/notifications';
 import projectsRoutes from './routes/projects';
-import chatModerationRoutes from './routes/chatModeration';
 import { generalLimiter } from './middleware/rateLimiting';
 import { createServer } from 'http';
-import { chatWebSocketServer } from './services/chatWebSocket';
 
 // Routes
 app.get('/api', (req, res) => {
@@ -144,9 +142,6 @@ app.use('/api/blog', blogRoutes);
 // Projects routes
 app.use('/api/projects', projectsRoutes);
 
-// Chat moderation routes
-app.use('/api/chat/moderation', chatModerationRoutes);
-
 // Upload routes
 app.use('/api/upload', uploadRoutes);
 
@@ -184,9 +179,6 @@ async function initializeApp() {
     // Initialize Twitter scheduler
     const { TwitterScheduler } = await import('./services/twitterScheduler');
     await TwitterScheduler.initialize();
-
-    // Initialize WebSocket server for chat
-    chatWebSocketServer.initialize(server);
   } catch (error) {
     console.error('❌ Failed to initialize app:', error);
   }
@@ -196,7 +188,6 @@ if (isStandalone) {
   server.listen(PORT, async () => {
     console.log(`🚀 Express API running at http://localhost:${PORT}`);
     console.log(`📚 Health endpoint: http://localhost:${PORT}/api/health`);
-    console.log(`💬 Chat WebSocket: ws://localhost:${PORT}/ws/chat`);
     
     // Initialize default admin after server starts
     await initializeApp();

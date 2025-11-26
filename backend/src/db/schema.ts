@@ -62,17 +62,6 @@ export const messages = websiteSchema.table('messages', {
   visitorId: varchar('visitor_id', { length: 36 })
 });
 
-// Chat moderation rules table (configurable block lists)
-export const chatModerationRules = websiteSchema.table('chat_moderation_rules', {
-	id: uuid('id').primaryKey().defaultRandom(),
-	type: varchar('type', { length: 20 }).notNull(), // 'word' or 'pattern'
-	value: text('value').notNull(), // The word or regex pattern
-	description: text('description'), // Optional description
-	createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
-	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-	updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
-});
-
 // Project categories table
 export const projectCategories = websiteSchema.table('project_categories', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -327,8 +316,6 @@ export type PostTag = typeof postTags.$inferSelect;
 export type NewPostTag = typeof postTags.$inferInsert;
 export type SiteConfig = typeof siteConfig.$inferSelect;
 export type NewSiteConfig = typeof siteConfig.$inferInsert;
-export type ChatModerationRule = typeof chatModerationRules.$inferSelect;
-export type NewChatModerationRule = typeof chatModerationRules.$inferInsert;
 export type TotpBackupCode = typeof totpBackupCodes.$inferSelect;
 export type NewTotpBackupCode = typeof totpBackupCodes.$inferInsert;
 export type DiscordStatus = typeof discordStatus.$inferSelect;
