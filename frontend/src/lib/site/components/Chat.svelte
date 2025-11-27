@@ -33,6 +33,37 @@
 	let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 	let isDestroyed = $state(false);
 
+	// Load saved nickname from localStorage
+	function getSavedNickname(): string | null {
+		if (!browser) return null;
+		try {
+			return localStorage.getItem('chatNickname');
+		} catch (error) {
+			console.error('Error reading nickname from localStorage:', error);
+			return null;
+		}
+	}
+
+	// Save nickname to localStorage
+	function saveNickname(nickname: string): void {
+		if (!browser) return;
+		try {
+			localStorage.setItem('chatNickname', nickname);
+		} catch (error) {
+			console.error('Error saving nickname to localStorage:', error);
+		}
+	}
+
+	// Restore nickname from localStorage
+	function restoreNickname(): void {
+		if (!ws || ws.readyState !== WebSocket.OPEN) return;
+		
+		const savedNickname = getSavedNickname();
+		if (savedNickname && savedNickname.trim()) {
+			ws.send(`/nick ${savedNickname.trim()}`);
+		}
+	}
+
 	// Get WebSocket URL
 	function getWebSocketUrl(): string {
 		if (!browser || typeof window === 'undefined') return '';
@@ -91,6 +122,8 @@
 				isConnected = true;
 				connectionStatus = 'connected';
 				console.log('✅ Chat connected successfully');
+				
+				restoreNickname();
 			};
 
 			ws.onmessage = (event) => {
@@ -208,6 +241,15 @@
 		}
 
 		const message = inputValue.trim();
+		
+		// Handle /nick command and save to localStorage
+		if (message.startsWith('/nick ')) {
+			const nickname = message.substring(6).trim();
+			if (nickname) {
+				saveNickname(nickname);
+			}
+		}
+		
 		ws.send(message);
 		inputValue = '';
 	}

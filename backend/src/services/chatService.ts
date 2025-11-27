@@ -133,11 +133,13 @@ export class ChatService {
     const oldNickname = this.nicknames.get(ws) || this.DEFAULT_NICKNAME;
     this.nicknames.set(ws, sanitizedNickname);
 
-    // Notify user of nickname change
-    this.sendToClient(ws, {
-      type: 'system',
-      message: `Nickname changed from "${oldNickname}" to "${sanitizedNickname}"`
-    });
+    if (oldNickname !== sanitizedNickname && oldNickname !== this.DEFAULT_NICKNAME) {
+      // Notify user of nickname change
+      this.sendToClient(ws, {
+        type: 'system',
+        message: `Nickname changed from "${oldNickname}" to "${sanitizedNickname}"`
+      });
+    }
 
     console.log(`👤 ${oldNickname} changed nickname to ${sanitizedNickname}`);
   }
