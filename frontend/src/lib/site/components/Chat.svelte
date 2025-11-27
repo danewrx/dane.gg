@@ -407,14 +407,17 @@
 
 	.chat-input-container {
 		border-top: 1px solid #666;
-		padding: 0;
+		padding: 2px 0 0 0;
 	}
 
 	.input-wrapper {
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		padding: 8px 0;
+		padding: 4px 0;
+		border-top: 1px solid rgba(102, 102, 102, 0.3);
+		border-bottom: 1px solid rgba(102, 102, 102, 0.3);
+		margin-top: 2px;
 	}
 
 	.input-prompt {
