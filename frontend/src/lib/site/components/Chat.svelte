@@ -2,6 +2,8 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
 
+	let globalWsInstance: WebSocket | null = null;
+
 	interface ChatMessage {
 		timestamp: string;
 		nickname: string;
@@ -19,6 +21,7 @@
 		timestamp: string;
 		formatted: string;
 		isSystem: boolean;
+		messageType?: 'connected' | 'nickname' | 'disconnected' | 'other';
 	}
 
 	let messages = $state<(ChatMessage | SystemMessage)[]>([]);
@@ -27,6 +30,8 @@
 	let connectionStatus = $state<'connecting' | 'connected' | 'disconnected'>('disconnected');
 	let ws: WebSocket | null = null;
 	let messagesContainer: HTMLDivElement | null = null;
+	let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+	let isDestroyed = $state(false);
 
 	// Get WebSocket URL
 	function getWebSocketUrl(): string {
@@ -46,7 +51,28 @@
 
 	// Connect to WebSocket
 	function connect() {
-		if (!browser) return;
+		if (!browser || isDestroyed) return;
+
+		// Close any existing global connection
+		if (globalWsInstance && (globalWsInstance.readyState === WebSocket.CONNECTING || globalWsInstance.readyState === WebSocket.OPEN)) {
+			console.log('Closing existing global WebSocket connection before creating new one');
+			globalWsInstance.close();
+			globalWsInstance = null;
+		}
+
+		// Close local connection
+		if (ws) {
+			if (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN) {
+				ws.close();
+			}
+			ws = null;
+		}
+
+		// Clear pending reconnection
+		if (reconnectTimeout) {
+			clearTimeout(reconnectTimeout);
+			reconnectTimeout = null;
+		}
 
 		try {
 			const wsUrl = getWebSocketUrl();
@@ -59,6 +85,7 @@
 			connectionStatus = 'connecting';
 			console.log('Attempting to connect to WebSocket:', wsUrl);
 			ws = new WebSocket(wsUrl);
+			globalWsInstance = ws;
 
 			ws.onopen = () => {
 				isConnected = true;
@@ -84,10 +111,22 @@
 						const now = new Date();
 						const hours = String(now.getHours()).padStart(2, '0');
 						const minutes = String(now.getMinutes()).padStart(2, '0');
+						
+						// Determine message type based on content
+						let messageType: 'connected' | 'nickname' | 'disconnected' | 'other' = 'other';
+						if (data.message.toLowerCase().includes('connected to chat')) {
+							messageType = 'connected';
+						} else if (data.message.toLowerCase().includes('nickname changed')) {
+							messageType = 'nickname';
+						} else if (data.message.toLowerCase().includes('disconnected')) {
+							messageType = 'disconnected';
+						}
+						
 						const systemMsg: SystemMessage = {
 							timestamp: now.toISOString(),
 							formatted: `[${hours}:${minutes}] <System> ${data.message}`,
-							isSystem: true
+							isSystem: true,
+							messageType
 						};
 						messages = [...messages, systemMsg];
 						scrollToBottom();
@@ -103,6 +142,21 @@
 				console.error('❌ WebSocket error:', error);
 				console.error('WebSocket readyState:', ws?.readyState);
 				connectionStatus = 'disconnected';
+				
+				// Clear all messages and show disconnected message
+				if (messages.length > 0) {
+					const now = new Date();
+					const hours = String(now.getHours()).padStart(2, '0');
+					const minutes = String(now.getMinutes()).padStart(2, '0');
+					const disconnectedMsg: SystemMessage = {
+						timestamp: now.toISOString(),
+						formatted: `[${hours}:${minutes}] <System> Disconnected from chat`,
+						isSystem: true,
+						messageType: 'disconnected'
+					};
+					messages = [disconnectedMsg];
+					scrollToBottom();
+				}
 			};
 
 			ws.onclose = (event) => {
@@ -110,9 +164,31 @@
 				connectionStatus = 'disconnected';
 				console.log('Chat disconnected. Code:', event.code, 'Reason:', event.reason || 'No reason', 'WasClean:', event.wasClean);
 
+				// Clear all messages and show disconnected message
+				const now = new Date();
+				const hours = String(now.getHours()).padStart(2, '0');
+				const minutes = String(now.getMinutes()).padStart(2, '0');
+				const disconnectedMsg: SystemMessage = {
+					timestamp: now.toISOString(),
+					formatted: `[${hours}:${minutes}] <System> Disconnected from chat`,
+					isSystem: true,
+					messageType: 'disconnected'
+				};
+				messages = [disconnectedMsg];
+				scrollToBottom();
+
+				// Clear the WS references
+				if (globalWsInstance === ws) {
+					globalWsInstance = null;
+				}
+				ws = null;
+
 				// Attempt to reconnect
-				setTimeout(() => {
-					if (!isConnected) {
+				if (reconnectTimeout) {
+					clearTimeout(reconnectTimeout);
+				}
+				reconnectTimeout = setTimeout(() => {
+					if (!isConnected && connectionStatus === 'disconnected' && !isDestroyed) {
 						console.log('Attempting to reconnect...');
 						connect();
 					}
@@ -155,13 +231,27 @@
 		}
 	}
 
+	// Force disconnect (testing only)
+	function forceDisconnect() {
+		if (ws) {
+			ws.close();
+		}
+	}
+
+	// Expose disconnect function to window for console testing
+	if (browser && typeof window !== 'undefined') {
+		(window as any).chatDisconnect = forceDisconnect;
+	}
+
 	onMount(() => {
 		if (browser) {
 			try {
-				connect();
 				setTimeout(() => {
-					scrollToBottom();
-				}, 100);
+					connect();
+					setTimeout(() => {
+						scrollToBottom();
+					}, 100);
+				}, 50);
 			} catch (error) {
 				console.error('Error initializing chat:', error);
 				connectionStatus = 'disconnected';
@@ -170,8 +260,24 @@
 	});
 
 	onDestroy(() => {
+		isDestroyed = true;
+		
+		if (reconnectTimeout) {
+			clearTimeout(reconnectTimeout);
+			reconnectTimeout = null;
+		}
+		
 		if (ws) {
+			isConnected = false;
+			connectionStatus = 'disconnected';
 			ws.close();
+			ws = null;
+		}
+		
+		// Clear global reference
+		if (globalWsInstance) {
+			globalWsInstance.close();
+			globalWsInstance = null;
 		}
 	});
 </script>
@@ -180,9 +286,21 @@
 	<div class="chat-messages" bind:this={messagesContainer}>
 		<div class="messages-wrapper">
 			{#each messages as msg}
-				<div class="message-line" class:system={'isSystem' in msg && msg.isSystem}>
-					{msg.formatted}
-				</div>
+				{#if 'isSystem' in msg && msg.isSystem}
+					{@const systemMsg = msg as SystemMessage}
+					{@const parts = systemMsg.formatted.match(/^(\[[^\]]+\]\s*<[^>]+>)\s*(.+)$/)}
+					<div class="message-line system" class:connected={systemMsg.messageType === 'connected'} class:nickname={systemMsg.messageType === 'nickname'} class:disconnected={systemMsg.messageType === 'disconnected'}>
+						{#if parts}
+							<span class="system-prefix">{parts[1]}</span> <span class="system-message">{parts[2]}</span>
+						{:else}
+							{systemMsg.formatted}
+						{/if}
+					</div>
+				{:else}
+					<div class="message-line">
+						{msg.formatted}
+					</div>
+				{/if}
 			{/each}
 		</div>
 	</div>
@@ -264,7 +382,27 @@
 	}
 
 	.message-line.system {
-		color: #4a9eff !important;
+		color: #e8e8e8 !important;
+	}
+
+	.message-line.system .system-prefix {
+		color: #e8e8e8 !important;
+	}
+
+	.message-line.system.connected .system-message {
+		color: #90ee90 !important;
+	}
+
+	.message-line.system.nickname .system-message {
+		color: #87ceeb !important;
+	}
+
+	.message-line.system.disconnected .system-message {
+		color: #ffb6c1 !important;
+	}
+
+	.message-line.system:not(.connected):not(.nickname):not(.disconnected) .system-message {
+		color: #e8e8e8 !important;
 	}
 
 	.chat-input-container {
@@ -360,7 +498,27 @@
 	}
 
 	:global(html:not(.dark)) .message-line.system {
-		color: #4a9eff !important;
+		color: #e8e8e8 !important;
+	}
+
+	:global(html:not(.dark)) .message-line.system .system-prefix {
+		color: #e8e8e8 !important;
+	}
+
+	:global(html:not(.dark)) .message-line.system.connected .system-message {
+		color: #90ee90 !important;
+	}
+
+	:global(html:not(.dark)) .message-line.system.nickname .system-message {
+		color: #87ceeb !important;
+	}
+
+	:global(html:not(.dark)) .message-line.system.disconnected .system-message {
+		color: #ffb6c1 !important;
+	}
+
+	:global(html:not(.dark)) .message-line.system:not(.connected):not(.nickname):not(.disconnected) .system-message {
+		color: #e8e8e8 !important;
 	}
 
 	:global(html:not(.dark)) .chat-input-container {

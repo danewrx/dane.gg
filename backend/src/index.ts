@@ -2,6 +2,7 @@ import express from 'express';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import { config } from 'dotenv';
+import { createServer } from 'http';
 import { createDefaultAdmin } from './utils/createDefaultAdmin';
 
 // Load environment variables from root .env file
@@ -9,7 +10,7 @@ config({ path: '../.env' });
 
 const app = express();
 const server = createServer(app);
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.BACKEND_PORT || process.env.PORT || 3001;
 
 // Middleware
 app.use(express.json());
@@ -76,7 +77,6 @@ import twitterRoutes from './routes/twitter';
 import notificationRoutes from './routes/notifications';
 import projectsRoutes from './routes/projects';
 import { generalLimiter } from './middleware/rateLimiting';
-import { createServer } from 'http';
 import { chatService } from './services/chatService';
 
 // Routes
