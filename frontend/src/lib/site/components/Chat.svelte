@@ -32,6 +32,7 @@
 	let messagesContainer: HTMLDivElement | null = null;
 	let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 	let isDestroyed = $state(false);
+	let hasDisconnectedMessage = $state(false);
 
 	// Load saved nickname from localStorage
 	function getSavedNickname(): string | null {
@@ -123,6 +124,17 @@
 				connectionStatus = 'connected';
 				console.log('✅ Chat connected successfully');
 				
+				// Remove disconnected message if it exists (quick reconnect)
+				if (hasDisconnectedMessage) {
+					messages = messages.filter(msg => {
+						if ('isSystem' in msg && msg.isSystem && msg.messageType === 'disconnected') {
+							return false;
+						}
+						return true;
+					});
+					hasDisconnectedMessage = false;
+				}
+				
 				restoreNickname();
 			};
 
@@ -188,6 +200,7 @@
 						messageType: 'disconnected'
 					};
 					messages = [disconnectedMsg];
+					hasDisconnectedMessage = true;
 					scrollToBottom();
 				}
 			};
@@ -208,6 +221,7 @@
 					messageType: 'disconnected'
 				};
 				messages = [disconnectedMsg];
+				hasDisconnectedMessage = true;
 				scrollToBottom();
 
 				// Clear the WS references
