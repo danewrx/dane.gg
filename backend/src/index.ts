@@ -9,7 +9,7 @@ config({ path: '../.env' });
 
 const app = express();
 const server = createServer(app);
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
@@ -77,6 +77,7 @@ import notificationRoutes from './routes/notifications';
 import projectsRoutes from './routes/projects';
 import { generalLimiter } from './middleware/rateLimiting';
 import { createServer } from 'http';
+import { chatService } from './services/chatService';
 
 // Routes
 app.get('/api', (req, res) => {
@@ -169,7 +170,7 @@ app.use((err: any, req: any, res: any, next: any) => {
 });
 
 // Only show console messages if running standalone
-const isStandalone = process.env.NODE_ENV !== 'production' && process.argv[1]?.includes('index.ts');
+const isStandalone = process.env.NODE_ENV !== 'production';
 
 // Initialize default admin user on startup
 async function initializeApp() {
@@ -182,20 +183,42 @@ async function initializeApp() {
   } catch (error) {
     console.error('❌ Failed to initialize app:', error);
   }
+  
+  // Initialize chat WebSocket server (don't block on errors)
+  try {
+    chatService.initialize(server);
+  } catch (error) {
+    console.error('❌ Failed to initialize chat service:', error);
+    // Don't throw - allow server to continue even if chat fails
+  }
 }
 
-if (isStandalone) {
-  server.listen(PORT, async () => {
+// Always start the server
+server.listen(PORT, async () => {
+  if (isStandalone) {
     console.log(`🚀 Express API running at http://localhost:${PORT}`);
     console.log(`📚 Health endpoint: http://localhost:${PORT}/api/health`);
-    
-    // Initialize default admin after server starts
+  }
+  
+  // Initialize default admin after server starts
+  try {
     await initializeApp();
-  });
-} else {
-  // If imported, start the server without console output
-  server.listen(PORT, async () => {
-    // Still initialize admin even when imported
-    await initializeApp();
-  });
-}
+  } catch (error) {
+    console.error('❌ Error during app initialization:', error);
+  }
+}).on('error', (error: any) => {
+  console.error('❌ Failed to start server:', error);
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use. Please stop the other process or change the PORT environment variable.`);
+  }
+  process.exit(1);
+});
+
+// Log if server is listening (check after a short delay)
+setTimeout(() => {
+  if (server.listening) {
+    console.log(`✅ Server is listening on port ${PORT}`);
+  } else {
+    console.error(`❌ Server is NOT listening on port ${PORT}`);
+  }
+}, 1000);

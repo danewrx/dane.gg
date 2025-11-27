@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
 	import DiscordStatus from '$lib/site/components/widgets/DiscordStatus.svelte';
 	import MusicWidget from '$lib/site/components/widgets/MusicWidget.svelte';
 	import TweetWidget from '$lib/site/components/widgets/TweetWidget.svelte';
@@ -10,6 +11,7 @@
 	import BorderedBox from '$lib/site/components/ui/BorderedBox.svelte';
 	import ServiceStatus from '$lib/site/components/widgets/ServiceStatus.svelte';
 	import SiteStats from '$lib/site/components/widgets/SiteStats.svelte';
+	import Chat from '$lib/site/components/Chat.svelte';
 	import { Radio, Twitter } from 'lucide-svelte';
 	import type { PageData } from './$types';
 	
@@ -171,6 +173,19 @@
 				>
 					<ServiceStatus bind:overallStatus={overallStatus} />
 				</BorderedBox>
+
+				{#if browser}
+					<BorderedBox 
+						padding="8px 16px" 
+						className="chat-section" 
+						showHeader={true} 
+						headerText="Chat" 
+						dynamicHeight={true} 
+						contentPadding={true}
+					>
+						<Chat />
+					</BorderedBox>
+				{/if}
 			</div>
 		</div>
 	</div>
@@ -235,6 +250,10 @@
 	}
 
 	:global(.service-status-section) {
+		margin-top: var(--spacing-md, 16px);
+	}
+
+	:global(.chat-section) {
 		margin-top: var(--spacing-md, 16px);
 	}
 
