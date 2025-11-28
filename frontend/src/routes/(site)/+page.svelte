@@ -12,6 +12,7 @@
 	import ServiceStatus from '$lib/site/components/widgets/ServiceStatus.svelte';
 	import SiteStats from '$lib/site/components/widgets/SiteStats.svelte';
 	import Chat from '$lib/site/components/Chat.svelte';
+	import ChatUserCount from '$lib/site/components/ChatUserCount.svelte';
 	import { Radio, Twitter } from 'lucide-svelte';
 	import type { PageData } from './$types';
 	
@@ -20,6 +21,7 @@
 	let musicData: any = $state(data.musicData);
 	let tweetData: any = $state(data.tweetData);
 	let overallStatus = $state('UNKNOWN');
+	let userCount = $state(0);
 	
 	const musicHeaderText = $derived(musicData?.nowPlaying ? 'Now Playing' : 'Recently Played');
 	const tweetHeaderText = $derived('Status');
@@ -183,7 +185,8 @@
 						dynamicHeight={true} 
 						contentPadding={true}
 					>
-						<Chat />
+						<ChatUserCount slot="header-right" count={userCount} />
+						<Chat bind:userCount />
 					</BorderedBox>
 				{/if}
 			</div>

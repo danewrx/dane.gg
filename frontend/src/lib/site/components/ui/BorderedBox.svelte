@@ -33,13 +33,18 @@
 	{#if showHeader && headerText}
 		<div class="bordered-box-header">
 			<div class="header-text">
-				<slot name="header-icon" />
-				{headerText}
-				{#if subheading}
-					<span class="header-subheading" style:color={subheadingColor || undefined}>
-						{subheading}
-					</span>
-				{/if}
+				<div class="header-left">
+					<slot name="header-icon" />
+					{headerText}
+					{#if subheading}
+						<span class="header-subheading" style:color={subheadingColor || undefined}>
+							{subheading}
+						</span>
+					{/if}
+				</div>
+				<div class="header-right-wrapper">
+					<slot name="header-right" />
+				</div>
 			</div>
 			<div class="header-divider"></div>
 		</div>
@@ -137,8 +142,19 @@
 		line-height: 1.2;
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
 		gap: 6px;
 		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
+	}
+	
+	.header-left {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+	
+	.header-right-wrapper {
+		margin-left: auto;
 	}
 
 	.header-subheading {

@@ -63,12 +63,22 @@ export class ChatService {
           type: 'system',
           message: 'Connected to chat - please be respectful'
         });
+
+        this.sendToClient(ws, {
+          type: 'userCount',
+          count: this.clients.size
+        });
       })
       .catch((error) => {
         console.error('Error loading recent messages for new connection:', error);
         this.sendToClient(ws, {
           type: 'system',
           message: 'Connected to chat - please be respectful'
+        });
+        
+        this.sendToClient(ws, {
+          type: 'userCount',
+          count: this.clients.size
         });
       });
 
@@ -241,6 +251,29 @@ export class ChatService {
     this.clients.delete(ws);
     this.nicknames.delete(ws);
     console.log(`📨 Chat client disconnected. Total clients: ${this.clients.size}`);
+    
+    this.broadcastUserCount();
+  }
+  
+  /**
+   * Broadcast current user count to all connected clients
+   */
+  private broadcastUserCount(): void {
+    const count = this.clients.size;
+    const message = JSON.stringify({
+      type: 'userCount',
+      count: count
+    });
+    
+    this.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        try {
+          client.send(message);
+        } catch (error) {
+          console.error('Error broadcasting user count:', error);
+        }
+      }
+    });
   }
 
   /**

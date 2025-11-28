@@ -12,9 +12,10 @@
 	}
 
 	interface WebSocketMessage {
-		type: 'message' | 'system' | 'error' | 'history';
+		type: 'message' | 'system' | 'error' | 'history' | 'userCount';
 		data?: ChatMessage | ChatMessage[];
 		message?: string;
+		count?: number;
 	}
 
 	interface SystemMessage {
@@ -33,6 +34,8 @@
 	let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 	let isDestroyed = $state(false);
 	let hasDisconnectedMessage = $state(false);
+	
+	let { userCount = $bindable(0) }: { userCount?: number } = $props();
 
 	// Load saved nickname from localStorage
 	function getSavedNickname(): string | null {
@@ -177,6 +180,8 @@
 						scrollToBottom();
 					} else if (data.type === 'error' && data.message) {
 						console.error('Chat error:', data.message);
+					} else if (data.type === 'userCount' && typeof data.count === 'number') {
+						userCount = data.count;
 					}
 				} catch (error) {
 					console.error('Error parsing WebSocket message:', error);
