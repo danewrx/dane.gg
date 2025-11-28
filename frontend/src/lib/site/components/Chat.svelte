@@ -37,6 +37,43 @@
 	
 	let { userCount = $bindable(0) }: { userCount?: number } = $props();
 
+	// Format timestamp in IRC style using browser's local timezone
+	function formatTimestamp(timestamp: string): string {
+		if (!browser) return '';
+		
+		try {
+			const date = new Date(timestamp);
+			const now = new Date();
+			const isToday = 
+				date.getDate() === now.getDate() &&
+				date.getMonth() === now.getMonth() &&
+				date.getFullYear() === now.getFullYear();
+
+			const hours = String(date.getHours()).padStart(2, '0');
+			const minutes = String(date.getMinutes()).padStart(2, '0');
+
+			if (isToday) {
+				// Same day
+				return `[${hours}:${minutes}]`;
+			} else {
+				// Different day
+				const month = String(date.getMonth() + 1).padStart(2, '0');
+				const day = String(date.getDate()).padStart(2, '0');
+				const year = date.getFullYear();
+				return `[${month}/${day}/${year}, ${hours}:${minutes}]`;
+			}
+		} catch (error) {
+			console.error('Error formatting timestamp:', error);
+			return '';
+		}
+	}
+
+	// Format a full message with timestamp and nickname
+	function formatMessage(timestamp: string, nickname: string, message: string): string {
+		const timeStr = formatTimestamp(timestamp);
+		return `${timeStr} <${nickname}> ${message}`;
+	}
+
 	// Load saved nickname from localStorage
 	function getSavedNickname(): string | null {
 		if (!browser) return null;
@@ -146,13 +183,19 @@
 					const data: WebSocketMessage = JSON.parse(event.data);
 
 					if (data.type === 'message' && data.data && !Array.isArray(data.data)) {
-						messages = [...messages, data.data];
+						const msg = data.data;
+						msg.formatted = formatMessage(msg.timestamp, msg.nickname, msg.message);
+						messages = [...messages, msg];
 						scrollToBottom();
 					} else if (data.type === 'history' && data.data && Array.isArray(data.data)) {
 						// Historical messages
 						// Preserve any system messages that were already added
 						const existingSystemMessages = messages.filter(msg => 'isSystem' in msg && msg.isSystem);
-						messages = [...data.data, ...existingSystemMessages];
+						const reformattedHistory = data.data.map((msg: ChatMessage) => ({
+							...msg,
+							formatted: formatMessage(msg.timestamp, msg.nickname, msg.message)
+						}));
+						messages = [...reformattedHistory, ...existingSystemMessages];
 						scrollToBottom();
 					} else if (data.type === 'system' && data.message) {
 						// Display system messages

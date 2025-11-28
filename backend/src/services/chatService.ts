@@ -161,8 +161,9 @@ export class ChatService {
     const nickname = this.nicknames.get(ws) || this.DEFAULT_NICKNAME;
     const now = new Date();
     
-    // Format message in IRC style
-    const formatted = this.formatMessage(now, nickname, message);
+    // Format message will be done on client side using user's local timezone
+    // For now, provide a placeholder that client will reformat
+    const formatted = `[${now.toISOString()}] <${nickname}> ${message}`;
 
     // Create message object
     const chatMessage: ChatMessage = {
@@ -186,29 +187,11 @@ export class ChatService {
 
   /**
    * Format message in IRC style
-   * Format: [MM/DD/YYYY, HH:MM] <nickname> message
-   * Or: [HH:MM] <nickname> message (if same day)
+   * Note: This is a helper function. Actual formatting should be done on the client
    */
   private formatMessage(date: Date, nickname: string, message: string): string {
-    const today = new Date();
-    const isToday = 
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear();
-
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-
-    if (isToday) {
-      // Same day - omit date
-      return `[${hours}:${minutes}] <${nickname}> ${message}`;
-    } else {
-      // Different day - include date
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const year = date.getFullYear();
-      return `[${month}/${day}/${year}, ${hours}:${minutes}] <${nickname}> ${message}`;
-    }
+    // This will be reformatted on the client side using the user's timezone
+    return `[${date.toISOString()}] <${nickname}> ${message}`;
   }
 
   /**
@@ -234,7 +217,7 @@ export class ChatService {
   /**
    * Send message to a specific client
    */
-  private sendToClient(ws: WebSocket, data: { type: string; message: string }): void {
+  private sendToClient(ws: WebSocket, data: { type: string; message?: string; count?: number }): void {
     if (ws.readyState === WebSocket.OPEN) {
       try {
         ws.send(JSON.stringify(data));
@@ -318,11 +301,13 @@ export class ChatService {
         .limit(100); // Limit to last 100 messages even if within time window
 
       // Convert database messages to ChatMessage format
+      // Formatting will be done on client side using user's local timezone
       return recentMessages
         .reverse() // Reverse to show oldest first
         .map((msg) => {
           const timestamp = msg.timestamp ? new Date(msg.timestamp) : new Date();
-          const formatted = this.formatMessage(timestamp, msg.username, msg.content);
+          // Placeholder formatted string - client will reformat with local timezone
+          const formatted = `[${timestamp.toISOString()}] <${msg.username}> ${msg.content}`;
           
           return {
             timestamp: timestamp.toISOString(),
