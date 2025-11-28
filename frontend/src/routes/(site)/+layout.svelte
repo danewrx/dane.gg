@@ -68,14 +68,14 @@
 	/* Static CSS Variables - Dark Grey Theme */
 	:global(:root) {
 		/* Dark grey color scheme */
-		--bg-primary: #1a1a1a;
+		--bg-primary: #141414;
 		--bg-secondary: #2d2d2d;
 		--bg-tertiary: #3a3a3a;
 		--bg-hover: #474747;
 		--text-primary: #ffffff;
 		--text-secondary: #e0e0e0;
 		--text-muted: #b0b0b0;
-		--border-color: #555555;
+		--border-color: #ffffff;
 		--accent-color: #4a9eff;
 		--accent-hover: #357abd;
 		--shadow: rgba(0, 0, 0, 0.3);
@@ -131,7 +131,7 @@
 	.content-area {
 		background: var(--bg-primary);
 		height: 100%;
-		padding: 1rem 2rem 3rem 2rem;
+		padding: 1rem 1rem 3rem 1rem;
 		overflow-y: auto;
 		transition: all 0.3s ease;
 		position: relative;

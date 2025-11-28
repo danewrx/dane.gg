@@ -174,6 +174,7 @@
 		list-style: none;
 		margin: 0;
 		padding: 0;
+		padding-left: 6px;
 		gap: 20px;
 		flex-wrap: wrap;
 		justify-content: flex-start;

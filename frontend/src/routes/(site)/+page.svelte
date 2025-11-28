@@ -207,7 +207,7 @@
 	}
 
 	.left-column {
-		flex: 0 0 30%;
+		flex: 0 0 35%;
 		min-width: 0;
 	}
 
