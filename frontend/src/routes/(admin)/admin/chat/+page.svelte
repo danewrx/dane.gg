@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
-	import { MessageSquare, Users, Send, RefreshCw, Trash2 } from 'lucide-svelte';
+	import { MessageSquare, Users, Send, RefreshCw, Trash2, Pencil, Check, X, Loader2 } from 'lucide-svelte';
 
 	interface ChatMessage {
 		id?: string;
@@ -35,6 +35,78 @@
 	let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 	let isDestroyed = $state(false);
 	let userCount = $state(0);
+	
+	let adminNickname = $state('Admin');
+	let isEditingNickname = $state(false);
+	let nicknameInput = $state('');
+	let isSavingNickname = $state(false);
+	
+	async function loadAdminNickname(): Promise<string> {
+		if (!browser) return 'Admin';
+		try {
+			const response = await fetch('/api/settings/admin-chat-nickname', {
+				credentials: 'include'
+			});
+			if (response.ok) {
+				const data = await response.json();
+				return data.nickname || 'Admin';
+			}
+		} catch (error) {
+			console.error('Failed to load admin nickname:', error);
+		}
+		return 'Admin';
+	}
+	
+	async function saveAdminNicknameToDb(nickname: string): Promise<boolean> {
+		if (!browser) return false;
+		try {
+			const response = await fetch('/api/settings/admin-chat-nickname', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ nickname })
+			});
+			return response.ok;
+		} catch (error) {
+			console.error('Failed to save admin nickname:', error);
+			return false;
+		}
+	}
+	
+	function startEditingNickname() {
+		nicknameInput = adminNickname;
+		isEditingNickname = true;
+	}
+	
+	function cancelEditingNickname() {
+		isEditingNickname = false;
+		nicknameInput = '';
+	}
+	
+	async function saveNickname() {
+		const newNickname = nicknameInput.trim();
+		if (newNickname && newNickname !== adminNickname) {
+			isSavingNickname = true;
+			const saved = await saveAdminNicknameToDb(newNickname);
+			if (saved) {
+				adminNickname = newNickname;
+				if (ws && isConnected) {
+					ws.send(`/nick ${newNickname}`);
+				}
+			}
+			isSavingNickname = false;
+		}
+		isEditingNickname = false;
+		nicknameInput = '';
+	}
+	
+	function handleNicknameKeyDown(e: KeyboardEvent) {
+		if (e.key === 'Enter') {
+			saveNickname();
+		} else if (e.key === 'Escape') {
+			cancelEditingNickname();
+		}
+	}
 
 	// Format timestamp
 	function formatTimestamp(timestamp: string): string {
@@ -107,9 +179,8 @@
 			ws.onopen = () => {
 				isConnected = true;
 				connectionStatus = 'connected';
-				
-				// Set admin nickname
-				ws?.send('/nick_restore Admin');
+			
+				ws?.send(`/nick_restore ${adminNickname}`);
 			};
 
 			ws.onmessage = (event) => {
@@ -225,8 +296,9 @@
 		ws.send(`/delete ${messageId}`);
 	}
 
-	onMount(() => {
+	onMount(async () => {
 		if (browser) {
+			adminNickname = await loadAdminNickname();
 			connect();
 		}
 	});
@@ -347,6 +419,48 @@
 
 		<!-- Right Column - Stats -->
 		<aside class="right-column">
+			<!-- Sending As Section -->
+			<div class="identity-section">
+				<div class="identity-header">
+					<h3>Identity</h3>
+				</div>
+				<div class="identity-content">
+					{#if isEditingNickname}
+						<div class="identity-edit">
+							<input
+								type="text"
+								class="nickname-input"
+								bind:value={nicknameInput}
+								onkeydown={handleNicknameKeyDown}
+								placeholder="Enter nickname..."
+								maxlength="20"
+								disabled={isSavingNickname}
+							/>
+							<div class="edit-actions">
+								<button class="edit-btn save" onclick={saveNickname} title="Save" disabled={isSavingNickname}>
+									{#if isSavingNickname}
+										<Loader2 size={14} class="spin" />
+									{:else}
+										<Check size={14} />
+									{/if}
+								</button>
+								<button class="edit-btn cancel" onclick={cancelEditingNickname} title="Cancel" disabled={isSavingNickname}>
+									<X size={14} />
+								</button>
+							</div>
+						</div>
+					{:else}
+						<div class="identity-display">
+							<span class="identity-label">Sending as</span>
+							<span class="identity-value">{adminNickname}</span>
+							<button class="edit-icon-btn" onclick={startEditingNickname} title="Change nickname">
+								<Pencil size={14} />
+							</button>
+						</div>
+					{/if}
+				</div>
+			</div>
+
 			<div class="stats-section">
 				<div class="stats-header">
 					<h3>Statistics</h3>
@@ -507,6 +621,176 @@
 		min-height: 0;
 		display: flex;
 		flex-direction: column;
+		gap: 16px;
+	}
+
+	.identity-section {
+		background: #2d2d2d;
+		border: 1px solid #404040;
+		border-radius: 8px;
+		overflow: hidden;
+	}
+
+	:global(html:not(.dark)) .identity-section {
+		background: #ffffff;
+		border-color: #e5e7eb;
+	}
+
+	.identity-header {
+		padding: 16px;
+		border-bottom: 1px solid #404040;
+	}
+
+	:global(html:not(.dark)) .identity-header {
+		border-bottom-color: #e5e7eb;
+	}
+
+	.identity-header h3 {
+		margin: 0;
+		font-size: 16px;
+		font-weight: 600;
+		color: #ffffff;
+	}
+
+	:global(html:not(.dark)) .identity-header h3 {
+		color: #1f2937;
+	}
+
+	.identity-content {
+		padding: 16px;
+	}
+
+	.identity-display {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.identity-label {
+		font-size: 13px;
+		color: #a1a1aa;
+	}
+
+	:global(html:not(.dark)) .identity-label {
+		color: #6b7280;
+	}
+
+	.identity-value {
+		font-size: 14px;
+		font-weight: 600;
+		color: var(--accent-color, #3b82f6);
+	}
+
+	.edit-icon-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		background: transparent;
+		border: none;
+		border-radius: 4px;
+		color: #6b7280;
+		cursor: pointer;
+		transition: background 0.2s, color 0.2s;
+		margin-left: auto;
+	}
+
+	.edit-icon-btn:hover {
+		background: #3a3a3a;
+		color: #ffffff;
+	}
+
+	:global(html:not(.dark)) .edit-icon-btn:hover {
+		background: #f3f4f6;
+		color: #1f2937;
+	}
+
+	.identity-edit {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.nickname-input {
+		flex: 1;
+		padding: 8px 12px;
+		background: #1a1a1a;
+		border: 1px solid #404040;
+		border-radius: 6px;
+		color: #ffffff;
+		font-size: 14px;
+		outline: none;
+	}
+
+	.nickname-input:focus {
+		border-color: var(--accent-color, #3b82f6);
+	}
+
+	:global(html:not(.dark)) .nickname-input {
+		background: #f9fafb;
+		border-color: #e5e7eb;
+		color: #1f2937;
+	}
+
+	.edit-actions {
+		display: flex;
+		gap: 4px;
+	}
+
+	.edit-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		transition: background 0.2s;
+	}
+
+	.edit-btn.save {
+		background: #22c55e;
+		color: white;
+	}
+
+	.edit-btn.save:hover {
+		background: #16a34a;
+	}
+
+	.edit-btn.cancel {
+		background: #404040;
+		color: #a1a1aa;
+	}
+
+	.edit-btn.cancel:hover {
+		background: #525252;
+		color: #ffffff;
+	}
+
+	:global(html:not(.dark)) .edit-btn.cancel {
+		background: #e5e7eb;
+		color: #6b7280;
+	}
+
+	:global(html:not(.dark)) .edit-btn.cancel:hover {
+		background: #d1d5db;
+		color: #1f2937;
+	}
+
+	.edit-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+
+	:global(.spin) {
+		animation: spin 1s linear infinite;
+	}
+
+	@keyframes spin {
+		from { transform: rotate(0deg); }
+		to { transform: rotate(360deg); }
 	}
 
 	.stats-section {
