@@ -35,6 +35,7 @@
 	}
 
 	interface ChatMessage {
+		id?: string;
 		timestamp: string;
 		nickname: string;
 		message: string;
@@ -42,10 +43,11 @@
 	}
 
 	interface WebSocketMessage {
-		type: 'message' | 'system' | 'error' | 'history' | 'userCount';
+		type: 'message' | 'system' | 'error' | 'history' | 'userCount' | 'delete';
 		data?: ChatMessage | ChatMessage[];
 		message?: string;
 		count?: number;
+		messageId?: string;
 	}
 
 	interface SystemMessage {
@@ -311,6 +313,11 @@
 						console.error('Chat error:', data.message);
 					} else if (data.type === 'userCount' && typeof data.count === 'number') {
 						userCount = data.count;
+					} else if (data.type === 'delete' && data.messageId) {
+						messages = messages.filter(msg => {
+							if ('isSystem' in msg) return true;
+							return (msg as ChatMessage).id !== data.messageId;
+						});
 					}
 				} catch (error) {
 					console.error('Error parsing WebSocket message:', error);

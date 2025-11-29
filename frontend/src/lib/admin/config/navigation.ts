@@ -1,18 +1,18 @@
 import { 
 	Settings, 
-	Home, 
 	Users, 
-	BarChart3, 
 	FileText,
 	Sliders,
 	TrendingUp,
-	FolderKanban
+	FolderKanban,
+	MessageSquare
 } from 'lucide-svelte';
+import type { ComponentType } from 'svelte';
 
 export interface NavigationItem {
 	id: string;
 	label: string;
-	icon: any;
+	icon: ComponentType;
 	path: string;
 	description?: string;
 }
@@ -32,6 +32,13 @@ export const adminNavigation: NavigationItem[] = [
 		icon: Settings,
 		path: '/admin/configuration',
 		description: 'Site configuration and settings'
+	},
+	{
+		id: 'chat',
+		label: 'Chat',
+		icon: MessageSquare,
+		path: '/admin/chat',
+		description: 'Site chat management'
 	},
 	{
 		id: 'blog',

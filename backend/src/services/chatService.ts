@@ -2,9 +2,10 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { Server } from 'http';
 import { db } from '../db';
 import { messages, type NewMessage } from '../db/schema';
-import { desc, gte } from 'drizzle-orm';
+import { desc, gte, eq, and } from 'drizzle-orm';
 
 interface ChatMessage {
+  id?: string;
   timestamp: string;
   nickname: string;
   message: string;
@@ -104,6 +105,13 @@ export class ChatService {
           return;
         }
 
+        // Handle /delete command (admin only)
+        if (message.startsWith('/delete ')) {
+          const messageId = message.substring(8).trim();
+          this.handleDeleteMessage(messageId);
+          return;
+        }
+
         // Handle regular message
         this.handleMessage(ws, message);
       } catch (error) {
@@ -179,24 +187,61 @@ export class ChatService {
     // For now, provide a placeholder that client will reformat
     const formatted = `[${now.toISOString()}] <${nickname}> ${message}`;
 
-    // Create message object
+    // Save to database and get ID
+    let messageId: string | undefined;
+    try {
+      messageId = await this.saveMessageToDatabase(nickname, message, now);
+    } catch (error) {
+      console.error('Error saving message to database:', error);
+    }
+
     const chatMessage: ChatMessage = {
+      id: messageId,
       timestamp: now.toISOString(),
       nickname,
       message,
       formatted
     };
 
-    // Save to database
-    try {
-      await this.saveMessageToDatabase(nickname, message, now);
-    } catch (error) {
-      console.error('Error saving message to database:', error);
-      // Continue even if database save fails
-    }
-
     // Broadcast to all clients
     this.broadcast(chatMessage);
+  }
+
+  /**
+   * Handle message deletion
+   */
+  private async handleDeleteMessage(messageId: string): Promise<void> {
+    try {
+      // Delete from database
+      await db.delete(messages).where(eq(messages.id, messageId));
+      
+      console.log(`🗑️ Message deleted: ${messageId}`);
+
+      // Broadcast deletion to all clients
+      this.broadcastDelete(messageId);
+    } catch (error) {
+      console.error('Error deleting message:', error);
+    }
+  }
+
+  /**
+   * Broadcast message deletion to all clients
+   */
+  private broadcastDelete(messageId: string): void {
+    const message = JSON.stringify({
+      type: 'delete',
+      messageId
+    });
+
+    this.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        try {
+          client.send(message);
+        } catch (error) {
+          console.error('Error broadcasting delete to client:', error);
+        }
+      }
+    });
   }
 
   /**
@@ -281,9 +326,9 @@ export class ChatService {
   }
 
   /**
-   * Save message to database
+   * Save message to database and return ID
    */
-  private async saveMessageToDatabase(nickname: string, content: string, timestamp: Date): Promise<void> {
+  private async saveMessageToDatabase(nickname: string, content: string, timestamp: Date): Promise<string | undefined> {
     try {
       const newMessage: NewMessage = {
         username: nickname,
@@ -292,10 +337,12 @@ export class ChatService {
         messageType: 'chat'
       };
 
-      await db.insert(messages).values(newMessage);
+      const result = await db.insert(messages).values(newMessage).returning({ id: messages.id });
+      return result[0]?.id;
     } catch (error) {
       console.error('Error saving message to database:', error);
       // Don't throw - allow message to still be broadcast even if DB save fails
+      return undefined;
     }
   }
 
@@ -322,6 +369,7 @@ export class ChatService {
           const formatted = `[${timestamp.toISOString()}] <${msg.username}> ${msg.content}`;
           
           return {
+            id: msg.id,
             timestamp: timestamp.toISOString(),
             nickname: msg.username,
             message: msg.content,
