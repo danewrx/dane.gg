@@ -3,6 +3,7 @@ import { db } from '../db';
 import { users, siteConfig } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { requireSession } from '../middleware/auth';
+import { chatService } from '../services/chatService';
 
 const router = Router();
 
@@ -259,6 +260,79 @@ router.post('/admin-chat-nickname', requireSession, async (req: Request, res: Re
     res.status(500).json({
       error: 'Internal server error',
       message: 'Failed to update admin chat nickname'
+    });
+  }
+});
+
+// Get admin chat color (authenticated users only)
+router.get('/admin-chat-color', requireSession, async (req: Request, res: Response) => {
+  try {
+    const result = await db.select({
+      value: siteConfig.value
+    }).from(siteConfig).where(eq(siteConfig.key, 'admin_chat_color')).limit(1);
+
+    const color = result.length > 0 ? result[0].value : '#f5b700';
+
+    res.json({
+      success: true,
+      color,
+      message: 'Admin chat color retrieved successfully'
+    });
+
+  } catch (error) {
+    console.error('Get admin chat color error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to get admin chat color'
+    });
+  }
+});
+
+// Update admin chat color (authenticated users only)
+router.post('/admin-chat-color', requireSession, async (req: Request, res: Response) => {
+  try {
+    const { color } = req.body;
+
+    const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
+    if (!color || !hexColorRegex.test(color)) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        message: 'Color must be a valid hex color (e.g., #f5b700)'
+      });
+    }
+
+    const existing = await db.select().from(siteConfig).where(eq(siteConfig.key, 'admin_chat_color')).limit(1);
+
+    if (existing.length > 0) {
+      await db.update(siteConfig)
+        .set({ 
+          value: color,
+          updatedAt: new Date()
+        })
+        .where(eq(siteConfig.key, 'admin_chat_color'));
+    } else {
+      await db.insert(siteConfig).values({
+        key: 'admin_chat_color',
+        value: color,
+        description: 'Color used for admin nickname in the site chat',
+        dataType: 'string',
+        isActive: true
+      });
+    }
+
+    chatService.broadcastAdminConfig({ color });
+
+    res.json({
+      success: true,
+      color,
+      message: 'Admin chat color updated successfully'
+    });
+
+  } catch (error) {
+    console.error('Update admin chat color error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to update admin chat color'
     });
   }
 });

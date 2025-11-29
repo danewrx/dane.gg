@@ -11,8 +11,36 @@
 	let audioUnlocked = false;
 	let currentNickname = $state<string | null>(null);
 	
+	// Admin nickname and color
+	let adminNickname = $state<string>('Admin');
+	let adminColor = $state<string>('#f5b700');
+	
 	// Track recently sent messages to avoid playing notification for own messages
 	let recentlySentMessages: { message: string; timestamp: number }[] = [];
+	
+	async function loadAdminConfig() {
+		try {
+			const [nicknameRes, colorRes] = await Promise.all([
+				fetch('/api/config/admin_chat_nickname'),
+				fetch('/api/config/admin_chat_color')
+			]);
+			
+			if (nicknameRes.ok) {
+				const data = await nicknameRes.json();
+				if (data.success && data.data?.value) {
+					adminNickname = data.data.value;
+				}
+			}
+			
+			if (colorRes.ok) {
+				const data = await colorRes.json();
+				if (data.success && data.data?.value) {
+					adminColor = data.data.value;
+				}
+			}
+		} catch (error) {
+		}
+	}
 	
 	// Unlock audio on first user interaction (required by browser autoplay policy)
 	function unlockAudio(): void {
@@ -42,9 +70,14 @@
 		formatted: string;
 	}
 
+	interface AdminConfigData {
+		nickname?: string;
+		color?: string;
+	}
+
 	interface WebSocketMessage {
-		type: 'message' | 'system' | 'error' | 'history' | 'userCount' | 'delete';
-		data?: ChatMessage | ChatMessage[];
+		type: 'message' | 'system' | 'error' | 'history' | 'userCount' | 'delete' | 'adminConfig';
+		data?: ChatMessage | ChatMessage[] | AdminConfigData;
 		message?: string;
 		count?: number;
 		messageId?: string;
@@ -264,8 +297,8 @@
 				try {
 					const data: WebSocketMessage = JSON.parse(event.data);
 
-					if (data.type === 'message' && data.data && !Array.isArray(data.data)) {
-						const msg = data.data;
+					if (data.type === 'message' && data.data && !Array.isArray(data.data) && 'timestamp' in data.data) {
+						const msg = data.data as ChatMessage;
 						msg.formatted = formatMessage(msg.timestamp, msg.nickname, msg.message);
 						messages = [...messages, msg];
 						scrollToBottom();
@@ -278,7 +311,7 @@
 						// Historical messages
 						// Preserve any system messages that were already added
 						const existingSystemMessages = messages.filter(msg => 'isSystem' in msg && msg.isSystem);
-						const reformattedHistory = data.data.map((msg: ChatMessage) => ({
+						const reformattedHistory = (data.data as ChatMessage[]).map((msg: ChatMessage) => ({
 							...msg,
 							formatted: formatMessage(msg.timestamp, msg.nickname, msg.message)
 						}));
@@ -318,6 +351,14 @@
 							if ('isSystem' in msg) return true;
 							return (msg as ChatMessage).id !== data.messageId;
 						});
+					} else if (data.type === 'adminConfig' && data.data) {
+						const config = data.data as { nickname?: string; color?: string };
+						if (config.nickname) {
+							adminNickname = config.nickname;
+						}
+						if (config.color) {
+							adminColor = config.color;
+						}
 					}
 				} catch (error) {
 					console.error('Error parsing WebSocket message:', error);
@@ -455,6 +496,7 @@
 				document.addEventListener('touchstart', unlockAudio);
 				
 				loadNotificationSetting();
+				loadAdminConfig();
 				
 				currentNickname = getSavedNickname();
 				
@@ -521,8 +563,9 @@
 						{/if}
 					</div>
 				{:else}
+					{@const chatMsg = msg as ChatMessage}
 					<div class="message-line">
-						{msg.formatted}
+						<span class="msg-time">{formatTimestamp(chatMsg.timestamp)}</span> <span class="msg-nickname" style={chatMsg.nickname === adminNickname ? `color: ${adminColor}; font-weight: bold;` : ''}>&lt;{chatMsg.nickname}&gt;</span> <span class="msg-content">{chatMsg.message}</span>
 					</div>
 				{/if}
 			{/each}
@@ -603,6 +646,19 @@
 		word-wrap: break-word;
 		white-space: pre-wrap;
 		color: #e8e8e8 !important;
+	}
+
+	.msg-time {
+		color: #888;
+	}
+
+	.msg-nickname {
+		color: #e8e8e8;
+		font-weight: normal;
+	}
+
+	.msg-content {
+		color: #e8e8e8;
 	}
 
 	.message-line.system {
@@ -721,6 +777,18 @@
 	}
 
 	:global(html:not(.dark)) .message-line {
+		color: #e8e8e8 !important;
+	}
+
+	:global(html:not(.dark)) .msg-time {
+		color: #888 !important;
+	}
+
+	:global(html:not(.dark)) .msg-nickname {
+		color: #e8e8e8;
+	}
+
+	:global(html:not(.dark)) .msg-content {
 		color: #e8e8e8 !important;
 	}
 

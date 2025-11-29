@@ -406,6 +406,28 @@ export class ChatService {
   }
 
   /**
+   * Broadcast admin config update to all clients
+   */
+  broadcastAdminConfig(config: { nickname?: string; color?: string }): void {
+    const message = JSON.stringify({
+      type: 'adminConfig',
+      data: config
+    });
+
+    console.log(`📢 Broadcasting admin config update:`, config);
+
+    this.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        try {
+          client.send(message);
+        } catch (error) {
+          console.error('Error broadcasting admin config to client:', error);
+        }
+      }
+    });
+  }
+
+  /**
    * Close WebSocket server
    */
   close(): void {

@@ -18,9 +18,14 @@
 		messageType?: 'connected' | 'nickname' | 'disconnected' | 'other';
 	}
 
+	interface AdminConfigData {
+		nickname?: string;
+		color?: string;
+	}
+
 	interface WebSocketMessage {
-		type: 'message' | 'system' | 'error' | 'history' | 'userCount' | 'delete';
-		data?: ChatMessage | ChatMessage[];
+		type: 'message' | 'system' | 'error' | 'history' | 'userCount' | 'delete' | 'adminConfig';
+		data?: ChatMessage | ChatMessage[] | AdminConfigData;
 		message?: string;
 		count?: number;
 		messageId?: string;
@@ -41,6 +46,9 @@
 	let nicknameInput = $state('');
 	let isSavingNickname = $state(false);
 	
+	let adminColor = $state('#f5b700');
+	let isSavingColor = $state(false);
+	
 	async function loadAdminNickname(): Promise<string> {
 		if (!browser) return 'Admin';
 		try {
@@ -57,6 +65,22 @@
 		return 'Admin';
 	}
 	
+	async function loadAdminColor(): Promise<string> {
+		if (!browser) return '#f5b700';
+		try {
+			const response = await fetch('/api/settings/admin-chat-color', {
+				credentials: 'include'
+			});
+			if (response.ok) {
+				const data = await response.json();
+				return data.color || '#f5b700';
+			}
+		} catch (error) {
+			console.error('Failed to load admin color:', error);
+		}
+		return '#f5b700';
+	}
+	
 	async function saveAdminNicknameToDb(nickname: string): Promise<boolean> {
 		if (!browser) return false;
 		try {
@@ -70,6 +94,33 @@
 		} catch (error) {
 			console.error('Failed to save admin nickname:', error);
 			return false;
+		}
+	}
+	
+	async function saveAdminColorToDb(color: string): Promise<boolean> {
+		if (!browser) return false;
+		try {
+			const response = await fetch('/api/settings/admin-chat-color', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ color })
+			});
+			return response.ok;
+		} catch (error) {
+			console.error('Failed to save admin color:', error);
+			return false;
+		}
+	}
+	
+	async function handleColorChange(e: Event) {
+		const target = e.target as HTMLInputElement;
+		const newColor = target.value;
+		if (newColor !== adminColor) {
+			isSavingColor = true;
+			adminColor = newColor;
+			await saveAdminColorToDb(newColor);
+			isSavingColor = false;
 		}
 	}
 	
@@ -187,13 +238,13 @@
 				try {
 					const data: WebSocketMessage = JSON.parse(event.data);
 
-					if (data.type === 'message' && data.data && !Array.isArray(data.data)) {
-						const msg = data.data;
+					if (data.type === 'message' && data.data && !Array.isArray(data.data) && 'timestamp' in data.data) {
+						const msg = data.data as ChatMessage;
 						messages = [...messages, msg];
 						scrollToBottom();
 					} else if (data.type === 'history' && data.data && Array.isArray(data.data)) {
 						const existingSystemMessages = messages.filter(msg => 'isSystem' in msg && msg.isSystem);
-						messages = [...data.data, ...existingSystemMessages];
+						messages = [...(data.data as ChatMessage[]), ...existingSystemMessages];
 						scrollToBottom();
 					} else if (data.type === 'system' && data.message) {
 						const now = new Date();
@@ -224,6 +275,14 @@
 							if ('isSystem' in msg) return true; // Keep system messages
 							return (msg as ChatMessage).id !== data.messageId;
 						});
+					} else if (data.type === 'adminConfig' && data.data) {
+						const config = data.data as { nickname?: string; color?: string };
+						if (config.nickname) {
+							adminNickname = config.nickname;
+						}
+						if (config.color) {
+							adminColor = config.color;
+						}
 					}
 				} catch (error) {
 					console.error('Error parsing WebSocket message:', error);
@@ -298,7 +357,10 @@
 
 	onMount(async () => {
 		if (browser) {
-			adminNickname = await loadAdminNickname();
+			[adminNickname, adminColor] = await Promise.all([
+				loadAdminNickname(),
+				loadAdminColor()
+			]);
 			connect();
 		}
 	});
@@ -380,7 +442,7 @@
 							{@const chatMsg = msg as ChatMessage}
 							<div class="message">
 								<span class="message-time">{formatTimestamp(chatMsg.timestamp)}</span>
-								<span class="message-nickname">{chatMsg.nickname}</span>
+								<span class="message-nickname" style={chatMsg.nickname === adminNickname ? `color: ${adminColor}` : ''}>{chatMsg.nickname}</span>
 								<span class="message-content">{chatMsg.message}</span>
 								{#if chatMsg.id}
 									<button 
@@ -452,12 +514,29 @@
 					{:else}
 						<div class="identity-display">
 							<span class="identity-label">Sending as</span>
-							<span class="identity-value">{adminNickname}</span>
+							<span class="identity-value" style="color: {adminColor}">{adminNickname}</span>
 							<button class="edit-icon-btn" onclick={startEditingNickname} title="Change nickname">
 								<Pencil size={14} />
 							</button>
 						</div>
 					{/if}
+					
+					<div class="color-picker-row">
+						<span class="identity-label">Name color</span>
+						<div class="color-picker-wrapper">
+							<input 
+								type="color" 
+								class="color-picker"
+								value={adminColor}
+								onchange={handleColorChange}
+								disabled={isSavingColor}
+							/>
+							<span class="color-value">{adminColor}</span>
+							{#if isSavingColor}
+								<span class="color-saving"><Loader2 size={14} class="spin" /></span>
+							{/if}
+						</div>
+					</div>
 				</div>
 			</div>
 
@@ -658,6 +737,9 @@
 
 	.identity-content {
 		padding: 16px;
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
 	}
 
 	.identity-display {
@@ -704,6 +786,64 @@
 	:global(html:not(.dark)) .edit-icon-btn:hover {
 		background: #f3f4f6;
 		color: #1f2937;
+	}
+
+	.color-picker-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding-top: 8px;
+		border-top: 1px solid #404040;
+	}
+
+	:global(html:not(.dark)) .color-picker-row {
+		border-top-color: #e5e7eb;
+	}
+
+	.color-picker-wrapper {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-left: auto;
+	}
+
+	.color-picker {
+		width: 32px;
+		height: 32px;
+		padding: 0;
+		border: 2px solid #404040;
+		border-radius: 6px;
+		cursor: pointer;
+		background: transparent;
+	}
+
+	.color-picker::-webkit-color-swatch-wrapper {
+		padding: 2px;
+	}
+
+	.color-picker::-webkit-color-swatch {
+		border: none;
+		border-radius: 4px;
+	}
+
+	:global(html:not(.dark)) .color-picker {
+		border-color: #e5e7eb;
+	}
+
+	.color-value {
+		font-size: 12px;
+		font-family: monospace;
+		color: #a1a1aa;
+	}
+
+	:global(html:not(.dark)) .color-value {
+		color: #6b7280;
+	}
+
+	.color-saving {
+		display: flex;
+		align-items: center;
+		color: var(--accent-color, #3b82f6);
 	}
 
 	.identity-edit {
