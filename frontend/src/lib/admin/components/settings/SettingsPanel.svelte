@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import FontSelector from './FontSelector.svelte';
 	import WeatherControls from './WeatherControls.svelte';
+	import ChatNotificationControl from '$lib/site/components/settings/ChatNotificationControl.svelte';
 
 	export let isOpen: boolean = false;
 
@@ -35,6 +36,11 @@
 		<div class="settings-section">
 			<h3>Weather Effects</h3>
 			<WeatherControls />
+		</div>
+
+		<div class="settings-section">
+			<h3>Chat</h3>
+			<ChatNotificationControl />
 		</div>
 	</div>
 </div>

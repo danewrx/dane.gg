@@ -3,6 +3,36 @@
 	import { browser } from '$app/environment';
 
 	let globalWsInstance: WebSocket | null = null;
+	
+	// Notification sound
+	const NOTIFICATION_STORAGE_KEY = 'chatNotificationsEnabled';
+	let notificationsEnabled = $state(true);
+	let notificationAudio: HTMLAudioElement | null = null;
+	let audioUnlocked = false;
+	let currentNickname = $state<string | null>(null);
+	
+	// Track recently sent messages to avoid playing notification for own messages
+	let recentlySentMessages: { message: string; timestamp: number }[] = [];
+	
+	// Unlock audio on first user interaction (required by browser autoplay policy)
+	function unlockAudio(): void {
+		if (audioUnlocked || !notificationAudio) return;
+		
+		// Play and immediately pause to unlock audio
+		notificationAudio.volume = 0;
+		notificationAudio.play().then(() => {
+			notificationAudio!.pause();
+			notificationAudio!.currentTime = 0;
+			notificationAudio!.volume = 0.5;
+			audioUnlocked = true;
+			// Remove listeners after unlocking
+			document.removeEventListener('click', unlockAudio);
+			document.removeEventListener('keydown', unlockAudio);
+			document.removeEventListener('touchstart', unlockAudio);
+		}).catch(() => {
+			// Still blocked, will try again on next interaction
+		});
+	}
 
 	interface ChatMessage {
 		timestamp: string;
@@ -90,9 +120,58 @@
 		if (!browser) return;
 		try {
 			localStorage.setItem('chatNickname', nickname);
+			currentNickname = nickname;
 		} catch (error) {
 			console.error('Error saving nickname to localStorage:', error);
 		}
+	}
+
+	// Load notification setting from localStorage
+	function loadNotificationSetting(): void {
+		if (!browser) return;
+		try {
+			const stored = localStorage.getItem(NOTIFICATION_STORAGE_KEY);
+			notificationsEnabled = stored === null ? true : stored === 'true';
+		} catch (error) {
+			console.error('Error reading notification setting:', error);
+		}
+	}
+
+	// Play notification sound
+	function playNotificationSound(): void {
+		if (!browser || !notificationsEnabled || !notificationAudio) return;
+		try {
+			notificationAudio.currentTime = 0;
+			notificationAudio.play().catch(() => {
+			});
+		} catch (error) {
+			console.error('Error playing notification sound:', error);
+		}
+	}
+
+	// Handle notification setting change from settings panel
+	function handleNotificationSettingChange(event: CustomEvent<{ enabled: boolean }>): void {
+		notificationsEnabled = event.detail.enabled;
+	}
+
+	// Check if a message was recently sent
+	function wasMessageSentByMe(messageText: string): boolean {
+		const now = Date.now();
+		recentlySentMessages = recentlySentMessages.filter(m => now - m.timestamp < 5000);
+		
+		const index = recentlySentMessages.findIndex(m => m.message === messageText);
+		if (index !== -1) {
+			recentlySentMessages.splice(index, 1);
+			return true;
+		}
+		return false;
+	}
+
+	function trackSentMessage(messageText: string): void {
+		recentlySentMessages.push({
+			message: messageText,
+			timestamp: Date.now()
+		});
 	}
 
 	// Restore nickname from localStorage
@@ -101,7 +180,8 @@
 		
 		const savedNickname = getSavedNickname();
 		if (savedNickname && savedNickname.trim()) {
-			ws.send(`/nick ${savedNickname.trim()}`);
+			currentNickname = savedNickname.trim();
+			ws.send(`/nick_restore ${savedNickname.trim()}`);
 		}
 	}
 
@@ -187,6 +267,11 @@
 						msg.formatted = formatMessage(msg.timestamp, msg.nickname, msg.message);
 						messages = [...messages, msg];
 						scrollToBottom();
+						
+						// Play notification sound
+						if (!wasMessageSentByMe(msg.message)) {
+							playNotificationSound();
+						}
 					} else if (data.type === 'history' && data.data && Array.isArray(data.data)) {
 						// Historical messages
 						// Preserve any system messages that were already added
@@ -205,11 +290,12 @@
 						
 						// Determine message type based on content
 						let messageType: 'connected' | 'nickname' | 'disconnected' | 'other' = 'other';
-						if (data.message.toLowerCase().includes('connected to chat')) {
+						const msgLower = data.message.toLowerCase();
+						if (msgLower.includes('connected to chat')) {
 							messageType = 'connected';
-						} else if (data.message.toLowerCase().includes('nickname changed')) {
+						} else if (msgLower.includes('nickname changed') || msgLower.includes('nickname set')) {
 							messageType = 'nickname';
-						} else if (data.message.toLowerCase().includes('disconnected')) {
+						} else if (msgLower.includes('disconnected')) {
 							messageType = 'disconnected';
 						}
 						
@@ -310,6 +396,8 @@
 			if (nickname) {
 				saveNickname(nickname);
 			}
+		} else {
+			trackSentMessage(message);
 		}
 		
 		ws.send(message);
@@ -350,6 +438,22 @@
 	onMount(() => {
 		if (browser) {
 			try {
+				// Initialize notification audio
+				notificationAudio = new Audio('/assets/sounds/notification.mp3');
+				notificationAudio.volume = 0.5;
+				
+				// Add listeners to unlock audio on first user interaction
+				document.addEventListener('click', unlockAudio);
+				document.addEventListener('keydown', unlockAudio);
+				document.addEventListener('touchstart', unlockAudio);
+				
+				loadNotificationSetting();
+				
+				currentNickname = getSavedNickname();
+				
+				// Listen for notification setting changes
+				window.addEventListener('chatNotificationSettingChanged', handleNotificationSettingChange as EventListener);
+				
 				setTimeout(() => {
 					connect();
 					setTimeout(() => {
@@ -383,6 +487,15 @@
 			globalWsInstance.close();
 			globalWsInstance = null;
 		}
+		
+		// Clean up notification event listeners
+		if (browser) {
+			window.removeEventListener('chatNotificationSettingChanged', handleNotificationSettingChange as EventListener);
+			document.removeEventListener('click', unlockAudio);
+			document.removeEventListener('keydown', unlockAudio);
+			document.removeEventListener('touchstart', unlockAudio);
+		}
+		notificationAudio = null;
 	});
 </script>
 

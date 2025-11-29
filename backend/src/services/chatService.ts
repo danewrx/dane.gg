@@ -94,7 +94,13 @@ export class ChatService {
         // Handle /nick command
         if (message.startsWith('/nick ')) {
           const nickname = message.substring(6).trim();
-          this.handleNickCommand(ws, nickname);
+          this.handleNickCommand(ws, nickname, false);
+          return;
+        }
+
+        if (message.startsWith('/nick_restore ')) {
+          const nickname = message.substring(14).trim();
+          this.handleNickCommand(ws, nickname, true);
           return;
         }
 
@@ -119,8 +125,9 @@ export class ChatService {
 
   /**
    * Handle /nick command
+   * @param silent - don't send system message
    */
-  private handleNickCommand(ws: WebSocket, nickname: string): void {
+  private handleNickCommand(ws: WebSocket, nickname: string, silent: boolean = false): void {
     if (!nickname || nickname.length === 0) {
       this.sendToClient(ws, {
         type: 'error',
@@ -143,12 +150,19 @@ export class ChatService {
     const oldNickname = this.nicknames.get(ws) || this.DEFAULT_NICKNAME;
     this.nicknames.set(ws, sanitizedNickname);
 
-    if (oldNickname !== sanitizedNickname && oldNickname !== this.DEFAULT_NICKNAME) {
+    if (!silent && oldNickname !== sanitizedNickname) {
       // Notify user of nickname change
-      this.sendToClient(ws, {
-        type: 'system',
-        message: `Nickname changed from "${oldNickname}" to "${sanitizedNickname}"`
-      });
+      if (oldNickname === this.DEFAULT_NICKNAME) {
+        this.sendToClient(ws, {
+          type: 'system',
+          message: `Nickname set to "${sanitizedNickname}"`
+        });
+      } else {
+        this.sendToClient(ws, {
+          type: 'system',
+          message: `Nickname changed from "${oldNickname}" to "${sanitizedNickname}"`
+        });
+      }
     }
 
     console.log(`👤 ${oldNickname} changed nickname to ${sanitizedNickname}`);
@@ -300,10 +314,8 @@ export class ChatService {
         .orderBy(desc(messages.timestamp))
         .limit(100); // Limit to last 100 messages even if within time window
 
-      // Convert database messages to ChatMessage format
-      // Formatting will be done on client side using user's local timezone
       return recentMessages
-        .reverse() // Reverse to show oldest first
+        .reverse()
         .map((msg) => {
           const timestamp = msg.timestamp ? new Date(msg.timestamp) : new Date();
           // Placeholder formatted string - client will reformat with local timezone
