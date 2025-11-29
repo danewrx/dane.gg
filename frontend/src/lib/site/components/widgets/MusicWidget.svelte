@@ -397,7 +397,7 @@
 	.default-placeholder {
 		display: flex;
 		align-items: center;
-		gap: var(--spacing-sm, 8px);
+		gap: 12px;
 		opacity: 0.6;
 	}
 
@@ -410,39 +410,38 @@
 		min-width: 0;
 		display: flex;
 		flex-direction: column;
-		justify-content: center;
+		justify-content: flex-start;
 		align-items: flex-start;
 		gap: 4px;
 		overflow: hidden;
-		height: 64px;
 	}
 
 	.default-placeholder .track-title {
-		font-weight: 600;
-		font-size: 16px;
+		font-weight: 500;
+		font-size: 14px;
 		color: var(--text-primary, #ffffff);
 		margin: 0;
 		padding: 0;
-		line-height: 1;
+		line-height: 1.4;
 		width: 100%;
 		max-width: 100%;
 	}
 
 	.default-placeholder .track-artist {
 		font-size: 14px;
-		color: var(--text-primary, #ffffff);
+		color: var(--text-muted, #999999);
 		margin: 0;
 		padding: 0;
-		line-height: 1;
+		line-height: 1.4;
 		width: 100%;
 		max-width: 100%;
 	}
 
 	.default-placeholder .track-status {
-		font-size: 10px;
+		font-size: 12px;
 		margin: 0;
 		padding: 0;
-		line-height: 1;
+		line-height: 1.4;
 		width: 100%;
 		max-width: 100%;
 		color: var(--text-muted, #999999);
@@ -452,7 +451,7 @@
 
 	.track-info {
 		display: flex;
-		gap: 8px;
+		gap: 12px;
 		align-items: center;
 	}
 
@@ -462,24 +461,24 @@
 	}
 
 	.track-image img {
-		width: 64px;
-		height: 64px;
+		width: 52px;
+		height: 52px;
 		border-radius: 0;
 		object-fit: cover;
-		border: 1px solid rgba(255, 255, 255, 0.2);
+		border: 1px solid rgba(255, 255, 255, 0.15);
 	}
 
 	.no-image {
-		width: 64px;
-		height: 64px;
-		background: var(--bg-secondary, #2d2d2d);
+		width: 52px;
+		height: 52px;
+		background: var(--background-secondary, #2a2a2a);
 		border-radius: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		font-size: 18px;
 		color: var(--text-muted, #999999);
-		border: 1px solid rgba(255, 255, 255, 0.2);
+		border: 1px solid rgba(255, 255, 255, 0.15);
 	}
 
 
@@ -488,20 +487,20 @@
 		min-width: 0;
 		display: flex;
 		flex-direction: column;
-		justify-content: center;
+		justify-content: flex-start;
 		align-items: flex-start;
 		gap: 4px;
 		overflow: hidden;
-		height: 64px;
+		padding-top: 0;
 	}
 
 	.track-title {
 		font-weight: 600;
-		font-size: 16px;
+		font-size: 15px;
 		color: var(--text-primary, #ffffff);
 		margin: 0;
 		padding: 0;
-		line-height: 1;
+		line-height: 1.4;
 		text-decoration: none;
 		display: block;
 		white-space: nowrap;
@@ -516,15 +515,14 @@
 
 	.track-title:hover {
 		color: var(--accent-color, #4a9eff);
-		text-decoration: underline;
 	}
 
 	.track-artist {
-		font-size: 14px;
+		font-size: 15px;
 		color: var(--text-primary, #ffffff);
 		margin: 0;
 		padding: 0;
-		line-height: 1;
+		line-height: 1.4;
 		font-weight: 400;
 		white-space: nowrap;
 		width: 100%;
@@ -537,13 +535,14 @@
 	}
 
 	.track-status {
-		font-size: 10px;
+		font-size: 12px;
 		margin: 0;
 		padding: 0;
-		line-height: 1;
+		line-height: 1.4;
 		white-space: nowrap;
 		width: 100%;
 		max-width: 100%;
+		color: var(--text-muted, #71767a);
 		/* Always show ellipsis, never scroll */
 		overflow: hidden !important;
 		text-overflow: ellipsis !important;
@@ -583,44 +582,32 @@
 
 	@media (max-width: 768px) {
 		.track-info {
-			gap: 8px;
-			flex: 1;
-			min-width: 0;
-			padding: 4px 0 12px 0;
+			gap: 10px;
 		}
 		
 		.track-image img, .no-image {
-			width: 56px;
-			height: 56px;
-		}
-		
-		.track-details {
-			gap: 4px;
-			height: 56px;
+			width: 44px;
+			height: 44px;
 		}
 		
 		.track-title {
-			font-size: 16px;
+			font-size: 13px;
 		}
 		
 		.track-artist {
-			font-size: 14px;
+			font-size: 13px;
 		}
 		
 		.track-status {
 			font-size: 11px;
 		}
 
-		.default-placeholder .track-details {
-			height: 56px;
-		}
-
 		.default-placeholder .track-title {
-			font-size: 16px;
+			font-size: 13px;
 		}
 
 		.default-placeholder .track-artist {
-			font-size: 14px;
+			font-size: 13px;
 		}
 
 		.default-placeholder .track-status {
@@ -640,49 +627,36 @@
 		}
 		
 		.track-info {
-			padding: 2px 0 16px 0;
-			gap: 8px;
+			gap: 10px;
 		}
 		
 		.track-image img, .no-image {
-			width: 48px;
-			height: 48px;
-		}
-		
-		.track-details {
-			flex: 1;
-			min-width: 0;
-			height: 48px;
-			gap: 5px;
+			width: 38px;
+			height: 38px;
 		}
 		
 		.track-title {
-			font-size: 17px;
+			font-size: 12px;
 		}
 		
 		.track-artist {
-			font-size: 15px;
+			font-size: 12px;
 		}
 		
 		.track-status {
-			font-size: 12px;
-		}
-
-		.default-placeholder .track-details {
-			height: 48px;
-			gap: 5px;
+			font-size: 10px;
 		}
 
 		.default-placeholder .track-title {
-			font-size: 17px;
+			font-size: 12px;
 		}
 
 		.default-placeholder .track-artist {
-			font-size: 15px;
+			font-size: 12px;
 		}
 
 		.default-placeholder .track-status {
-			font-size: 12px;
+			font-size: 10px;
 		}
 	}
 </style>
