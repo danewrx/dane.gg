@@ -287,7 +287,7 @@
 	</section>
 
 	<div class="content-columns">
-		<!-- Left Column (60%) - Chat -->
+		<!-- Left Column - Chat -->
 		<section class="chat-section">
 			<div class="chat-container">
 				<div class="messages-container" bind:this={messagesContainer}>
@@ -345,25 +345,21 @@
 			</div>
 		</section>
 
-		<!-- Right Column (40%) - Sidebar -->
-		<aside class="sidebar-section">
-			<div class="sidebar-container">
-				<div class="sidebar-header">
-					<h3>Chat Info</h3>
+		<!-- Right Column - Stats -->
+		<aside class="right-column">
+			<div class="stats-section">
+				<div class="stats-header">
+					<h3>Statistics</h3>
 				</div>
-				<div class="sidebar-content">
-					<div class="info-card">
-						<div class="info-label">Online Users</div>
-						<div class="info-value">{userCount}</div>
-					</div>
-					<div class="info-card">
-						<div class="info-label">Total Messages</div>
-						<div class="info-value">{messages.filter(m => !('isSystem' in m)).length}</div>
-					</div>
-					<div class="info-card">
-						<div class="info-label">Connection</div>
-						<div class="info-value status" class:connected={isConnected}>
-							{isConnected ? 'Active' : 'Inactive'}
+				<div class="stats-content">
+					<div class="stats-grid">
+						<div class="info-card">
+							<div class="info-label">Online Users</div>
+							<div class="info-value">{userCount}</div>
+						</div>
+						<div class="info-card">
+							<div class="info-label">Total Messages</div>
+							<div class="info-value">{messages.filter(m => !('isSystem' in m)).length}</div>
 						</div>
 					</div>
 				</div>
@@ -492,6 +488,13 @@
 		background: var(--accent-color-dark, #2563eb);
 	}
 
+	.content-columns {
+		display: flex;
+		gap: 24px;
+		flex: 1;
+		min-height: 0;
+	}
+
 	.chat-section {
 		flex: 0 0 60%;
 		min-height: 0;
@@ -499,55 +502,53 @@
 		flex-direction: column;
 	}
 
-	.sidebar-section {
+	.right-column {
 		flex: 0 0 40%;
 		min-height: 0;
 		display: flex;
 		flex-direction: column;
 	}
 
-	.sidebar-container {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
+	.stats-section {
 		background: #2d2d2d;
 		border: 1px solid #404040;
 		border-radius: 8px;
 		overflow: hidden;
 	}
 
-	:global(html:not(.dark)) .sidebar-container {
+	:global(html:not(.dark)) .stats-section {
 		background: #ffffff;
 		border-color: #e5e7eb;
 	}
 
-	.sidebar-header {
+	.stats-header {
 		padding: 16px;
 		border-bottom: 1px solid #404040;
 	}
 
-	:global(html:not(.dark)) .sidebar-header {
+	:global(html:not(.dark)) .stats-header {
 		border-bottom-color: #e5e7eb;
 	}
 
-	.sidebar-header h3 {
+	.stats-header h3 {
 		margin: 0;
 		font-size: 16px;
 		font-weight: 600;
 		color: #ffffff;
 	}
 
-	:global(html:not(.dark)) .sidebar-header h3 {
+	:global(html:not(.dark)) .stats-header h3 {
 		color: #1f2937;
 	}
 
-	.sidebar-content {
-		flex: 1;
+	.stats-content {
 		padding: 16px;
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-		overflow-y: auto;
+	}
+
+	.stats-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 16px;
 	}
 
 	.info-card {
@@ -580,15 +581,6 @@
 
 	:global(html:not(.dark)) .info-value {
 		color: #1f2937;
-	}
-
-	.info-value.status {
-		font-size: 16px;
-		color: #ef4444;
-	}
-
-	.info-value.status.connected {
-		color: #22c55e;
 	}
 
 	.chat-container {
@@ -813,7 +805,7 @@
 	/* Responsive */
 	@media (max-width: 1024px) {
 		.content-columns {
-			flex-direction: column;
+			flex-direction: column-reverse;
 		}
 
 		.chat-section {
@@ -821,25 +813,15 @@
 			min-height: 400px;
 		}
 
-		.sidebar-section {
+		.right-column {
 			flex: 0 0 auto;
-			min-height: auto;
-		}
-
-		.sidebar-content {
-			flex-direction: row;
-			flex-wrap: wrap;
-		}
-
-		.info-card {
-			flex: 1;
-			min-width: 120px;
 		}
 	}
 
 	@media (max-width: 768px) {
 		.chat-page {
 			height: calc(100vh - 180px);
+			gap: 16px;
 		}
 
 		.section-header {
@@ -855,12 +837,26 @@
 			font-size: 20px;
 		}
 
+		.stats-content {
+			padding: 12px;
+		}
+
+		.stats-grid {
+			gap: 12px;
+		}
+
 		.info-card {
 			padding: 12px;
 		}
 
 		.info-value {
 			font-size: 20px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.stats-grid {
+			grid-template-columns: 1fr;
 		}
 	}
 </style>
