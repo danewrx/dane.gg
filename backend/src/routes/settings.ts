@@ -3,7 +3,7 @@ import { db } from '../db';
 import { users, siteConfig } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { requireSession } from '../middleware/auth';
-import { chatService } from '../services/chatService';
+import { ConfigService } from '../services/config';
 
 const router = Router();
 
@@ -249,6 +249,8 @@ router.post('/admin-chat-nickname', requireSession, async (req: Request, res: Re
       });
     }
 
+    ConfigService.clearCache();
+
     res.json({
       success: true,
       nickname: trimmedNickname,
@@ -320,7 +322,7 @@ router.post('/admin-chat-color', requireSession, async (req: Request, res: Respo
       });
     }
 
-    chatService.broadcastAdminConfig({ color });
+    ConfigService.clearCache();
 
     res.json({
       success: true,

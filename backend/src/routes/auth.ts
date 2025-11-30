@@ -13,6 +13,7 @@ import {
   loginSlowDown,
   bruteForceProtection 
 } from '../middleware/rateLimiting';
+import { adminSessions } from '../services/adminSessions';
 
 const router = Router();
 
@@ -111,6 +112,11 @@ router.post('/login', authLimiter, loginSlowDown, bruteForceProtection, async (r
         themePreference: userData.themePreference || 'system',
         accentColor: userData.accentColor || '#3b82f6'
       };
+      
+      // Register admin session for WebSocket auth
+      if (userData.isAdmin && req.sessionID) {
+        adminSessions.register(req.sessionID, userData.id, userData.username);
+      }
     }
 
     // Set session cookie options based on remember me
@@ -162,6 +168,11 @@ router.post('/login', authLimiter, loginSlowDown, bruteForceProtection, async (r
 // Logout route
 router.post('/logout', (req: Request, res: Response) => {
   try {
+    // Remove admin session for WebSocket auth
+    if (req.sessionID) {
+      adminSessions.remove(req.sessionID);
+    }
+    
     // Clear session
     req.session.destroy((err) => {
       if (err) {

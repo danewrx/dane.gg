@@ -1,8 +1,11 @@
 import { WebSocketServer, WebSocket } from 'ws';
-import { Server } from 'http';
+import { Server, IncomingMessage } from 'http';
 import { db } from '../db';
-import { messages, type NewMessage } from '../db/schema';
-import { desc, gte, eq, and } from 'drizzle-orm';
+import { messages, siteConfig, type NewMessage } from '../db/schema';
+import { desc, gte, eq } from 'drizzle-orm';
+import cookie from 'cookie';
+import signature from 'cookie-signature';
+import { adminSessions } from './adminSessions';
 
 interface ChatMessage {
   id?: string;
@@ -10,28 +13,49 @@ interface ChatMessage {
   nickname: string;
   message: string;
   formatted: string;
+  isAdmin?: boolean;
+}
+
+interface AdminConfig {
+  nickname: string;
+  color: string;
 }
 
 export class ChatService {
   private wss: WebSocketServer | null = null;
   private clients: Set<WebSocket> = new Set();
   private nicknames: Map<WebSocket, string> = new Map();
+  private adminClients: Set<WebSocket> = new Set();
   private readonly DEFAULT_NICKNAME = 'Anonymous';
   private readonly MESSAGE_HISTORY_DAYS = 30;
+  private sessionSecret: string = '';
+  
+  private adminConfig: AdminConfig = {
+    nickname: 'Admin',
+    color: '#f5b700'
+  };
 
   /**
    * Initialize WebSocket server
    */
-  initialize(server: Server): void {
+  async initialize(server: Server): Promise<void> {
     try {
+      // Get session secret from environment
+      this.sessionSecret = process.env.SESSION_SECRET || 'your-super-secret-session-key-change-this-in-production';
+      
+      await this.loadAdminConfig();
+      
       this.wss = new WebSocketServer({ 
         server,
         path: '/ws/chat'
       });
 
-      this.wss.on('connection', (ws: WebSocket, req) => {
+      this.wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
         console.log('📨 New WebSocket connection attempt from:', req.socket.remoteAddress);
-        this.handleConnection(ws);
+        
+        const isAdmin = this.validateAdminSession(req);
+        
+        this.handleConnection(ws, isAdmin);
       });
 
       this.wss.on('error', (error) => {
@@ -39,76 +63,171 @@ export class ChatService {
       });
 
       console.log('✅ Chat WebSocket server initialized on /ws/chat');
-      console.log('   Server listening:', server.listening);
+      console.log('   Admin config:', this.adminConfig);
     } catch (error) {
       console.error('❌ Failed to initialize WebSocket server:', error);
     }
   }
 
   /**
+   * Validate if the WebSocket request comes from an authenticated admin
+   */
+  private validateAdminSession(req: IncomingMessage): boolean {
+    try {
+      // Check if the connection is from the admin site
+      const origin = req.headers.origin || '';
+      const referer = req.headers.referer || '';
+      
+      const isFromAdminSite = referer.includes('/admin') || origin.includes('/admin');
+      
+      if (!isFromAdminSite) {
+        // Connection is from public site
+        return false;
+      }
+
+      const cookies = cookie.parse(req.headers.cookie || '');
+      const signedSessionId = cookies['dane.gg.sid'];
+      
+      if (!signedSessionId) {
+        return false;
+      }
+
+      // The cookie is signed with 's:' prefix
+      let sessionId = signedSessionId;
+      if (signedSessionId.startsWith('s:')) {
+        const unsigned = signature.unsign(signedSessionId.slice(2), this.sessionSecret);
+        if (!unsigned) {
+          return false;
+        }
+        sessionId = unsigned;
+      }
+
+      // Check if this session is registered as an admin
+      if (adminSessions.isAdmin(sessionId)) {
+        const info = adminSessions.get(sessionId);
+        console.log('🔑 Admin session validated for user:', info?.username, '(from admin site)');
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error validating admin session:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Load admin config from database
+   */
+  private async loadAdminConfig(): Promise<void> {
+    try {
+      const [nicknameResult, colorResult] = await Promise.all([
+        db.select({ value: siteConfig.value })
+          .from(siteConfig)
+          .where(eq(siteConfig.key, 'admin_chat_nickname'))
+          .limit(1),
+        db.select({ value: siteConfig.value })
+          .from(siteConfig)
+          .where(eq(siteConfig.key, 'admin_chat_color'))
+          .limit(1)
+      ]);
+
+      if (nicknameResult.length > 0) {
+        this.adminConfig.nickname = nicknameResult[0].value;
+      }
+      if (colorResult.length > 0) {
+        this.adminConfig.color = colorResult[0].value;
+      }
+
+      console.log('📋 Loaded admin config:', this.adminConfig);
+    } catch (error) {
+      console.error('Error loading admin config:', error);
+    }
+  }
+
+  /**
+   * Save admin config to database
+   */
+  private async saveAdminConfig(key: 'nickname' | 'color', value: string): Promise<boolean> {
+    try {
+      const dbKey = key === 'nickname' ? 'admin_chat_nickname' : 'admin_chat_color';
+      
+      const existing = await db.select()
+        .from(siteConfig)
+        .where(eq(siteConfig.key, dbKey))
+        .limit(1);
+
+      if (existing.length > 0) {
+        await db.update(siteConfig)
+          .set({ value, updatedAt: new Date() })
+          .where(eq(siteConfig.key, dbKey));
+      } else {
+        await db.insert(siteConfig).values({
+          key: dbKey,
+          value,
+          description: key === 'nickname' 
+            ? 'Nickname used by admins in the site chat'
+            : 'Color used for admin nickname in the site chat',
+          dataType: 'string',
+          isActive: true
+        });
+      }
+
+      return true;
+    } catch (error) {
+      console.error(`Error saving admin ${key}:`, error);
+      return false;
+    }
+  }
+
+  /**
    * Handle new WebSocket connection
    */
-  private async handleConnection(ws: WebSocket): Promise<void> {
-    // Add client to set
+  private async handleConnection(ws: WebSocket, isAdmin: boolean): Promise<void> {
     this.clients.add(ws);
-    
-    // Set default nickname
     this.nicknames.set(ws, this.DEFAULT_NICKNAME);
+    
+    if (isAdmin) {
+      this.adminClients.add(ws);
+      console.log('🔑 Client connected as admin');
+    }
 
     console.log(`📨 New chat client connected. Total clients: ${this.clients.size}`);
 
-    this.sendRecentMessages(ws)
-      .then(() => {
-        // Send welcome system message after history is loaded
-        this.sendToClient(ws, {
-          type: 'system',
-          message: 'Connected to chat - please be respectful'
-        });
+    // Send admin config first
+    this.sendToClient(ws, {
+      type: 'adminConfig',
+      data: this.adminConfig
+    });
 
-        this.sendToClient(ws, {
-          type: 'userCount',
-          count: this.clients.size
-        });
-      })
-      .catch((error) => {
-        console.error('Error loading recent messages for new connection:', error);
-        this.sendToClient(ws, {
-          type: 'system',
-          message: 'Connected to chat - please be respectful'
-        });
-        
-        this.sendToClient(ws, {
-          type: 'userCount',
-          count: this.clients.size
-        });
-      });
+    // Then send message history
+    try {
+      await this.sendRecentMessages(ws);
+    } catch (error) {
+      console.error('Error loading recent messages:', error);
+    }
+
+    this.sendToClient(ws, {
+      type: 'system',
+      message: 'Connected to chat - please be respectful'
+    });
+
+    this.sendToClient(ws, {
+      type: 'userCount',
+      count: this.clients.size
+    });
+
+    this.broadcastUserCount();
 
     // Handle incoming messages
     ws.on('message', (data: Buffer) => {
       try {
         const message = data.toString('utf-8').trim();
-        
-        if (!message) {
-          return;
-        }
+        if (!message) return;
 
-        // Handle /nick command
-        if (message.startsWith('/nick ')) {
-          const nickname = message.substring(6).trim();
-          this.handleNickCommand(ws, nickname, false);
-          return;
-        }
-
-        if (message.startsWith('/nick_restore ')) {
-          const nickname = message.substring(14).trim();
-          this.handleNickCommand(ws, nickname, true);
-          return;
-        }
-
-        // Handle /delete command (admin only)
-        if (message.startsWith('/delete ')) {
-          const messageId = message.substring(8).trim();
-          this.handleDeleteMessage(messageId);
+        // Handle commands
+        if (message.startsWith('/')) {
+          this.handleCommand(ws, message);
           return;
         }
 
@@ -119,12 +238,7 @@ export class ChatService {
       }
     });
 
-    // Handle disconnection
-    ws.on('close', () => {
-      this.handleDisconnection(ws);
-    });
-
-    // Handle errors
+    ws.on('close', () => this.handleDisconnection(ws));
     ws.on('error', (error) => {
       console.error('WebSocket error:', error);
       this.handleDisconnection(ws);
@@ -132,26 +246,78 @@ export class ChatService {
   }
 
   /**
-   * Handle /nick command
-   * @param silent - don't send system message
+   * Handle chat commands
    */
-  private handleNickCommand(ws: WebSocket, nickname: string, silent: boolean = false): void {
-    if (!nickname || nickname.length === 0) {
-      this.sendToClient(ws, {
-        type: 'error',
-        message: 'Nickname cannot be empty'
-      });
+  private async handleCommand(ws: WebSocket, message: string): Promise<void> {
+    // /nick <nickname> - Change nickname (shows message)
+    if (message.startsWith('/nick ')) {
+      const nickname = message.substring(6).trim();
+      this.handleNickCommand(ws, nickname, false);
       return;
     }
 
-    // Sanitize nickname (remove special characters that might break formatting)
-    const sanitizedNickname = nickname.replace(/[<>]/g, '').trim();
-    
-    if (sanitizedNickname.length === 0) {
+    // /nick_restore <nickname> - Restore nickname silently
+    if (message.startsWith('/nick_restore ')) {
+      const nickname = message.substring(14).trim();
+      this.handleNickCommand(ws, nickname, true);
+      return;
+    }
+
+    // /delete <messageId> - Delete a message (admin only)
+    if (message.startsWith('/delete ')) {
+      if (!this.adminClients.has(ws)) {
+        this.sendToClient(ws, { type: 'error', message: 'Unauthorized' });
+        return;
+      }
+      const messageId = message.substring(8).trim();
+      await this.handleDeleteMessage(messageId);
+      return;
+    }
+
+    // /set_admin_nickname <nickname> - Set admin nickname (admin only)
+    if (message.startsWith('/set_admin_nickname ')) {
+      if (!this.adminClients.has(ws)) {
+        this.sendToClient(ws, { type: 'error', message: 'Unauthorized' });
+        return;
+      }
+      const nickname = message.substring(20).trim();
+      await this.handleSetAdminNickname(ws, nickname);
+      return;
+    }
+
+    // /set_admin_color <color> - Set admin color (admin only)
+    if (message.startsWith('/set_admin_color ')) {
+      if (!this.adminClients.has(ws)) {
+        this.sendToClient(ws, { type: 'error', message: 'Unauthorized' });
+        return;
+      }
+      const color = message.substring(17).trim();
+      await this.handleSetAdminColor(ws, color);
+      return;
+    }
+
+    // /get_admin_config - Get current admin config
+    if (message === '/get_admin_config') {
       this.sendToClient(ws, {
-        type: 'error',
-        message: 'Invalid nickname'
+        type: 'adminConfig',
+        data: this.adminConfig
       });
+      return;
+    }
+  }
+
+  /**
+   * Handle /nick command
+   */
+  private handleNickCommand(ws: WebSocket, nickname: string, silent: boolean = false): void {
+    if (!nickname || nickname.length === 0) {
+      this.sendToClient(ws, { type: 'error', message: 'Nickname cannot be empty' });
+      return;
+    }
+
+    const sanitizedNickname = nickname.replace(/[<>]/g, '').trim();
+    if (sanitizedNickname.length === 0) {
+      this.sendToClient(ws, { type: 'error', message: 'Invalid nickname' });
       return;
     }
 
@@ -159,7 +325,6 @@ export class ChatService {
     this.nicknames.set(ws, sanitizedNickname);
 
     if (!silent && oldNickname !== sanitizedNickname) {
-      // Notify user of nickname change
       if (oldNickname === this.DEFAULT_NICKNAME) {
         this.sendToClient(ws, {
           type: 'system',
@@ -173,7 +338,48 @@ export class ChatService {
       }
     }
 
-    console.log(`👤 ${oldNickname} changed nickname to ${sanitizedNickname}`);
+    console.log(`👤 ${oldNickname} -> ${sanitizedNickname}`);
+  }
+
+  /**
+   * Handle setting admin nickname
+   */
+  private async handleSetAdminNickname(ws: WebSocket, nickname: string): Promise<void> {
+    if (!nickname || nickname.length < 1 || nickname.length > 20) {
+      this.sendToClient(ws, { type: 'error', message: 'Nickname must be 1-20 characters' });
+      return;
+    }
+
+    const saved = await this.saveAdminConfig('nickname', nickname);
+    if (saved) {
+      this.adminConfig.nickname = nickname;
+      console.log(`📢 Admin nickname changed to: ${nickname}`);
+      
+      this.broadcastAdminConfig();
+    } else {
+      this.sendToClient(ws, { type: 'error', message: 'Failed to save nickname' });
+    }
+  }
+
+  /**
+   * Handle setting admin color
+   */
+  private async handleSetAdminColor(ws: WebSocket, color: string): Promise<void> {
+    const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
+    if (!hexColorRegex.test(color)) {
+      this.sendToClient(ws, { type: 'error', message: 'Color must be a valid hex color (e.g., #f5b700)' });
+      return;
+    }
+
+    const saved = await this.saveAdminConfig('color', color);
+    if (saved) {
+      this.adminConfig.color = color;
+      console.log(`📢 Admin color changed to: ${color}`);
+      
+      this.broadcastAdminConfig();
+    } else {
+      this.sendToClient(ws, { type: 'error', message: 'Failed to save color' });
+    }
   }
 
   /**
@@ -181,13 +387,10 @@ export class ChatService {
    */
   private async handleMessage(ws: WebSocket, message: string): Promise<void> {
     const nickname = this.nicknames.get(ws) || this.DEFAULT_NICKNAME;
+    const isAdmin = this.adminClients.has(ws);
     const now = new Date();
-    
-    // Format message will be done on client side using user's local timezone
-    // For now, provide a placeholder that client will reformat
     const formatted = `[${now.toISOString()}] <${nickname}> ${message}`;
 
-    // Save to database and get ID
     let messageId: string | undefined;
     try {
       messageId = await this.saveMessageToDatabase(nickname, message, now);
@@ -200,10 +403,10 @@ export class ChatService {
       timestamp: now.toISOString(),
       nickname,
       message,
-      formatted
+      formatted,
+      isAdmin
     };
 
-    // Broadcast to all clients
     this.broadcast(chatMessage);
   }
 
@@ -212,12 +415,8 @@ export class ChatService {
    */
   private async handleDeleteMessage(messageId: string): Promise<void> {
     try {
-      // Delete from database
       await db.delete(messages).where(eq(messages.id, messageId));
-      
       console.log(`🗑️ Message deleted: ${messageId}`);
-
-      // Broadcast deletion to all clients
       this.broadcastDelete(messageId);
     } catch (error) {
       console.error('Error deleting message:', error);
@@ -225,63 +424,68 @@ export class ChatService {
   }
 
   /**
-   * Broadcast message deletion to all clients
+   * Broadcast message deletion
    */
   private broadcastDelete(messageId: string): void {
-    const message = JSON.stringify({
-      type: 'delete',
-      messageId
-    });
-
+    const message = JSON.stringify({ type: 'delete', messageId });
     this.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         try {
           client.send(message);
         } catch (error) {
-          console.error('Error broadcasting delete to client:', error);
+          console.error('Error broadcasting delete:', error);
         }
       }
     });
   }
 
   /**
-   * Format message in IRC style
-   * Note: This is a helper function. Actual formatting should be done on the client
-   */
-  private formatMessage(date: Date, nickname: string, message: string): string {
-    // This will be reformatted on the client side using the user's timezone
-    return `[${date.toISOString()}] <${nickname}> ${message}`;
-  }
-
-  /**
-   * Broadcast message to all connected clients
+   * Broadcast chat message
    */
   private broadcast(chatMessage: ChatMessage): void {
-    const message = JSON.stringify({
-      type: 'message',
-      data: chatMessage
-    });
-
+    const message = JSON.stringify({ type: 'message', data: chatMessage });
     this.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         try {
           client.send(message);
         } catch (error) {
-          console.error('Error broadcasting message to client:', error);
+          console.error('Error broadcasting message:', error);
         }
       }
     });
   }
 
   /**
-   * Send message to a specific client
+   * Broadcast admin config to all clients
    */
-  private sendToClient(ws: WebSocket, data: { type: string; message?: string; count?: number }): void {
+  private broadcastAdminConfig(): void {
+    const message = JSON.stringify({
+      type: 'adminConfig',
+      data: this.adminConfig
+    });
+
+    console.log(`📢 Broadcasting admin config:`, this.adminConfig);
+
+    this.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        try {
+          client.send(message);
+        } catch (error) {
+          console.error('Error broadcasting admin config:', error);
+        }
+      }
+    });
+  }
+
+  /**
+   * Send message to specific client
+   */
+  private sendToClient(ws: WebSocket, data: any): void {
     if (ws.readyState === WebSocket.OPEN) {
       try {
         ws.send(JSON.stringify(data));
       } catch (error) {
-        console.error('Error sending message to client:', error);
+        console.error('Error sending to client:', error);
       }
     }
   }
@@ -292,21 +496,16 @@ export class ChatService {
   private handleDisconnection(ws: WebSocket): void {
     this.clients.delete(ws);
     this.nicknames.delete(ws);
+    this.adminClients.delete(ws);
     console.log(`📨 Chat client disconnected. Total clients: ${this.clients.size}`);
-    
     this.broadcastUserCount();
   }
-  
+
   /**
-   * Broadcast current user count to all connected clients
+   * Broadcast user count
    */
   private broadcastUserCount(): void {
-    const count = this.clients.size;
-    const message = JSON.stringify({
-      type: 'userCount',
-      count: count
-    });
-    
+    const message = JSON.stringify({ type: 'userCount', count: this.clients.size });
     this.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         try {
@@ -319,14 +518,14 @@ export class ChatService {
   }
 
   /**
-   * Get number of connected clients
+   * Get client count
    */
   getClientCount(): number {
     return this.clients.size;
   }
 
   /**
-   * Save message to database and return ID
+   * Save message to database
    */
   private async saveMessageToDatabase(nickname: string, content: string, timestamp: Date): Promise<string | undefined> {
     try {
@@ -336,12 +535,10 @@ export class ChatService {
         timestamp: timestamp,
         messageType: 'chat'
       };
-
       const result = await db.insert(messages).values(newMessage).returning({ id: messages.id });
       return result[0]?.id;
     } catch (error) {
-      console.error('Error saving message to database:', error);
-      // Don't throw - allow message to still be broadcast even if DB save fails
+      console.error('Error saving message:', error);
       return undefined;
     }
   }
@@ -360,70 +557,37 @@ export class ChatService {
         .where(gte(messages.timestamp, cutoffTime))
         .orderBy(desc(messages.timestamp));
 
-      return recentMessages
-        .reverse()
-        .map((msg) => {
-          const timestamp = msg.timestamp ? new Date(msg.timestamp) : new Date();
-          // Placeholder formatted string - client will reformat with local timezone
-          const formatted = `[${timestamp.toISOString()}] <${msg.username}> ${msg.content}`;
-          
-          return {
-            id: msg.id,
-            timestamp: timestamp.toISOString(),
-            nickname: msg.username,
-            message: msg.content,
-            formatted
-          };
-        });
+      return recentMessages.reverse().map((msg) => {
+        const timestamp = msg.timestamp ? new Date(msg.timestamp) : new Date();
+        return {
+          id: msg.id,
+          timestamp: timestamp.toISOString(),
+          nickname: msg.username,
+          message: msg.content,
+          formatted: `[${timestamp.toISOString()}] <${msg.username}> ${msg.content}`
+        };
+      });
     } catch (error) {
-      console.error('Error loading recent messages from database:', error);
+      console.error('Error loading recent messages:', error);
       return [];
     }
   }
 
   /**
-   * Send recent messages to a newly connected client
+   * Send recent messages to client
    */
   private async sendRecentMessages(ws: WebSocket): Promise<void> {
-    try {
-      const recentMessages = await this.loadRecentMessages();
-      
-      if (recentMessages.length > 0) {
-        // Send all recent messages to the client
-        const message = JSON.stringify({
-          type: 'history',
-          data: recentMessages
-        });
-
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(message);
-        }
-      }
-    } catch (error) {
-      console.error('Error sending recent messages to client:', error);
+    const recentMessages = await this.loadRecentMessages();
+    if (recentMessages.length > 0 && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'history', data: recentMessages }));
     }
   }
 
   /**
-   * Broadcast admin config update to all clients
+   * Get current admin config (for external access)
    */
-  broadcastAdminConfig(config: { nickname?: string; color?: string }): void {
-    const message = JSON.stringify({
-      type: 'adminConfig',
-      data: config
-    });
-
-    console.log(`📢 Broadcasting admin config update:`, config);
-
-    this.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        try {
-          client.send(message);
-        } catch (error) {
-          console.error('Error broadcasting admin config to client:', error);
-        }
-      }
-    });
+  getAdminConfig(): AdminConfig {
+    return { ...this.adminConfig };
   }
 
   /**
@@ -434,11 +598,10 @@ export class ChatService {
       this.wss.close();
       this.clients.clear();
       this.nicknames.clear();
+      this.adminClients.clear();
       console.log('Chat WebSocket server closed');
     }
   }
 }
 
-// Export singleton instance
 export const chatService = new ChatService();
-

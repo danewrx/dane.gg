@@ -190,7 +190,7 @@ async function initializeApp() {
   
   // Initialize chat WebSocket server (don't block on errors)
   try {
-    chatService.initialize(server);
+    await chatService.initialize(server);
   } catch (error) {
     console.error('❌ Failed to initialize chat service:', error);
     // Don't throw - allow server to continue even if chat fails

@@ -9,6 +9,7 @@
 		nickname: string;
 		message: string;
 		formatted?: string;
+		isAdmin?: boolean;
 	}
 
 	interface SystemMessage {
@@ -55,53 +56,20 @@
 	let nextCursor = $state<string | null>(null);
 	let isInitialLoad = $state(true);
 	
-	async function loadAdminNickname(): Promise<string> {
-		if (!browser) return 'Admin';
-		try {
-			const response = await fetch('/api/settings/admin-chat-nickname', {
-				credentials: 'include'
-			});
-			if (response.ok) {
-				const data = await response.json();
-				return data.nickname || 'Admin';
-			}
-		} catch (error) {
-			console.error('Failed to load admin nickname:', error);
+	// Save admin nickname via WebSocket
+	function saveAdminNickname(nickname: string): void {
+		if (ws && isConnected) {
+			ws.send(`/set_admin_nickname ${nickname}`);
 		}
-		return 'Admin';
 	}
 	
-	async function loadAdminColor(): Promise<string> {
-		if (!browser) return '#f5b700';
-		try {
-			const response = await fetch('/api/settings/admin-chat-color', {
-				credentials: 'include'
-			});
-			if (response.ok) {
-				const data = await response.json();
-				return data.color || '#f5b700';
-			}
-		} catch (error) {
-			console.error('Failed to load admin color:', error);
-		}
-		return '#f5b700';
-	}
-	
-	async function saveAdminNicknameToDb(nickname: string): Promise<boolean> {
-		if (!browser) return false;
-		try {
-			const response = await fetch('/api/settings/admin-chat-nickname', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				credentials: 'include',
-				body: JSON.stringify({ nickname })
-			});
-			return response.ok;
-		} catch (error) {
-			console.error('Failed to save admin nickname:', error);
-			return false;
+	// Save admin color via WebSocket
+	function saveAdminColor(color: string): void {
+		if (ws && isConnected) {
+			ws.send(`/set_admin_color ${color}`);
 		}
 	}
+
 	
 	// Load messages from API with pagination
 	async function loadMessages(before?: string): Promise<void> {
@@ -161,30 +129,15 @@
 		}
 	}
 
-	async function saveAdminColorToDb(color: string): Promise<boolean> {
-		if (!browser) return false;
-		try {
-			const response = await fetch('/api/settings/admin-chat-color', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				credentials: 'include',
-				body: JSON.stringify({ color })
-			});
-			return response.ok;
-		} catch (error) {
-			console.error('Failed to save admin color:', error);
-			return false;
-		}
-	}
-	
-	async function handleColorChange(e: Event) {
+	function handleColorChange(e: Event) {
 		const target = e.target as HTMLInputElement;
 		const newColor = target.value;
 		if (newColor !== adminColor) {
 			isSavingColor = true;
 			adminColor = newColor;
-			await saveAdminColorToDb(newColor);
-			isSavingColor = false;
+			saveAdminColor(newColor);
+			// Color saving is instant via WebSocket
+			setTimeout(() => { isSavingColor = false; }, 300);
 		}
 	}
 	
@@ -198,18 +151,16 @@
 		nicknameInput = '';
 	}
 	
-	async function saveNickname() {
+	function saveNicknameHandler() {
 		const newNickname = nicknameInput.trim();
 		if (newNickname && newNickname !== adminNickname) {
 			isSavingNickname = true;
-			const saved = await saveAdminNicknameToDb(newNickname);
-			if (saved) {
-				adminNickname = newNickname;
-				if (ws && isConnected) {
-					ws.send(`/nick ${newNickname}`);
-				}
+			saveAdminNickname(newNickname);
+			adminNickname = newNickname;
+			if (ws && isConnected) {
+				ws.send(`/nick ${newNickname}`);
 			}
-			isSavingNickname = false;
+			setTimeout(() => { isSavingNickname = false; }, 300);
 		}
 		isEditingNickname = false;
 		nicknameInput = '';
@@ -217,7 +168,7 @@
 	
 	function handleNicknameKeyDown(e: KeyboardEvent) {
 		if (e.key === 'Enter') {
-			saveNickname();
+			saveNicknameHandler();
 		} else if (e.key === 'Escape') {
 			cancelEditingNickname();
 		}
@@ -294,8 +245,6 @@
 			ws.onopen = () => {
 				isConnected = true;
 				connectionStatus = 'connected';
-			
-				ws?.send(`/nick_restore ${adminNickname}`);
 			};
 
 			ws.onmessage = (event) => {
@@ -339,8 +288,12 @@
 						});
 					} else if (data.type === 'adminConfig' && data.data) {
 						const config = data.data as { nickname?: string; color?: string };
+						const isInitialConfig = adminNickname === 'Admin' && config.nickname;
 						if (config.nickname) {
 							adminNickname = config.nickname;
+							if (isInitialConfig && ws) {
+								ws.send(`/nick_restore ${config.nickname}`);
+							}
 						}
 						if (config.color) {
 							adminColor = config.color;
@@ -419,13 +372,7 @@
 
 	onMount(async () => {
 		if (browser) {
-			// Load admin config and initial messages
-			[adminNickname, adminColor] = await Promise.all([
-				loadAdminNickname(),
-				loadAdminColor()
-			]);
-			
-			// Load all messages from API (lazy load)
+
 			await loadMessages();
 			connect();
 		}
@@ -523,7 +470,7 @@
 							{@const chatMsg = msg as ChatMessage}
 							<div class="message">
 								<span class="message-time">{formatTimestamp(chatMsg.timestamp)}</span>
-								<span class="message-nickname" style={chatMsg.nickname === adminNickname ? `color: ${adminColor}` : ''}>{chatMsg.nickname}</span>
+								<span class="message-nickname" style={chatMsg.isAdmin ? `color: ${adminColor}` : ''}>{chatMsg.nickname}</span>
 								<span class="message-content">{chatMsg.message}</span>
 								{#if chatMsg.id}
 									<button 
@@ -580,7 +527,7 @@
 								disabled={isSavingNickname}
 							/>
 							<div class="edit-actions">
-								<button class="edit-btn save" onclick={saveNickname} title="Save" disabled={isSavingNickname}>
+								<button class="edit-btn save" onclick={saveNicknameHandler} title="Save" disabled={isSavingNickname}>
 									{#if isSavingNickname}
 										<Loader2 size={14} class="spin" />
 									{:else}

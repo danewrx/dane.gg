@@ -11,36 +11,12 @@
 	let audioUnlocked = false;
 	let currentNickname = $state<string | null>(null);
 	
-	// Admin nickname and color
+	// Admin nickname and color (received via WebSocket on connect)
 	let adminNickname = $state<string>('Admin');
 	let adminColor = $state<string>('#f5b700');
 	
 	// Track recently sent messages to avoid playing notification for own messages
 	let recentlySentMessages: { message: string; timestamp: number }[] = [];
-	
-	async function loadAdminConfig() {
-		try {
-			const [nicknameRes, colorRes] = await Promise.all([
-				fetch('/api/config/admin_chat_nickname'),
-				fetch('/api/config/admin_chat_color')
-			]);
-			
-			if (nicknameRes.ok) {
-				const data = await nicknameRes.json();
-				if (data.success && data.data?.value) {
-					adminNickname = data.data.value;
-				}
-			}
-			
-			if (colorRes.ok) {
-				const data = await colorRes.json();
-				if (data.success && data.data?.value) {
-					adminColor = data.data.value;
-				}
-			}
-		} catch (error) {
-		}
-	}
 	
 	// Unlock audio on first user interaction (required by browser autoplay policy)
 	function unlockAudio(): void {
@@ -68,6 +44,7 @@
 		nickname: string;
 		message: string;
 		formatted: string;
+		isAdmin?: boolean;
 	}
 
 	interface AdminConfigData {
@@ -496,13 +473,12 @@
 				document.addEventListener('touchstart', unlockAudio);
 				
 				loadNotificationSetting();
-				loadAdminConfig();
-				
 				currentNickname = getSavedNickname();
 				
 				// Listen for notification setting changes
 				window.addEventListener('chatNotificationSettingChanged', handleNotificationSettingChange as EventListener);
 				
+				// Connect to WebSocket (admin config will be received on connect)
 				setTimeout(() => {
 					connect();
 					setTimeout(() => {
@@ -565,7 +541,7 @@
 				{:else}
 					{@const chatMsg = msg as ChatMessage}
 					<div class="message-line">
-						<span class="msg-time">{formatTimestamp(chatMsg.timestamp)}</span> <span class="msg-nickname" style={chatMsg.nickname === adminNickname ? `color: ${adminColor}; font-weight: bold;` : ''}>&lt;{chatMsg.nickname}&gt;</span> <span class="msg-content">{chatMsg.message}</span>
+						<span class="msg-time">{formatTimestamp(chatMsg.timestamp)}</span> <span class="msg-nickname" style={chatMsg.isAdmin ? `color: ${adminColor}; font-weight: bold;` : ''}>&lt;{chatMsg.nickname}&gt;</span> <span class="msg-content">{chatMsg.message}</span>
 					</div>
 				{/if}
 			{/each}
