@@ -49,6 +49,12 @@
 	let adminColor = $state('#f5b700');
 	let isSavingColor = $state(false);
 	
+	// Lazy loading state
+	let isLoadingMore = $state(false);
+	let hasMoreMessages = $state(true);
+	let nextCursor = $state<string | null>(null);
+	let isInitialLoad = $state(true);
+	
 	async function loadAdminNickname(): Promise<string> {
 		if (!browser) return 'Admin';
 		try {
@@ -97,6 +103,64 @@
 		}
 	}
 	
+	// Load messages from API with pagination
+	async function loadMessages(before?: string): Promise<void> {
+		if (!browser || isLoadingMore) return;
+		
+		isLoadingMore = true;
+		
+		try {
+			const params = new URLSearchParams({ limit: '50' });
+			if (before) {
+				params.set('before', before);
+			}
+			
+			const response = await fetch(`/api/chat/messages?${params}`, {
+				credentials: 'include'
+			});
+			
+			if (response.ok) {
+				const result = await response.json();
+				if (result.success) {
+					const newMessages = result.data.messages as ChatMessage[];
+					hasMoreMessages = result.data.hasMore;
+					nextCursor = result.data.nextCursor;
+					
+					if (before) {
+						const scrollHeight = messagesContainer?.scrollHeight || 0;
+						messages = [...newMessages, ...messages];
+						
+						requestAnimationFrame(() => {
+							if (messagesContainer) {
+								const newScrollHeight = messagesContainer.scrollHeight;
+								messagesContainer.scrollTop = newScrollHeight - scrollHeight;
+							}
+						});
+					} else {
+						messages = newMessages;
+						isInitialLoad = false;
+						scrollToBottom();
+					}
+				}
+			}
+		} catch (error) {
+			console.error('Failed to load messages:', error);
+		} finally {
+			isLoadingMore = false;
+		}
+	}
+	
+	// Handle scroll for lazy loading
+	function handleScroll(event: Event) {
+		const target = event.target as HTMLDivElement;
+		if (!target || isLoadingMore || !hasMoreMessages) return;
+		
+		// Load more when scrolled at top (within 100px)
+		if (target.scrollTop < 100 && nextCursor) {
+			loadMessages(nextCursor);
+		}
+	}
+
 	async function saveAdminColorToDb(color: string): Promise<boolean> {
 		if (!browser) return false;
 		try {
@@ -242,10 +306,8 @@
 						const msg = data.data as ChatMessage;
 						messages = [...messages, msg];
 						scrollToBottom();
-					} else if (data.type === 'history' && data.data && Array.isArray(data.data)) {
-						const existingSystemMessages = messages.filter(msg => 'isSystem' in msg && msg.isSystem);
-						messages = [...(data.data as ChatMessage[]), ...existingSystemMessages];
-						scrollToBottom();
+					} else if (data.type === 'history') {
+						// Ignore WebSocket history
 					} else if (data.type === 'system' && data.message) {
 						const now = new Date();
 						
@@ -357,10 +419,14 @@
 
 	onMount(async () => {
 		if (browser) {
+			// Load admin config and initial messages
 			[adminNickname, adminColor] = await Promise.all([
 				loadAdminNickname(),
 				loadAdminColor()
 			]);
+			
+			// Load all messages from API (lazy load)
+			await loadMessages();
 			connect();
 		}
 	});
@@ -424,12 +490,27 @@
 		<!-- Left Column - Chat -->
 		<section class="chat-section">
 			<div class="chat-container">
-				<div class="messages-container" bind:this={messagesContainer}>
-					{#if messages.length === 0}
+				<div class="messages-container" bind:this={messagesContainer} onscroll={handleScroll}>
+					{#if isLoadingMore}
+						<div class="loading-more">
+							<Loader2 size={16} class="spin" />
+							<span>Loading older messages...</span>
+						</div>
+					{:else if hasMoreMessages && messages.length > 0}
+						<div class="load-more-hint">
+							<span>Scroll up for older messages</span>
+						</div>
+					{/if}
+					{#if messages.length === 0 && !isInitialLoad}
 						<div class="empty-state">
 							<MessageSquare size={48} />
 							<p>No messages yet</p>
 							<span>Messages from the site chat will appear here</span>
+						</div>
+					{:else if isInitialLoad}
+						<div class="empty-state">
+							<Loader2 size={48} class="spin" />
+							<p>Loading messages...</p>
 						</div>
 					{:else}
 						{#each messages as msg, i (i)}
@@ -1050,6 +1131,37 @@
 	.empty-state span {
 		font-size: 14px;
 		color: #a1a1aa;
+	}
+
+	.loading-more {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		padding: 12px;
+		color: #a1a1aa;
+		font-size: 13px;
+		border-bottom: 1px solid #404040;
+		margin-bottom: 8px;
+	}
+
+	:global(html:not(.dark)) .loading-more {
+		border-bottom-color: #e5e7eb;
+	}
+
+	.load-more-hint {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 8px;
+		color: #6b7280;
+		font-size: 12px;
+		border-bottom: 1px solid #404040;
+		margin-bottom: 8px;
+	}
+
+	:global(html:not(.dark)) .load-more-hint {
+		border-bottom-color: #e5e7eb;
 	}
 
 	.message {

@@ -17,7 +17,7 @@ export class ChatService {
   private clients: Set<WebSocket> = new Set();
   private nicknames: Map<WebSocket, string> = new Map();
   private readonly DEFAULT_NICKNAME = 'Anonymous';
-  private readonly MESSAGE_HISTORY_HOURS = 24;
+  private readonly MESSAGE_HISTORY_DAYS = 30;
 
   /**
    * Initialize WebSocket server
@@ -352,14 +352,13 @@ export class ChatService {
   private async loadRecentMessages(): Promise<ChatMessage[]> {
     try {
       const cutoffTime = new Date();
-      cutoffTime.setHours(cutoffTime.getHours() - this.MESSAGE_HISTORY_HOURS);
+      cutoffTime.setDate(cutoffTime.getDate() - this.MESSAGE_HISTORY_DAYS);
 
       const recentMessages = await db
         .select()
         .from(messages)
         .where(gte(messages.timestamp, cutoffTime))
-        .orderBy(desc(messages.timestamp))
-        .limit(100); // Limit to last 100 messages even if within time window
+        .orderBy(desc(messages.timestamp));
 
       return recentMessages
         .reverse()

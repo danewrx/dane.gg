@@ -76,6 +76,7 @@ import uptimeKumaRoutes from './routes/uptimeKuma';
 import twitterRoutes from './routes/twitter';
 import notificationRoutes from './routes/notifications';
 import projectsRoutes from './routes/projects';
+import chatRoutes from './routes/chat';
 import { generalLimiter } from './middleware/rateLimiting';
 import { chatService } from './services/chatService';
 
@@ -154,6 +155,9 @@ app.use('/api/twitter', twitterRoutes);
 
 // Notifications routes (Ntfy integration)
 app.use('/api/notifications', notificationRoutes);
+
+// Chat routes (admin message history)
+app.use('/api/chat', chatRoutes);
 
 // Webhooks routes (for external services to update data)
 app.use('/webhooks', webhooksRoutes);
