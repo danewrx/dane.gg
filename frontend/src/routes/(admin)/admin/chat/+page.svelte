@@ -9,7 +9,7 @@
 		nickname: string;
 		message: string;
 		formatted?: string;
-		isAdmin?: boolean;
+		color?: string;
 	}
 
 	interface SystemMessage {
@@ -46,6 +46,7 @@
 	let isEditingNickname = $state(false);
 	let nicknameInput = $state('');
 	let isSavingNickname = $state(false);
+	let hasRestoredNickname = $state(false);
 	
 	let adminColor = $state('#f5b700');
 	let isSavingColor = $state(false);
@@ -134,9 +135,7 @@
 		const newColor = target.value;
 		if (newColor !== adminColor) {
 			isSavingColor = true;
-			adminColor = newColor;
 			saveAdminColor(newColor);
-			// Color saving is instant via WebSocket
 			setTimeout(() => { isSavingColor = false; }, 300);
 		}
 	}
@@ -156,10 +155,6 @@
 		if (newNickname && newNickname !== adminNickname) {
 			isSavingNickname = true;
 			saveAdminNickname(newNickname);
-			adminNickname = newNickname;
-			if (ws && isConnected) {
-				ws.send(`/nick ${newNickname}`);
-			}
 			setTimeout(() => { isSavingNickname = false; }, 300);
 		}
 		isEditingNickname = false;
@@ -286,13 +281,18 @@
 							if ('isSystem' in msg) return true; // Keep system messages
 							return (msg as ChatMessage).id !== data.messageId;
 						});
+					} else if (data.type === 'error' && data.message) {
+						console.error('Server error:', data.message);
 					} else if (data.type === 'adminConfig' && data.data) {
 						const config = data.data as { nickname?: string; color?: string };
-						const isInitialConfig = adminNickname === 'Admin' && config.nickname;
+						
 						if (config.nickname) {
+							const nicknameChanged = config.nickname !== adminNickname;
 							adminNickname = config.nickname;
-							if (isInitialConfig && ws) {
+							
+							if ((!hasRestoredNickname || nicknameChanged) && ws) {
 								ws.send(`/nick_restore ${config.nickname}`);
+								hasRestoredNickname = true;
 							}
 						}
 						if (config.color) {
@@ -312,6 +312,7 @@
 				isConnected = false;
 				connectionStatus = 'disconnected';
 				ws = null;
+				hasRestoredNickname = false;
 
 				if (reconnectTimeout) {
 					clearTimeout(reconnectTimeout);
@@ -470,7 +471,7 @@
 							{@const chatMsg = msg as ChatMessage}
 							<div class="message">
 								<span class="message-time">{formatTimestamp(chatMsg.timestamp)}</span>
-								<span class="message-nickname" style={chatMsg.isAdmin ? `color: ${adminColor}` : ''}>{chatMsg.nickname}</span>
+								<span class="message-nickname" style={chatMsg.color ? `color: ${chatMsg.color}` : ''}>{chatMsg.nickname}</span>
 								<span class="message-content">{chatMsg.message}</span>
 								{#if chatMsg.id}
 									<button 

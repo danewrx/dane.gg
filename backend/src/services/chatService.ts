@@ -13,7 +13,7 @@ interface ChatMessage {
   nickname: string;
   message: string;
   formatted: string;
-  isAdmin?: boolean;
+  color?: string;
 }
 
 interface AdminConfig {
@@ -51,10 +51,7 @@ export class ChatService {
       });
 
       this.wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
-        console.log('📨 New WebSocket connection attempt from:', req.socket.remoteAddress);
-        
         const isAdmin = this.validateAdminSession(req);
-        
         this.handleConnection(ws, isAdmin);
       });
 
@@ -74,17 +71,6 @@ export class ChatService {
    */
   private validateAdminSession(req: IncomingMessage): boolean {
     try {
-      // Check if the connection is from the admin site
-      const origin = req.headers.origin || '';
-      const referer = req.headers.referer || '';
-      
-      const isFromAdminSite = referer.includes('/admin') || origin.includes('/admin');
-      
-      if (!isFromAdminSite) {
-        // Connection is from public site
-        return false;
-      }
-
       const cookies = cookie.parse(req.headers.cookie || '');
       const signedSessionId = cookies['dane.gg.sid'];
       
@@ -102,10 +88,10 @@ export class ChatService {
         sessionId = unsigned;
       }
 
-      // Check if this session is registered as an admin
+      // Check if session is registered as admin
       if (adminSessions.isAdmin(sessionId)) {
         const info = adminSessions.get(sessionId);
-        console.log('🔑 Admin session validated for user:', info?.username, '(from admin site)');
+        console.log('✅ Admin session validated for user:', info?.username);
         return true;
       }
 
@@ -353,8 +339,6 @@ export class ChatService {
     const saved = await this.saveAdminConfig('nickname', nickname);
     if (saved) {
       this.adminConfig.nickname = nickname;
-      console.log(`📢 Admin nickname changed to: ${nickname}`);
-      
       this.broadcastAdminConfig();
     } else {
       this.sendToClient(ws, { type: 'error', message: 'Failed to save nickname' });
@@ -390,10 +374,12 @@ export class ChatService {
     const isAdmin = this.adminClients.has(ws);
     const now = new Date();
     const formatted = `[${now.toISOString()}] <${nickname}> ${message}`;
+    
+    const messageColor = isAdmin ? this.adminConfig.color : undefined;
 
     let messageId: string | undefined;
     try {
-      messageId = await this.saveMessageToDatabase(nickname, message, now);
+      messageId = await this.saveMessageToDatabase(nickname, message, now, messageColor);
     } catch (error) {
       console.error('Error saving message to database:', error);
     }
@@ -404,7 +390,7 @@ export class ChatService {
       nickname,
       message,
       formatted,
-      isAdmin
+      color: messageColor
     };
 
     this.broadcast(chatMessage);
@@ -527,13 +513,14 @@ export class ChatService {
   /**
    * Save message to database
    */
-  private async saveMessageToDatabase(nickname: string, content: string, timestamp: Date): Promise<string | undefined> {
+  private async saveMessageToDatabase(nickname: string, content: string, timestamp: Date, color?: string): Promise<string | undefined> {
     try {
       const newMessage: NewMessage = {
         username: nickname,
         content: content,
         timestamp: timestamp,
-        messageType: 'chat'
+        messageType: 'chat',
+        messageColor: color || null
       };
       const result = await db.insert(messages).values(newMessage).returning({ id: messages.id });
       return result[0]?.id;
@@ -564,7 +551,8 @@ export class ChatService {
           timestamp: timestamp.toISOString(),
           nickname: msg.username,
           message: msg.content,
-          formatted: `[${timestamp.toISOString()}] <${msg.username}> ${msg.content}`
+          formatted: `[${timestamp.toISOString()}] <${msg.username}> ${msg.content}`,
+          color: msg.messageColor || undefined
         };
       });
     } catch (error) {

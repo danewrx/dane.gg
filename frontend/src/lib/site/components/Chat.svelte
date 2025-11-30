@@ -11,10 +11,6 @@
 	let audioUnlocked = false;
 	let currentNickname = $state<string | null>(null);
 	
-	// Admin nickname and color (received via WebSocket on connect)
-	let adminNickname = $state<string>('Admin');
-	let adminColor = $state<string>('#f5b700');
-	
 	// Track recently sent messages to avoid playing notification for own messages
 	let recentlySentMessages: { message: string; timestamp: number }[] = [];
 	
@@ -44,7 +40,7 @@
 		nickname: string;
 		message: string;
 		formatted: string;
-		isAdmin?: boolean;
+		color?: string; // The color at time of sending (for admin messages)
 	}
 
 	interface AdminConfigData {
@@ -328,15 +324,9 @@
 							if ('isSystem' in msg) return true;
 							return (msg as ChatMessage).id !== data.messageId;
 						});
-					} else if (data.type === 'adminConfig' && data.data) {
-						const config = data.data as { nickname?: string; color?: string };
-						if (config.nickname) {
-							adminNickname = config.nickname;
-						}
-						if (config.color) {
-							adminColor = config.color;
-						}
 					}
+					// adminConfig messages are received but we don't need to track them
+					// since the color is now stored with each message
 				} catch (error) {
 					console.error('Error parsing WebSocket message:', error);
 				}
@@ -541,7 +531,7 @@
 				{:else}
 					{@const chatMsg = msg as ChatMessage}
 					<div class="message-line">
-						<span class="msg-time">{formatTimestamp(chatMsg.timestamp)}</span> <span class="msg-nickname" style={chatMsg.isAdmin ? `color: ${adminColor}; font-weight: bold;` : ''}>&lt;{chatMsg.nickname}&gt;</span> <span class="msg-content">{chatMsg.message}</span>
+						<span class="msg-time">{formatTimestamp(chatMsg.timestamp)}</span> <span class="msg-nickname" style={chatMsg.color ? `color: ${chatMsg.color}; font-weight: bold;` : ''}>&lt;{chatMsg.nickname}&gt;</span> <span class="msg-content">{chatMsg.message}</span>
 					</div>
 				{/if}
 			{/each}
