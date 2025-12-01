@@ -10,6 +10,7 @@
 		message: string;
 		formatted?: string;
 		color?: string;
+		source?: 'web' | 'discord' | 'admin';
 	}
 
 	interface SystemMessage {

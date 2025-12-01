@@ -21,7 +21,8 @@ router.get('/messages', requireSession, async (req, res) => {
         content: messages.content,
         timestamp: messages.timestamp,
         messageType: messages.messageType,
-        messageColor: messages.messageColor
+        messageColor: messages.messageColor,
+        messageSource: messages.messageSource
       })
       .from(messages);
 
@@ -42,7 +43,8 @@ router.get('/messages', requireSession, async (req, res) => {
         nickname: msg.username,
         message: msg.content,
         messageType: msg.messageType,
-        color: msg.messageColor || undefined
+        color: msg.messageColor || undefined,
+        source: msg.messageSource || 'web'
       };
     });
 

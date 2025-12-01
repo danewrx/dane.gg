@@ -1,0 +1,1 @@
+ALTER TABLE "website"."messages" ADD COLUMN "message_source" varchar(20) DEFAULT 'web';

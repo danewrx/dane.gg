@@ -7,6 +7,8 @@ import cookie from 'cookie';
 import signature from 'cookie-signature';
 import { adminSessions } from './adminSessions';
 
+type MessageSource = 'web' | 'discord' | 'admin';
+
 interface ChatMessage {
   id?: string;
   timestamp: string;
@@ -14,6 +16,7 @@ interface ChatMessage {
   message: string;
   formatted: string;
   color?: string;
+  source?: MessageSource;
 }
 
 interface AdminConfig {
@@ -290,6 +293,67 @@ export class ChatService {
       });
       return;
     }
+
+    // /discord <json> - Post a message from Discord (bot only, requires admin auth)
+    if (message.startsWith('/discord ')) {
+      if (!this.adminClients.has(ws)) {
+        this.sendToClient(ws, { type: 'error', message: 'Unauthorized' });
+        return;
+      }
+      const jsonStr = message.substring(9).trim();
+      await this.handleDiscordMessage(ws, jsonStr);
+      return;
+    }
+  }
+
+  /**
+   * Handle message from Discord bot
+   */
+  private async handleDiscordMessage(ws: WebSocket, jsonStr: string): Promise<void> {
+    try {
+      const data = JSON.parse(jsonStr);
+      const { nickname, message, color } = data;
+
+      if (!nickname || !message) {
+        this.sendToClient(ws, { type: 'error', message: 'Missing nickname or message' });
+        return;
+      }
+
+      if (nickname.length > 50) {
+        this.sendToClient(ws, { type: 'error', message: 'Nickname too long' });
+        return;
+      }
+
+      if (message.length > 1000) {
+        this.sendToClient(ws, { type: 'error', message: 'Message too long' });
+        return;
+      }
+
+      const now = new Date();
+      const formatted = `[${now.toISOString()}] <${nickname}> ${message}`;
+
+      let messageId: string | undefined;
+      try {
+        messageId = await this.saveMessageToDatabase(nickname, message, now, color, 'discord');
+      } catch (error) {
+        console.error('Error saving Discord message to database:', error);
+      }
+
+      const chatMessage: ChatMessage = {
+        id: messageId,
+        timestamp: now.toISOString(),
+        nickname,
+        message,
+        formatted,
+        color: color || undefined,
+        source: 'discord'
+      };
+
+      this.broadcast(chatMessage);
+    } catch (error) {
+      console.error('Error parsing Discord message:', error);
+      this.sendToClient(ws, { type: 'error', message: 'Invalid JSON format' });
+    }
   }
 
   /**
@@ -376,10 +440,11 @@ export class ChatService {
     const formatted = `[${now.toISOString()}] <${nickname}> ${message}`;
     
     const messageColor = isAdmin ? this.adminConfig.color : undefined;
+    const source: MessageSource = isAdmin ? 'admin' : 'web';
 
     let messageId: string | undefined;
     try {
-      messageId = await this.saveMessageToDatabase(nickname, message, now, messageColor);
+      messageId = await this.saveMessageToDatabase(nickname, message, now, messageColor, source);
     } catch (error) {
       console.error('Error saving message to database:', error);
     }
@@ -390,7 +455,8 @@ export class ChatService {
       nickname,
       message,
       formatted,
-      color: messageColor
+      color: messageColor,
+      source
     };
 
     this.broadcast(chatMessage);
@@ -513,14 +579,21 @@ export class ChatService {
   /**
    * Save message to database
    */
-  private async saveMessageToDatabase(nickname: string, content: string, timestamp: Date, color?: string): Promise<string | undefined> {
+  private async saveMessageToDatabase(
+    nickname: string, 
+    content: string, 
+    timestamp: Date, 
+    color?: string,
+    source: MessageSource = 'web'
+  ): Promise<string | undefined> {
     try {
       const newMessage: NewMessage = {
         username: nickname,
         content: content,
         timestamp: timestamp,
         messageType: 'chat',
-        messageColor: color || null
+        messageColor: color || null,
+        messageSource: source
       };
       const result = await db.insert(messages).values(newMessage).returning({ id: messages.id });
       return result[0]?.id;
@@ -552,7 +625,8 @@ export class ChatService {
           nickname: msg.username,
           message: msg.content,
           formatted: `[${timestamp.toISOString()}] <${msg.username}> ${msg.content}`,
-          color: msg.messageColor || undefined
+          color: msg.messageColor || undefined,
+          source: (msg.messageSource as MessageSource) || 'web'
         };
       });
     } catch (error) {

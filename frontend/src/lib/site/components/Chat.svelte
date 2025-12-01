@@ -40,7 +40,8 @@
 		nickname: string;
 		message: string;
 		formatted: string;
-		color?: string; // The color at time of sending (for admin messages)
+		color?: string;
+		source?: 'web' | 'discord' | 'admin';
 	}
 
 	interface AdminConfigData {
@@ -531,7 +532,12 @@
 				{:else}
 					{@const chatMsg = msg as ChatMessage}
 					<div class="message-line">
-						<span class="msg-time">{formatTimestamp(chatMsg.timestamp)}</span> <span class="msg-nickname" style={chatMsg.color ? `color: ${chatMsg.color}; font-weight: bold;` : ''}>&lt;{chatMsg.nickname}&gt;</span> <span class="msg-content">{chatMsg.message}</span>
+						<span class="msg-time">{formatTimestamp(chatMsg.timestamp)}</span>
+						{#if chatMsg.source === 'discord'}
+							<span class="msg-source discord" title="Discord">⟨D⟩</span>
+						{/if}
+						<span class="msg-nickname" style={chatMsg.color ? `color: ${chatMsg.color}; font-weight: bold;` : ''}>&lt;{chatMsg.nickname}&gt;</span>
+						<span class="msg-content">{chatMsg.message}</span>
 					</div>
 				{/if}
 			{/each}
@@ -625,6 +631,17 @@
 
 	.msg-content {
 		color: #e8e8e8;
+	}
+
+	.msg-source {
+		font-size: 11px;
+		padding: 0 2px;
+		margin-right: 2px;
+		border-radius: 2px;
+	}
+
+	.msg-source.discord {
+		color: #5865F2;
 	}
 
 	.message-line.system {

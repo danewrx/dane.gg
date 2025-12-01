@@ -58,6 +58,7 @@ export const messages = websiteSchema.table('messages', {
   timestamp: timestamp('timestamp', { withTimezone: true }).defaultNow(),
   messageType: varchar('message_type', { length: 50 }).notNull(),
   messageColor: varchar('message_color', { length: 50 }),
+  messageSource: varchar('message_source', { length: 20 }).default('web'), // 'web', 'discord', 'admin'
   clientUuid: uuid('client_uuid'),
   visitorId: varchar('visitor_id', { length: 36 })
 });
