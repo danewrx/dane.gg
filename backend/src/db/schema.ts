@@ -227,6 +227,20 @@ export const uptimeKumaMonitors = websiteSchema.table('uptime_kuma_monitors', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
 });
 
+// API Keys table for bot/external access
+export const apiKeys = websiteSchema.table('api_keys', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 100 }).notNull(),
+  keyHash: varchar('key_hash', { length: 255 }).notNull(), // SHA-256 hash of the key
+  keyPrefix: varchar('key_prefix', { length: 12 }).notNull().unique(),
+  permissions: varchar('permissions', { length: 50 }).notNull().default('full'), // 'full', 'read', 'chat' etc.
+  isActive: boolean('is_active').default(true),
+  lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+  expiresAt: timestamp('expires_at', { withTimezone: true }),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
+});
+
 // Relations
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   category: one(projectCategories, {
@@ -329,3 +343,5 @@ export type UserUpload = typeof userUploads.$inferSelect;
 export type NewUserUpload = typeof userUploads.$inferInsert;
 export type UptimeKumaMonitorCache = typeof uptimeKumaMonitors.$inferSelect;
 export type NewUptimeKumaMonitorCache = typeof uptimeKumaMonitors.$inferInsert;
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type NewApiKey = typeof apiKeys.$inferInsert;

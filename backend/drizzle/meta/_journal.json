@@ -71,6 +71,13 @@
       "when": 1764546731533,
       "tag": "0009_grey_diamondback",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1764715165915,
+      "tag": "0010_flowery_killer_shrike",
+      "breakpoints": true
     }
   ]
 }

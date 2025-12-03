@@ -1,10 +1,11 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { Server, IncomingMessage } from 'http';
 import { db } from '../db';
-import { messages, siteConfig, type NewMessage } from '../db/schema';
+import { messages, siteConfig, apiKeys, type NewMessage } from '../db/schema';
 import { desc, gte, eq } from 'drizzle-orm';
 import cookie from 'cookie';
 import signature from 'cookie-signature';
+import crypto from 'crypto';
 import { adminSessions } from './adminSessions';
 
 type MessageSource = 'web' | 'discord' | 'admin';
@@ -53,8 +54,8 @@ export class ChatService {
         path: '/ws/chat'
       });
 
-      this.wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
-        const isAdmin = this.validateAdminSession(req);
+      this.wss.on('connection', async (ws: WebSocket, req: IncomingMessage) => {
+        const isAdmin = await this.validateAdminSession(req);
         this.handleConnection(ws, isAdmin);
       });
 
@@ -70,10 +71,29 @@ export class ChatService {
   }
 
   /**
-   * Validate if the WebSocket request comes from an authenticated admin
+   * Validate if the WebSocket request comes from an authenticated admin or has a valid API key
    */
-  private validateAdminSession(req: IncomingMessage): boolean {
+  private async validateAdminSession(req: IncomingMessage): Promise<boolean> {
     try {
+      const authHeader = req.headers.authorization;
+      const xApiKey = req.headers['x-api-key'];
+      
+      let apiKey: string | undefined;
+      if (authHeader?.startsWith('Bearer dk_')) {
+        apiKey = authHeader.substring(7);
+      } else if (typeof xApiKey === 'string' && xApiKey.startsWith('dk_')) {
+        apiKey = xApiKey;
+      }
+
+      if (apiKey) {
+        const isValid = await this.validateApiKey(apiKey);
+        if (isValid) {
+          console.log('✅ API key validated for WebSocket connection');
+          return true;
+        }
+      }
+
+      // Fall back to session cookie validation
       const cookies = cookie.parse(req.headers.cookie || '');
       const signedSessionId = cookies['dane.gg.sid'];
       
@@ -101,6 +121,58 @@ export class ChatService {
       return false;
     } catch (error) {
       console.error('Error validating admin session:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Validate an API key for WebSocket authentication
+   */
+  private async validateApiKey(key: string): Promise<boolean> {
+    try {
+      const prefix = key.substring(0, 11); // dk_ + 8 chars
+      const keyHash = crypto.createHash('sha256').update(key).digest('hex');
+
+      const result = await db
+        .select({
+          id: apiKeys.id,
+          keyHash: apiKeys.keyHash,
+          isActive: apiKeys.isActive,
+          expiresAt: apiKeys.expiresAt,
+          permissions: apiKeys.permissions
+        })
+        .from(apiKeys)
+        .where(eq(apiKeys.keyPrefix, prefix))
+        .limit(1);
+
+      if (result.length === 0) {
+        return false;
+      }
+
+      const apiKey = result[0];
+
+      // Verify hash
+      if (apiKey.keyHash !== keyHash) {
+        return false;
+      }
+
+      if (!apiKey.isActive) {
+        return false;
+      }
+
+      if (apiKey.expiresAt && new Date(apiKey.expiresAt) < new Date()) {
+        return false;
+      }
+
+      // Update last used
+      db.update(apiKeys)
+        .set({ lastUsedAt: new Date() })
+        .where(eq(apiKeys.id, apiKey.id))
+        .catch(err => console.error('Failed to update API key last used:', err));
+
+      return true;
+    } catch (error) {
+      console.error('Error validating API key:', error);
       return false;
     }
   }

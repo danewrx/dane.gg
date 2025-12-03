@@ -77,6 +77,7 @@ import twitterRoutes from './routes/twitter';
 import notificationRoutes from './routes/notifications';
 import projectsRoutes from './routes/projects';
 import chatRoutes from './routes/chat';
+import apiKeysRoutes from './routes/apiKeys';
 import { generalLimiter } from './middleware/rateLimiting';
 import { chatService } from './services/chatService';
 
@@ -158,6 +159,9 @@ app.use('/api/notifications', notificationRoutes);
 
 // Chat routes (admin message history)
 app.use('/api/chat', chatRoutes);
+
+// API Keys routes (admin only)
+app.use('/api/api-keys', apiKeysRoutes);
 
 // Webhooks routes (for external services to update data)
 app.use('/webhooks', webhooksRoutes);
