@@ -606,6 +606,9 @@
 		flex-direction: column;
 		gap: 24px;
 		height: calc(100vh - 120px);
+		max-width: 1400px;
+		margin: 0 auto;
+		width: 100%;
 	}
 
 	.header-section {
