@@ -59,6 +59,7 @@ export const messages = websiteSchema.table('messages', {
   messageType: varchar('message_type', { length: 50 }).notNull(),
   messageColor: varchar('message_color', { length: 50 }),
   messageSource: varchar('message_source', { length: 20 }).default('web'), // 'web', 'discord', 'admin'
+  discordMessageId: varchar('discord_message_id', { length: 100 }), // Discord message ID for syncing deletions
   clientUuid: uuid('client_uuid'),
   visitorId: varchar('visitor_id', { length: 36 })
 });

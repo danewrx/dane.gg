@@ -30,6 +30,7 @@ export class ChatService {
   private clients: Set<WebSocket> = new Set();
   private nicknames: Map<WebSocket, string> = new Map();
   private adminClients: Set<WebSocket> = new Set();
+  private apiKeyConnections: Map<WebSocket, string> = new Map(); // Track API key prefix per connection
   private readonly DEFAULT_NICKNAME = 'Anonymous';
   private readonly MESSAGE_HISTORY_DAYS = 30;
   private sessionSecret: string = '';
@@ -55,8 +56,8 @@ export class ChatService {
       });
 
       this.wss.on('connection', async (ws: WebSocket, req: IncomingMessage) => {
-        const isAdmin = await this.validateAdminSession(req);
-        this.handleConnection(ws, isAdmin);
+        const { isAdmin, apiKeyPrefix } = await this.validateAdminSession(req);
+        this.handleConnection(ws, isAdmin, apiKeyPrefix);
       });
 
       this.wss.on('error', (error) => {
@@ -72,24 +73,33 @@ export class ChatService {
 
   /**
    * Validate if the WebSocket request comes from an authenticated admin or has a valid API key
+   * Returns both admin status and API key prefix if authenticated via API key
    */
-  private async validateAdminSession(req: IncomingMessage): Promise<boolean> {
+  private async validateAdminSession(req: IncomingMessage): Promise<{ isAdmin: boolean; apiKeyPrefix?: string }> {
     try {
       const authHeader = req.headers.authorization;
       const xApiKey = req.headers['x-api-key'];
+      
+      const url = new URL(req.url || '', `http://${req.headers.host || 'localhost'}`);
+      const queryApiKey = url.searchParams.get('api_key');
       
       let apiKey: string | undefined;
       if (authHeader?.startsWith('Bearer dk_')) {
         apiKey = authHeader.substring(7);
       } else if (typeof xApiKey === 'string' && xApiKey.startsWith('dk_')) {
         apiKey = xApiKey;
+      } else if (queryApiKey && queryApiKey.startsWith('dk_')) {
+        apiKey = queryApiKey;
       }
 
       if (apiKey) {
         const isValid = await this.validateApiKey(apiKey);
         if (isValid) {
-          console.log('✅ API key validated for WebSocket connection');
-          return true;
+          const prefix = apiKey.substring(0, 11); // dk_ + 8 chars
+          console.log(`✅ API key validated for WebSocket connection (prefix: ${prefix})`);
+          return { isAdmin: true, apiKeyPrefix: prefix };
+        } else {
+          console.log('❌ API key validation failed for WebSocket connection');
         }
       }
 
@@ -98,7 +108,7 @@ export class ChatService {
       const signedSessionId = cookies['dane.gg.sid'];
       
       if (!signedSessionId) {
-        return false;
+        return { isAdmin: false };
       }
 
       // The cookie is signed with 's:' prefix
@@ -106,7 +116,7 @@ export class ChatService {
       if (signedSessionId.startsWith('s:')) {
         const unsigned = signature.unsign(signedSessionId.slice(2), this.sessionSecret);
         if (!unsigned) {
-          return false;
+          return { isAdmin: false };
         }
         sessionId = unsigned;
       }
@@ -115,13 +125,13 @@ export class ChatService {
       if (adminSessions.isAdmin(sessionId)) {
         const info = adminSessions.get(sessionId);
         console.log('✅ Admin session validated for user:', info?.username);
-        return true;
+        return { isAdmin: true };
       }
 
-      return false;
+      return { isAdmin: false };
     } catch (error) {
       console.error('Error validating admin session:', error);
-      return false;
+      return { isAdmin: false };
     }
   }
 
@@ -244,13 +254,20 @@ export class ChatService {
   /**
    * Handle new WebSocket connection
    */
-  private async handleConnection(ws: WebSocket, isAdmin: boolean): Promise<void> {
+  private async handleConnection(ws: WebSocket, isAdmin: boolean, apiKeyPrefix?: string): Promise<void> {
     this.clients.add(ws);
     this.nicknames.set(ws, this.DEFAULT_NICKNAME);
     
     if (isAdmin) {
       this.adminClients.add(ws);
-      console.log('🔑 Client connected as admin');
+      if (apiKeyPrefix) {
+        this.apiKeyConnections.set(ws, apiKeyPrefix);
+        console.log(`🔑 Client connected as admin via API key (prefix: ${apiKeyPrefix}). Total admin clients: ${this.adminClients.size}`);
+      } else {
+        console.log(`🔑 Client connected as admin via session. Total admin clients: ${this.adminClients.size}`);
+      }
+    } else {
+      console.log(`📨 Client connected as regular user (not admin)`);
     }
 
     console.log(`📨 New chat client connected. Total clients: ${this.clients.size}`);
@@ -310,6 +327,33 @@ export class ChatService {
    * Handle chat commands
    */
   private async handleCommand(ws: WebSocket, message: string): Promise<void> {
+    // /check_auth - Diagnostic command to check authentication status
+    if (message === '/check_auth') {
+      const isAdmin = this.adminClients.has(ws);
+      const isInClients = this.clients.has(ws);
+      const apiKeyPrefix = this.apiKeyConnections.get(ws);
+      const nickname = this.nicknames.get(ws);
+      
+      console.log(`🔍 Auth check requested:`);
+      console.log(`   - In clients set: ${isInClients}`);
+      console.log(`   - In adminClients set: ${isAdmin}`);
+      console.log(`   - API key prefix: ${apiKeyPrefix || 'none'}`);
+      console.log(`   - Nickname: ${nickname || 'none'}`);
+      console.log(`   - Total clients: ${this.clients.size}`);
+      console.log(`   - Total admin clients: ${this.adminClients.size}`);
+      
+      this.sendToClient(ws, {
+        type: 'system',
+        message: `Auth status: ${isAdmin ? 'ADMIN' : 'NOT ADMIN'}, API key: ${apiKeyPrefix || 'none'}, In clients: ${isInClients}`
+      });
+      return;
+    }
+    
+    // Log command attempts for debugging
+    if (message.startsWith('/set_discord_message_id') || message.startsWith('/delete_discord_message')) {
+      const isAdmin = this.adminClients.has(ws);
+      console.log(`🔍 Command received: ${message.substring(0, 30)}... | Admin: ${isAdmin} | Total admin clients: ${this.adminClients.size}`);
+    }
     // /nick <nickname> - Change nickname (shows message)
     if (message.startsWith('/nick ')) {
       const nickname = message.substring(6).trim();
@@ -366,6 +410,17 @@ export class ChatService {
       return;
     }
 
+    // /check_auth - Check authentication status (for debugging)
+    if (message === '/check_auth') {
+      const isAdmin = this.adminClients.has(ws);
+      const isInClients = this.clients.has(ws);
+      this.sendToClient(ws, {
+        type: 'system',
+        message: `Auth Status: In clients: ${isInClients}, Is admin: ${isAdmin}, Total admins: ${this.adminClients.size}`
+      });
+      return;
+    }
+
     // /discord <json> - Post a message from Discord (bot only, requires admin auth)
     if (message.startsWith('/discord ')) {
       if (!this.adminClients.has(ws)) {
@@ -376,6 +431,48 @@ export class ChatService {
       await this.handleDiscordMessage(ws, jsonStr);
       return;
     }
+
+    // /set_discord_message_id <messageId> <discordMessageId> - Store Discord message ID for a message (bot only)
+    if (message.startsWith('/set_discord_message_id ')) {
+      const isAdmin = this.adminClients.has(ws);
+      const isInClients = this.clients.has(ws);
+      const apiKeyPrefix = this.apiKeyConnections.get(ws);
+      
+      if (!isAdmin) {
+        console.log(`❌ Unauthorized /set_discord_message_id:`);
+        console.log(`   - Client in clients set: ${isInClients}`);
+        console.log(`   - Client in adminClients set: ${isAdmin}`);
+        console.log(`   - API key prefix: ${apiKeyPrefix || 'none'}`);
+        console.log(`   - Total clients: ${this.clients.size}`);
+        console.log(`   - Total admin clients: ${this.adminClients.size}`);
+        console.log(`   - Command: ${message.substring(0, 50)}...`);
+        
+        // Check if connection was previously authenticated with API key
+        if (apiKeyPrefix) {
+          console.log(`   ⚠️ Connection has API key prefix but is not in adminClients - possible connection state issue`);
+        }
+        
+        this.sendToClient(ws, { 
+          type: 'error', 
+          message: 'Unauthorized: Connection not authenticated as admin. Please reconnect with API key.' 
+        });
+        return;
+      }
+      const parts = message.substring(24).trim().split(' ');
+      if (parts.length >= 2) {
+        const messageId = parts[0];
+        const discordMessageId = parts.slice(1).join(' ');
+        console.log(`📝 Setting Discord message ID: ${messageId} → ${discordMessageId}`);
+        await this.handleSetDiscordMessageId(messageId, discordMessageId);
+        this.sendToClient(ws, { 
+          type: 'system', 
+          message: `Discord message ID stored: ${discordMessageId}` 
+        });
+      } else {
+        this.sendToClient(ws, { type: 'error', message: 'Invalid format. Use: /set_discord_message_id <messageId> <discordMessageId>' });
+      }
+      return;
+    }
   }
 
   /**
@@ -384,7 +481,7 @@ export class ChatService {
   private async handleDiscordMessage(ws: WebSocket, jsonStr: string): Promise<void> {
     try {
       const data = JSON.parse(jsonStr);
-      const { nickname, message, color } = data;
+      const { nickname, message, color, discordMessageId } = data;
 
       if (!nickname || !message) {
         this.sendToClient(ws, { type: 'error', message: 'Missing nickname or message' });
@@ -406,7 +503,7 @@ export class ChatService {
 
       let messageId: string | undefined;
       try {
-        messageId = await this.saveMessageToDatabase(nickname, message, now, color, 'discord');
+        messageId = await this.saveMessageToDatabase(nickname, message, now, color, 'discord', discordMessageId);
       } catch (error) {
         console.error('Error saving Discord message to database:', error);
       }
@@ -425,6 +522,23 @@ export class ChatService {
     } catch (error) {
       console.error('Error parsing Discord message:', error);
       this.sendToClient(ws, { type: 'error', message: 'Invalid JSON format' });
+    }
+  }
+
+  /**
+   * Handle setting Discord message ID for a message
+   * Called by Discord bot when it sends a web message to Discord
+   */
+  private async handleSetDiscordMessageId(messageId: string, discordMessageId: string): Promise<void> {
+    try {
+      await db
+        .update(messages)
+        .set({ discordMessageId })
+        .where(eq(messages.id, messageId));
+      
+      console.log(`✅ Stored Discord message ID ${discordMessageId} for message ${messageId}`);
+    } catch (error) {
+      console.error('Error storing Discord message ID:', error);
     }
   }
 
@@ -539,12 +653,46 @@ export class ChatService {
    */
   private async handleDeleteMessage(messageId: string): Promise<void> {
     try {
+      // Fetch message to check if it has a Discord message ID
+      const messageResult = await db
+        .select({ discordMessageId: messages.discordMessageId })
+        .from(messages)
+        .where(eq(messages.id, messageId))
+        .limit(1);
+
+      const discordMessageId = messageResult[0]?.discordMessageId;
+
+      // Delete from database
       await db.delete(messages).where(eq(messages.id, messageId));
       console.log(`🗑️ Message deleted: ${messageId}`);
+
+      // If message has Discord message ID, notify Discord bot to delete it
+      if (discordMessageId) {
+        this.notifyDiscordBotDelete(discordMessageId);
+      }
+
       this.broadcastDelete(messageId);
     } catch (error) {
       console.error('Error deleting message:', error);
     }
+  }
+
+  /**
+   * Notify Discord bot to delete a message in Discord
+   */
+  private notifyDiscordBotDelete(discordMessageId: string): void {
+    // Send command to all admin clients (Discord bot should be an admin client)
+    const command = `/delete_discord_message ${discordMessageId}`;
+    this.adminClients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        try {
+          client.send(command);
+          console.log(`📤 Sent Discord delete command to bot: ${discordMessageId}`);
+        } catch (error) {
+          console.error('Error sending Discord delete command:', error);
+        }
+      }
+    });
   }
 
   /**
@@ -618,11 +766,59 @@ export class ChatService {
    * Handle client disconnection
    */
   private handleDisconnection(ws: WebSocket): void {
+    const wasAdmin = this.adminClients.has(ws);
+    const apiKeyPrefix = this.apiKeyConnections.get(ws);
+    
     this.clients.delete(ws);
     this.nicknames.delete(ws);
     this.adminClients.delete(ws);
+    this.apiKeyConnections.delete(ws);
+    
+    if (wasAdmin) {
+      console.log(`🔓 Admin client disconnected${apiKeyPrefix ? ` (API key prefix: ${apiKeyPrefix})` : ''}. Total admin clients: ${this.adminClients.size}`);
+    }
     console.log(`📨 Chat client disconnected. Total clients: ${this.clients.size}`);
     this.broadcastUserCount();
+  }
+
+  /**
+   * Close all WebSocket connections authenticated with a specific API key prefix
+   * Called when an API key is deleted, deactivated, or regenerated
+   */
+  closeConnectionsForApiKey(apiKeyPrefix: string): number {
+    let closedCount = 0;
+    const connectionsToClose: WebSocket[] = [];
+
+    // Find all connections using this API key prefix
+    this.apiKeyConnections.forEach((prefix, ws) => {
+      if (prefix === apiKeyPrefix) {
+        connectionsToClose.push(ws);
+      }
+    });
+
+    // Close the connections
+    connectionsToClose.forEach((ws) => {
+      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+        try {
+          this.sendToClient(ws, {
+            type: 'error',
+            message: 'API key revoked. Connection closed.'
+          });
+          ws.close(1008, 'API key revoked');
+          closedCount++;
+        } catch (error) {
+          console.error('Error closing WebSocket connection:', error);
+        }
+      }
+      // Clean up tracking
+      this.apiKeyConnections.delete(ws);
+    });
+
+    if (closedCount > 0) {
+      console.log(`🔒 Closed ${closedCount} WebSocket connection(s) for API key prefix: ${apiKeyPrefix}`);
+    }
+
+    return closedCount;
   }
 
   /**
@@ -656,7 +852,8 @@ export class ChatService {
     content: string, 
     timestamp: Date, 
     color?: string,
-    source: MessageSource = 'web'
+    source: MessageSource = 'web',
+    discordMessageId?: string
   ): Promise<string | undefined> {
     try {
       const newMessage: NewMessage = {
@@ -665,7 +862,8 @@ export class ChatService {
         timestamp: timestamp,
         messageType: 'chat',
         messageColor: color || null,
-        messageSource: source
+        messageSource: source,
+        discordMessageId: discordMessageId || null
       };
       const result = await db.insert(messages).values(newMessage).returning({ id: messages.id });
       return result[0]?.id;

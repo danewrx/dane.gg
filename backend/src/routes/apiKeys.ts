@@ -3,6 +3,7 @@ import { db } from '../db';
 import { apiKeys, type NewApiKey } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { requireSession, requireAdmin, hashApiKey } from '../middleware/auth';
+import { chatService } from '../services/chatService';
 import crypto from 'crypto';
 
 const router = Router();
@@ -141,6 +142,21 @@ router.patch('/:id', requireSession, requireAdmin, async (req: Request, res: Res
       return res.status(400).json({ error: 'No valid fields to update' });
     }
 
+    // Get the key prefix before updating
+    const existing = await db
+      .select({ keyPrefix: apiKeys.keyPrefix, isActive: apiKeys.isActive })
+      .from(apiKeys)
+      .where(eq(apiKeys.id, id))
+      .limit(1);
+
+    if (existing.length === 0) {
+      return res.status(404).json({ error: 'API key not found' });
+    }
+
+    const keyPrefix = existing[0].keyPrefix;
+    const wasActive = existing[0].isActive;
+    const willBeDeactivated = updates.isActive === false && wasActive;
+
     const result = await db
       .update(apiKeys)
       .set(updates)
@@ -156,8 +172,12 @@ router.patch('/:id', requireSession, requireAdmin, async (req: Request, res: Res
         createdAt: apiKeys.createdAt
       });
 
-    if (result.length === 0) {
-      return res.status(404).json({ error: 'API key not found' });
+    // If the key deactivated, close all connections
+    if (willBeDeactivated) {
+      const closedCount = chatService.closeConnectionsForApiKey(keyPrefix);
+      if (closedCount > 0) {
+        console.log(`🔒 Closed ${closedCount} connection(s) for deactivated API key: ${keyPrefix}`);
+      }
     }
 
     res.json({ message: 'API key updated', key: result[0] });
@@ -177,7 +197,7 @@ router.post('/:id/regenerate', requireSession, requireAdmin, async (req: Request
 
     // Get the existing key
     const existing = await db
-      .select()
+      .select({ keyPrefix: apiKeys.keyPrefix })
       .from(apiKeys)
       .where(eq(apiKeys.id, id))
       .limit(1);
@@ -185,6 +205,8 @@ router.post('/:id/regenerate', requireSession, requireAdmin, async (req: Request
     if (existing.length === 0) {
       return res.status(404).json({ error: 'API key not found' });
     }
+
+    const oldKeyPrefix = existing[0].keyPrefix;
 
     // Generate new key
     const { key, prefix, hash } = generateApiKey();
@@ -208,6 +230,12 @@ router.post('/:id/regenerate', requireSession, requireAdmin, async (req: Request
         createdAt: apiKeys.createdAt
       });
 
+    // Close all WebSocket connections using the old API key
+    const closedCount = chatService.closeConnectionsForApiKey(oldKeyPrefix);
+    if (closedCount > 0) {
+      console.log(`🔒 Closed ${closedCount} connection(s) for regenerated API key: ${oldKeyPrefix}`);
+    }
+
     res.json({
       message: 'API key regenerated. Save this key - it will not be shown again!',
       key: key,
@@ -226,13 +254,29 @@ router.delete('/:id', requireSession, requireAdmin, async (req: Request, res: Re
   try {
     const { id } = req.params;
 
+    // Get key prefix before deleting
+    const existing = await db
+      .select({ keyPrefix: apiKeys.keyPrefix })
+      .from(apiKeys)
+      .where(eq(apiKeys.id, id))
+      .limit(1);
+
+    if (existing.length === 0) {
+      return res.status(404).json({ error: 'API key not found' });
+    }
+
+    const keyPrefix = existing[0].keyPrefix;
+
+    // Delete key
     const result = await db
       .delete(apiKeys)
       .where(eq(apiKeys.id, id))
       .returning({ id: apiKeys.id });
 
-    if (result.length === 0) {
-      return res.status(404).json({ error: 'API key not found' });
+    // Close all ws connections using key
+    const closedCount = chatService.closeConnectionsForApiKey(keyPrefix);
+    if (closedCount > 0) {
+      console.log(`🔒 Closed ${closedCount} connection(s) for deleted API key: ${keyPrefix}`);
     }
 
     res.json({ message: 'API key deleted', id: result[0].id });
