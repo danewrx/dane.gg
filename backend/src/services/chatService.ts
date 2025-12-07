@@ -25,14 +25,23 @@ interface AdminConfig {
   color: string;
 }
 
+interface MessageRateLimit {
+  count: number;
+  resetTime: number;
+}
+
 export class ChatService {
   private wss: WebSocketServer | null = null;
   private clients: Set<WebSocket> = new Set();
   private nicknames: Map<WebSocket, string> = new Map();
   private adminClients: Set<WebSocket> = new Set();
   private apiKeyConnections: Map<WebSocket, string> = new Map(); // Track API key prefix per connection
+  private messageRateLimits: Map<WebSocket, MessageRateLimit> = new Map(); // Rate limiting per connection
   private readonly DEFAULT_NICKNAME = 'Anonymous';
   private readonly MESSAGE_HISTORY_DAYS = 30;
+  private readonly MAX_MESSAGE_LENGTH = 1000;
+  private readonly RATE_LIMIT_MESSAGES = 8;
+  private readonly RATE_LIMIT_WINDOW_MS = 5000; // 5 seconds
   private sessionSecret: string = '';
   
   private adminConfig: AdminConfig = {
@@ -45,8 +54,14 @@ export class ChatService {
    */
   async initialize(server: Server): Promise<void> {
     try {
-      // Get session secret from environment
-      this.sessionSecret = process.env.SESSION_SECRET || 'your-super-secret-session-key-change-this-in-production';
+      this.sessionSecret = process.env.SESSION_SECRET || '';
+      if (!this.sessionSecret) {
+        if (process.env.NODE_ENV === 'production') {
+          throw new Error('SESSION_SECRET environment variable is required in production');
+        }
+        console.warn('WARNING: SESSION_SECRET not set, using default (only for development)');
+        this.sessionSecret = 'your-super-secret-session-key-change-this-in-production';
+      }
       
       await this.loadAdminConfig();
       
@@ -257,6 +272,7 @@ export class ChatService {
   private async handleConnection(ws: WebSocket, isAdmin: boolean, apiKeyPrefix?: string): Promise<void> {
     this.clients.add(ws);
     this.nicknames.set(ws, this.DEFAULT_NICKNAME);
+    this.messageRateLimits.set(ws, { count: 0, resetTime: Date.now() + this.RATE_LIMIT_WINDOW_MS });
     
     if (isAdmin) {
       this.adminClients.add(ws);
@@ -272,11 +288,13 @@ export class ChatService {
 
     console.log(`📨 New chat client connected. Total clients: ${this.clients.size}`);
 
-    // Send admin config first
-    this.sendToClient(ws, {
-      type: 'adminConfig',
-      data: this.adminConfig
-    });
+    // Send admin config only to admin clients
+    if (isAdmin) {
+      this.sendToClient(ws, {
+        type: 'adminConfig',
+        data: this.adminConfig
+      });
+    }
 
     // Then send message history
     try {
@@ -302,6 +320,16 @@ export class ChatService {
       try {
         const message = data.toString('utf-8').trim();
         if (!message) return;
+
+        // Check rate limit for all messages (commands and regular messages)
+        // /check_auth is exempt
+        if (!message.startsWith('/check_auth') && !this.checkRateLimit(ws)) {
+          this.sendToClient(ws, {
+            type: 'error',
+            message: `Rate limit exceeded. Maximum ${this.RATE_LIMIT_MESSAGES} messages per ${this.RATE_LIMIT_WINDOW_MS / 1000} seconds.`
+          });
+          return;
+        }
 
         // Handle commands
         if (message.startsWith('/')) {
@@ -370,7 +398,16 @@ export class ChatService {
 
     // /delete <messageId> - Delete a message (admin only)
     if (message.startsWith('/delete ')) {
-      if (!this.adminClients.has(ws)) {
+      const isAdmin = this.adminClients.has(ws);
+      const isInClients = this.clients.has(ws);
+      
+      if (!isAdmin) {
+        console.log(`❌ Unauthorized /delete command:`);
+        console.log(`   - Client in clients set: ${isInClients}`);
+        console.log(`   - Client in adminClients set: ${isAdmin}`);
+        console.log(`   - Total clients: ${this.clients.size}`);
+        console.log(`   - Total admin clients: ${this.adminClients.size}`);
+        console.log(`   - Command: ${message.substring(0, 50)}...`);
         this.sendToClient(ws, { type: 'error', message: 'Unauthorized' });
         return;
       }
@@ -480,6 +517,11 @@ export class ChatService {
    */
   private async handleDiscordMessage(ws: WebSocket, jsonStr: string): Promise<void> {
     try {
+      if (jsonStr.length > 5000) {
+        this.sendToClient(ws, { type: 'error', message: 'JSON payload too large' });
+        return;
+      }
+
       const data = JSON.parse(jsonStr);
       const { nickname, message, color, discordMessageId } = data;
 
@@ -488,22 +530,46 @@ export class ChatService {
         return;
       }
 
-      if (nickname.length > 50) {
-        this.sendToClient(ws, { type: 'error', message: 'Nickname too long' });
+      // Sanitize nickname
+      const sanitizedNickname = this.sanitizeNickname(String(nickname));
+      if (sanitizedNickname.length === 0 || sanitizedNickname.length > 50) {
+        this.sendToClient(ws, { type: 'error', message: 'Invalid nickname' });
         return;
       }
 
-      if (message.length > 1000) {
-        this.sendToClient(ws, { type: 'error', message: 'Message too long' });
+      // Validate and sanitize message
+      const messageStr = String(message);
+      if (messageStr.length > this.MAX_MESSAGE_LENGTH) {
+        this.sendToClient(ws, { type: 'error', message: `Message too long. Maximum ${this.MAX_MESSAGE_LENGTH} characters.` });
+        return;
+      }
+      const sanitizedMessage = this.sanitizeMessage(messageStr);
+      if (!sanitizedMessage || sanitizedMessage.length === 0) {
+        this.sendToClient(ws, { type: 'error', message: 'Message cannot be empty' });
+        return;
+      }
+
+      // Validate Discord message ID
+      if (discordMessageId && (typeof discordMessageId !== 'string' || discordMessageId.length > 100 || !/^\d+$/.test(discordMessageId))) {
+        this.sendToClient(ws, { type: 'error', message: 'Invalid Discord message ID format' });
         return;
       }
 
       const now = new Date();
-      const formatted = `[${now.toISOString()}] <${nickname}> ${message}`;
+      const formatted = `[${now.toISOString()}] <${sanitizedNickname}> ${sanitizedMessage}`;
+
+      // Validate color
+      let validColor: string | undefined = undefined;
+      if (color) {
+        const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
+        if (hexColorRegex.test(String(color))) {
+          validColor = String(color);
+        }
+      }
 
       let messageId: string | undefined;
       try {
-        messageId = await this.saveMessageToDatabase(nickname, message, now, color, 'discord', discordMessageId);
+        messageId = await this.saveMessageToDatabase(sanitizedNickname, sanitizedMessage, now, validColor, 'discord', discordMessageId);
       } catch (error) {
         console.error('Error saving Discord message to database:', error);
       }
@@ -511,10 +577,10 @@ export class ChatService {
       const chatMessage: ChatMessage = {
         id: messageId,
         timestamp: now.toISOString(),
-        nickname,
-        message,
+        nickname: sanitizedNickname,
+        message: sanitizedMessage,
         formatted,
-        color: color || undefined,
+        color: validColor,
         source: 'discord'
       };
 
@@ -531,6 +597,18 @@ export class ChatService {
    */
   private async handleSetDiscordMessageId(messageId: string, discordMessageId: string): Promise<void> {
     try {
+      // Validate UUID format for message ID
+      if (!this.isValidUUID(messageId)) {
+        console.error(`Invalid message ID format: ${messageId}`);
+        return;
+      }
+
+      // Validate Discord message ID (max 100 chars)
+      if (!discordMessageId || discordMessageId.length > 100 || !/^\d+$/.test(discordMessageId)) {
+        console.error(`Invalid Discord message ID format: ${discordMessageId}`);
+        return;
+      }
+
       await db
         .update(messages)
         .set({ discordMessageId })
@@ -545,13 +623,25 @@ export class ChatService {
   /**
    * Handle /nick command
    */
+  /**
+   * Sanitize nickname
+   */
+  private sanitizeNickname(nickname: string): string {
+    return nickname
+      .replace(/[<>]/g, '') // Remove angle brackets
+      .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim()
+      .substring(0, 25); // Enforce max length
+  }
+
   private handleNickCommand(ws: WebSocket, nickname: string, silent: boolean = false): void {
     if (!nickname || nickname.length === 0) {
       this.sendToClient(ws, { type: 'error', message: 'Nickname cannot be empty' });
       return;
     }
 
-    const sanitizedNickname = nickname.replace(/[<>]/g, '').trim();
+    const sanitizedNickname = this.sanitizeNickname(nickname);
     if (sanitizedNickname.length === 0) {
       this.sendToClient(ws, { type: 'error', message: 'Invalid nickname' });
       return;
@@ -617,20 +707,82 @@ export class ChatService {
   }
 
   /**
+   * Check rate limit for a connection
+   */
+  private checkRateLimit(ws: WebSocket): boolean {
+    const now = Date.now();
+    const limit = this.messageRateLimits.get(ws);
+    
+    if (!limit) {
+      this.messageRateLimits.set(ws, { count: 0, resetTime: now + this.RATE_LIMIT_WINDOW_MS });
+      return true;
+    }
+
+    if (now >= limit.resetTime) {
+      limit.count = 0;
+      limit.resetTime = now + this.RATE_LIMIT_WINDOW_MS;
+    }
+
+    if (limit.count >= this.RATE_LIMIT_MESSAGES) {
+      return false;
+    }
+
+    limit.count++;
+    return true;
+  }
+
+  /**
+   * Sanitize message content
+   */
+  private sanitizeMessage(message: string): string {
+    // Remove null bytes and control characters
+    return message
+      .replace(/\0/g, '')
+      .replace(/[\x01-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '')
+      .trim();
+  }
+
+  /**
+   * Validate UUID format
+   */
+  private isValidUUID(str: string): boolean {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(str);
+  }
+
+  /**
    * Handle regular chat message
    */
   private async handleMessage(ws: WebSocket, message: string): Promise<void> {
-    const nickname = this.nicknames.get(ws) || this.DEFAULT_NICKNAME;
+
+    if (message.length > this.MAX_MESSAGE_LENGTH) {
+      this.sendToClient(ws, {
+        type: 'error',
+        message: `Message too long. Maximum ${this.MAX_MESSAGE_LENGTH} characters.`
+      });
+      return;
+    }
+
+    const sanitizedMessage = this.sanitizeMessage(message);
+    if (!sanitizedMessage || sanitizedMessage.length === 0) {
+      this.sendToClient(ws, {
+        type: 'error',
+        message: 'Message cannot be empty.'
+      });
+      return;
+    }
+
     const isAdmin = this.adminClients.has(ws);
+    const nickname = isAdmin ? this.adminConfig.nickname : (this.nicknames.get(ws) || this.DEFAULT_NICKNAME);
     const now = new Date();
-    const formatted = `[${now.toISOString()}] <${nickname}> ${message}`;
+    const formatted = `[${now.toISOString()}] <${nickname}> ${sanitizedMessage}`;
     
     const messageColor = isAdmin ? this.adminConfig.color : undefined;
     const source: MessageSource = isAdmin ? 'admin' : 'web';
 
     let messageId: string | undefined;
     try {
-      messageId = await this.saveMessageToDatabase(nickname, message, now, messageColor, source);
+      messageId = await this.saveMessageToDatabase(nickname, sanitizedMessage, now, messageColor, source);
     } catch (error) {
       console.error('Error saving message to database:', error);
     }
@@ -639,7 +791,7 @@ export class ChatService {
       id: messageId,
       timestamp: now.toISOString(),
       nickname,
-      message,
+      message: sanitizedMessage,
       formatted,
       color: messageColor,
       source
@@ -653,6 +805,12 @@ export class ChatService {
    */
   private async handleDeleteMessage(messageId: string): Promise<void> {
     try {
+      // Validate UUID format
+      if (!this.isValidUUID(messageId)) {
+        console.error(`Invalid message ID format: ${messageId}`);
+        return;
+      }
+
       // Fetch message to check if it has a Discord message ID
       const messageResult = await db
         .select({ discordMessageId: messages.discordMessageId })
@@ -773,6 +931,7 @@ export class ChatService {
     this.nicknames.delete(ws);
     this.adminClients.delete(ws);
     this.apiKeyConnections.delete(ws);
+    this.messageRateLimits.delete(ws);
     
     if (wasAdmin) {
       console.log(`🔓 Admin client disconnected${apiKeyPrefix ? ` (API key prefix: ${apiKeyPrefix})` : ''}. Total admin clients: ${this.adminClients.size}`);
