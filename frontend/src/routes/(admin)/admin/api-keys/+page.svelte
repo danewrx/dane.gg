@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { Plus, Trash2, Key, X, Copy, Check, RefreshCw, Eye, EyeOff, AlertTriangle } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
+	import Tabs from '$lib/admin/components/ui/Tabs.svelte';
 
 	interface ApiKey {
 		id: string;
@@ -30,6 +31,17 @@
 		permissions: 'full',
 		expiresAt: ''
 	});
+
+	// Permission tab config
+	const permissionTabs = [
+		{ id: 'full', label: 'Full Access', value: 'full' },
+		{ id: 'read', label: 'Read Only', value: 'read' },
+		{ id: 'chat', label: 'Chat Only', value: 'chat' }
+	];
+
+	function handlePermissionChange(tabId: string, value: string) {
+		addForm.permissions = value;
+	}
 
 	const API_BASE = 'http://localhost:3001';
 
@@ -415,15 +427,26 @@
 
 					<div class="form-group">
 						<label for="key-permissions">Permissions</label>
-						<select
-							id="key-permissions"
-							bind:value={addForm.permissions}
-							disabled={isSubmitting}
-						>
-							<option value="full">Full Access - All API endpoints</option>
-							<option value="read">Read Only - GET requests only</option>
-							<option value="chat">Chat Only - WebSocket chat access</option>
-						</select>
+						<div class="permissions-tabs-wrapper">
+							<Tabs
+								tabs={permissionTabs}
+								activeTab={addForm.permissions}
+								onTabChange={handlePermissionChange}
+								variant="default"
+								size="md"
+								fullWidth={true}
+								disabled={isSubmitting}
+							/>
+						</div>
+						<div class="permission-descriptions">
+							{#if addForm.permissions === 'full'}
+								<span class="permission-hint">All API endpoints - Full administrative access</span>
+							{:else if addForm.permissions === 'read'}
+								<span class="permission-hint">GET requests only - Read-only access to data</span>
+							{:else if addForm.permissions === 'chat'}
+								<span class="permission-hint">WebSocket chat access - Send and receive chat messages</span>
+							{/if}
+						</div>
 					</div>
 
 					<div class="form-group">
@@ -936,8 +959,7 @@
 		color: var(--text-primary, #ffffff);
 	}
 
-	.form-group input,
-	.form-group select {
+	.form-group input {
 		padding: 10px 12px;
 		background: var(--bg-primary, #1a1a1a);
 		border: 1px solid var(--border-color, #3a3a3a);
@@ -947,15 +969,10 @@
 		transition: all 0.2s ease;
 	}
 
-	.form-group input:focus,
-	.form-group select:focus {
+	.form-group input:focus {
 		outline: none;
 		border-color: var(--accent-color, #6366f1);
 		box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-	}
-
-	.form-group select {
-		cursor: pointer;
 	}
 
 	.form-hint {
@@ -1078,6 +1095,22 @@
 
 	.copy-button.copied {
 		background: #22c55e;
+	}
+
+	.permissions-tabs-wrapper {
+		margin-top: 4px;
+	}
+
+	.permission-descriptions {
+		margin-top: 8px;
+		min-height: 20px;
+	}
+
+	.permission-hint {
+		display: block;
+		font-size: 12px;
+		color: var(--text-tertiary, #71717a);
+		line-height: 1.4;
 	}
 </style>
 
