@@ -3,6 +3,7 @@ import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import { config } from 'dotenv';
 import { createServer } from 'http';
+import path from 'path';
 import { createDefaultAdmin } from './utils/createDefaultAdmin';
 
 // Load environment variables from root .env file
@@ -16,6 +17,9 @@ const PORT = process.env.BACKEND_PORT || process.env.PORT || 3001;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+app.use('/uploads', express.static(path.join(process.cwd(), 'static', 'uploads')));
+app.use('/emojis', express.static(path.join(process.cwd(), 'static', 'emojis')));
 
 // Session configuration
 app.use(session({
@@ -80,6 +84,7 @@ import chatRoutes from './routes/chat';
 import apiKeysRoutes from './routes/apiKeys';
 import { generalLimiter } from './middleware/rateLimiting';
 import { chatService } from './services/chatService';
+import emojisRoutes from './routes/emojis';
 
 // Routes
 app.get('/api', (req, res) => {
@@ -165,6 +170,8 @@ app.use('/api/api-keys', apiKeysRoutes);
 
 // Webhooks routes (for external services to update data)
 app.use('/webhooks', webhooksRoutes);
+
+app.use('/api/emojis', emojisRoutes);
 
 // 404 handler for API routes
 app.use('/api', (req, res) => {

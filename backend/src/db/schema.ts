@@ -242,6 +242,16 @@ export const apiKeys = websiteSchema.table('api_keys', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
 });
 
+// Custom Emojis table
+export const emojis = websiteSchema.table('emojis', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 50 }).notNull().unique(), // :emojiname: format (without colons)
+  imageUrl: varchar('image_url', { length: 500 }).notNull(), // Path to emoji image
+  isCustom: boolean('is_custom').default(true), // true for custom, false for default Unicode emojis
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
+});
+
 // Relations
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   category: one(projectCategories, {

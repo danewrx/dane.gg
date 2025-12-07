@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
-	import { MessageSquare, Users, Send, RefreshCw, Trash2, Pencil, Check, X, Loader2 } from 'lucide-svelte';
+	import { MessageSquare, Users, Send, RefreshCw, Trash2, Pencil, Check, X, Loader2, Upload, Image as ImageIcon, Trash } from 'lucide-svelte';
+	import { toast } from 'svelte-sonner';
 
 	interface ChatMessage {
 		id?: string;
@@ -57,6 +58,14 @@
 	let hasMoreMessages = $state(true);
 	let nextCursor = $state<string | null>(null);
 	let isInitialLoad = $state(true);
+	
+	// Emoji upload state
+	let showEmojiUpload = $state(false);
+	let emojiFile: File | null = $state(null);
+	let emojiName = $state('');
+	let isUploadingEmoji = $state(false);
+	let customEmojis = $state<Array<{ id: string; name: string; imageUrl: string }>>([]);
+	let isLoadingEmojis = $state(false);
 	
 	// Save admin nickname via WebSocket
 	function saveAdminNickname(nickname: string): void {
@@ -350,6 +359,162 @@
 		}
 	}
 
+	// Load custom emojis
+	async function loadCustomEmojis() {
+		if (!browser) return;
+		
+		try {
+			isLoadingEmojis = true;
+			const response = await fetch('/api/emojis', {
+				credentials: 'include'
+			});
+			
+			if (response.ok) {
+				const data = await response.json();
+				customEmojis = data.data || [];
+			}
+		} catch (error) {
+			console.error('Failed to load emojis:', error);
+		} finally {
+			isLoadingEmojis = false;
+		}
+	}
+
+	// Handle emoji file selection
+	function handleEmojiFileSelect(event: Event) {
+		const input = event.target as HTMLInputElement;
+		if (input.files && input.files[0]) {
+			const file = input.files[0];
+			const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+			
+			if (!allowedTypes.includes(file.type)) {
+				toast.error('Invalid file type', {
+					description: 'Only JPG, PNG, and GIF files are allowed'
+				});
+				return;
+			}
+			
+			if (file.size > 2 * 1024 * 1024) {
+				toast.error('File too large', {
+					description: 'Emoji files must be less than 2MB'
+				});
+				return;
+			}
+			
+			emojiFile = file;
+			const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+			emojiName = nameWithoutExt.toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+		}
+	}
+
+	// Upload emoji
+	async function uploadEmoji() {
+		if (!emojiFile || !emojiName.trim()) {
+			toast.error('Missing information', {
+				description: 'Please select a file and enter an emoji name'
+			});
+			return;
+		}
+
+		// Validate name format
+		const nameRegex = /^[a-zA-Z0-9_-]+$/;
+		if (!nameRegex.test(emojiName.trim())) {
+			toast.error('Invalid emoji name', {
+				description: 'Name can only contain letters, numbers, underscores, and hyphens'
+			});
+			return;
+		}
+
+		try {
+			isUploadingEmoji = true;
+			const formData = new FormData();
+			formData.append('file', emojiFile);
+			formData.append('name', emojiName.trim().toLowerCase());
+
+			const response = await fetch('/api/emojis', {
+				method: 'POST',
+				credentials: 'include',
+				body: formData
+			});
+
+			if (!response.ok) {
+				const error = await response.json();
+				throw new Error(error.error || 'Failed to upload emoji');
+			}
+
+			toast.success('Emoji uploaded', {
+				description: `:${emojiName.trim()}: is now available`
+			});
+
+			emojiFile = null;
+			emojiName = '';
+			showEmojiUpload = false;
+			
+			await loadCustomEmojis();
+		} catch (error) {
+			console.error('Error uploading emoji:', error);
+			toast.error('Failed to upload emoji', {
+				description: error instanceof Error ? error.message : 'Please try again'
+			});
+		} finally {
+			isUploadingEmoji = false;
+		}
+	}
+
+	// Delete emoji
+	async function deleteEmoji(emojiId: string, emojiName: string) {
+		if (!confirm(`Delete emoji :${emojiName}:?`)) {
+			return;
+		}
+
+		try {
+			const response = await fetch(`/api/emojis/${emojiId}`, {
+				method: 'DELETE',
+				credentials: 'include'
+			});
+
+			if (!response.ok) {
+				throw new Error('Failed to delete emoji');
+			}
+
+			toast.success('Emoji deleted', {
+				description: `:${emojiName}: has been removed`
+			});
+
+			await loadCustomEmojis();
+		} catch (error) {
+			console.error('Error deleting emoji:', error);
+			toast.error('Failed to delete emoji');
+		}
+	}
+
+	// Render message with emoji replacement
+	function renderEmojiMessage(message: string): string {
+		let html = message
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;');
+		
+		// Create emoji map from custom emojis
+		const emojiMap = new Map<string, { imageUrl: string; name: string }>();
+		customEmojis.forEach(e => {
+			emojiMap.set(e.name.toLowerCase(), { imageUrl: e.imageUrl, name: e.name });
+		});
+		
+		// Replace :emojiname: with emoji images or characters
+		html = html.replace(/:([a-zA-Z0-9_-]+):/g, (match, name) => {
+			const emoji = emojiMap.get(name.toLowerCase());
+			if (emoji) {
+				return `<img src="${emoji.imageUrl}" alt=":${emoji.name}:" class="custom-emoji-inline" title=":${emoji.name}:" style="width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">`;
+			}
+			return match;
+		});
+		
+		return html;
+	}
+
 	// Scroll to bottom
 	function scrollToBottom() {
 		if (messagesContainer) {
@@ -374,7 +539,7 @@
 
 	onMount(async () => {
 		if (browser) {
-
+			await loadCustomEmojis();
 			await loadMessages();
 			connect();
 		}
@@ -483,7 +648,7 @@
 											</svg>
 										</span>{/if}
 								</span>
-								<span class="message-content">{chatMsg.message}</span>
+								<span class="message-content">{@html renderEmojiMessage(chatMsg.message)}</span>
 								{#if chatMsg.id}
 									<button 
 										class="delete-btn" 
@@ -577,6 +742,108 @@
 							{/if}
 						</div>
 					</div>
+				</div>
+			</div>
+
+			<!-- Custom Emojis Section -->
+			<div class="emojis-section">
+				<div class="emojis-header">
+					<h3>Custom Emojis</h3>
+					<button 
+						class="add-emoji-btn"
+						onclick={() => showEmojiUpload = !showEmojiUpload}
+						title="Upload emoji"
+					>
+						<Upload size={16} />
+					</button>
+				</div>
+				<div class="emojis-content">
+					{#if showEmojiUpload}
+						<div class="emoji-upload-form">
+							<div class="upload-form-group">
+								<label for="emoji-file">Image File (JPG, PNG, GIF)</label>
+								<input
+									id="emoji-file"
+									type="file"
+									accept="image/jpeg,image/jpg,image/png,image/gif"
+									onchange={handleEmojiFileSelect}
+									disabled={isUploadingEmoji}
+								/>
+								{#if emojiFile}
+									<span class="file-name">{emojiFile.name}</span>
+								{/if}
+							</div>
+							<div class="upload-form-group">
+								<label for="emoji-name">Emoji Name</label>
+								<input
+									id="emoji-name"
+									type="text"
+									bind:value={emojiName}
+									placeholder="e.g., myemoji"
+									pattern="[a-zA-Z0-9_-]+"
+									disabled={isUploadingEmoji}
+								/>
+								<span class="form-hint">Use :{emojiName || 'name'}: in chat</span>
+							</div>
+							<div class="upload-form-actions">
+								<button 
+									class="upload-btn"
+									onclick={uploadEmoji}
+									disabled={!emojiFile || !emojiName.trim() || isUploadingEmoji}
+								>
+									{#if isUploadingEmoji}
+										<Loader2 size={14} class="spin" />
+										Uploading...
+									{:else}
+										<Upload size={14} />
+										Upload
+									{/if}
+								</button>
+								<button 
+									class="cancel-btn"
+									onclick={() => { showEmojiUpload = false; emojiFile = null; emojiName = ''; }}
+									disabled={isUploadingEmoji}
+								>
+									Cancel
+								</button>
+							</div>
+						</div>
+					{/if}
+					
+					{#if isLoadingEmojis}
+						<div class="emojis-loading">
+							<Loader2 size={16} class="spin" />
+							<span>Loading emojis...</span>
+						</div>
+					{:else if customEmojis.length === 0}
+						<div class="emojis-empty">
+							<ImageIcon size={24} />
+							<p>No custom emojis yet</p>
+							<span>Upload an emoji to get started</span>
+						</div>
+					{:else}
+						<div class="emojis-grid">
+							{#each customEmojis as emoji}
+								<div class="emoji-item">
+									<img 
+										src={emoji.imageUrl} 
+										alt={`:${emoji.name}:`}
+										class="emoji-preview"
+									/>
+									<div class="emoji-info">
+										<span class="emoji-name">:{emoji.name}:</span>
+									</div>
+									<button
+										class="emoji-delete-btn"
+										onclick={() => deleteEmoji(emoji.id, emoji.name)}
+										title="Delete emoji"
+									>
+										<Trash size={12} />
+									</button>
+								</div>
+							{/each}
+						</div>
+					{/if}
 				</div>
 			</div>
 
@@ -976,6 +1243,312 @@
 		to { transform: rotate(360deg); }
 	}
 
+	.emojis-section {
+		background: #2d2d2d;
+		border: 1px solid #404040;
+		border-radius: 8px;
+		overflow: hidden;
+	}
+
+	:global(html:not(.dark)) .emojis-section {
+		background: #ffffff;
+		border-color: #e5e7eb;
+	}
+
+	.emojis-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 16px;
+		border-bottom: 1px solid #404040;
+	}
+
+	:global(html:not(.dark)) .emojis-header {
+		border-bottom-color: #e5e7eb;
+	}
+
+	.emojis-header h3 {
+		margin: 0;
+		font-size: 16px;
+		font-weight: 600;
+		color: #ffffff;
+	}
+
+	:global(html:not(.dark)) .emojis-header h3 {
+		color: #1f2937;
+	}
+
+	.add-emoji-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 6px;
+		background: transparent;
+		border: 1px solid #404040;
+		border-radius: 4px;
+		color: #a1a1aa;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.add-emoji-btn:hover {
+		background: #3a3a3a;
+		border-color: #555;
+		color: #ffffff;
+	}
+
+	:global(html:not(.dark)) .add-emoji-btn {
+		border-color: #e5e7eb;
+		color: #6b7280;
+	}
+
+	:global(html:not(.dark)) .add-emoji-btn:hover {
+		background: #f3f4f6;
+		border-color: #d1d5db;
+		color: #1f2937;
+	}
+
+	.emojis-content {
+		padding: 16px;
+	}
+
+	.emoji-upload-form {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		padding-bottom: 16px;
+		border-bottom: 1px solid #404040;
+		margin-bottom: 16px;
+	}
+
+	:global(html:not(.dark)) .emoji-upload-form {
+		border-bottom-color: #e5e7eb;
+	}
+
+	.upload-form-group {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	.upload-form-group label {
+		font-size: 13px;
+		font-weight: 500;
+		color: #a1a1aa;
+	}
+
+	:global(html:not(.dark)) .upload-form-group label {
+		color: #6b7280;
+	}
+
+	.upload-form-group input[type="file"],
+	.upload-form-group input[type="text"] {
+		padding: 8px 12px;
+		background: #1a1a1a;
+		border: 1px solid #404040;
+		border-radius: 4px;
+		color: #ffffff;
+		font-size: 14px;
+		font-family: inherit;
+	}
+
+	:global(html:not(.dark)) .upload-form-group input[type="file"],
+	:global(html:not(.dark)) .upload-form-group input[type="text"] {
+		background: #ffffff;
+		border-color: #e5e7eb;
+		color: #1f2937;
+	}
+
+	.upload-form-group input:focus {
+		outline: none;
+		border-color: #6366f1;
+	}
+
+	.file-name {
+		font-size: 12px;
+		color: #a1a1aa;
+	}
+
+	:global(html:not(.dark)) .file-name {
+		color: #6b7280;
+	}
+
+	.form-hint {
+		font-size: 11px;
+		color: #71717a;
+	}
+
+	.upload-form-actions {
+		display: flex;
+		gap: 8px;
+		margin-top: 4px;
+	}
+
+	.upload-btn,
+	.cancel-btn {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 8px 16px;
+		border: none;
+		border-radius: 4px;
+		font-size: 13px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.upload-btn {
+		background: #6366f1;
+		color: #ffffff;
+	}
+
+	.upload-btn:hover:not(:disabled) {
+		background: #4f46e5;
+	}
+
+	.upload-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.cancel-btn {
+		background: #3a3a3a;
+		color: #a1a1aa;
+	}
+
+	.cancel-btn:hover:not(:disabled) {
+		background: #4a4a4a;
+		color: #ffffff;
+	}
+
+	:global(html:not(.dark)) .cancel-btn {
+		background: #f3f4f6;
+		color: #6b7280;
+	}
+
+	:global(html:not(.dark)) .cancel-btn:hover:not(:disabled) {
+		background: #e5e7eb;
+		color: #1f2937;
+	}
+
+	.emojis-loading,
+	.emojis-empty {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 32px 16px;
+		text-align: center;
+		color: #a1a1aa;
+		gap: 8px;
+	}
+
+	:global(html:not(.dark)) .emojis-loading,
+	:global(html:not(.dark)) .emojis-empty {
+		color: #6b7280;
+	}
+
+	.emojis-empty :global(svg) {
+		opacity: 0.5;
+	}
+
+	.emojis-empty p {
+		margin: 0;
+		font-size: 14px;
+		font-weight: 500;
+	}
+
+	.emojis-empty span {
+		font-size: 12px;
+	}
+
+	.emojis-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+		gap: 12px;
+	}
+
+	.emoji-item {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 8px;
+		background: #1a1a1a;
+		border: 1px solid #404040;
+		border-radius: 6px;
+		transition: all 0.2s;
+	}
+
+	.emoji-item:hover {
+		background: #2a2a2a;
+		border-color: #555;
+	}
+
+	:global(html:not(.dark)) .emoji-item {
+		background: #f9fafb;
+		border-color: #e5e7eb;
+	}
+
+	:global(html:not(.dark)) .emoji-item:hover {
+		background: #f3f4f6;
+		border-color: #d1d5db;
+	}
+
+	.emoji-preview {
+		width: 32px;
+		height: 32px;
+		object-fit: contain;
+		image-rendering: -webkit-optimize-contrast;
+		image-rendering: crisp-edges;
+		margin-bottom: 6px;
+	}
+
+	.emoji-info {
+		width: 100%;
+		text-align: center;
+	}
+
+	.emoji-name {
+		font-size: 11px;
+		color: #a1a1aa;
+		font-family: 'Courier New', monospace;
+		word-break: break-word;
+	}
+
+	:global(html:not(.dark)) .emoji-name {
+		color: #6b7280;
+	}
+
+	.emoji-delete-btn {
+		position: absolute;
+		top: 4px;
+		right: 4px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 20px;
+		height: 20px;
+		padding: 0;
+		background: rgba(239, 68, 68, 0.2);
+		border: 1px solid rgba(239, 68, 68, 0.4);
+		border-radius: 4px;
+		color: #ef4444;
+		cursor: pointer;
+		opacity: 0;
+		transition: all 0.2s;
+	}
+
+	.emoji-item:hover .emoji-delete-btn {
+		opacity: 1;
+	}
+
+	.emoji-delete-btn:hover {
+		background: rgba(239, 68, 68, 0.3);
+		border-color: rgba(239, 68, 68, 0.6);
+	}
+
 	.stats-section {
 		background: #2d2d2d;
 		border: 1px solid #404040;
@@ -1229,6 +1802,18 @@
 	.message-content {
 		color: #ffffff;
 		word-break: break-word;
+	}
+
+	.message-content :global(.custom-emoji-inline) {
+		display: inline-block;
+		width: 1.375em;
+		height: 1.375em;
+		vertical-align: -0.2em;
+		image-rendering: -webkit-optimize-contrast;
+		image-rendering: crisp-edges;
+		object-fit: contain;
+		max-width: 22px;
+		max-height: 22px;
 	}
 
 	:global(html:not(.dark)) .message-content {

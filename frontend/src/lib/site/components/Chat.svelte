@@ -77,6 +77,11 @@
 	let hasDisconnectedMessage = $state(false);
 	let showEmojiPicker = $state(false);
 	let chatInput: HTMLInputElement | null = null;
+	let emojiAutocompleteOpen = $state(false);
+	let emojiAutocompleteMatches = $state<Array<{ name: string; emoji: string; isCustom: boolean; imageUrl?: string }>>([]);
+	let emojiAutocompleteIndex = $state(0);
+	let emojiAutocompleteQuery = $state('');
+	let allEmojis = $state<Array<{ name: string; emoji: string; isCustom: boolean; imageUrl?: string }>>([]);
 	
 	let { userCount = $bindable(0) }: { userCount?: number } = $props();
 
@@ -426,6 +431,11 @@
 
 	// Handle Enter key
 	function handleKeyDown(event: KeyboardEvent) {
+		if (emojiAutocompleteOpen) {
+			handleAutocompleteKeyDown(event);
+			return;
+		}
+		
 		if (event.key === 'Enter' && !event.shiftKey) {
 			event.preventDefault();
 			sendMessage();
@@ -433,26 +443,162 @@
 	}
 
 
+	// Load all emojis (default + custom)
+	async function loadAllEmojis() {
+		if (!browser) return;
+		
+		try {
+			// Default emojis with names
+			const defaultEmojis = [
+				// Smileys
+				{ name: 'smile', emoji: '😀', isCustom: false },
+				{ name: 'grin', emoji: '😃', isCustom: false },
+				{ name: 'joy', emoji: '😂', isCustom: false },
+				{ name: 'wink', emoji: '😉', isCustom: false },
+				{ name: 'blush', emoji: '😊', isCustom: false },
+				// Hearts
+				{ name: 'heart', emoji: '❤️', isCustom: false },
+				{ name: 'orange_heart', emoji: '🧡', isCustom: false },
+				{ name: 'yellow_heart', emoji: '💛', isCustom: false },
+				{ name: 'green_heart', emoji: '💚', isCustom: false },
+				{ name: 'blue_heart', emoji: '💙', isCustom: false },
+				{ name: 'purple_heart', emoji: '💜', isCustom: false },
+				// Gestures
+				{ name: 'thumbsup', emoji: '👍', isCustom: false },
+				{ name: 'thumbsdown', emoji: '👎', isCustom: false },
+				{ name: 'ok_hand', emoji: '👌', isCustom: false },
+				{ name: 'clap', emoji: '👏', isCustom: false },
+				{ name: 'pray', emoji: '🙏', isCustom: false },
+				// Reactions
+				{ name: 'fire', emoji: '🔥', isCustom: false },
+				{ name: 'star', emoji: '⭐', isCustom: false },
+				{ name: 'sparkles', emoji: '✨', isCustom: false },
+				{ name: 'party', emoji: '🎉', isCustom: false },
+				{ name: 'trophy', emoji: '🏆', isCustom: false },
+				// Symbols
+				{ name: 'check', emoji: '✅', isCustom: false },
+				{ name: 'x', emoji: '❌', isCustom: false },
+				{ name: 'question', emoji: '❓', isCustom: false },
+				{ name: 'exclamation', emoji: '❗', isCustom: false },
+			];
+			
+			// Load custom emojis
+			const response = await fetch('/api/emojis');
+			if (response.ok) {
+				const data = await response.json();
+				const customEmojis = (data.data || []).map((e: any) => ({
+					name: e.name,
+					emoji: `:${e.name}:`,
+					isCustom: true,
+					imageUrl: e.imageUrl
+				}));
+				allEmojis = [...defaultEmojis, ...customEmojis];
+			} else {
+				allEmojis = defaultEmojis;
+			}
+		} catch (error) {
+			console.error('Failed to load emojis:', error);
+		}
+	}
+
 	// Handle emoji selection from picker
-	function handleEmojiSelect(event: CustomEvent<{ emoji: string }>) {
+	function handleEmojiSelect(event: CustomEvent<{ emoji: string; isCustom?: boolean; imageUrl?: string }>) {
 		if (!chatInput) return;
 		
-		const emoji = event.detail.emoji;
+		const emojiText = event.detail.emoji;
+		
 		const start = chatInput.selectionStart || 0;
 		const end = chatInput.selectionEnd || 0;
 		
 		// Insert emoji at cursor position
-		inputValue = inputValue.substring(0, start) + emoji + inputValue.substring(end);
+		inputValue = inputValue.substring(0, start) + emojiText + inputValue.substring(end);
 		
 		setTimeout(() => {
 			if (chatInput) {
-				const newPosition = start + emoji.length;
+				const newPosition = start + emojiText.length;
 				chatInput.setSelectionRange(newPosition, newPosition);
 				chatInput.focus();
 			}
 		}, 0);
 		
 		showEmojiPicker = false;
+	}
+
+	// Handle autocomplete for :emojiname: syntax
+	function handleInputChange() {
+		if (!chatInput) return;
+		
+		const text = inputValue;
+		const cursorPos = chatInput.selectionStart || 0;
+		
+		// Find the :emojiname: pattern before cursor
+		const beforeCursor = text.substring(0, cursorPos);
+		const match = beforeCursor.match(/:([a-zA-Z0-9_-]*)$/);
+		
+		if (match && match[1].length > 0) {
+			const query = match[1].toLowerCase();
+			emojiAutocompleteQuery = query;
+			
+			const matches = allEmojis.filter(e => 
+				e.name.toLowerCase().startsWith(query)
+			).slice(0, 8);
+			
+			if (matches.length > 0) {
+				emojiAutocompleteMatches = matches;
+				emojiAutocompleteIndex = 0;
+				emojiAutocompleteOpen = true;
+			} else {
+				emojiAutocompleteOpen = false;
+			}
+		} else {
+			emojiAutocompleteOpen = false;
+		}
+	}
+
+	function insertAutocompleteEmoji(emoji: { name: string; emoji: string; isCustom: boolean; imageUrl?: string }) {
+		if (!chatInput) return;
+		
+		const text = inputValue;
+		const cursorPos = chatInput.selectionStart || 0;
+		const beforeCursor = text.substring(0, cursorPos);
+		const match = beforeCursor.match(/:([a-zA-Z0-9_-]*)$/);
+		
+		if (match) {
+			const start = cursorPos - match[0].length;
+			const end = cursorPos;
+			const emojiText = `:${emoji.name}:`;
+			
+			inputValue = text.substring(0, start) + emojiText + text.substring(end);
+			
+			setTimeout(() => {
+				if (chatInput) {
+					const newPos = start + emojiText.length;
+					chatInput.setSelectionRange(newPos, newPos);
+					chatInput.focus();
+				}
+			}, 0);
+		}
+		
+		emojiAutocompleteOpen = false;
+	}
+
+	function handleAutocompleteKeyDown(event: KeyboardEvent) {
+		if (!emojiAutocompleteOpen || emojiAutocompleteMatches.length === 0) return;
+		
+		if (event.key === 'ArrowDown') {
+			event.preventDefault();
+			emojiAutocompleteIndex = (emojiAutocompleteIndex + 1) % emojiAutocompleteMatches.length;
+		} else if (event.key === 'ArrowUp') {
+			event.preventDefault();
+			emojiAutocompleteIndex = emojiAutocompleteIndex === 0 
+				? emojiAutocompleteMatches.length - 1 
+				: emojiAutocompleteIndex - 1;
+		} else if (event.key === 'Enter' || event.key === 'Tab') {
+			event.preventDefault();
+			insertAutocompleteEmoji(emojiAutocompleteMatches[emojiAutocompleteIndex]);
+		} else if (event.key === 'Escape') {
+			emojiAutocompleteOpen = false;
+		}
 	}
 
 	function toggleEmojiPicker() {
@@ -497,8 +643,33 @@
 		(window as any).chatDisconnect = forceDisconnect;
 	}
 
+	function renderEmojiMessage(message: string): string {
+		let html = message
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;');
+		
+		// Replace :emojiname: with emoji images or characters
+		html = html.replace(/:([a-zA-Z0-9_-]+):/g, (match, name) => {
+			const emoji = allEmojis.find(e => e.name.toLowerCase() === name.toLowerCase());
+			if (emoji) {
+				if (emoji.isCustom && emoji.imageUrl) {
+					return `<img src="${emoji.imageUrl}" alt=":${emoji.name}:" class="custom-emoji-inline" title=":${emoji.name}:" style="width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">`;
+				} else {
+					return emoji.emoji;
+				}
+			}
+			return match;
+		});
+		
+		return html;
+	}
+
 	onMount(() => {
 		if (browser) {
+			loadAllEmojis();
 			try {
 				// Initialize notification audio
 				notificationAudio = new Audio('/assets/sounds/notification.mp3');
@@ -590,7 +761,9 @@
 									</svg>
 								</span>{/if}&gt;
 						</span>
-						<span class="msg-content">{chatMsg.message}</span>
+						<span class="msg-content">
+							{@html renderEmojiMessage(chatMsg.message)}
+						</span>
 					</div>
 				{/if}
 			{/each}
@@ -600,15 +773,41 @@
 	<div class="chat-input-container">
 		<div class="input-wrapper">
 			<span class="input-prompt">$</span>
-			<input
-				type="text"
-				class="chat-input"
-				placeholder="Use /nick to set a name"
-				bind:value={inputValue}
-				bind:this={chatInput}
-				onkeydown={handleKeyDown}
-				disabled={!isConnected}
-			/>
+			<div class="input-container">
+				<input
+					type="text"
+					class="chat-input"
+					placeholder="Use /nick to set a name"
+					bind:value={inputValue}
+					bind:this={chatInput}
+					onkeydown={handleKeyDown}
+					oninput={handleInputChange}
+					disabled={!isConnected}
+				/>
+				{#if emojiAutocompleteOpen && emojiAutocompleteMatches.length > 0}
+					<div class="emoji-autocomplete">
+						{#each emojiAutocompleteMatches as match, index}
+							<button
+								class="autocomplete-item"
+								class:active={index === emojiAutocompleteIndex}
+								onclick={() => insertAutocompleteEmoji(match)}
+								type="button"
+							>
+							{#if match.isCustom && match.imageUrl}
+								<img 
+									src={match.imageUrl} 
+									alt={match.name}
+									class="autocomplete-emoji-img"
+								/>
+								{:else}
+									<span class="autocomplete-emoji">{match.emoji}</span>
+								{/if}
+								<span class="autocomplete-name">:{match.name}:</span>
+							</button>
+						{/each}
+					</div>
+				{/if}
+			</div>
 			<div class="input-actions">
 				<div class="emoji-picker-wrapper">
 					<button 
@@ -842,6 +1041,84 @@
 		border-color: #333;
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	.input-container {
+		position: relative;
+		flex: 1;
+	}
+
+	.emoji-autocomplete {
+		position: absolute;
+		bottom: 100%;
+		left: 0;
+		margin-bottom: 4px;
+		background: #1a1a1a;
+		border: 1px solid #666;
+		border-radius: 0;
+		max-height: 200px;
+		overflow-y: auto;
+		z-index: 100;
+		min-width: 200px;
+		font-family: 'Courier New', monospace;
+	}
+
+	.autocomplete-item {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 6px 12px;
+		background: transparent;
+		border: none;
+		border-bottom: 1px solid #333;
+		color: #e8e8e8;
+		cursor: pointer;
+		width: 100%;
+		text-align: left;
+		font-size: 13px;
+		transition: background 0.1s;
+	}
+
+	.autocomplete-item:last-child {
+		border-bottom: none;
+	}
+
+	.autocomplete-item:hover,
+	.autocomplete-item.active {
+		background: #3a3a3a;
+	}
+
+	.autocomplete-emoji,
+	.autocomplete-emoji-img {
+		width: 20px;
+		height: 20px;
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 16px;
+	}
+
+	.autocomplete-emoji-img {
+		object-fit: contain;
+		image-rendering: -webkit-optimize-contrast;
+		image-rendering: crisp-edges;
+	}
+
+	.autocomplete-name {
+		font-family: 'Courier New', monospace;
+	}
+
+	.custom-emoji-inline {
+		display: inline-block;
+		width: 1.375em;
+		height: 1.375em;
+		vertical-align: -0.2em;
+		image-rendering: -webkit-optimize-contrast;
+		image-rendering: crisp-edges;
+		object-fit: contain;
+		max-width: 22px;
+		max-height: 22px;
 	}
 
 	.input-prompt {
