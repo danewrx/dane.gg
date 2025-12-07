@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
+	import EmojiPicker from './EmojiPicker.svelte';
+	import { Smile } from 'lucide-svelte';
 
 	let globalWsInstance: WebSocket | null = null;
 	
@@ -73,6 +75,8 @@
 	let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 	let isDestroyed = $state(false);
 	let hasDisconnectedMessage = $state(false);
+	let showEmojiPicker = $state(false);
+	let chatInput: HTMLInputElement | null = null;
 	
 	let { userCount = $bindable(0) }: { userCount?: number } = $props();
 
@@ -428,6 +432,48 @@
 		}
 	}
 
+
+	// Handle emoji selection from picker
+	function handleEmojiSelect(event: CustomEvent<{ emoji: string }>) {
+		if (!chatInput) return;
+		
+		const emoji = event.detail.emoji;
+		const start = chatInput.selectionStart || 0;
+		const end = chatInput.selectionEnd || 0;
+		
+		// Insert emoji at cursor position
+		inputValue = inputValue.substring(0, start) + emoji + inputValue.substring(end);
+		
+		setTimeout(() => {
+			if (chatInput) {
+				const newPosition = start + emoji.length;
+				chatInput.setSelectionRange(newPosition, newPosition);
+				chatInput.focus();
+			}
+		}, 0);
+		
+		showEmojiPicker = false;
+	}
+
+	function toggleEmojiPicker() {
+		showEmojiPicker = !showEmojiPicker;
+	}
+
+	function handleClickOutside(event: MouseEvent) {
+		if (showEmojiPicker && !(event.target as HTMLElement).closest('.emoji-picker') && !(event.target as HTMLElement).closest('.emoji-button')) {
+			showEmojiPicker = false;
+		}
+	}
+
+	$effect(() => {
+		if (showEmojiPicker && browser) {
+			document.addEventListener('click', handleClickOutside);
+			return () => {
+				document.removeEventListener('click', handleClickOutside);
+			};
+		}
+	});
+
 	// Scroll to bottom
 	function scrollToBottom() {
 		if (messagesContainer) {
@@ -559,17 +605,35 @@
 				class="chat-input"
 				placeholder="Use /nick to set a name"
 				bind:value={inputValue}
+				bind:this={chatInput}
 				onkeydown={handleKeyDown}
 				disabled={!isConnected}
 			/>
-			<button 
-				class="send-button"
-				onclick={sendMessage}
-				disabled={!isConnected || !inputValue.trim()}
-				title="Send message"
-			>
-				&gt;
-			</button>
+			<div class="input-actions">
+				<div class="emoji-picker-wrapper">
+					<button 
+						class="emoji-button"
+						onclick={toggleEmojiPicker}
+						type="button"
+						disabled={!isConnected}
+						title="Add emoji"
+					>
+						<Smile size={18} />
+					</button>
+					<EmojiPicker 
+						bind:isOpen={showEmojiPicker}
+						on:select={handleEmojiSelect}
+					/>
+				</div>
+				<button 
+					class="send-button"
+					onclick={sendMessage}
+					disabled={!isConnected || !inputValue.trim()}
+					title="Send message"
+				>
+					&gt;
+				</button>
+			</div>
 		</div>
 	</div>
 </div>
@@ -733,6 +797,51 @@
 		border-top: 1px solid rgba(102, 102, 102, 0.3);
 		border-bottom: 1px solid rgba(102, 102, 102, 0.3);
 		margin-top: 2px;
+		position: relative;
+	}
+
+	.input-actions {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+
+	.emoji-picker-wrapper {
+		position: relative;
+	}
+
+	.emoji-button {
+		background: #3a3a3a;
+		border: 1px solid #555;
+		color: #e8e8e8;
+		padding: 6px;
+		cursor: pointer;
+		font-family: 'Courier New', monospace;
+		min-width: 32px;
+		height: 28px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s;
+		border-radius: 2px;
+	}
+
+	.emoji-button:hover:not(:disabled) {
+		background: #4a4a4a;
+		border-color: #666;
+		color: #ffffff;
+	}
+
+	.emoji-button:active:not(:disabled) {
+		background: #2a2a2a;
+		border-color: #444;
+	}
+
+	.emoji-button:disabled {
+		background: #2a2a2a;
+		border-color: #333;
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	.input-prompt {
