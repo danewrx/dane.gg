@@ -166,8 +166,7 @@ export function bruteForceProtection(req: any, res: any, next: any) {
  * Prevents login attempts for locked accounts
  */
 export function accountLockoutProtection(req: any, res: any, next: any) {
-  // This would integrate with your user table to check if account is locked
-  // For now, we'll just pass through - you can add account lockout logic here
+  // TODO: integrate with user table to check if account is locked
   next();
 }
 
@@ -213,6 +212,29 @@ export const adminLimiter = rateLimit({
       error: 'Too many admin operations',
       message: 'Too many admin operations from this IP, please try again later',
       retryAfter: '1 hour'
+    });
+  }
+});
+
+/**
+ * API key validation rate limiting
+ * 100 attempts per 15 minutes per IP
+ */
+export const apiKeyValidationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  message: {
+    error: 'Too many API key validation attempts',
+    message: 'Too many API key validation attempts from this IP, please try again after 15 minutes',
+    retryAfter: '15 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      error: 'Too many API key validation attempts',
+      message: 'Too many API key validation attempts from this IP, please try again after 15 minutes',
+      retryAfter: '15 minutes'
     });
   }
 });

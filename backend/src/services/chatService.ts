@@ -95,16 +95,12 @@ export class ChatService {
       const authHeader = req.headers.authorization;
       const xApiKey = req.headers['x-api-key'];
       
-      const url = new URL(req.url || '', `http://${req.headers.host || 'localhost'}`);
-      const queryApiKey = url.searchParams.get('api_key');
-      
       let apiKey: string | undefined;
+      
       if (authHeader?.startsWith('Bearer dk_')) {
         apiKey = authHeader.substring(7);
       } else if (typeof xApiKey === 'string' && xApiKey.startsWith('dk_')) {
         apiKey = xApiKey;
-      } else if (queryApiKey && queryApiKey.startsWith('dk_')) {
-        apiKey = queryApiKey;
       }
 
       if (apiKey) {
@@ -151,7 +147,25 @@ export class ChatService {
   }
 
   /**
+   * Constant-time comparison of two hash strings to prevent timing attacks
+   */
+  private constantTimeCompare(a: string, b: string): boolean {
+    if (a.length !== b.length) {
+      return false;
+    }
+    try {
+      return crypto.timingSafeEqual(
+        Buffer.from(a, 'hex'),
+        Buffer.from(b, 'hex')
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Validate an API key for WebSocket authentication
+   * Uses constant-time comparison to prevent timing attacks
    */
   private async validateApiKey(key: string): Promise<boolean> {
     try {
@@ -170,16 +184,20 @@ export class ChatService {
         .where(eq(apiKeys.keyPrefix, prefix))
         .limit(1);
 
+      // Always perform hash comparison even if prefix not found to prevent timing leaks
+      // Use a dummy hash of the same length if no key found
+      const storedHash = result.length > 0 ? result[0].keyHash : '0'.repeat(64); // SHA-256 produces 64 hex chars
+      
+      // Verify hash using constant-time comparison
+      if (!this.constantTimeCompare(keyHash, storedHash)) {
+        return false;
+      }
+
       if (result.length === 0) {
         return false;
       }
 
       const apiKey = result[0];
-
-      // Verify hash
-      if (apiKey.keyHash !== keyHash) {
-        return false;
-      }
 
       if (!apiKey.isActive) {
         return false;
