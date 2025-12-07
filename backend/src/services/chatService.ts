@@ -30,6 +30,11 @@ interface MessageRateLimit {
   resetTime: number;
 }
 
+interface ConnectionRateLimit {
+  count: number;
+  resetTime: number;
+}
+
 export class ChatService {
   private wss: WebSocketServer | null = null;
   private clients: Set<WebSocket> = new Set();
@@ -37,11 +42,14 @@ export class ChatService {
   private adminClients: Set<WebSocket> = new Set();
   private apiKeyConnections: Map<WebSocket, string> = new Map(); // Track API key prefix per connection
   private messageRateLimits: Map<WebSocket, MessageRateLimit> = new Map(); // Rate limiting per connection
+  private connectionRateLimits: Map<string, ConnectionRateLimit> = new Map(); // Global connection rate limiting per IP
   private readonly DEFAULT_NICKNAME = 'Anonymous';
   private readonly MESSAGE_HISTORY_DAYS = 30;
   private readonly MAX_MESSAGE_LENGTH = 1000;
   private readonly RATE_LIMIT_MESSAGES = 8;
   private readonly RATE_LIMIT_WINDOW_MS = 5000; // 5 seconds
+  private readonly MAX_CONNECTIONS_PER_IP = 10; // Max WebSocket connections per IP
+  private readonly CONNECTION_RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
   private sessionSecret: string = '';
   
   private adminConfig: AdminConfig = {
@@ -72,7 +80,7 @@ export class ChatService {
 
       this.wss.on('connection', async (ws: WebSocket, req: IncomingMessage) => {
         const { isAdmin, apiKeyPrefix } = await this.validateAdminSession(req);
-        this.handleConnection(ws, isAdmin, apiKeyPrefix);
+        this.handleConnection(ws, req, isAdmin, apiKeyPrefix);
       });
 
       this.wss.on('error', (error) => {
@@ -165,28 +173,30 @@ export class ChatService {
 
   /**
    * Validate an API key for WebSocket authentication
-   * Uses constant-time comparison to prevent timing attacks
+   * Uses constant-time comparison and timing normalization to prevent timing attacks
    */
   private async validateApiKey(key: string): Promise<boolean> {
     try {
       const prefix = key.substring(0, 11); // dk_ + 8 chars
       const keyHash = crypto.createHash('sha256').update(key).digest('hex');
 
-      const result = await db
-        .select({
-          id: apiKeys.id,
-          keyHash: apiKeys.keyHash,
-          isActive: apiKeys.isActive,
-          expiresAt: apiKeys.expiresAt,
-          permissions: apiKeys.permissions
-        })
-        .from(apiKeys)
-        .where(eq(apiKeys.keyPrefix, prefix))
-        .limit(1);
+      const [result] = await Promise.all([
+        db
+          .select({
+            id: apiKeys.id,
+            keyHash: apiKeys.keyHash,
+            isActive: apiKeys.isActive,
+            expiresAt: apiKeys.expiresAt,
+            permissions: apiKeys.permissions
+          })
+          .from(apiKeys)
+          .where(eq(apiKeys.keyPrefix, prefix))
+          .limit(1),
+        new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 10)))
+      ]);
 
       // Always perform hash comparison even if prefix not found to prevent timing leaks
-      // Use a dummy hash of the same length if no key found
-      const storedHash = result.length > 0 ? result[0].keyHash : '0'.repeat(64); // SHA-256 produces 64 hex chars
+      const storedHash = result.length > 0 ? result[0].keyHash : '0'.repeat(64);
       
       // Verify hash using constant-time comparison
       if (!this.constantTimeCompare(keyHash, storedHash)) {
@@ -285,9 +295,56 @@ export class ChatService {
   }
 
   /**
+   * Check global connection rate limit per IP
+   */
+  private checkConnectionRateLimit(clientIp: string): boolean {
+    const now = Date.now();
+    const limit = this.connectionRateLimits.get(clientIp);
+    
+    if (!limit) {
+      this.connectionRateLimits.set(clientIp, { count: 0, resetTime: now + this.CONNECTION_RATE_LIMIT_WINDOW_MS });
+      return true;
+    }
+
+    if (now >= limit.resetTime) {
+      limit.count = 0;
+      limit.resetTime = now + this.CONNECTION_RATE_LIMIT_WINDOW_MS;
+    }
+
+    if (limit.count >= this.MAX_CONNECTIONS_PER_IP) {
+      return false;
+    }
+
+    limit.count++;
+    return true;
+  }
+
+  /**
+   * Get client IP from WebSocket request
+   */
+  private getClientIp(req: IncomingMessage): string {
+    const forwarded = req.headers['x-forwarded-for'];
+    if (forwarded && typeof forwarded === 'string') {
+      return forwarded.split(',')[0].trim();
+    }
+    return req.socket.remoteAddress || 'unknown';
+  }
+
+  /**
    * Handle new WebSocket connection
    */
-  private async handleConnection(ws: WebSocket, isAdmin: boolean, apiKeyPrefix?: string): Promise<void> {
+  private async handleConnection(ws: WebSocket, req: IncomingMessage, isAdmin: boolean, apiKeyPrefix?: string): Promise<void> {
+    const clientIp = this.getClientIp(req);
+    if (!this.checkConnectionRateLimit(clientIp)) {
+      console.log(`⚠️ Connection rejected: Rate limit exceeded for IP ${clientIp}`);
+      this.sendToClient(ws, {
+        type: 'error',
+        message: `Too many connections from your IP. Maximum ${this.MAX_CONNECTIONS_PER_IP} connections per minute.`
+      });
+      ws.close(1008, 'Connection rate limit exceeded');
+      return;
+    }
+
     this.clients.add(ws);
     this.nicknames.set(ws, this.DEFAULT_NICKNAME);
     this.messageRateLimits.set(ws, { count: 0, resetTime: Date.now() + this.RATE_LIMIT_WINDOW_MS });
@@ -362,10 +419,10 @@ export class ChatService {
       }
     });
 
-    ws.on('close', () => this.handleDisconnection(ws));
+    ws.on('close', () => this.handleDisconnection(ws, req));
     ws.on('error', (error) => {
       console.error('WebSocket error:', error);
-      this.handleDisconnection(ws);
+      this.handleDisconnection(ws, req);
     });
   }
 
@@ -941,7 +998,7 @@ export class ChatService {
   /**
    * Handle client disconnection
    */
-  private handleDisconnection(ws: WebSocket): void {
+  private handleDisconnection(ws: WebSocket, req?: IncomingMessage): void {
     const wasAdmin = this.adminClients.has(ws);
     const apiKeyPrefix = this.apiKeyConnections.get(ws);
     

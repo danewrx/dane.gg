@@ -40,18 +40,21 @@ async function validateApiKey(key: string): Promise<{ id: string; username: stri
     const keyHash = hashApiKey(key);
 
     // Find the API key in the database
-    const result = await db
-      .select({
-        id: apiKeys.id,
-        name: apiKeys.name,
-        keyHash: apiKeys.keyHash,
-        isActive: apiKeys.isActive,
-        expiresAt: apiKeys.expiresAt,
-        permissions: apiKeys.permissions
-      })
-      .from(apiKeys)
-      .where(eq(apiKeys.keyPrefix, prefix))
-      .limit(1);
+    const [result] = await Promise.all([
+      db
+        .select({
+          id: apiKeys.id,
+          name: apiKeys.name,
+          keyHash: apiKeys.keyHash,
+          isActive: apiKeys.isActive,
+          expiresAt: apiKeys.expiresAt,
+          permissions: apiKeys.permissions
+        })
+        .from(apiKeys)
+        .where(eq(apiKeys.keyPrefix, prefix))
+        .limit(1),
+      new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 10)))
+    ]);
 
     const storedHash = result.length > 0 ? result[0].keyHash : '0'.repeat(64);
     
