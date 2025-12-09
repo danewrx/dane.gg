@@ -2,6 +2,7 @@
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { Smile } from 'lucide-svelte';
 	import { browser } from '$app/environment';
+	import { onDestroy } from 'svelte';
 
 	const dispatch = createEventDispatcher<{
 		select: { emoji: string; isCustom?: boolean; imageUrl?: string };
@@ -18,6 +19,10 @@
 
 	let customEmojis = $state<CustomEmoji[]>([]);
 	let isLoadingCustom = $state(false);
+	let pickerElement: HTMLDivElement | null = $state(null);
+	let overlayElement: HTMLDivElement | null = $state(null);
+	let originalParent: Node | null = $state(null);
+	let originalNextSibling: Node | null = $state(null);
 
 	const emojiCategories = [
 		{
@@ -222,7 +227,7 @@
 		}
 	];
 
-	let selectedCategory = $state('Smileys');
+	let selectedCategory = $state('All');
 
 	// Load custom emojis from API
 	async function loadCustomEmojis() {
@@ -273,6 +278,87 @@
 		}
 	});
 
+	// Function to position picker
+	function positionPicker() {
+		if (!browser || !pickerElement || !isOpen) return;
+		
+		let button = document.querySelector('.emoji-button') as HTMLElement;
+		if (!button && originalParent) {
+			button = (originalParent as Element).querySelector('.emoji-button') as HTMLElement;
+		}
+
+		if (!button) {
+			const chatContainer = document.querySelector('.chat-container, .chat-input-container');
+			if (chatContainer) {
+				button = chatContainer.querySelector('.emoji-button') as HTMLElement;
+			}
+		}
+		
+		if (button) {
+			const rect = button.getBoundingClientRect();
+			void pickerElement.offsetHeight;
+			const pickerWidth = pickerElement.offsetWidth || 360;
+			const pickerHeight = pickerElement.offsetHeight || 320;
+			const spaceAbove = rect.top;
+			const spaceBelow = window.innerHeight - rect.bottom;
+			
+			let leftPos = rect.right - pickerWidth;
+			
+			if (leftPos < 10) {
+				leftPos = 10;
+			}
+			
+			if (leftPos + pickerWidth > window.innerWidth - 10) {
+				leftPos = window.innerWidth - pickerWidth - 10;
+			}
+			
+			if (spaceAbove >= pickerHeight + 10) {
+				pickerElement.style.top = 'auto';
+				pickerElement.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+				pickerElement.style.left = `${leftPos}px`;
+				pickerElement.style.right = 'auto';
+				pickerElement.style.transform = 'none';
+			} else if (spaceBelow >= pickerHeight + 10) {
+				pickerElement.style.bottom = 'auto';
+				pickerElement.style.top = `${rect.bottom + 4}px`;
+				pickerElement.style.left = `${leftPos}px`;
+				pickerElement.style.right = 'auto';
+				pickerElement.style.transform = 'none';
+			} else {
+
+				pickerElement.style.top = '50%';
+				pickerElement.style.bottom = 'auto';
+				pickerElement.style.left = `${Math.max(10, Math.min(leftPos, window.innerWidth - pickerWidth - 10))}px`;
+				pickerElement.style.right = 'auto';
+				pickerElement.style.transform = 'translateY(-50%)';
+			}
+		}
+	}
+
+	// Position picker relative to button when opened
+	$effect(() => {
+		if (isOpen && browser && pickerElement && pickerElement.parentNode === document.body) {
+			const handleResize = () => {
+				if (isOpen && pickerElement) {
+					positionPicker();
+				}
+			};
+			
+			window.addEventListener('resize', handleResize);
+			
+			return () => {
+				window.removeEventListener('resize', handleResize);
+			};
+		} else if (!isOpen && pickerElement) {
+			pickerElement.style.top = '';
+			pickerElement.style.bottom = '';
+			pickerElement.style.left = '';
+			pickerElement.style.right = '';
+			pickerElement.style.transform = '';
+			pickerElement.style.width = '';
+		}
+	});
+
 	$effect(() => {
 		if (reloadTrigger > 0) {
 			loadCustomEmojis();
@@ -282,11 +368,60 @@
 	onMount(() => {
 		loadCustomEmojis();
 	});
+	
+	onDestroy(() => {
+		if (pickerElement && originalParent) {
+			if (pickerElement.parentNode === document.body) {
+				document.body.removeChild(pickerElement);
+			}
+		}
+		if (overlayElement && originalParent) {
+			if (overlayElement.parentNode === document.body) {
+				document.body.removeChild(overlayElement);
+			}
+		}
+	});
+	
+	$effect(() => {
+		if (isOpen && browser && pickerElement && overlayElement) {
+			if (!originalParent && pickerElement.parentNode && pickerElement.parentNode !== document.body) {
+				originalParent = pickerElement.parentNode;
+				originalNextSibling = pickerElement.nextSibling;
+			}
+			
+			setTimeout(() => {
+				if (pickerElement && overlayElement) {
+					if (overlayElement.parentNode !== document.body) {
+						document.body.appendChild(overlayElement);
+					}
+					
+					if (pickerElement.parentNode !== document.body) {
+						document.body.appendChild(pickerElement);
+					}
+					
+					positionPicker();
+				}
+			}, 0);
+		} else if (!isOpen && pickerElement && overlayElement) {
+			setTimeout(() => {
+				if (pickerElement && overlayElement) {
+					if (pickerElement.parentNode === document.body) {
+						document.body.removeChild(pickerElement);
+					}
+					if (overlayElement.parentNode === document.body) {
+						document.body.removeChild(overlayElement);
+					}
+					originalParent = null;
+					originalNextSibling = null;
+				}
+			}, 0);
+		}
+	});
 </script>
 
 {#if isOpen}
-	<div class="emoji-picker-overlay" onclick={handleOverlayClick} role="button" tabindex="-1"></div>
-	<div class="emoji-picker" onclick={(e) => e.stopPropagation()}>
+	<div class="emoji-picker-overlay" bind:this={overlayElement} onclick={handleOverlayClick} role="button" tabindex="-1"></div>
+	<div class="emoji-picker" bind:this={pickerElement} onclick={(e) => e.stopPropagation()}>
 		<div class="win95-titlebar">
 			<div class="titlebar-icon">☺</div>
 			<div class="titlebar-text">Character Map</div>
@@ -305,6 +440,14 @@
 
 		<!-- Category Tabs -->
 		<div class="win95-tabs">
+			<button
+				class="win95-tab"
+				class:active={selectedCategory === 'All'}
+				onclick={() => selectedCategory = 'All'}
+				type="button"
+			>
+				All
+			</button>
 			{#each emojiCategories as category}
 				<button
 					class="win95-tab"
@@ -329,8 +472,45 @@
 
 		<div class="win95-content">
 			<div class="win95-grid-container">
-				<div class="win95-grid">
-					{#if selectedCategory === 'Custom'}
+				{#if selectedCategory === 'All'}
+					<div class="emoji-category-section">
+						{#if customEmojis.length > 0}
+							<div class="category-heading">Custom</div>
+							<div class="win95-grid">
+								{#each customEmojis as customEmoji}
+									<button
+										class="win95-char-button"
+										onclick={() => selectEmoji('', true, customEmoji.imageUrl, customEmoji.name)}
+										type="button"
+										title={`:${customEmoji.name}:`}
+									>
+										<img 
+											src={customEmoji.imageUrl} 
+											alt={customEmoji.name}
+											loading="lazy"
+										/>
+									</button>
+								{/each}
+							</div>
+						{/if}
+						{#each emojiCategories as category}
+							<div class="category-heading">{category.name}</div>
+							<div class="win95-grid">
+								{#each category.emojis as emojiData}
+									<button
+										class="win95-char-button"
+										onclick={() => selectEmoji(emojiData)}
+										type="button"
+										title={`:${emojiData.name}:`}
+									>
+										{emojiData.emoji}
+									</button>
+								{/each}
+							</div>
+						{/each}
+					</div>
+				{:else if selectedCategory === 'Custom'}
+					<div class="win95-grid">
 						{#each customEmojis as customEmoji}
 							<button
 								class="win95-char-button"
@@ -345,7 +525,9 @@
 								/>
 							</button>
 						{/each}
-					{:else}
+					</div>
+				{:else}
+					<div class="win95-grid">
 						{#each emojiCategories.find(c => c.name === selectedCategory)?.emojis || [] as emojiData}
 							<button
 								class="win95-char-button"
@@ -356,8 +538,8 @@
 								{emojiData.emoji}
 							</button>
 						{/each}
-					{/if}
-				</div>
+					</div>
+				{/if}
 			</div>
 		</div>
 
@@ -389,16 +571,18 @@
 	}
 
 	.emoji-picker {
-		position: absolute;
-		bottom: 100%;
-		right: 0;
-		margin-bottom: 4px;
+		position: fixed;
+		bottom: auto;
+		top: auto;
+		right: auto;
+		left: auto;
 		width: 360px;
 		max-width: calc(100vw - 20px);
-		max-height: 500px;
+		height: 320px;
+		max-height: calc(100vh - 40px);
 		display: flex;
 		flex-direction: column;
-		z-index: 1000;
+		z-index: 10000;
 		overflow: hidden;
 		font-family: 'MS Sans Serif', 'Segoe UI', sans-serif;
 		font-size: 12px;
@@ -409,13 +593,24 @@
 			inset 1px 1px 0 #666666,
 			inset -2px -2px 0 #1a1a1a,
 			inset 2px 2px 0 #555555;
+		box-sizing: border-box;
+	}
+
+	@media (max-width: 768px) {
+		.emoji-picker {
+			width: calc(100vw - 20px);
+			max-width: calc(100vw - 20px);
+			height: 50vh;
+			max-height: calc(100vh - 100px);
+		}
 	}
 
 	@media (max-width: 480px) {
 		.emoji-picker {
-			width: calc(100vw - 20px);
-			right: 10px;
-			max-height: 70vh;
+			width: calc(100vw - 16px);
+			max-width: calc(100vw - 16px);
+			height: 60vh;
+			max-height: calc(100vh - 80px);
 		}
 	}
 
@@ -612,6 +807,25 @@
 	.win95-grid-container::-webkit-scrollbar-corner {
 		background: #2a2a2a;
 		border: 1px inset #2a2a2a;
+	}
+
+	.emoji-category-section {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	.category-heading {
+		color: #e0e0e0;
+		font-size: 13px;
+		font-weight: bold;
+		padding: 4px 0;
+		border-bottom: 1px solid #3a3a3a;
+		margin-top: 8px;
+	}
+
+	.category-heading:first-child {
+		margin-top: 0;
 	}
 
 	.win95-grid {
