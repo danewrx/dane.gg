@@ -983,6 +983,27 @@ export class ChatService {
   }
 
   /**
+   * Broadcast emoji update to all clients
+   */
+  broadcastEmojiUpdate(): void {
+    const message = JSON.stringify({
+      type: 'emojiUpdate'
+    });
+
+    console.log('Broadcasting emoji update to all clients');
+
+    this.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        try {
+          client.send(message);
+        } catch (error) {
+          console.error('Error broadcasting emoji update:', error);
+        }
+      }
+    });
+  }
+
+  /**
    * Send message to specific client
    */
   private sendToClient(ws: WebSocket, data: any): void {

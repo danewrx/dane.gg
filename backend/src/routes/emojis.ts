@@ -6,6 +6,7 @@ import { requireSession, requireAdmin } from '../middleware/auth';
 import { db } from '../db';
 import { emojis } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
+import { chatService } from '../services/chatService';
 
 const router = Router();
 
@@ -141,6 +142,8 @@ router.post('/', requireSession, requireAdmin, emojiUpload.single('file'), async
       createdBy: req.user.id
     }).returning();
 
+    chatService.broadcastEmojiUpdate();
+
     res.json({
       success: true,
       data: newEmoji
@@ -192,6 +195,8 @@ router.delete('/:id', requireSession, requireAdmin, async (req: Request, res: Re
     }
 
     await db.delete(emojis).where(eq(emojis.id, id));
+
+    chatService.broadcastEmojiUpdate();
 
     res.json({
       success: true,

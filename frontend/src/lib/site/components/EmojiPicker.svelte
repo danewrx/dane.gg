@@ -7,7 +7,7 @@
 		select: { emoji: string; isCustom?: boolean; imageUrl?: string };
 	}>();
 
-	let { isOpen = $bindable(false) } = $props();
+	let { isOpen = $bindable(false), reloadTrigger = 0 } = $props();
 
 	interface CustomEmoji {
 		id: string;
@@ -269,6 +269,12 @@
 
 	$effect(() => {
 		if (isOpen && customEmojis.length === 0 && !isLoadingCustom) {
+			loadCustomEmojis();
+		}
+	});
+
+	$effect(() => {
+		if (reloadTrigger > 0) {
 			loadCustomEmojis();
 		}
 	});

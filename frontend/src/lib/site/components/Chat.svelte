@@ -52,7 +52,7 @@
 	}
 
 	interface WebSocketMessage {
-		type: 'message' | 'system' | 'error' | 'history' | 'userCount' | 'delete' | 'adminConfig';
+		type: 'message' | 'system' | 'error' | 'history' | 'userCount' | 'delete' | 'adminConfig' | 'emojiUpdate';
 		data?: ChatMessage | ChatMessage[] | AdminConfigData;
 		message?: string;
 		count?: number;
@@ -76,6 +76,7 @@
 	let isDestroyed = $state(false);
 	let hasDisconnectedMessage = $state(false);
 	let showEmojiPicker = $state(false);
+	let emojiPickerReloadTrigger = $state(0);
 	let chatInput: HTMLInputElement | null = null;
 	let emojiAutocompleteOpen = $state(false);
 	let emojiAutocompleteMatches = $state<Array<{ name: string; emoji: string; isCustom: boolean; imageUrl?: string }>>([]);
@@ -334,6 +335,10 @@
 							if ('isSystem' in msg) return true;
 							return (msg as ChatMessage).id !== data.messageId;
 						});
+					} else if (data.type === 'emojiUpdate') {
+						// Reload emojis when update is broadcast
+						loadAllEmojis();
+						emojiPickerReloadTrigger++;
 					}
 					// adminConfig messages are received but we don't need to track them
 					// since the color is now stored with each message
@@ -821,6 +826,7 @@
 					</button>
 					<EmojiPicker 
 						bind:isOpen={showEmojiPicker}
+						reloadTrigger={emojiPickerReloadTrigger}
 						on:select={handleEmojiSelect}
 					/>
 				</div>
