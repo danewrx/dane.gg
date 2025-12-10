@@ -1052,6 +1052,8 @@
 	.input-container {
 		position: relative;
 		flex: 1;
+		min-width: 0;
+		overflow: hidden;
 	}
 
 	.emoji-autocomplete {
@@ -1138,7 +1140,7 @@
 	}
 
 	.chat-input {
-		flex: 1;
+		width: 100%;
 		padding: 0;
 		background: transparent;
 		border: none;
@@ -1149,8 +1151,7 @@
 		height: auto;
 		outline: none;
 		box-sizing: border-box;
-		display: flex;
-		align-items: center;
+		min-width: 0;
 	}
 
 	.chat-input:disabled {
