@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
-	import { MessageSquare, Users, Send, RefreshCw, Trash2, Pencil, Check, X, Loader2, Upload, Image as ImageIcon, Trash } from 'lucide-svelte';
+	import { MessageSquare, Users, Send, RefreshCw, Trash2, Pencil, Check, X, Loader2, Upload, Image as ImageIcon, Trash, Smile } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
+	import AdminEmojiPicker from '$lib/admin/components/AdminEmojiPicker.svelte';
 
 	interface ChatMessage {
 		id?: string;
@@ -27,7 +28,7 @@
 	}
 
 	interface WebSocketMessage {
-		type: 'message' | 'system' | 'error' | 'history' | 'userCount' | 'delete' | 'adminConfig';
+		type: 'message' | 'system' | 'error' | 'history' | 'userCount' | 'delete' | 'adminConfig' | 'emojiUpdate';
 		data?: ChatMessage | ChatMessage[] | AdminConfigData;
 		message?: string;
 		count?: number;
@@ -66,6 +67,13 @@
 	let isUploadingEmoji = $state(false);
 	let customEmojis = $state<Array<{ id: string; name: string; imageUrl: string }>>([]);
 	let isLoadingEmojis = $state(false);
+	let allEmojis = $state<Array<{ name: string; emoji: string; isCustom: boolean; imageUrl?: string }>>([]);
+	
+	// Emoji picker state
+	let showEmojiPicker = $state(false);
+	let emojiPickerReloadTrigger = $state(0);
+	let emojiButtonRef: HTMLButtonElement | null = $state(null);
+	let messageInput: HTMLInputElement | null = null;
 	
 	// Save admin nickname via WebSocket
 	function saveAdminNickname(nickname: string): void {
@@ -308,6 +316,10 @@
 						if (config.color) {
 							adminColor = config.color;
 						}
+					} else if (data.type === 'emojiUpdate') {
+						// Reload emojis when update is broadcast
+						loadCustomEmojis();
+						emojiPickerReloadTrigger++;
 					}
 				} catch (error) {
 					console.error('Error parsing WebSocket message:', error);
@@ -358,6 +370,40 @@
 			sendMessage();
 		}
 	}
+	
+	// Handle emoji selection
+	function handleEmojiSelect(event: CustomEvent<{ emoji: string; isCustom?: boolean; imageUrl?: string }>) {
+		const { emoji } = event.detail;
+		inputValue = (inputValue || '') + emoji;
+		showEmojiPicker = false;
+		if (messageInput) {
+			messageInput.focus();
+		}
+	}
+	
+	function toggleEmojiPicker(event?: Event) {
+		if (event) {
+			event.stopPropagation();
+		}
+		showEmojiPicker = !showEmojiPicker;
+	}
+	
+	// Close emoji picker when clicking outside focus window
+	$effect(() => {
+		if (showEmojiPicker && browser) {
+			const handleClickOutside = (event: MouseEvent) => {
+				const target = event.target as HTMLElement;
+				if (!target.closest('.emoji-picker') && !target.closest('.emoji-btn')) {
+					showEmojiPicker = false;
+				}
+			};
+			
+			document.addEventListener('click', handleClickOutside);
+			return () => {
+				document.removeEventListener('click', handleClickOutside);
+			};
+		}
+	});
 
 	// Load custom emojis
 	async function loadCustomEmojis() {
@@ -378,6 +424,193 @@
 		} finally {
 			isLoadingEmojis = false;
 		}
+		
+		loadAllEmojis();
+	}
+	
+	function loadAllEmojis() {
+		if (!browser) return;
+		
+		const defaultEmojis = [
+			// Smileys
+			{ name: 'smile', emoji: '😀', isCustom: false },
+			{ name: 'grin', emoji: '😃', isCustom: false },
+			{ name: 'smile_big', emoji: '😄', isCustom: false },
+			{ name: 'grin_wide', emoji: '😁', isCustom: false },
+			{ name: 'laugh', emoji: '😆', isCustom: false },
+			{ name: 'sweat_smile', emoji: '😅', isCustom: false },
+			{ name: 'rofl', emoji: '🤣', isCustom: false },
+			{ name: 'joy', emoji: '😂', isCustom: false },
+			{ name: 'slight_smile', emoji: '🙂', isCustom: false },
+			{ name: 'upside_down', emoji: '🙃', isCustom: false },
+			{ name: 'wink', emoji: '😉', isCustom: false },
+			{ name: 'blush', emoji: '😊', isCustom: false },
+			{ name: 'innocent', emoji: '😇', isCustom: false },
+			{ name: 'love_eyes', emoji: '🥰', isCustom: false },
+			{ name: 'heart_eyes', emoji: '😍', isCustom: false },
+			{ name: 'star_eyes', emoji: '🤩', isCustom: false },
+			{ name: 'kiss', emoji: '😘', isCustom: false },
+			{ name: 'kiss_light', emoji: '😗', isCustom: false },
+			{ name: 'kiss_blush', emoji: '😚', isCustom: false },
+			{ name: 'kiss_smile', emoji: '😙', isCustom: false },
+			// Hearts
+			{ name: 'heart', emoji: '❤️', isCustom: false },
+			{ name: 'orange_heart', emoji: '🧡', isCustom: false },
+			{ name: 'yellow_heart', emoji: '💛', isCustom: false },
+			{ name: 'green_heart', emoji: '💚', isCustom: false },
+			{ name: 'blue_heart', emoji: '💙', isCustom: false },
+			{ name: 'purple_heart', emoji: '💜', isCustom: false },
+			{ name: 'black_heart', emoji: '🖤', isCustom: false },
+			{ name: 'white_heart', emoji: '🤍', isCustom: false },
+			{ name: 'brown_heart', emoji: '🤎', isCustom: false },
+			{ name: 'broken_heart', emoji: '💔', isCustom: false },
+			{ name: 'heart_fire', emoji: '❤️‍🔥', isCustom: false },
+			{ name: 'heart_bandage', emoji: '❤️‍🩹', isCustom: false },
+			{ name: 'two_hearts', emoji: '💕', isCustom: false },
+			{ name: 'revolving_hearts', emoji: '💞', isCustom: false },
+			{ name: 'beating_heart', emoji: '💓', isCustom: false },
+			{ name: 'growing_heart', emoji: '💗', isCustom: false },
+			{ name: 'sparkling_heart', emoji: '💖', isCustom: false },
+			{ name: 'cupid', emoji: '💘', isCustom: false },
+			{ name: 'gift_heart', emoji: '💝', isCustom: false },
+			{ name: 'heart_decoration', emoji: '💟', isCustom: false },
+			// Gestures
+			{ name: 'thumbsup', emoji: '👍', isCustom: false },
+			{ name: 'thumbsdown', emoji: '👎', isCustom: false },
+			{ name: 'ok_hand', emoji: '👌', isCustom: false },
+			{ name: 'peace', emoji: '✌️', isCustom: false },
+			{ name: 'crossed_fingers', emoji: '🤞', isCustom: false },
+			{ name: 'love_you', emoji: '🤟', isCustom: false },
+			{ name: 'rock_on', emoji: '🤘', isCustom: false },
+			{ name: 'call_me', emoji: '🤙', isCustom: false },
+			{ name: 'point_left', emoji: '👈', isCustom: false },
+			{ name: 'point_right', emoji: '👉', isCustom: false },
+			{ name: 'point_up', emoji: '👆', isCustom: false },
+			{ name: 'point_down', emoji: '👇', isCustom: false },
+			{ name: 'point_up_one', emoji: '☝️', isCustom: false },
+			{ name: 'clap', emoji: '👏', isCustom: false },
+			{ name: 'raised_hands', emoji: '🙌', isCustom: false },
+			{ name: 'open_hands', emoji: '👐', isCustom: false },
+			{ name: 'palms_up', emoji: '🤲', isCustom: false },
+			{ name: 'handshake', emoji: '🤝', isCustom: false },
+			{ name: 'pray', emoji: '🙏', isCustom: false },
+			{ name: 'writing', emoji: '✍️', isCustom: false },
+			// Reactions
+			{ name: 'fire', emoji: '🔥', isCustom: false },
+			{ name: 'hundred', emoji: '💯', isCustom: false },
+			{ name: 'star', emoji: '⭐', isCustom: false },
+			{ name: 'sparkles', emoji: '✨', isCustom: false },
+			{ name: 'star2', emoji: '🌟', isCustom: false },
+			{ name: 'dizzy', emoji: '💫', isCustom: false },
+			{ name: 'zap', emoji: '⚡', isCustom: false },
+			{ name: 'boom', emoji: '💥', isCustom: false },
+			{ name: 'anger', emoji: '💢', isCustom: false },
+			{ name: 'sweat_drops', emoji: '💦', isCustom: false },
+			{ name: 'dash', emoji: '💨', isCustom: false },
+			{ name: 'party', emoji: '🎉', isCustom: false },
+			{ name: 'confetti', emoji: '🎊', isCustom: false },
+			{ name: 'balloon', emoji: '🎈', isCustom: false },
+			{ name: 'gift', emoji: '🎁', isCustom: false },
+			{ name: 'trophy', emoji: '🏆', isCustom: false },
+			{ name: 'first_place', emoji: '🥇', isCustom: false },
+			{ name: 'second_place', emoji: '🥈', isCustom: false },
+			{ name: 'third_place', emoji: '🥉', isCustom: false },
+			{ name: 'medal', emoji: '🎖️', isCustom: false },
+			// Animals
+			{ name: 'dog', emoji: '🐶', isCustom: false },
+			{ name: 'cat', emoji: '🐱', isCustom: false },
+			{ name: 'mouse', emoji: '🐭', isCustom: false },
+			{ name: 'hamster', emoji: '🐹', isCustom: false },
+			{ name: 'rabbit', emoji: '🐰', isCustom: false },
+			{ name: 'fox', emoji: '🦊', isCustom: false },
+			{ name: 'bear', emoji: '🐻', isCustom: false },
+			{ name: 'panda', emoji: '🐼', isCustom: false },
+			{ name: 'koala', emoji: '🐨', isCustom: false },
+			{ name: 'tiger', emoji: '🐯', isCustom: false },
+			{ name: 'lion', emoji: '🦁', isCustom: false },
+			{ name: 'cow', emoji: '🐮', isCustom: false },
+			{ name: 'pig', emoji: '🐷', isCustom: false },
+			{ name: 'frog', emoji: '🐸', isCustom: false },
+			{ name: 'monkey', emoji: '🐵', isCustom: false },
+			{ name: 'chicken', emoji: '🐔', isCustom: false },
+			{ name: 'penguin', emoji: '🐧', isCustom: false },
+			{ name: 'bird', emoji: '🐦', isCustom: false },
+			{ name: 'baby_chick', emoji: '🐤', isCustom: false },
+			{ name: 'eagle', emoji: '🦅', isCustom: false },
+			// Food
+			{ name: 'apple', emoji: '🍎', isCustom: false },
+			{ name: 'banana', emoji: '🍌', isCustom: false },
+			{ name: 'grapes', emoji: '🍇', isCustom: false },
+			{ name: 'strawberry', emoji: '🍓', isCustom: false },
+			{ name: 'peach', emoji: '🍑', isCustom: false },
+			{ name: 'cherries', emoji: '🍒', isCustom: false },
+			{ name: 'pizza', emoji: '🍕', isCustom: false },
+			{ name: 'hamburger', emoji: '🍔', isCustom: false },
+			{ name: 'fries', emoji: '🍟', isCustom: false },
+			{ name: 'hotdog', emoji: '🌭', isCustom: false },
+			{ name: 'popcorn', emoji: '🍿', isCustom: false },
+			{ name: 'doughnut', emoji: '🍩', isCustom: false },
+			{ name: 'cookie', emoji: '🍪', isCustom: false },
+			{ name: 'birthday', emoji: '🎂', isCustom: false },
+			{ name: 'cake', emoji: '🍰', isCustom: false },
+			{ name: 'cupcake', emoji: '🧁', isCustom: false },
+			{ name: 'chocolate', emoji: '🍫', isCustom: false },
+			{ name: 'candy', emoji: '🍬', isCustom: false },
+			{ name: 'lollipop', emoji: '🍭', isCustom: false },
+			{ name: 'custard', emoji: '🍮', isCustom: false },
+			// Objects
+			{ name: 'computer', emoji: '💻', isCustom: false },
+			{ name: 'iphone', emoji: '📱', isCustom: false },
+			{ name: 'watch', emoji: '⌚', isCustom: false },
+			{ name: 'desktop', emoji: '🖥️', isCustom: false },
+			{ name: 'printer', emoji: '🖨️', isCustom: false },
+			{ name: 'keyboard', emoji: '⌨️', isCustom: false },
+			{ name: 'mouse', emoji: '🖱️', isCustom: false },
+			{ name: 'trackball', emoji: '🖲️', isCustom: false },
+			{ name: 'joystick', emoji: '🕹️', isCustom: false },
+			{ name: 'clamp', emoji: '🗜️', isCustom: false },
+			{ name: 'floppy_disk', emoji: '💾', isCustom: false },
+			{ name: 'cd', emoji: '💿', isCustom: false },
+			{ name: 'dvd', emoji: '📀', isCustom: false },
+			{ name: 'vhs', emoji: '📼', isCustom: false },
+			{ name: 'camera', emoji: '📷', isCustom: false },
+			{ name: 'camera_flash', emoji: '📸', isCustom: false },
+			{ name: 'video_camera', emoji: '📹', isCustom: false },
+			{ name: 'movie_camera', emoji: '🎥', isCustom: false },
+			{ name: 'tv', emoji: '📺', isCustom: false },
+			{ name: 'radio', emoji: '📻', isCustom: false },
+			// Symbols
+			{ name: 'check', emoji: '✅', isCustom: false },
+			{ name: 'x', emoji: '❌', isCustom: false },
+			{ name: 'o', emoji: '⭕', isCustom: false },
+			{ name: 'question', emoji: '❓', isCustom: false },
+			{ name: 'question_white', emoji: '❔', isCustom: false },
+			{ name: 'exclamation', emoji: '❗', isCustom: false },
+			{ name: 'exclamation_white', emoji: '❕', isCustom: false },
+			{ name: 'speech_balloon', emoji: '💬', isCustom: false },
+			{ name: 'thought_balloon', emoji: '💭', isCustom: false },
+			{ name: 'anger_balloon', emoji: '🗯️', isCustom: false },
+			{ name: 'spades', emoji: '♠️', isCustom: false },
+			{ name: 'hearts', emoji: '♥️', isCustom: false },
+			{ name: 'diamonds', emoji: '♦️', isCustom: false },
+			{ name: 'clubs', emoji: '♣️', isCustom: false },
+			{ name: 'joker', emoji: '🃏', isCustom: false },
+			{ name: 'mahjong', emoji: '🀄', isCustom: false },
+			{ name: 'flower_playing_cards', emoji: '🎴', isCustom: false },
+			{ name: 'performing_arts', emoji: '🎭', isCustom: false },
+			{ name: 'frame_photo', emoji: '🖼️', isCustom: false },
+			{ name: 'art', emoji: '🎨', isCustom: false },
+		];
+		
+		// Add custom emojis
+		const customEmojiList = customEmojis.map(e => ({
+			name: e.name,
+			emoji: `:${e.name}:`,
+			isCustom: true,
+			imageUrl: e.imageUrl
+		}));
+		
+		allEmojis = [...defaultEmojis, ...customEmojiList];
 	}
 
 	// Handle emoji file selection
@@ -497,17 +730,15 @@
 			.replace(/"/g, '&quot;')
 			.replace(/'/g, '&#039;');
 		
-		// Create emoji map from custom emojis
-		const emojiMap = new Map<string, { imageUrl: string; name: string }>();
-		customEmojis.forEach(e => {
-			emojiMap.set(e.name.toLowerCase(), { imageUrl: e.imageUrl, name: e.name });
-		});
-		
 		// Replace :emojiname: with emoji images or characters
 		html = html.replace(/:([a-zA-Z0-9_-]+):/g, (match, name) => {
-			const emoji = emojiMap.get(name.toLowerCase());
+			const emoji = allEmojis.find(e => e.name.toLowerCase() === name.toLowerCase());
 			if (emoji) {
-				return `<img src="${emoji.imageUrl}" alt=":${emoji.name}:" class="custom-emoji-inline" title=":${emoji.name}:" style="width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">`;
+				if (emoji.isCustom && emoji.imageUrl) {
+					return `<img src="${emoji.imageUrl}" alt=":${emoji.name}:" class="custom-emoji-inline" title=":${emoji.name}:" style="width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">`;
+				} else {
+					return emoji.emoji;
+				}
 			}
 			return match;
 		});
@@ -665,11 +896,22 @@
 				</div>
 
 				<div class="input-container">
+					<button 
+						class="emoji-btn"
+						bind:this={emojiButtonRef}
+						onclick={(e) => toggleEmojiPicker(e)}
+						type="button"
+						disabled={!isConnected}
+						title="Add emoji"
+					>
+						<Smile size={18} />
+					</button>
 					<input
 						type="text"
 						class="message-input"
 						placeholder={isConnected ? "Type a message..." : "Connecting..."}
 						bind:value={inputValue}
+						bind:this={messageInput}
 						onkeydown={handleKeyDown}
 						disabled={!isConnected}
 					/>
@@ -681,6 +923,15 @@
 						<Send size={18} />
 					</button>
 				</div>
+				
+				{#if showEmojiPicker}
+					<AdminEmojiPicker 
+						bind:isOpen={showEmojiPicker}
+						triggerButton={emojiButtonRef}
+						reloadTrigger={emojiPickerReloadTrigger}
+						on:select={handleEmojiSelect}
+					/>
+				{/if}
 			</div>
 		</section>
 
@@ -1869,11 +2120,50 @@
 		padding: 16px;
 		border-top: 1px solid #404040;
 		background: #252525;
+		align-items: center;
 	}
 
 	:global(html:not(.dark)) .input-container {
 		border-top-color: #e5e7eb;
 		background: #f9fafb;
+	}
+
+	.emoji-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		background: #3a3a3a;
+		border: 1px solid #404040;
+		border-radius: 6px;
+		color: #a1a1aa;
+		cursor: pointer;
+		transition: all 0.2s;
+		flex-shrink: 0;
+	}
+
+	.emoji-btn:hover:not(:disabled) {
+		background: #404040;
+		border-color: #505050;
+		color: #ffffff;
+	}
+
+	.emoji-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	:global(html:not(.dark)) .emoji-btn {
+		background: #ffffff;
+		border-color: #d1d5db;
+		color: #6b7280;
+	}
+
+	:global(html:not(.dark)) .emoji-btn:hover:not(:disabled) {
+		background: #f9fafb;
+		border-color: #9ca3af;
+		color: #1f2937;
 	}
 
 	.message-input {
