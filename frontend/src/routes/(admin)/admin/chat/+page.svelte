@@ -1124,7 +1124,8 @@
 		display: flex;
 		flex-direction: column;
 		gap: 24px;
-		min-height: calc(100vh - 120px);
+		height: calc(100vh - 120px);
+		max-height: calc(100vh - 120px);
 		max-width: 1400px;
 		margin: 0 auto;
 		width: 100%;
@@ -1133,12 +1134,21 @@
 		overflow-x: hidden;
 	}
 
+	@media (max-width: 768px) {
+		.chat-page {
+			height: auto;
+			min-height: calc(100vh - 180px);
+			max-height: none;
+		}
+	}
+
 	.header-section {
 		flex-shrink: 0;
 	}
 
 	.content-columns {
-		display: flex;
+		display: grid;
+		grid-template-columns: 3fr 2fr;
 		gap: 24px;
 		flex: 1;
 		min-height: 0;
@@ -1247,18 +1257,16 @@
 	}
 
 	.chat-section {
-		flex: 0 0 60%;
-		min-height: 0;
 		display: flex;
 		flex-direction: column;
+		min-height: 0;
 	}
 
 	.right-column {
-		flex: 0 0 40%;
-		min-height: 0;
 		display: flex;
 		flex-direction: column;
 		gap: 16px;
+		min-height: 0;
 	}
 
 	.identity-section {
@@ -1879,6 +1887,8 @@
 		border: 1px solid #404040;
 		border-radius: 8px;
 		overflow: hidden;
+		min-height: 0;
+		max-height: 100%;
 	}
 
 	:global(html:not(.dark)) .chat-container {
@@ -2253,29 +2263,19 @@
 
 	@media (max-width: 768px) {
 		.chat-page {
-			min-height: calc(100vh - 180px);
 			gap: 16px;
 			padding: 0 12px;
 			overflow-x: hidden;
 		}
 
 		.content-columns {
-			flex-direction: column;
+			grid-template-columns: 1fr;
 			overflow: visible;
 			min-height: auto;
 		}
 
 		.chat-section {
-			flex: 1 1 auto;
 			min-height: 400px;
-			width: 100%;
-			max-width: 100%;
-		}
-
-		.right-column {
-			flex: 1 1 auto;
-			width: 100%;
-			max-width: 100%;
 		}
 
 		.chat-container {
