@@ -1124,10 +1124,13 @@
 		display: flex;
 		flex-direction: column;
 		gap: 24px;
-		height: calc(100vh - 120px);
+		min-height: calc(100vh - 120px);
 		max-width: 1400px;
 		margin: 0 auto;
 		width: 100%;
+		padding: 0 16px;
+		box-sizing: border-box;
+		overflow-x: hidden;
 	}
 
 	.header-section {
@@ -1139,6 +1142,7 @@
 		gap: 24px;
 		flex: 1;
 		min-height: 0;
+		overflow: hidden;
 	}
 
 	.section-header {
@@ -1240,13 +1244,6 @@
 
 	.reconnect-btn:hover {
 		background: var(--accent-color-dark, #2563eb);
-	}
-
-	.content-columns {
-		display: flex;
-		gap: 24px;
-		flex: 1;
-		min-height: 0;
 	}
 
 	.chat-section {
@@ -2256,8 +2253,34 @@
 
 	@media (max-width: 768px) {
 		.chat-page {
-			height: calc(100vh - 180px);
+			min-height: calc(100vh - 180px);
 			gap: 16px;
+			padding: 0 12px;
+			overflow-x: hidden;
+		}
+
+		.content-columns {
+			flex-direction: column;
+			overflow: visible;
+			min-height: auto;
+		}
+
+		.chat-section {
+			flex: 1 1 auto;
+			min-height: 400px;
+			width: 100%;
+			max-width: 100%;
+		}
+
+		.right-column {
+			flex: 1 1 auto;
+			width: 100%;
+			max-width: 100%;
+		}
+
+		.chat-container {
+			min-height: 400px;
+			max-height: 600px;
 		}
 
 		.section-header {
@@ -2267,6 +2290,7 @@
 
 		.header-actions {
 			flex-wrap: wrap;
+			width: 100%;
 		}
 
 		.page-title {
@@ -2291,8 +2315,35 @@
 	}
 
 	@media (max-width: 480px) {
+		.chat-page {
+			padding: 0 8px;
+			gap: 12px;
+			min-height: auto;
+		}
+
+		.content-columns {
+			gap: 12px;
+		}
+
+		.chat-section {
+			min-height: 300px;
+		}
+
+		.chat-container {
+			min-height: 300px;
+			max-height: 500px;
+		}
+
 		.stats-grid {
 			grid-template-columns: 1fr;
+		}
+
+		.messages-container {
+			padding: 12px;
+		}
+
+		.input-container {
+			padding: 12px;
 		}
 	}
 </style>

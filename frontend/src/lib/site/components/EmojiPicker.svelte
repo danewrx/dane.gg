@@ -383,6 +383,7 @@
 	});
 	
 	$effect(() => {
+		if (isOpen && browser) {
 			setTimeout(() => {
 				if (!pickerElement || !overlayElement) return;
 				
