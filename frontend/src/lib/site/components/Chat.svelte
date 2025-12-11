@@ -78,6 +78,7 @@
 	let showEmojiPicker = $state(false);
 	let emojiPickerReloadTrigger = $state(0);
 	let chatInput: HTMLInputElement | null = null;
+	let chatInputDiv: HTMLDivElement | null = null;
 	let emojiAutocompleteOpen = $state(false);
 	let emojiAutocompleteMatches = $state<Array<{ name: string; emoji: string; isCustom: boolean; imageUrl?: string }>>([]);
 	let emojiAutocompleteIndex = $state(0);
@@ -85,6 +86,116 @@
 	let allEmojis = $state<Array<{ name: string; emoji: string; isCustom: boolean; imageUrl?: string }>>([]);
 	
 	let { userCount = $bindable(0) }: { userCount?: number } = $props();
+
+	function getInputText(): string {
+		if (!chatInputDiv) return inputValue;
+		
+		let text = '';
+		const walker = document.createTreeWalker(
+			chatInputDiv,
+			NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+			null
+		);
+		
+		let node;
+		while (node = walker.nextNode()) {
+			if (node.nodeType === Node.TEXT_NODE) {
+				text += node.textContent || '';
+			} else if (node.nodeType === Node.ELEMENT_NODE) {
+				const el = node as HTMLElement;
+				if (el.tagName === 'IMG' && el.classList.contains('emoji-inline')) {
+					const alt = el.getAttribute('alt') || '';
+					text += alt;
+				}
+			}
+		}
+		
+		return text;
+	}
+	
+	function getCaretPosition(): number {
+		if (!chatInputDiv) return 0;
+		
+		const selection = window.getSelection();
+		if (!selection || selection.rangeCount === 0) return 0;
+		
+		const range = selection.getRangeAt(0);
+		const preCaretRange = range.cloneRange();
+		preCaretRange.selectNodeContents(chatInputDiv);
+		preCaretRange.setEnd(range.endContainer, range.endOffset);
+		
+		let position = 0;
+		const walker = document.createTreeWalker(
+			chatInputDiv,
+			NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+			null
+		);
+		
+		let node;
+		while (node = walker.nextNode()) {
+			if (node === range.endContainer) {
+				if (node.nodeType === Node.TEXT_NODE) {
+					position += range.endOffset;
+				}
+				break;
+			}
+			
+			if (node.nodeType === Node.TEXT_NODE) {
+				position += (node.textContent || '').length;
+			} else if (node.nodeType === Node.ELEMENT_NODE) {
+				const el = node as HTMLElement;
+				if (el.tagName === 'IMG' && el.classList.contains('emoji-inline')) {
+					const alt = el.getAttribute('alt') || '';
+					position += alt.length;
+				}
+			}
+		}
+		
+		return position;
+	}
+	
+	function setCaretPosition(position: number) {
+		if (!chatInputDiv) return;
+		
+		const selection = window.getSelection();
+		if (!selection) return;
+		
+		const range = document.createRange();
+		let currentPos = 0;
+		
+		const walker = document.createTreeWalker(
+			chatInputDiv,
+			NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+			null
+		);
+		
+		let node;
+		while (node = walker.nextNode()) {
+			if (node.nodeType === Node.TEXT_NODE) {
+				const text = node.textContent || '';
+				if (currentPos + text.length >= position) {
+					range.setStart(node, position - currentPos);
+					range.setEnd(node, position - currentPos);
+					break;
+				}
+				currentPos += text.length;
+			} else if (node.nodeType === Node.ELEMENT_NODE) {
+				const el = node as HTMLElement;
+				if (el.tagName === 'IMG' && el.classList.contains('emoji-inline')) {
+					const alt = el.getAttribute('alt') || '';
+					if (currentPos + alt.length >= position) {
+						range.setStartAfter(el);
+						range.setEndAfter(el);
+						break;
+					}
+					currentPos += alt.length;
+				}
+			}
+		}
+		
+		selection.removeAllRanges();
+		selection.addRange(range);
+	}
 
 	// Format timestamp in IRC style using browser's local timezone
 	function formatTimestamp(timestamp: string): string {
@@ -211,7 +322,8 @@
 		try {
 			const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 			const host = window.location.host;
-			const wsUrl = `${protocol}//${host}/ws/chat`;
+			// Add ?public=true to explicitly mark this as a public chat connection
+			const wsUrl = `${protocol}//${host}/ws/chat?public=true`;
 			console.log('WebSocket URL (proxied through frontend):', wsUrl);
 			return wsUrl;
 		} catch (error) {
@@ -414,11 +526,14 @@
 
 	// Send message
 	function sendMessage() {
-		if (!ws || !isConnected || !inputValue.trim()) {
+		if (!ws || !isConnected) {
 			return;
 		}
 
-		const message = inputValue.trim();
+		const message = getInputText().trim();
+		if (!message) {
+			return;
+		}
 		
 		// Handle /nick command and save to localStorage
 		if (message.startsWith('/nick ')) {
@@ -432,6 +547,29 @@
 		
 		ws.send(message);
 		inputValue = '';
+		if (chatInputDiv) {
+			chatInputDiv.textContent = '';
+			chatInputDiv.classList.add('show-placeholder');
+		}
+	}
+
+	function isEmptyContentEditable(element: HTMLElement): boolean {
+		if (!element) return true;
+		const text = element.textContent?.trim() || '';
+		const images = element.querySelectorAll('img.emoji-inline');
+		return text === '' && images.length === 0;
+	}
+	
+	function handleInputFocus() {
+		if (chatInputDiv) {
+			chatInputDiv.classList.remove('show-placeholder');
+		}
+	}
+	
+	function handleInputBlur() {
+		if (chatInputDiv && isEmptyContentEditable(chatInputDiv)) {
+			chatInputDiv.classList.add('show-placeholder');
+		}
 	}
 
 	// Handle Enter key
@@ -508,21 +646,61 @@
 
 	// Handle emoji selection from picker
 	function handleEmojiSelect(event: CustomEvent<{ emoji: string; isCustom?: boolean; imageUrl?: string }>) {
-		if (!chatInput) return;
+		if (!chatInputDiv) return;
 		
-		const emojiText = event.detail.emoji;
+		const { emoji: emojiText, isCustom, imageUrl } = event.detail;
 		
-		const start = chatInput.selectionStart || 0;
-		const end = chatInput.selectionEnd || 0;
+		// Get current cursor position
+		const selection = window.getSelection();
+		if (!selection || selection.rangeCount === 0) {
+			if (isCustom && imageUrl) {
+				const img = document.createElement('img');
+				img.src = imageUrl;
+				img.alt = emojiText;
+				img.className = 'emoji-inline';
+				img.style.cssText = 'width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;';
+				chatInputDiv.appendChild(img);
+			} else {
+				const textNode = document.createTextNode(emojiText);
+				chatInputDiv.appendChild(textNode);
+			}
+		} else {
+			const range = selection.getRangeAt(0);
+			range.deleteContents();
+			
+			if (isCustom && imageUrl) {
+				// Create image element for custom emoji
+				const img = document.createElement('img');
+				img.src = imageUrl;
+				img.alt = emojiText;
+				img.className = 'emoji-inline';
+				img.style.cssText = 'width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;';
+				range.insertNode(img);
+			} else {
+				// Insert Unicode emoji
+				const textNode = document.createTextNode(emojiText);
+				range.insertNode(textNode);
+			}
+			
+			range.setStartAfter(range.endContainer);
+			range.collapse(true);
+			selection.removeAllRanges();
+			selection.addRange(range);
+		}
 		
-		// Insert emoji at cursor position
-		inputValue = inputValue.substring(0, start) + emojiText + inputValue.substring(end);
+		inputValue = getInputText();
 		
 		setTimeout(() => {
-			if (chatInput) {
-				const newPosition = start + emojiText.length;
-				chatInput.setSelectionRange(newPosition, newPosition);
-				chatInput.focus();
+			if (chatInputDiv) {
+				chatInputDiv.focus();
+				const sel = window.getSelection();
+				if (sel) {
+					const range = document.createRange();
+					range.selectNodeContents(chatInputDiv);
+					range.collapse(false);
+					sel.removeAllRanges();
+					sel.addRange(range);
+				}
 			}
 		}, 0);
 		
@@ -531,13 +709,82 @@
 
 	// Handle autocomplete for :emojiname: syntax
 	function handleInputChange() {
-		if (!chatInput) return;
+		if (!chatInputDiv) return;
 		
-		const text = inputValue;
-		const cursorPos = chatInput.selectionStart || 0;
+		const text = getInputText();
+		const cursorPos = getCaretPosition();
+		inputValue = text;
 		
-		// Find the :emojiname: pattern before cursor
+		if (isEmptyContentEditable(chatInputDiv)) {
+			chatInputDiv.classList.add('show-placeholder');
+		} else {
+			chatInputDiv.classList.remove('show-placeholder');
+		}
+		
 		const beforeCursor = text.substring(0, cursorPos);
+		const afterCursor = text.substring(cursorPos);
+		
+		const completeMatch = beforeCursor.match(/:([a-zA-Z0-9_-]+):$/);
+		
+		if (completeMatch && completeMatch[1].length > 0) {
+			const emojiName = completeMatch[1].toLowerCase();
+			const emoji = allEmojis.find(e => e.name.toLowerCase() === emojiName);
+			
+			if (emoji) {
+				const start = cursorPos - completeMatch[0].length;
+				
+				const selection = window.getSelection();
+				if (selection && selection.rangeCount > 0) {
+					const range = selection.getRangeAt(0);
+					const textNode = range.startContainer;
+					
+					if (textNode.nodeType === Node.TEXT_NODE && textNode.parentNode === chatInputDiv) {
+						const nodeText = textNode.textContent || '';
+						const beforePattern = nodeText.substring(0, start);
+						const afterPattern = nodeText.substring(start + completeMatch[0].length);
+						
+						if (emoji.isCustom && emoji.imageUrl) {
+							const img = document.createElement('img');
+							img.src = emoji.imageUrl;
+							img.alt = `:${emoji.name}:`;
+							img.className = 'emoji-inline';
+							img.style.cssText = 'width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;';
+							
+							const beforeNode = document.createTextNode(beforePattern);
+							const afterNode = document.createTextNode(afterPattern + afterCursor);
+							
+							textNode.parentNode?.replaceChild(beforeNode, textNode);
+							beforeNode.parentNode?.insertBefore(img, beforeNode.nextSibling);
+							img.parentNode?.insertBefore(afterNode, img.nextSibling);
+							
+							setTimeout(() => {
+								const newRange = document.createRange();
+								newRange.setStartAfter(img);
+								newRange.setEndAfter(img);
+								const sel = window.getSelection();
+								sel?.removeAllRanges();
+								sel?.addRange(newRange);
+								chatInputDiv?.focus();
+							}, 0);
+						} else {
+							textNode.textContent = beforePattern + emoji.emoji + afterPattern + afterCursor;
+							
+							setTimeout(() => {
+								const newPos = start + emoji.emoji.length;
+								setCaretPosition(newPos);
+								chatInputDiv?.focus();
+							}, 0);
+						}
+						
+						inputValue = getInputText();
+						emojiAutocompleteOpen = false;
+						return;
+					}
+				}
+			}
+		}
+		
+		// Find the :emojiname: pattern before cursor for autocomplete
 		const match = beforeCursor.match(/:([a-zA-Z0-9_-]*)$/);
 		
 		if (match && match[1].length > 0) {
@@ -561,27 +808,62 @@
 	}
 
 	function insertAutocompleteEmoji(emoji: { name: string; emoji: string; isCustom: boolean; imageUrl?: string }) {
-		if (!chatInput) return;
+		if (!chatInputDiv) return;
 		
-		const text = inputValue;
-		const cursorPos = chatInput.selectionStart || 0;
+		const text = getInputText();
+		const cursorPos = getCaretPosition();
 		const beforeCursor = text.substring(0, cursorPos);
 		const match = beforeCursor.match(/:([a-zA-Z0-9_-]*)$/);
 		
 		if (match) {
 			const start = cursorPos - match[0].length;
-			const end = cursorPos;
-			const emojiText = `:${emoji.name}:`;
+			const selection = window.getSelection();
 			
-			inputValue = text.substring(0, start) + emojiText + text.substring(end);
-			
-			setTimeout(() => {
-				if (chatInput) {
-					const newPos = start + emojiText.length;
-					chatInput.setSelectionRange(newPos, newPos);
-					chatInput.focus();
+			if (selection && selection.rangeCount > 0) {
+				const range = selection.getRangeAt(0);
+				const textNode = range.startContainer;
+				
+				if (textNode.nodeType === Node.TEXT_NODE && textNode.parentNode === chatInputDiv) {
+					const nodeText = textNode.textContent || '';
+					const beforePattern = nodeText.substring(0, start);
+					const afterPattern = nodeText.substring(cursorPos);
+					
+					if (emoji.isCustom && emoji.imageUrl) {
+						// Create image element for custom emoji
+						const img = document.createElement('img');
+						img.src = emoji.imageUrl;
+						img.alt = `:${emoji.name}:`;
+						img.className = 'emoji-inline';
+						img.style.cssText = 'width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;';
+						
+						const beforeNode = document.createTextNode(beforePattern);
+						const afterNode = document.createTextNode(afterPattern);
+						
+						textNode.parentNode?.replaceChild(beforeNode, textNode);
+						beforeNode.parentNode?.insertBefore(img, beforeNode.nextSibling);
+						img.parentNode?.insertBefore(afterNode, img.nextSibling);
+						
+						setTimeout(() => {
+							const newRange = document.createRange();
+							newRange.setStartAfter(img);
+							newRange.setEndAfter(img);
+							const sel = window.getSelection();
+							sel?.removeAllRanges();
+							sel?.addRange(newRange);
+							chatInputDiv?.focus();
+						}, 0);
+					} else {
+						textNode.textContent = beforePattern + emoji.emoji + afterPattern;
+						setTimeout(() => {
+							const newPos = start + emoji.emoji.length;
+							setCaretPosition(newPos);
+							chatInputDiv?.focus();
+						}, 0);
+					}
+					
+					inputValue = getInputText();
 				}
-			}, 0);
+			}
 		}
 		
 		emojiAutocompleteOpen = false;
@@ -779,16 +1061,19 @@
 		<div class="input-wrapper">
 			<span class="input-prompt">$</span>
 			<div class="input-container">
-				<input
-					type="text"
-					class="chat-input"
-					placeholder="Use /nick to set a name"
-					bind:value={inputValue}
-					bind:this={chatInput}
+				<div
+					class="chat-input show-placeholder"
+					contenteditable={isConnected}
+					bind:this={chatInputDiv}
+					data-placeholder="Use /nick to set a name"
 					onkeydown={handleKeyDown}
 					oninput={handleInputChange}
-					disabled={!isConnected}
-				/>
+					onfocus={handleInputFocus}
+					onblur={handleInputBlur}
+					role="textbox"
+					tabindex="0"
+					aria-label="Chat input"
+				></div>
 				{#if emojiAutocompleteOpen && emojiAutocompleteMatches.length > 0}
 					<div class="emoji-autocomplete">
 						{#each emojiAutocompleteMatches as match, index}
@@ -833,7 +1118,7 @@
 				<button 
 					class="send-button"
 					onclick={sendMessage}
-					disabled={!isConnected || !inputValue.trim()}
+					disabled={!isConnected || !getInputText().trim()}
 					title="Send message"
 				>
 					&gt;
@@ -1147,20 +1432,42 @@
 		color: #e8e8e8 !important;
 		font-family: 'Courier New', monospace;
 		font-size: 14px;
-		line-height: 1;
+		line-height: 1.5;
+		min-height: 20px;
 		height: auto;
 		outline: none;
 		box-sizing: border-box;
 		min-width: 0;
+		white-space: pre-wrap;
+		word-wrap: break-word;
+		overflow-wrap: break-word;
 	}
 
-	.chat-input:disabled {
+	.chat-input.show-placeholder:before {
+		content: attr(data-placeholder);
+		color: #b0b0b0 !important;
+		pointer-events: none;
+	}
+	
+	.chat-input:not(.show-placeholder):before {
+		content: '';
+	}
+
+	.chat-input:not([contenteditable="true"]) {
 		opacity: 0.5;
 		cursor: not-allowed;
 	}
 
-	.chat-input::placeholder {
-		color: #b0b0b0 !important;
+	.chat-input .emoji-inline {
+		width: 1.375em;
+		height: 1.375em;
+		max-width: 22px;
+		max-height: 22px;
+		vertical-align: -0.2em;
+		display: inline-block;
+		object-fit: contain;
+		image-rendering: -webkit-optimize-contrast;
+		image-rendering: crisp-edges;
 	}
 
 	.send-button {

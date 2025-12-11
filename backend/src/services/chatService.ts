@@ -100,6 +100,15 @@ export class ChatService {
    */
   private async validateAdminSession(req: IncomingMessage): Promise<{ isAdmin: boolean; apiKeyPrefix?: string }> {
     try {
+      // Check if this is explicitly a public chat connection
+      const url = new URL(req.url || '', `http://${req.headers.host || 'localhost'}`);
+      const isPublicChat = url.searchParams.get('public') === 'true';
+      
+      if (isPublicChat) {
+        console.log('📨 Public chat connection detected - ignoring admin session');
+        return { isAdmin: false };
+      }
+
       const authHeader = req.headers.authorization;
       const xApiKey = req.headers['x-api-key'];
       
