@@ -801,15 +801,89 @@
 				
 				const start = cursorPos - completeMatch[0].length;
 				const currentText = getInputText();
-				const newText = currentText.substring(0, start) + emoji.emoji + currentText.substring(start + completeMatch[0].length);
 				
-				chatInputDiv.textContent = newText;
+				if (!chatInputDiv) {
+					(chatInputDiv as any).__convertingEmoji = false;
+					return;
+				}
+				
+				const beforeText = currentText.substring(0, start);
+				const afterText = currentText.substring(start + completeMatch[0].length);
+				
+				chatInputDiv.textContent = beforeText;
+				
+				if (emoji.isCustom && emoji.imageUrl) {
+					// Insert custom emoji as image
+					const img = document.createElement('img');
+					img.src = emoji.imageUrl;
+					img.alt = `:${emoji.name}:`;
+					img.className = 'emoji-inline';
+					img.style.cssText = 'width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;';
+					chatInputDiv.appendChild(img);
+				} else {
+					// Insert default emoji as text
+					const emojiTextNode = document.createTextNode(emoji.emoji);
+					chatInputDiv.appendChild(emojiTextNode);
+				}
+				
+				if (afterText) {
+					const afterTextNode = document.createTextNode(afterText);
+					chatInputDiv.appendChild(afterTextNode);
+				}
 				
 				// Restore cursor position
 				setTimeout(() => {
-					const newPos = start + emoji.emoji.length;
-					setCaretPosition(newPos);
-					chatInputDiv?.focus();
+					if (!chatInputDiv) {
+						(chatInputDiv as any).__convertingEmoji = false;
+						return;
+					}
+					
+					const selection = window.getSelection();
+					if (!selection) {
+						(chatInputDiv as any).__convertingEmoji = false;
+						return;
+					}
+					
+					let newRange = document.createRange();
+					if (emoji.isCustom && emoji.imageUrl) {
+						const img = chatInputDiv.querySelector('img.emoji-inline:last-of-type');
+						if (img) {
+							newRange.setStartAfter(img);
+						} else {
+							newRange.selectNodeContents(chatInputDiv);
+							newRange.collapse(false);
+						}
+					} else {
+						// Find emoji text node
+						const walker = document.createTreeWalker(
+							chatInputDiv,
+							NodeFilter.SHOW_TEXT,
+							null
+						);
+						let emojiNode: Text | null = null;
+						let pos = 0;
+						let node;
+						while (node = walker.nextNode()) {
+							const text = (node as Text).textContent || '';
+							if (pos + text.length >= start + emoji.emoji.length) {
+								emojiNode = node as Text;
+								break;
+							}
+							pos += text.length;
+						}
+						if (emojiNode) {
+							const offset = Math.min(start + emoji.emoji.length - pos, emojiNode.textContent?.length || 0);
+							newRange.setStart(emojiNode, offset);
+						} else {
+							newRange.selectNodeContents(chatInputDiv);
+							newRange.collapse(false);
+						}
+					}
+					
+					newRange.collapse(true);
+					selection.removeAllRanges();
+					selection.addRange(newRange);
+					chatInputDiv.focus();
 					inputValue = getInputText();
 					emojiAutocompleteOpen = false;
 					(chatInputDiv as any).__convertingEmoji = false;
