@@ -77,6 +77,7 @@
 	let hasDisconnectedMessage = $state(false);
 	let showEmojiPicker = $state(false);
 	let emojiPickerReloadTrigger = $state(0);
+	let isLoadingEmojis = $state(false);
 	let chatInput: HTMLInputElement | null = null;
 	let chatInputDiv: HTMLDivElement | null = null;
 	let emojiAutocompleteOpen = $state(false);
@@ -588,10 +589,9 @@
 
 	// Load all emojis (default + custom)
 	async function loadAllEmojis() {
-		if (!browser) return;
+		if (!browser || isLoadingEmojis) return;
 		
 		try {
-			// Default emojis with names
 			const defaultEmojis = [
 				// Smileys
 				{ name: 'smile', emoji: '😀', isCustom: false },
@@ -641,6 +641,8 @@
 			}
 		} catch (error) {
 			console.error('Failed to load emojis:', error);
+		} finally {
+			isLoadingEmojis = false;
 		}
 	}
 
@@ -650,43 +652,105 @@
 		
 		const { emoji: emojiText, isCustom, imageUrl } = event.detail;
 		
+		let emojiToInsert = emojiText;
+		if (emojiText.startsWith(':') && emojiText.endsWith(':')) {
+			const emojiName = emojiText.slice(1, -1).toLowerCase();
+			
+			const emoji = allEmojis.find(e => e.name.toLowerCase() === emojiName);
+			if (emoji) {
+				if (!emoji.isCustom) {
+					emojiToInsert = emoji.emoji;
+				}
+			} else {
+				const emojiPickerMap: Record<string, string> = {
+					// Smileys
+					'smile': '😀', 'grin': '😃', 'smile_big': '😄', 'grin_wide': '😁', 'laugh': '😆',
+					'sweat_smile': '😅', 'rofl': '🤣', 'joy': '😂', 'slight_smile': '🙂', 'upside_down': '🙃',
+					'wink': '😉', 'blush': '😊', 'innocent': '😇', 'love_eyes': '🥰', 'heart_eyes': '😍',
+					'star_eyes': '🤩', 'kiss': '😘', 'kiss_light': '😗', 'kiss_blush': '😚', 'kiss_smile': '😙',
+					// Hearts
+					'heart': '❤️', 'orange_heart': '🧡', 'yellow_heart': '💛', 'green_heart': '💚', 'blue_heart': '💙',
+					'purple_heart': '💜', 'black_heart': '🖤', 'white_heart': '🤍', 'brown_heart': '🤎', 'broken_heart': '💔',
+					'heart_fire': '❤️‍🔥', 'heart_bandage': '❤️‍🩹', 'two_hearts': '💕', 'revolving_hearts': '💞',
+					'beating_heart': '💓', 'growing_heart': '💗', 'sparkling_heart': '💖', 'cupid': '💘',
+					'gift_heart': '💝', 'heart_decoration': '💟',
+					// Gestures
+					'thumbsup': '👍', 'thumbsdown': '👎', 'ok_hand': '👌', 'peace': '✌️', 'crossed_fingers': '🤞',
+					'love_you': '🤟', 'rock_on': '🤘', 'call_me': '🤙', 'point_left': '👈', 'point_right': '👉',
+					'point_up': '👆', 'point_down': '👇', 'point_up_one': '☝️', 'clap': '👏', 'raised_hands': '🙌',
+					'open_hands': '👐', 'palms_up': '🤲', 'handshake': '🤝', 'pray': '🙏', 'writing': '✍️',
+					// Reactions
+					'fire': '🔥', 'hundred': '💯', 'star': '⭐', 'sparkles': '✨', 'star2': '🌟',
+					'dizzy': '💫', 'zap': '⚡', 'boom': '💥', 'anger': '💢', 'sweat_drops': '💦',
+					'dash': '💨', 'party': '🎉', 'confetti': '🎊', 'balloon': '🎈', 'gift': '🎁',
+					'trophy': '🏆', 'first_place': '🥇', 'second_place': '🥈', 'third_place': '🥉', 'medal': '🎖️',
+					// Animals
+					'dog': '🐶', 'cat': '🐱', 'mouse': '🐭', 'hamster': '🐹', 'rabbit': '🐰',
+					'fox': '🦊', 'bear': '🐻', 'panda': '🐼', 'koala': '🐨', 'tiger': '🐯',
+					'lion': '🦁', 'cow': '🐮', 'pig': '🐷', 'frog': '🐸', 'monkey': '🐵',
+					'chicken': '🐔', 'penguin': '🐧', 'bird': '🐦', 'baby_chick': '🐤', 'eagle': '🦅',
+					// Food
+					'apple': '🍎', 'banana': '🍌', 'grapes': '🍇', 'strawberry': '🍓', 'peach': '🍑',
+					'cherries': '🍒', 'pizza': '🍕', 'hamburger': '🍔', 'fries': '🍟', 'hotdog': '🌭',
+					'popcorn': '🍿', 'doughnut': '🍩', 'cookie': '🍪', 'birthday': '🎂', 'cake': '🍰',
+					'cupcake': '🧁', 'chocolate': '🍫', 'candy': '🍬', 'lollipop': '🍭', 'custard': '🍮',
+					// Objects (note: 'mouse' for computer mouse is handled separately if needed)
+					'computer': '💻', 'iphone': '📱', 'watch': '⌚', 'desktop': '🖥️', 'printer': '🖨️',
+					'keyboard': '⌨️', 'trackball': '🖲️', 'joystick': '🕹️', 'clamp': '🗜️',
+					'floppy_disk': '💾', 'cd': '💿', 'dvd': '📀', 'vhs': '📼', 'camera': '📷',
+					'camera_flash': '📸', 'video_camera': '📹', 'movie_camera': '🎥', 'tv': '📺', 'radio': '📻',
+					// Symbols
+					'check': '✅', 'x': '❌', 'o': '⭕', 'question': '❓', 'question_white': '❔',
+					'exclamation': '❗', 'exclamation_white': '❕', 'speech_balloon': '💬', 'thought_balloon': '💭',
+					'anger_balloon': '🗯️', 'spades': '♠️', 'hearts': '♥️', 'diamonds': '♦️', 'clubs': '♣️',
+					'joker': '🃏', 'mahjong': '🀄', 'flower_playing_cards': '🎴', 'performing_arts': '🎭',
+					'frame_photo': '🖼️', 'art': '🎨'
+				};
+				
+				if (emojiPickerMap[emojiName]) {
+					emojiToInsert = emojiPickerMap[emojiName];
+				}
+			}
+		}
+		
+		chatInputDiv.focus();
+		
 		// Get current cursor position
 		const selection = window.getSelection();
+		let range: Range;
+		
 		if (!selection || selection.rangeCount === 0) {
-			if (isCustom && imageUrl) {
-				const img = document.createElement('img');
-				img.src = imageUrl;
-				img.alt = emojiText;
-				img.className = 'emoji-inline';
-				img.style.cssText = 'width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;';
-				chatInputDiv.appendChild(img);
-			} else {
-				const textNode = document.createTextNode(emojiText);
-				chatInputDiv.appendChild(textNode);
-			}
+			range = document.createRange();
+			range.selectNodeContents(chatInputDiv);
+			range.collapse(false);
 		} else {
-			const range = selection.getRangeAt(0);
-			range.deleteContents();
+			range = selection.getRangeAt(0);
 			
-			if (isCustom && imageUrl) {
-				// Create image element for custom emoji
-				const img = document.createElement('img');
-				img.src = imageUrl;
-				img.alt = emojiText;
-				img.className = 'emoji-inline';
-				img.style.cssText = 'width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;';
-				range.insertNode(img);
-			} else {
-				// Insert Unicode emoji
-				const textNode = document.createTextNode(emojiText);
-				range.insertNode(textNode);
+			if (!chatInputDiv.contains(range.commonAncestorContainer)) {
+				range.selectNodeContents(chatInputDiv);
+				range.collapse(false);
 			}
-			
-			range.setStartAfter(range.endContainer);
-			range.collapse(true);
-			selection.removeAllRanges();
-			selection.addRange(range);
 		}
+		
+		range.deleteContents();
+		
+		if (isCustom && imageUrl) {
+			const img = document.createElement('img');
+			img.src = imageUrl;
+			img.alt = emojiText;
+			img.className = 'emoji-inline';
+			img.style.cssText = 'width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;';
+			range.insertNode(img);
+			range.setStartAfter(img);
+		} else {
+			const textNode = document.createTextNode(emojiToInsert);
+			range.insertNode(textNode);
+			range.setStartAfter(textNode);
+		}
+		
+		range.collapse(true);
+		selection?.removeAllRanges();
+		selection?.addRange(range);
 		
 		inputValue = getInputText();
 		
@@ -726,61 +790,32 @@
 		
 		const completeMatch = beforeCursor.match(/:([a-zA-Z0-9_-]+):$/);
 		
-		if (completeMatch && completeMatch[1].length > 0) {
+		if (completeMatch && completeMatch[1].length > 0 && allEmojis.length > 0) {
 			const emojiName = completeMatch[1].toLowerCase();
 			const emoji = allEmojis.find(e => e.name.toLowerCase() === emojiName);
 			
 			if (emoji) {
-				const start = cursorPos - completeMatch[0].length;
+				// Prevent recursive calls
+				if ((chatInputDiv as any).__convertingEmoji) return;
+				(chatInputDiv as any).__convertingEmoji = true;
 				
-				const selection = window.getSelection();
-				if (selection && selection.rangeCount > 0) {
-					const range = selection.getRangeAt(0);
-					const textNode = range.startContainer;
-					
-					if (textNode.nodeType === Node.TEXT_NODE && textNode.parentNode === chatInputDiv) {
-						const nodeText = textNode.textContent || '';
-						const beforePattern = nodeText.substring(0, start);
-						const afterPattern = nodeText.substring(start + completeMatch[0].length);
-						
-						if (emoji.isCustom && emoji.imageUrl) {
-							const img = document.createElement('img');
-							img.src = emoji.imageUrl;
-							img.alt = `:${emoji.name}:`;
-							img.className = 'emoji-inline';
-							img.style.cssText = 'width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;';
-							
-							const beforeNode = document.createTextNode(beforePattern);
-							const afterNode = document.createTextNode(afterPattern + afterCursor);
-							
-							textNode.parentNode?.replaceChild(beforeNode, textNode);
-							beforeNode.parentNode?.insertBefore(img, beforeNode.nextSibling);
-							img.parentNode?.insertBefore(afterNode, img.nextSibling);
-							
-							setTimeout(() => {
-								const newRange = document.createRange();
-								newRange.setStartAfter(img);
-								newRange.setEndAfter(img);
-								const sel = window.getSelection();
-								sel?.removeAllRanges();
-								sel?.addRange(newRange);
-								chatInputDiv?.focus();
-							}, 0);
-						} else {
-							textNode.textContent = beforePattern + emoji.emoji + afterPattern + afterCursor;
-							
-							setTimeout(() => {
-								const newPos = start + emoji.emoji.length;
-								setCaretPosition(newPos);
-								chatInputDiv?.focus();
-							}, 0);
-						}
-						
-						inputValue = getInputText();
-						emojiAutocompleteOpen = false;
-						return;
-					}
-				}
+				const start = cursorPos - completeMatch[0].length;
+				const currentText = getInputText();
+				const newText = currentText.substring(0, start) + emoji.emoji + currentText.substring(start + completeMatch[0].length);
+				
+				chatInputDiv.textContent = newText;
+				
+				// Restore cursor position
+				setTimeout(() => {
+					const newPos = start + emoji.emoji.length;
+					setCaretPosition(newPos);
+					chatInputDiv?.focus();
+					inputValue = getInputText();
+					emojiAutocompleteOpen = false;
+					(chatInputDiv as any).__convertingEmoji = false;
+				}, 0);
+				
+				return;
 			}
 		}
 		

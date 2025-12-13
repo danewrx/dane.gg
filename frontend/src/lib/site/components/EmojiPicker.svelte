@@ -231,7 +231,7 @@
 
 	// Load custom emojis from API
 	async function loadCustomEmojis() {
-		if (!browser) return;
+		if (!browser || isLoadingCustom) return;
 		
 		try {
 			isLoadingCustom = true;
@@ -273,8 +273,23 @@
 	}
 
 	$effect(() => {
-		if (isOpen && customEmojis.length === 0 && !isLoadingCustom) {
-			loadCustomEmojis();
+		if (isOpen && customEmojis.length === 0 && !isLoadingCustom && !hasLoadedEmojis) {
+			loadCustomEmojis().then(() => {
+				hasLoadedEmojis = true;
+			});
+		}
+	});
+
+	let hasLoadedEmojis = $state(false);
+	let lastReloadTrigger = $state(0);
+
+	$effect(() => {
+		if (reloadTrigger > 0 && reloadTrigger !== lastReloadTrigger && !isLoadingCustom) {
+			lastReloadTrigger = reloadTrigger;
+			hasLoadedEmojis = false;
+			loadCustomEmojis().then(() => {
+				hasLoadedEmojis = true;
+			});
 		}
 	});
 
@@ -359,14 +374,12 @@
 		}
 	});
 
-	$effect(() => {
-		if (reloadTrigger > 0) {
-			loadCustomEmojis();
-		}
-	});
-
 	onMount(() => {
-		loadCustomEmojis();
+		if (!hasLoadedEmojis) {
+			loadCustomEmojis().then(() => {
+				hasLoadedEmojis = true;
+			});
+		}
 	});
 	
 	onDestroy(() => {

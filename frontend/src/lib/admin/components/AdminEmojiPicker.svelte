@@ -19,6 +19,7 @@
 
 	let customEmojis = $state<CustomEmoji[]>([]);
 	let isLoadingCustom = $state(false);
+	let hasLoadedEmojis = $state(false);
 	let pickerElement: HTMLDivElement | null = $state(null);
 	let overlayElement: HTMLDivElement | null = $state(null);
 
@@ -229,7 +230,7 @@
 
 	// Load custom emojis from API
 	async function loadCustomEmojis() {
-		if (!browser) return;
+		if (!browser || isLoadingCustom) return;
 		
 		try {
 			isLoadingCustom = true;
@@ -269,15 +270,23 @@
 		}
 	}
 
+	let lastReloadTrigger = $state(0);
+
 	$effect(() => {
-		if (isOpen && customEmojis.length === 0 && !isLoadingCustom) {
-			loadCustomEmojis();
+		if (isOpen && customEmojis.length === 0 && !isLoadingCustom && !hasLoadedEmojis) {
+			loadCustomEmojis().then(() => {
+				hasLoadedEmojis = true;
+			});
 		}
 	});
 
 	$effect(() => {
-		if (reloadTrigger > 0) {
-			loadCustomEmojis();
+		if (reloadTrigger > 0 && reloadTrigger !== lastReloadTrigger && !isLoadingCustom) {
+			lastReloadTrigger = reloadTrigger;
+			hasLoadedEmojis = false;
+			loadCustomEmojis().then(() => {
+				hasLoadedEmojis = true;
+			});
 		}
 	});
 
@@ -375,7 +384,11 @@
 	});
 
 	onMount(() => {
-		loadCustomEmojis();
+		if (!hasLoadedEmojis) {
+			loadCustomEmojis().then(() => {
+				hasLoadedEmojis = true;
+			});
+		}
 	});
 	
 	onDestroy(() => {
