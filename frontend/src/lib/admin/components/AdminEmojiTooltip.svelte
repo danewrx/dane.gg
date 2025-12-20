@@ -12,26 +12,29 @@
 		if (!browser || tooltipElement) return;
 
 		tooltipElement = document.createElement('div');
-		tooltipElement.className = 'emoji-global-tooltip';
+		tooltipElement.className = 'admin-emoji-global-tooltip';
 		tooltipElement.innerHTML = `
 			<div class="tooltip-emoji"></div>
 			<div class="tooltip-name"></div>
 		`;
+		
+		const isDark = document.documentElement.classList.contains('dark') || 
+			!document.documentElement.classList.contains('light');
+		
 		tooltipElement.style.cssText = `
 			display: none;
 			position: fixed;
 			z-index: 99999;
 			pointer-events: none;
-			background: #1a1a1a;
-			border: 1px solid #3a3a3a;
-			border-radius: 4px;
+			background: ${isDark ? '#2d2d2d' : '#ffffff'};
+			border: 1px solid ${isDark ? '#404040' : '#e5e7eb'};
+			border-radius: 8px;
 			padding: 10px 14px;
-			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+			box-shadow: 0 4px 12px rgba(0, 0, 0, ${isDark ? '0.4' : '0.15'});
 			flex-direction: column;
 			align-items: center;
 			gap: 6px;
 			min-width: 70px;
-			font-family: 'Courier New', monospace;
 		`;
 		document.body.appendChild(tooltipElement);
 	}
@@ -84,6 +87,9 @@
 		const tooltipEmoji = tooltipElement.querySelector('.tooltip-emoji') as HTMLElement;
 		const tooltipName = tooltipElement.querySelector('.tooltip-name') as HTMLElement;
 
+		const isDark = document.documentElement.classList.contains('dark') || 
+			!document.documentElement.classList.contains('light');
+
 		if (emojiContent.tagName === 'IMG') {
 			tooltipEmoji.innerHTML = `<img src="${(emojiContent as HTMLImageElement).src}" style="width: 36px; height: 36px; object-fit: contain; image-rendering: -webkit-optimize-contrast;">`;
 		} else {
@@ -91,7 +97,7 @@
 			tooltipEmoji.style.cssText = 'font-size: 28px; line-height: 1; text-align: center;';
 		}
 		tooltipName.textContent = nameContent.textContent;
-		tooltipName.style.cssText = 'font-size: 11px; color: #888; font-family: "Courier New", monospace; text-align: center; white-space: nowrap;';
+		tooltipName.style.cssText = `font-size: 11px; color: ${isDark ? '#a1a1aa' : '#6b7280'}; font-family: system-ui, -apple-system, sans-serif; text-align: center; white-space: nowrap;`;
 
 		tooltipElement.style.display = 'flex';
 		positionTooltip(e);

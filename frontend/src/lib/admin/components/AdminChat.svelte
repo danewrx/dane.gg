@@ -3,7 +3,7 @@
 	import { browser } from '$app/environment';
 	import { MessageSquare, Send, Trash2, Smile, Loader2 } from 'lucide-svelte';
 	import AdminEmojiPicker from '$lib/admin/components/AdminEmojiPicker.svelte';
-	import EmojiTooltip from '$lib/site/components/EmojiTooltip.svelte';
+	import AdminEmojiTooltip from '$lib/admin/components/AdminEmojiTooltip.svelte';
 	import { getEmojiFromName, getNameFromEmoji } from '$lib/shared/utils/emojiData';
 	import { trackEmojiUsage } from '$lib/shared/utils/recentEmojis';
 
@@ -805,7 +805,7 @@
 	});
 </script>
 
-<EmojiTooltip bind:container={messagesContainer} />
+<AdminEmojiTooltip bind:container={messagesContainer} />
 
 <section class="chat-section">
 	<div class="chat-container">
