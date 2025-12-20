@@ -78,6 +78,7 @@
 	
 	// Emoji picker state
 	let showEmojiPicker = $state(false);
+	let isOpeningEmojiPicker = $state(false);
 	let emojiButtonRef: HTMLButtonElement | null = $state(null);
 	let messageInputDiv: HTMLDivElement | null = null;
 	
@@ -205,7 +206,18 @@
 		}
 	}
 	
-	function handleInputBlur() {
+	function handleInputBlur(event: FocusEvent) {
+		if (showEmojiPicker || isOpeningEmojiPicker) {
+			return;
+		}
+		
+		const relatedTarget = event.relatedTarget as HTMLElement;
+		if (relatedTarget) {
+			if (relatedTarget.closest('.emoji-button') || relatedTarget.closest('.emoji-picker') || relatedTarget.closest('.admin-emoji-picker') || relatedTarget.closest('.emoji-btn')) {
+				return;
+			}
+		}
+		
 		if (messageInputDiv && isEmptyContentEditable(messageInputDiv)) {
 			messageInputDiv.classList.add('show-placeholder');
 		}
@@ -501,6 +513,18 @@
 		
 		range.deleteContents();
 		
+		let insertContainer = range.commonAncestorContainer;
+		if (insertContainer.nodeType === Node.TEXT_NODE) {
+			insertContainer = insertContainer.parentNode as Node;
+		}
+		
+		if (insertContainer && (insertContainer as HTMLElement).nodeName === 'DIV' && insertContainer !== messageInputDiv) {
+			const startContainer = range.startContainer;
+			if (startContainer.nodeType === Node.TEXT_NODE) {
+				range.setStart(startContainer, range.startOffset);
+			}
+		}
+		
 		if (isCustom && imageUrl) {
 			const img = document.createElement('img');
 			img.src = imageUrl;
@@ -519,21 +543,24 @@
 		selection?.removeAllRanges();
 		selection?.addRange(range);
 		
+		messageInputDiv.normalize();
+		
+		const divs = messageInputDiv.querySelectorAll('div');
+		divs.forEach(div => {
+			const parent = div.parentNode;
+			if (parent) {
+				while (div.firstChild) {
+					parent.insertBefore(div.firstChild, div);
+				}
+				parent.removeChild(div);
+			}
+		});
+		
+		messageInputDiv.normalize();
+		
 		inputValue = getInputText();
 		
-		setTimeout(() => {
-			if (messageInputDiv) {
-				messageInputDiv.focus();
-				const sel = window.getSelection();
-				if (sel) {
-					const range = document.createRange();
-					range.selectNodeContents(messageInputDiv);
-					range.collapse(false);
-					sel.removeAllRanges();
-					sel.addRange(range);
-				}
-			}
-		}, 0);
+		messageInputDiv.focus();
 		
 		showEmojiPicker = false;
 	}
@@ -545,8 +572,12 @@
 		const cursorPos = getCaretPosition();
 		inputValue = text;
 		
-		if (isEmptyContentEditable(messageInputDiv)) {
-			messageInputDiv.classList.add('show-placeholder');
+		if (document.activeElement !== messageInputDiv) {
+			if (isEmptyContentEditable(messageInputDiv)) {
+				messageInputDiv.classList.add('show-placeholder');
+			} else {
+				messageInputDiv.classList.remove('show-placeholder');
+			}
 		} else {
 			messageInputDiv.classList.remove('show-placeholder');
 		}
@@ -635,7 +666,11 @@
 		if (event) {
 			event.stopPropagation();
 		}
+		isOpeningEmojiPicker = true;
 		showEmojiPicker = !showEmojiPicker;
+		setTimeout(() => {
+			isOpeningEmojiPicker = false;
+		}, 100);
 	}
 	
 	// Close emoji picker when clicking outside
@@ -660,6 +695,12 @@
 			return () => {
 				document.removeEventListener('click', handleClickOutside);
 			};
+		}
+	});
+	
+	$effect(() => {
+		if (!showEmojiPicker && messageInputDiv && isEmptyContentEditable(messageInputDiv) && document.activeElement !== messageInputDiv) {
+			messageInputDiv.classList.add('show-placeholder');
 		}
 	});
 
