@@ -307,7 +307,16 @@
 									>
 										<td class="title-cell">
 											<div class="title-content">
-												<span class="drag-handle" title="Drag to reorder">⋮⋮</span>
+												<span class="drag-handle" title="Drag to reorder">
+													<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+														<circle cx="2" cy="2" r="1.5" fill="currentColor"/>
+														<circle cx="2" cy="6" r="1.5" fill="currentColor"/>
+														<circle cx="2" cy="10" r="1.5" fill="currentColor"/>
+														<circle cx="6" cy="2" r="1.5" fill="currentColor"/>
+														<circle cx="6" cy="6" r="1.5" fill="currentColor"/>
+														<circle cx="6" cy="10" r="1.5" fill="currentColor"/>
+													</svg>
+												</span>
 												<span class="title-text">{project.title}</span>
 											</div>
 										</td>
@@ -613,24 +622,43 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 20px;
-		height: 20px;
+		width: 24px;
+		height: 24px;
 		color: var(--text-secondary, #a1a1aa);
 		cursor: grab;
 		user-select: none;
-		font-size: 12px;
-		line-height: 1;
-		margin-right: 8px;
-		opacity: 0.5;
-		transition: opacity 0.2s ease;
+		margin-right: 12px;
+		opacity: 0.6;
+		transition: all 0.2s ease;
+		border-radius: 4px;
+		padding: 4px;
+		flex-shrink: 0;
+	}
+	
+	.drag-handle:hover {
+		opacity: 1;
+		background: var(--bg-tertiary, #3a3a3a);
+		color: var(--accent-color, #6366f1);
+		transform: scale(1.1);
 	}
 	
 	.drag-handle:active {
 		cursor: grabbing;
+		transform: scale(0.95);
+	}
+	
+	.drag-handle svg {
+		width: 100%;
+		height: 100%;
 	}
 	
 	.projects-table tbody tr.project-row:hover .drag-handle {
+		opacity: 0.8;
+	}
+	
+	.projects-table tbody tr.project-row.dragging .drag-handle {
 		opacity: 1;
+		color: var(--accent-color, #6366f1);
 	}
 
 	.projects-table tbody tr.project-row:last-child {
