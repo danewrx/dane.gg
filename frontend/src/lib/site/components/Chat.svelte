@@ -81,6 +81,7 @@
 	let showEmojiPicker = $state(false);
 	let emojiPickerReloadTrigger = $state(0);
 	let isLoadingEmojis = $state(false);
+	let isOpeningEmojiPicker = $state(false);
 	let chatInput: HTMLInputElement | null = null;
 	let chatInputDiv: HTMLDivElement | null = null;
 	let emojiAutocompleteOpen = $state(false);
@@ -570,7 +571,18 @@
 		}
 	}
 	
-	function handleInputBlur() {
+	function handleInputBlur(event: FocusEvent) {
+		if (showEmojiPicker || isOpeningEmojiPicker) {
+			return;
+		}
+		
+		const relatedTarget = event.relatedTarget as HTMLElement;
+		if (relatedTarget) {
+			if (relatedTarget.closest('.emoji-button') || relatedTarget.closest('.emoji-picker')) {
+				return;
+			}
+		}
+		
 		if (chatInputDiv && isEmptyContentEditable(chatInputDiv)) {
 			chatInputDiv.classList.add('show-placeholder');
 		}
@@ -662,6 +674,18 @@
 		
 		range.deleteContents();
 		
+		let insertContainer = range.commonAncestorContainer;
+		if (insertContainer.nodeType === Node.TEXT_NODE) {
+			insertContainer = insertContainer.parentNode as Node;
+		}
+		
+		if (insertContainer && (insertContainer as HTMLElement).nodeName === 'DIV' && insertContainer !== chatInputDiv) {
+			const startContainer = range.startContainer;
+			if (startContainer.nodeType === Node.TEXT_NODE) {
+				range.setStart(startContainer, range.startOffset);
+			}
+		}
+		
 		if (isCustom && imageUrl) {
 			const img = document.createElement('img');
 			img.src = imageUrl;
@@ -680,21 +704,25 @@
 		selection?.removeAllRanges();
 		selection?.addRange(range);
 		
+
+		chatInputDiv.normalize();
+		
+		const divs = chatInputDiv.querySelectorAll('div');
+		divs.forEach(div => {
+			const parent = div.parentNode;
+			if (parent) {
+				while (div.firstChild) {
+					parent.insertBefore(div.firstChild, div);
+				}
+				parent.removeChild(div);
+			}
+		});
+		
+		chatInputDiv.normalize();
+		
 		inputValue = getInputText();
 		
-		setTimeout(() => {
-			if (chatInputDiv) {
-				chatInputDiv.focus();
-				const sel = window.getSelection();
-				if (sel) {
-					const range = document.createRange();
-					range.selectNodeContents(chatInputDiv);
-					range.collapse(false);
-					sel.removeAllRanges();
-					sel.addRange(range);
-				}
-			}
-		}, 0);
+		chatInputDiv.focus();
 		
 		showEmojiPicker = false;
 	}
@@ -707,8 +735,12 @@
 		const cursorPos = getCaretPosition();
 		inputValue = text;
 		
-		if (isEmptyContentEditable(chatInputDiv)) {
-			chatInputDiv.classList.add('show-placeholder');
+		if (document.activeElement !== chatInputDiv) {
+			if (isEmptyContentEditable(chatInputDiv)) {
+				chatInputDiv.classList.add('show-placeholder');
+			} else {
+				chatInputDiv.classList.remove('show-placeholder');
+			}
 		} else {
 			chatInputDiv.classList.remove('show-placeholder');
 		}
@@ -940,7 +972,11 @@
 	}
 
 	function toggleEmojiPicker() {
+		isOpeningEmojiPicker = true;
 		showEmojiPicker = !showEmojiPicker;
+		setTimeout(() => {
+			isOpeningEmojiPicker = false;
+		}, 100);
 	}
 
 	function handleClickOutside(event: MouseEvent) {
@@ -955,6 +991,12 @@
 			return () => {
 				document.removeEventListener('click', handleClickOutside);
 			};
+		}
+	});
+	
+	$effect(() => {
+		if (!showEmojiPicker && chatInputDiv && isEmptyContentEditable(chatInputDiv) && document.activeElement !== chatInputDiv) {
+			chatInputDiv.classList.add('show-placeholder');
 		}
 	});
 
