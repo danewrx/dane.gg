@@ -4,6 +4,7 @@
 	import EmojiPicker from './EmojiPicker.svelte';
 	import { Smile } from 'lucide-svelte';
 	import { getAllDefaultEmojis, getEmojiFromName, type EmojiData } from '$lib/shared/utils/emojiData';
+	import { trackEmojiUsage } from '$lib/shared/utils/recentEmojis';
 
 	let globalWsInstance: WebSocket | null = null;
 	
@@ -721,6 +722,13 @@
 			const emoji = allEmojis.find(e => e.name.toLowerCase() === emojiName);
 			
 			if (emoji) {
+				// Track emoji usage
+				if (emoji.isCustom && emoji.imageUrl) {
+					trackEmojiUsage(`:${emoji.name}:`, emoji.name);
+				} else {
+					trackEmojiUsage(emoji.emoji, emoji.name);
+				}
+				
 				// Prevent recursive calls
 				if ((chatInputDiv as any).__convertingEmoji) return;
 				(chatInputDiv as any).__convertingEmoji = true;
@@ -844,6 +852,13 @@
 
 	function insertAutocompleteEmoji(emoji: { name: string; emoji: string; isCustom: boolean; imageUrl?: string }) {
 		if (!chatInputDiv) return;
+		
+		// Track emoji usage
+		if (emoji.isCustom && emoji.imageUrl) {
+			trackEmojiUsage(`:${emoji.name}:`, emoji.name);
+		} else {
+			trackEmojiUsage(emoji.emoji, emoji.name);
+		}
 		
 		const text = getInputText();
 		const cursorPos = getCaretPosition();
@@ -978,10 +993,12 @@
 			const emoji = allEmojis.find(e => e.name.toLowerCase() === name.toLowerCase());
 			if (emoji) {
 				if (emoji.isCustom && emoji.imageUrl) {
-					return `<img src="${emoji.imageUrl}" alt=":${emoji.name}:" class="custom-emoji-inline" title=":${emoji.name}:" style="width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">`;
-				} else {
-					return emoji.emoji;
+					const imageUrl = emoji.imageUrl.trim();
+					if (imageUrl) {
+						return `<img src="${imageUrl}" alt=":${emoji.name}:" class="custom-emoji-inline" title=":${emoji.name}:" style="width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">`;
+					}
 				}
+				return emoji.emoji;
 			}
 			return match;
 		});

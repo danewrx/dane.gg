@@ -4,6 +4,7 @@
 	import { browser } from '$app/environment';
 	import { onDestroy } from 'svelte';
 	import { getEmojiCategories } from '$lib/shared/utils/emojiData';
+	import { trackEmojiUsage, getRecentEmojis } from '$lib/shared/utils/recentEmojis';
 
 	const dispatch = createEventDispatcher<{
 		select: { emoji: string; isCustom?: boolean; imageUrl?: string };
@@ -36,6 +37,7 @@
 	}
 
 	let emojiCategories = $state<Array<{ name: string; emojis: Array<{ emoji: string; name: string }> }>>([]);
+	let recentEmojis = $state<Array<{ emoji: string; name: string }>>([]);
 
 	let selectedCategory = $state('All');
 
@@ -59,12 +61,19 @@
 
 	function selectEmoji(emojiData: { emoji: string; name: string } | string, isCustom = false, imageUrl?: string, emojiName?: string) {
 		if (isCustom && imageUrl && emojiName) {
+			// Track custom emoji usage
+			trackEmojiUsage(`:${emojiName}:`, emojiName);
 			dispatch('select', { emoji: `:${emojiName}:`, isCustom: true, imageUrl });
 		} else if (typeof emojiData === 'object') {
+			// Track default emoji usage
+			trackEmojiUsage(emojiData.emoji, emojiData.name);
 			dispatch('select', { emoji: `:${emojiData.name}:`, isCustom: false });
 		} else {
+			// Track emoji character usage
+			trackEmojiUsage(emojiData);
 			dispatch('select', { emoji: emojiData, isCustom: false });
 		}
+		recentEmojis = getRecentEmojis();
 		isOpen = false;
 	}
 
@@ -220,12 +229,19 @@
 	onMount(() => {
 		if (browser) {
 			emojiCategories = generateEmojiCategories();
+			recentEmojis = getRecentEmojis();
 			console.log('Admin emoji categories loaded:', emojiCategories.length, 'categories with', emojiCategories.reduce((sum, cat) => sum + cat.emojis.length, 0), 'total emojis');
 		}
 		if (!hasLoadedEmojis) {
 			loadCustomEmojis().then(() => {
 				hasLoadedEmojis = true;
 			});
+		}
+	});
+	
+	$effect(() => {
+		if (isOpen && browser) {
+			recentEmojis = getRecentEmojis();
 		}
 	});
 	
@@ -298,6 +314,21 @@
 			>
 				All
 			</button>
+			{#if recentEmojis.length > 0}
+				<button
+					class="picker-tab"
+					class:active={selectedCategory === 'Recently Used'}
+					onclick={(e) => {
+						e.stopPropagation();
+						e.preventDefault();
+						selectedCategory = 'Recently Used';
+					}}
+					onmousedown={(e) => e.stopPropagation()}
+					type="button"
+				>
+					Recently Used
+				</button>
+			{/if}
 			{#each emojiCategories as category}
 				<button
 					class="picker-tab"
@@ -334,6 +365,31 @@
 			<div class="picker-grid-container">
 				{#if selectedCategory === 'All'}
 					<div class="emoji-category-section">
+						{#if recentEmojis.length > 0}
+							<div class="category-heading">Recently Used</div>
+							<div class="picker-grid">
+								{#each recentEmojis as emojiData}
+									{@const isCustomEmoji = emojiData.emoji.startsWith(':') && emojiData.emoji.endsWith(':')}
+									{@const customEmoji = isCustomEmoji ? customEmojis.find(c => c.name === emojiData.name) : null}
+									<button
+										class="emoji-button"
+										onclick={() => isCustomEmoji && customEmoji ? selectEmoji('', true, customEmoji.imageUrl, customEmoji.name) : selectEmoji(emojiData)}
+										type="button"
+										title={`:${emojiData.name}:`}
+									>
+										{#if isCustomEmoji && customEmoji}
+											<img 
+												src={customEmoji.imageUrl} 
+												alt={customEmoji.name}
+												loading="lazy"
+											/>
+										{:else}
+											{emojiData.emoji}
+										{/if}
+									</button>
+								{/each}
+							</div>
+						{/if}
 						{#if customEmojis.length > 0}
 							<div class="category-heading">Custom</div>
 							<div class="picker-grid">
@@ -367,6 +423,29 @@
 									</button>
 								{/each}
 							</div>
+						{/each}
+					</div>
+				{:else if selectedCategory === 'Recently Used'}
+					<div class="picker-grid">
+						{#each recentEmojis as emojiData}
+							{@const isCustomEmoji = emojiData.emoji.startsWith(':') && emojiData.emoji.endsWith(':')}
+							{@const customEmoji = isCustomEmoji ? customEmojis.find(c => c.name === emojiData.name) : null}
+							<button
+								class="emoji-button"
+								onclick={() => isCustomEmoji && customEmoji ? selectEmoji('', true, customEmoji.imageUrl, customEmoji.name) : selectEmoji(emojiData)}
+								type="button"
+								title={`:${emojiData.name}:`}
+							>
+								{#if isCustomEmoji && customEmoji}
+									<img 
+										src={customEmoji.imageUrl} 
+										alt={customEmoji.name}
+										loading="lazy"
+									/>
+								{:else}
+									{emojiData.emoji}
+								{/if}
+							</button>
 						{/each}
 					</div>
 				{:else if selectedCategory === 'Custom'}

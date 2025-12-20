@@ -4,6 +4,7 @@
 	import { MessageSquare, Send, Trash2, Smile, Loader2 } from 'lucide-svelte';
 	import AdminEmojiPicker from '$lib/admin/components/AdminEmojiPicker.svelte';
 	import { getEmojiFromName } from '$lib/shared/utils/emojiData';
+	import { trackEmojiUsage } from '$lib/shared/utils/recentEmojis';
 
 	interface ChatMessage {
 		id?: string;
@@ -570,6 +571,13 @@
 			}
 			
 			if (emoji) {
+				// Track emoji usage
+				if (emoji.isCustom && emoji.imageUrl) {
+					trackEmojiUsage(`:${emoji.name}:`, emoji.name);
+				} else {
+					trackEmojiUsage(emoji.emoji, emoji.name);
+				}
+				
 				const start = cursorPos - completeMatch[0].length;
 				
 				const selection = window.getSelection();
@@ -680,10 +688,12 @@
 			
 			if (emoji) {
 				if (emoji.isCustom && emoji.imageUrl) {
-					return `<img src="${emoji.imageUrl}" alt=":${emoji.name}:" class="custom-emoji-inline" title=":${emoji.name}:" style="width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">`;
-				} else {
-					return emoji.emoji;
+					const imageUrl = emoji.imageUrl.trim();
+					if (imageUrl) {
+						return `<img src="${imageUrl}" alt=":${emoji.name}:" class="custom-emoji-inline" title=":${emoji.name}:" style="width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">`;
+					}
 				}
+				return emoji.emoji;
 			}
 			return match;
 		});
