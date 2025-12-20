@@ -3,7 +3,8 @@
 	import { browser } from '$app/environment';
 	import { MessageSquare, Send, Trash2, Smile, Loader2 } from 'lucide-svelte';
 	import AdminEmojiPicker from '$lib/admin/components/AdminEmojiPicker.svelte';
-	import { getEmojiFromName } from '$lib/shared/utils/emojiData';
+	import EmojiTooltip from '$lib/site/components/EmojiTooltip.svelte';
+	import { getEmojiFromName, getNameFromEmoji } from '$lib/shared/utils/emojiData';
 	import { trackEmojiUsage } from '$lib/shared/utils/recentEmojis';
 
 	interface ChatMessage {
@@ -65,7 +66,7 @@
 	let messages = $state<(ChatMessage | SystemMessage)[]>([]);
 	let inputValue = $state('');
 	let ws: WebSocket | null = null;
-	let messagesContainer: HTMLDivElement | null = null;
+	let messagesContainer = $state<HTMLDivElement | null>(null);
 	let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 	let isDestroyed = $state(false);
 	
@@ -662,7 +663,6 @@
 		}
 	});
 
-	// Render message with emoji replacement
 	function renderEmojiMessage(message: string): string {
 		let html = message
 			.replace(/&/g, '&amp;')
@@ -671,7 +671,6 @@
 			.replace(/"/g, '&quot;')
 			.replace(/'/g, '&#039;');
 		
-		// Replace :emojiname: with emoji images or characters
 		html = html.replace(/:([a-zA-Z0-9_-]+):/g, (match, name) => {
 			let emoji = allEmojis.find(e => e.name.toLowerCase() === name.toLowerCase());
 			
@@ -690,12 +689,54 @@
 				if (emoji.isCustom && emoji.imageUrl) {
 					const imageUrl = emoji.imageUrl.trim();
 					if (imageUrl) {
-						return `<img src="${imageUrl}" alt=":${emoji.name}:" class="custom-emoji-inline" title=":${emoji.name}:" style="width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">`;
+						const escapedName = emoji.name.replace(/"/g, '&quot;');
+						const escapedUrl = imageUrl.replace(/"/g, '&quot;');
+						return `<span class="emoji-hover" data-tooltip=":${escapedName}:" data-emoji-url="${escapedUrl}">
+							<img src="${escapedUrl}" alt=":${escapedName}:" class="custom-emoji-inline">
+							<span class="emoji-tooltip-popup"><img src="${escapedUrl}" class="tooltip-emoji-img"><span class="tooltip-name">:${escapedName}:</span></span>
+						</span>`;
 					}
 				}
-				return emoji.emoji;
+				const escapedName = emoji.name.replace(/"/g, '&quot;');
+				return `<span class="emoji-hover"><span class="emoji-char">${emoji.emoji}</span><span class="emoji-tooltip-popup"><span class="tooltip-emoji-char">${emoji.emoji}</span><span class="tooltip-name">:${escapedName}:</span></span></span>`;
 			}
 			return match;
+		});
+		
+		const emojiCharMap = new Map<string, string>();
+		for (const emoji of allEmojis) {
+			if (!emoji.isCustom && emoji.emoji) {
+				emojiCharMap.set(emoji.emoji, emoji.name);
+			}
+		}
+		
+		const emojiRegex = /(?:\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(?:\p{Emoji_Modifier}|\u200D\p{Emoji_Presentation}|\u200D\p{Emoji}\uFE0F)*/gu;
+		
+		const marker = '\x00EMOJI_WRAPPED\x00';
+		let markerIndex = 0;
+		const wrappedEmojis: string[] = [];
+		
+		html = html.replace(/<span class="emoji-hover">[\s\S]*?<\/span><\/span><\/span>/g, (match) => {
+			wrappedEmojis.push(match);
+			return `${marker}${markerIndex++}${marker}`;
+		});
+		
+		html = html.replace(emojiRegex, (emojiChar) => {
+			if (emojiChar === '\uFE0F' || emojiChar === '\u200D') {
+				return emojiChar;
+			}
+			
+			let name = emojiCharMap.get(emojiChar);
+			if (!name) {
+				name = getNameFromEmoji(emojiChar) || 'emoji';
+			}
+			
+			const escapedName = name.replace(/"/g, '&quot;');
+			return `<span class="emoji-hover"><span class="emoji-char">${emojiChar}</span><span class="emoji-tooltip-popup"><span class="tooltip-emoji-char">${emojiChar}</span><span class="tooltip-name">:${escapedName}:</span></span></span>`;
+		});
+		
+		html = html.replace(new RegExp(`${marker}(\\d+)${marker}`, 'g'), (_, index) => {
+			return wrappedEmojis[parseInt(index, 10)] || '';
 		});
 		
 		return html;
@@ -763,6 +804,8 @@
 		}
 	});
 </script>
+
+<EmojiTooltip bind:container={messagesContainer} />
 
 <section class="chat-section">
 	<div class="chat-container">
@@ -871,6 +914,35 @@
 </section>
 
 <style>
+	:global(.emoji-hover) {
+		display: inline-block;
+		cursor: pointer;
+		position: relative;
+	}
+
+	:global(.emoji-hover .emoji-char) {
+		display: inline;
+	}
+
+	:global(.emoji-hover .emoji-tooltip-popup) {
+		display: none !important;
+		position: absolute;
+		visibility: hidden;
+		pointer-events: none;
+	}
+
+	:global(.custom-emoji-inline) {
+		display: inline-block;
+		width: 1.375em;
+		height: 1.375em;
+		vertical-align: -0.2em;
+		image-rendering: -webkit-optimize-contrast;
+		image-rendering: crisp-edges;
+		object-fit: contain;
+		max-width: 22px;
+		max-height: 22px;
+	}
+
 	.chat-section {
 		display: flex;
 		flex-direction: column;
