@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { Plus, Edit, Trash2, Eye, EyeOff, FolderKanban, Calendar, Clock, Star, FolderTree, Tag } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
-	import { getAllProjects, deleteProject, type Project } from '$lib/admin/services/projectsService';
+	import { getAllProjects, deleteProject, updateProjectOrder, type Project } from '$lib/admin/services/projectsService';
 	import SlideInPanel from '$lib/admin/components/ui/SlideInPanel.svelte';
 	import ProjectEditor from '$lib/admin/components/ProjectEditor.svelte';
 	import ProjectCategoryManager from '$lib/admin/components/ProjectCategoryManager.svelte';
@@ -17,20 +17,11 @@
 	let showCategoryManager = $state(false);
 	let showTagManager = $state(false);
 
-	let sortedProjects = $derived.by(() => {
-		const projectsCopy = [...projects];
-		return projectsCopy.sort((a, b) => {
-			const dateA = sortBy === 'created' ? new Date(a.createdAt) : new Date(a.updatedAt);
-			const dateB = sortBy === 'created' ? new Date(b.createdAt) : new Date(b.updatedAt);
-			return dateB.getTime() - dateA.getTime();
-		});
-	});
 
-	// Group projects by category
 	let projectsByCategory = $derived.by(() => {
-		const grouped: Record<string, { category: { id: string; name: string; displayOrder: number }; projects: typeof sortedProjects }> = {};
+		const grouped: Record<string, { category: { id: string; name: string; displayOrder: number }; projects: Project[] }> = {};
 		
-		sortedProjects.forEach(project => {
+		projects.forEach(project => {
 			const categoryId = project.category.id;
 			if (!grouped[categoryId]) {
 				grouped[categoryId] = {
@@ -45,10 +36,25 @@
 			grouped[categoryId].projects.push(project);
 		});
 		
+		Object.values(grouped).forEach(group => {
+			group.projects.sort((a, b) => {
+				if (a.displayOrder !== b.displayOrder) {
+					return a.displayOrder - b.displayOrder;
+				}
+				const dateA = sortBy === 'created' ? new Date(a.createdAt) : new Date(a.updatedAt);
+				const dateB = sortBy === 'created' ? new Date(b.createdAt) : new Date(b.updatedAt);
+				return dateB.getTime() - dateA.getTime();
+			});
+		});
+		
 		return Object.values(grouped).sort((a, b) => {
 			return a.category.displayOrder - b.category.displayOrder;
 		});
 	});
+	
+	let draggedProjectId = $state<string | null>(null);
+	let draggedOverProjectId = $state<string | null>(null);
+	let isDragging = $state(false);
 
 	onMount(async () => {
 		await loadProjects();
@@ -136,6 +142,96 @@
 		if (description.length <= maxLength) return description;
 		return description.substring(0, maxLength) + '...';
 	}
+	
+	function handleDragStart(event: DragEvent, projectId: string) {
+		if (!event.dataTransfer) return;
+		draggedProjectId = projectId;
+		isDragging = true;
+		event.dataTransfer.effectAllowed = 'move';
+		event.dataTransfer.setData('text/plain', projectId);
+		setTimeout(() => {
+			if (event.dataTransfer) {
+				event.dataTransfer.setDragImage(event.target as HTMLElement, 0, 0);
+			}
+		}, 0);
+	}
+	
+	function handleDragOver(event: DragEvent, projectId: string) {
+		event.preventDefault();
+		if (!draggedProjectId || draggedProjectId === projectId) return;
+		event.dataTransfer!.dropEffect = 'move';
+		draggedOverProjectId = projectId;
+	}
+	
+	function handleDragLeave() {
+		draggedOverProjectId = null;
+	}
+	
+	async function handleDrop(event: DragEvent, targetProjectId: string, categoryId: string) {
+		event.preventDefault();
+		if (!draggedProjectId || draggedProjectId === targetProjectId) {
+			draggedProjectId = null;
+			draggedOverProjectId = null;
+			isDragging = false;
+			return;
+		}
+		
+		const categoryGroup = projectsByCategory.find(g => g.category.id === categoryId);
+		if (!categoryGroup) {
+			draggedProjectId = null;
+			draggedOverProjectId = null;
+			isDragging = false;
+			return;
+		}
+		
+		const draggedProject = categoryGroup.projects.find(p => p.id === draggedProjectId);
+		const targetProject = categoryGroup.projects.find(p => p.id === targetProjectId);
+		
+		if (!draggedProject || !targetProject) {
+			draggedProjectId = null;
+			draggedOverProjectId = null;
+			isDragging = false;
+			return;
+		}
+		
+		// Get the current index positions
+		const draggedIndex = categoryGroup.projects.findIndex(p => p.id === draggedProjectId);
+		const targetIndex = categoryGroup.projects.findIndex(p => p.id === targetProjectId);
+		
+		// Reorder the projects array
+		const reorderedProjects = [...categoryGroup.projects];
+		reorderedProjects.splice(draggedIndex, 1);
+		reorderedProjects.splice(targetIndex, 0, draggedProject);
+		
+		// Update displayOrder for all projects in the category
+		const projectOrders = reorderedProjects.map((project, index) => ({
+			id: project.id,
+			displayOrder: index
+		}));
+		
+		try {
+			await updateProjectOrder(projectOrders);
+			await loadProjects();
+			toast.success('Project order updated', {
+				description: 'The project order has been saved'
+			});
+		} catch (err) {
+			console.error('Error updating project order:', err);
+			toast.error('Failed to update project order', {
+				description: 'Please try again'
+			});
+		}
+		
+		draggedProjectId = null;
+		draggedOverProjectId = null;
+		isDragging = false;
+	}
+	
+	function handleDragEnd() {
+		draggedProjectId = null;
+		draggedOverProjectId = null;
+		isDragging = false;
+	}
 </script>
 
 <div class="projects-list">
@@ -198,9 +294,20 @@
 							</thead>
 							<tbody>
 								{#each categoryGroup.projects as project (project.id)}
-									<tr class="project-row">
+									<tr 
+										class="project-row"
+										class:dragging={draggedProjectId === project.id}
+										class:drag-over={draggedOverProjectId === project.id}
+										draggable="true"
+										ondragstart={(e) => handleDragStart(e, project.id)}
+										ondragover={(e) => handleDragOver(e, project.id)}
+										ondragleave={handleDragLeave}
+										ondrop={(e) => handleDrop(e, project.id, categoryGroup.category.id)}
+										ondragend={handleDragEnd}
+									>
 										<td class="title-cell">
 											<div class="title-content">
+												<span class="drag-handle" title="Drag to reorder">⋮⋮</span>
 												<span class="title-text">{project.title}</span>
 											</div>
 										</td>
@@ -487,10 +594,43 @@
 	.projects-table tbody tr.project-row {
 		border-bottom: 1px solid var(--border-color, #3a3a3a);
 		transition: background 0.2s ease;
+		cursor: move;
 	}
 
 	.projects-table tbody tr.project-row:hover {
 		background: var(--bg-tertiary, #3a3a3a);
+	}
+	
+	.projects-table tbody tr.project-row.dragging {
+		opacity: 0.5;
+	}
+	
+	.projects-table tbody tr.project-row.drag-over {
+		border-top: 2px solid var(--accent-color, #6366f1);
+	}
+	
+	.drag-handle {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 20px;
+		height: 20px;
+		color: var(--text-secondary, #a1a1aa);
+		cursor: grab;
+		user-select: none;
+		font-size: 12px;
+		line-height: 1;
+		margin-right: 8px;
+		opacity: 0.5;
+		transition: opacity 0.2s ease;
+	}
+	
+	.drag-handle:active {
+		cursor: grabbing;
+	}
+	
+	.projects-table tbody tr.project-row:hover .drag-handle {
+		opacity: 1;
 	}
 
 	.projects-table tbody tr.project-row:last-child {

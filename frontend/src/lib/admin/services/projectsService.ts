@@ -290,6 +290,30 @@ export async function deleteProjectCategory(id: string): Promise<void> {
 }
 
 /**
+ * Update project display order
+ */
+export async function updateProjectOrder(projectOrders: { id: string; displayOrder: number }[]): Promise<void> {
+	try {
+		const response = await fetch(`${API_BASE}/admin/order`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			credentials: 'include',
+			body: JSON.stringify({ projectOrders })
+		});
+
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.error || 'Failed to update project order');
+		}
+	} catch (error) {
+		console.error('Error updating project order:', error);
+		throw error;
+	}
+}
+
+/**
  * Update category display order
  */
 export async function updateCategoryOrder(categoryOrders: { id: string; displayOrder: number }[]): Promise<void> {

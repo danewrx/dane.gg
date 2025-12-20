@@ -435,6 +435,42 @@ router.post('/admin', requireSession, async (req, res) => {
 });
 
 /**
+ * Update project display order (authenticated users only)
+ */
+router.put('/admin/order', requireSession, async (req, res) => {
+  try {
+    const { projectOrders } = req.body;
+
+    if (!Array.isArray(projectOrders)) {
+      return res.status(400).json({
+        success: false,
+        error: 'projectOrders must be an array'
+      });
+    }
+
+    await Promise.all(
+      projectOrders.map(({ id, displayOrder }: { id: string; displayOrder: number }) =>
+        db
+          .update(projects)
+          .set({ displayOrder: parseInt(displayOrder.toString(), 10) })
+          .where(eq(projects.id, id))
+      )
+    );
+
+    res.json({
+      success: true,
+      message: 'Project order updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating project order:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update project order'
+    });
+  }
+});
+
+/**
  * Update a project (authenticated users only)
  */
 router.put('/admin/:id', requireSession, async (req, res) => {

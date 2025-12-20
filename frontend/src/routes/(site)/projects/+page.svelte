@@ -72,6 +72,7 @@
 					const totalProjects = categoryGroup.projects.length;
 
 					// Filter projects: show if featured OR if only one project in category
+
 					const visibleProjects = categoryGroup.projects.filter(project => {
 						if (totalProjects === 1) {
 							// Show the only project regardless of featured flag
