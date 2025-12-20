@@ -5,7 +5,7 @@
 	import AdminEmojiPicker from '$lib/admin/components/AdminEmojiPicker.svelte';
 	import AdminEmojiTooltip from '$lib/admin/components/AdminEmojiTooltip.svelte';
 	import { getEmojiFromName, getNameFromEmoji } from '$lib/shared/utils/emojiData';
-	import { trackEmojiUsage } from '$lib/shared/utils/recentEmojis';
+	import { trackEmojiUsage, getRecentEmojis } from '$lib/shared/utils/recentEmojis';
 
 	interface ChatMessage {
 		id?: string;
@@ -81,6 +81,12 @@
 	let isOpeningEmojiPicker = $state(false);
 	let emojiButtonRef: HTMLButtonElement | null = $state(null);
 	let messageInputDiv: HTMLDivElement | null = null;
+	
+	// Autocomplete state
+	let emojiAutocompleteOpen = $state(false);
+	let emojiAutocompleteMatches = $state<Array<{ name: string; emoji: string; isCustom: boolean; imageUrl?: string }>>([]);
+	let emojiAutocompleteIndex = $state(0);
+	let emojiAutocompleteQuery = $state('');
 	
 	// Extract text content from contenteditable, converting emoji images back to :name:
 	function getInputText(): string {
@@ -461,10 +467,98 @@
 
 	// Handle Enter key
 	function handleKeyDown(event: KeyboardEvent) {
+
+		if (emojiAutocompleteOpen && emojiAutocompleteMatches.length > 0) {
+			if (event.key === 'ArrowDown') {
+				event.preventDefault();
+				emojiAutocompleteIndex = (emojiAutocompleteIndex + 1) % emojiAutocompleteMatches.length;
+				return;
+			} else if (event.key === 'ArrowUp') {
+				event.preventDefault();
+				emojiAutocompleteIndex = emojiAutocompleteIndex === 0 
+					? emojiAutocompleteMatches.length - 1 
+					: emojiAutocompleteIndex - 1;
+				return;
+			} else if (event.key === 'Enter' || event.key === 'Tab') {
+				event.preventDefault();
+				insertAutocompleteEmoji(emojiAutocompleteMatches[emojiAutocompleteIndex]);
+				return;
+			} else if (event.key === 'Escape') {
+				emojiAutocompleteOpen = false;
+				return;
+			}
+		}
+		
 		if (event.key === 'Enter' && !event.shiftKey) {
 			event.preventDefault();
 			sendMessage();
 		}
+	}
+	
+	function insertAutocompleteEmoji(emoji: { name: string; emoji: string; isCustom: boolean; imageUrl?: string }) {
+		if (!messageInputDiv) return;
+		
+		const text = getInputText();
+		const cursorPos = getCaretPosition();
+		const beforeCursor = text.substring(0, cursorPos);
+		
+		const match = beforeCursor.match(/:([a-zA-Z0-9_-]*)$/);
+		if (!match) return;
+		
+		if (emoji.isCustom && emoji.imageUrl) {
+			trackEmojiUsage(`:${emoji.name}:`, emoji.name);
+		} else {
+			trackEmojiUsage(emoji.emoji, emoji.name);
+		}
+		
+		const selection = window.getSelection();
+		if (selection && selection.rangeCount > 0) {
+			const range = selection.getRangeAt(0);
+			
+			if (!messageInputDiv.contains(range.commonAncestorContainer)) {
+				range.selectNodeContents(messageInputDiv);
+				range.collapse(false);
+			}
+			
+			range.setStart(range.startContainer, Math.max(0, range.startOffset - match[0].length));
+			range.deleteContents();
+			
+			if (emoji.isCustom && emoji.imageUrl) {
+				const img = document.createElement('img');
+				img.src = emoji.imageUrl;
+				img.alt = `:${emoji.name}:`;
+				img.className = 'emoji-inline';
+				img.style.cssText = 'width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;';
+				range.insertNode(img);
+				range.setStartAfter(img);
+			} else {
+				const textNode = document.createTextNode(emoji.emoji);
+				range.insertNode(textNode);
+				range.setStartAfter(textNode);
+			}
+			
+			range.collapse(true);
+			selection.removeAllRanges();
+			selection.addRange(range);
+			
+			messageInputDiv.normalize();
+			const divs = messageInputDiv.querySelectorAll('div');
+			divs.forEach(div => {
+				const parent = div.parentNode;
+				if (parent) {
+					while (div.firstChild) {
+						parent.insertBefore(div.firstChild, div);
+					}
+					parent.removeChild(div);
+				}
+			});
+			messageInputDiv.normalize();
+			
+			inputValue = getInputText();
+			messageInputDiv.focus();
+		}
+		
+		emojiAutocompleteOpen = false;
 	}
 	
 	// Handle emoji selection
@@ -585,11 +679,12 @@
 		const beforeCursor = text.substring(0, cursorPos);
 		const afterCursor = text.substring(cursorPos);
 		
+		const incompleteMatch = beforeCursor.match(/:([a-zA-Z0-9_-]*)$/);
 		const completeMatch = beforeCursor.match(/:([a-zA-Z0-9_-]+):$/);
 		
-		if (completeMatch && completeMatch[1].length > 0) {
-			const emojiName = completeMatch[1];
-			let emoji = allEmojis.find(e => e.name.toLowerCase() === emojiName.toLowerCase());
+		if (completeMatch && completeMatch[1].length > 0 && allEmojis.length > 0) {
+			const emojiName = completeMatch[1].toLowerCase();
+			let emoji = allEmojis.find(e => e.name.toLowerCase() === emojiName);
 			
 			if (!emoji) {
 				const emojiChar = getEmojiFromName(emojiName);
@@ -656,9 +751,117 @@
 						}
 						
 						inputValue = getInputText();
+						emojiAutocompleteOpen = false;
 					}
 				}
+				return;
 			}
+
+			if (completeMatch && completeMatch[1].length > 0) {
+				const query = completeMatch[1].toLowerCase();
+				emojiAutocompleteQuery = query;
+				
+				const exactMatches: typeof allEmojis = [];
+				const startsWithMatches: typeof allEmojis = [];
+				const containsMatches: typeof allEmojis = [];
+				
+				for (const emoji of allEmojis) {
+					const name = emoji.name.toLowerCase();
+					if (name === query) {
+						exactMatches.push(emoji);
+					} else if (name.startsWith(query)) {
+						startsWithMatches.push(emoji);
+					} else if (name.includes(query)) {
+						containsMatches.push(emoji);
+					}
+				}
+				
+				const matches = [...exactMatches, ...startsWithMatches, ...containsMatches].slice(0, 8);
+				
+				if (matches.length > 0) {
+					emojiAutocompleteMatches = matches;
+					emojiAutocompleteIndex = 0;
+					emojiAutocompleteOpen = true;
+				} else {
+					emojiAutocompleteOpen = false;
+				}
+				return;
+			}
+		}
+		
+		const match = incompleteMatch;
+		
+		if (match && match[1] !== undefined && allEmojis.length > 0) {
+			if (match[1].length === 0) {
+				const recentEmojis = getRecentEmojis();
+				if (recentEmojis.length > 0) {
+					const recentEmojiData: typeof allEmojis = [];
+					for (const recent of recentEmojis) {
+						const found = allEmojis.find(e => 
+							e.emoji === recent.emoji || 
+							e.name.toLowerCase() === recent.name.toLowerCase() ||
+							(e.isCustom && `:${e.name}:` === recent.emoji)
+						);
+						if (found) {
+							recentEmojiData.push(found);
+						}
+					}
+					
+					if (recentEmojiData.length > 0) {
+						emojiAutocompleteMatches = recentEmojiData.slice(0, 8);
+						emojiAutocompleteIndex = 0;
+						emojiAutocompleteOpen = true;
+						return;
+					}
+				}
+				
+				const popularEmojis = allEmojis.filter(e => 
+					['smile', 'joy', 'heart', 'thumbsup', 'fire', 'star', 'ok_hand', 'wave'].includes(e.name.toLowerCase())
+				).slice(0, 8);
+				if (popularEmojis.length > 0) {
+					emojiAutocompleteMatches = popularEmojis;
+					emojiAutocompleteIndex = 0;
+					emojiAutocompleteOpen = true;
+					return;
+				}
+				emojiAutocompleteOpen = false;
+				return;
+			}
+			
+			const query = match[1].toLowerCase();
+			if (!/^[a-z0-9_-]*$/.test(query)) {
+				emojiAutocompleteOpen = false;
+				return;
+			}
+			
+			emojiAutocompleteQuery = query;
+			
+			const exactMatches: typeof allEmojis = [];
+			const startsWithMatches: typeof allEmojis = [];
+			const containsMatches: typeof allEmojis = [];
+			
+			for (const emoji of allEmojis) {
+				const name = emoji.name.toLowerCase();
+				if (name === query) {
+					exactMatches.push(emoji);
+				} else if (name.startsWith(query)) {
+					startsWithMatches.push(emoji);
+				} else if (name.includes(query)) {
+					containsMatches.push(emoji);
+				}
+			}
+			
+			const matches = [...exactMatches, ...startsWithMatches, ...containsMatches].slice(0, 8);
+			
+			if (matches.length > 0) {
+				emojiAutocompleteMatches = matches;
+				emojiAutocompleteIndex = 0;
+				emojiAutocompleteOpen = true;
+			} else {
+				emojiAutocompleteOpen = false;
+			}
+		} else {
+			emojiAutocompleteOpen = false;
 		}
 	}
 	
@@ -921,19 +1124,46 @@
 			>
 				<Smile size={18} />
 			</button>
-			<div
-				class="message-input show-placeholder"
-				contenteditable={isConnected}
-				bind:this={messageInputDiv}
-				data-placeholder={isConnected ? "Type a message..." : "Connecting..."}
-				onkeydown={handleKeyDown}
-				oninput={handleInputChange}
-				onfocus={handleInputFocus}
-				onblur={handleInputBlur}
-				role="textbox"
-				tabindex="0"
-				aria-label="Chat input"
-			></div>
+			<div class="input-wrapper">
+				<div class="input-container">
+					<div
+						class="message-input show-placeholder"
+						contenteditable={isConnected}
+						bind:this={messageInputDiv}
+						data-placeholder={isConnected ? "Type a message..." : "Connecting..."}
+						onkeydown={handleKeyDown}
+						oninput={handleInputChange}
+						onfocus={handleInputFocus}
+						onblur={handleInputBlur}
+						role="textbox"
+						tabindex="0"
+						aria-label="Chat input"
+					></div>
+				</div>
+				{#if emojiAutocompleteOpen && emojiAutocompleteMatches.length > 0}
+					<div class="emoji-autocomplete">
+						{#each emojiAutocompleteMatches as match, index}
+							<button
+								class="autocomplete-item"
+								class:active={index === emojiAutocompleteIndex}
+								onclick={() => insertAutocompleteEmoji(match)}
+								type="button"
+							>
+							{#if match.isCustom && match.imageUrl}
+								<img 
+									src={match.imageUrl} 
+									alt={match.name}
+									class="autocomplete-emoji-img"
+								/>
+								{:else}
+									<span class="autocomplete-emoji">{match.emoji}</span>
+								{/if}
+								<span class="autocomplete-name">:{match.name}:</span>
+							</button>
+						{/each}
+					</div>
+				{/if}
+			</div>
 			<button 
 				class="send-btn"
 				onclick={sendMessage}
@@ -1255,6 +1485,98 @@
 		border-top: 1px solid #404040;
 		background: #252525;
 		align-items: center;
+		position: relative;
+	}
+	
+	.input-wrapper {
+		position: relative;
+		flex: 1;
+		min-width: 0;
+	}
+	
+	.input-wrapper > .input-container {
+		position: relative;
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		padding: 0;
+		border: none;
+		background: transparent;
+	}
+	
+	.emoji-autocomplete {
+		position: absolute;
+		bottom: calc(100% + 4px);
+		left: 0;
+		background: #2d2d2d;
+		border: 1px solid #404040;
+		border-radius: 8px;
+		max-height: 200px;
+		overflow-y: auto;
+		z-index: 1000;
+		min-width: 200px;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+	}
+	
+	:global(html:not(.dark)) .emoji-autocomplete {
+		background: #ffffff;
+		border-color: #e5e7eb;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	}
+	
+	.autocomplete-item {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 8px 12px;
+		background: transparent;
+		border: none;
+		border-bottom: 1px solid #404040;
+		color: #e8e8e8;
+		cursor: pointer;
+		width: 100%;
+		text-align: left;
+		font-size: 14px;
+		transition: background-color 0.2s;
+	}
+	
+	:global(html:not(.dark)) .autocomplete-item {
+		border-bottom-color: #e5e7eb;
+		color: #1f2937;
+	}
+	
+	.autocomplete-item:last-child {
+		border-bottom: none;
+	}
+	
+	.autocomplete-item:hover,
+	.autocomplete-item.active {
+		background: #3a3a3a;
+	}
+	
+	:global(html:not(.dark)) .autocomplete-item:hover,
+	:global(html:not(.dark)) .autocomplete-item.active {
+		background: #f3f4f6;
+	}
+	
+	.autocomplete-emoji {
+		font-size: 18px;
+		line-height: 1;
+	}
+	
+	.autocomplete-emoji-img {
+		width: 18px;
+		height: 18px;
+		object-fit: contain;
+	}
+	
+	.autocomplete-name {
+		font-size: 12px;
+		color: #a1a1aa;
+	}
+	
+	:global(html:not(.dark)) .autocomplete-name {
+		color: #6b7280;
 	}
 
 	:global(html:not(.dark)) .input-container {
