@@ -2,8 +2,9 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
 	import EmojiPicker from './EmojiPicker.svelte';
+	import EmojiTooltip from './EmojiTooltip.svelte';
 	import { Smile } from 'lucide-svelte';
-	import { getAllDefaultEmojis, getEmojiFromName, type EmojiData } from '$lib/shared/utils/emojiData';
+	import { getAllDefaultEmojis, getEmojiFromName, getNameFromEmoji, type EmojiData } from '$lib/shared/utils/emojiData';
 	import { trackEmojiUsage } from '$lib/shared/utils/recentEmojis';
 
 	let globalWsInstance: WebSocket | null = null;
@@ -73,7 +74,7 @@
 	let isConnected = $state(false);
 	let connectionStatus = $state<'connecting' | 'connected' | 'disconnected'>('disconnected');
 	let ws: WebSocket | null = null;
-	let messagesContainer: HTMLDivElement | null = null;
+	let messagesContainer = $state<HTMLDivElement | null>(null);
 	let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 	let isDestroyed = $state(false);
 	let hasDisconnectedMessage = $state(false);
@@ -988,19 +989,62 @@
 			.replace(/"/g, '&quot;')
 			.replace(/'/g, '&#039;');
 		
-		// Replace :emojiname: with emoji images or characters
 		html = html.replace(/:([a-zA-Z0-9_-]+):/g, (match, name) => {
 			const emoji = allEmojis.find(e => e.name.toLowerCase() === name.toLowerCase());
 			if (emoji) {
 				if (emoji.isCustom && emoji.imageUrl) {
 					const imageUrl = emoji.imageUrl.trim();
 					if (imageUrl) {
-						return `<img src="${imageUrl}" alt=":${emoji.name}:" class="custom-emoji-inline" title=":${emoji.name}:" style="width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">`;
+						const escapedName = emoji.name.replace(/"/g, '&quot;');
+						const escapedUrl = imageUrl.replace(/"/g, '&quot;');
+						return `<span class="emoji-hover" data-tooltip=":${escapedName}:" data-emoji-url="${escapedUrl}">
+							<img src="${escapedUrl}" alt=":${escapedName}:" class="custom-emoji-inline">
+							<span class="emoji-tooltip-popup"><img src="${escapedUrl}" class="tooltip-emoji-img"><span class="tooltip-name">:${escapedName}:</span></span>
+						</span>`;
 					}
 				}
-				return emoji.emoji;
+				const escapedEmoji = emoji.emoji.replace(/"/g, '&quot;');
+				const escapedName = emoji.name.replace(/"/g, '&quot;');
+				return `<span class="emoji-hover"><span class="emoji-char">${emoji.emoji}</span><span class="emoji-tooltip-popup"><span class="tooltip-emoji-char">${emoji.emoji}</span><span class="tooltip-name">:${escapedName}:</span></span></span>`;
 			}
 			return match;
+		});
+		
+		const emojiCharMap = new Map<string, string>();
+		for (const emoji of allEmojis) {
+			if (!emoji.isCustom && emoji.emoji) {
+				emojiCharMap.set(emoji.emoji, emoji.name);
+			}
+		}
+		
+		// Comprehensive emoji regex
+		const emojiRegex = /(?:\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(?:\p{Emoji_Modifier}|\u200D\p{Emoji_Presentation}|\u200D\p{Emoji}\uFE0F)*/gu;
+		
+		const marker = '\x00EMOJI_WRAPPED\x00';
+		let markerIndex = 0;
+		const wrappedEmojis: string[] = [];
+		
+		html = html.replace(/<span class="emoji-hover">[\s\S]*?<\/span><\/span><\/span>/g, (match) => {
+			wrappedEmojis.push(match);
+			return `${marker}${markerIndex++}${marker}`;
+		});
+		
+		html = html.replace(emojiRegex, (emojiChar) => {
+			if (emojiChar === '\uFE0F' || emojiChar === '\u200D') {
+				return emojiChar;
+			}
+			
+			let name = emojiCharMap.get(emojiChar);
+			if (!name) {
+				name = getNameFromEmoji(emojiChar) || 'emoji';
+			}
+			
+			const escapedName = name.replace(/"/g, '&quot;');
+			return `<span class="emoji-hover"><span class="emoji-char">${emojiChar}</span><span class="emoji-tooltip-popup"><span class="tooltip-emoji-char">${emojiChar}</span><span class="tooltip-name">:${escapedName}:</span></span></span>`;
+		});
+		
+		html = html.replace(new RegExp(`${marker}(\\d+)${marker}`, 'g'), (_, index) => {
+			return wrappedEmojis[parseInt(index, 10)] || '';
 		});
 		
 		return html;
@@ -1025,10 +1069,10 @@
 				// Listen for notification setting changes
 				window.addEventListener('chatNotificationSettingChanged', handleNotificationSettingChange as EventListener);
 				
-				// Connect to WebSocket (admin config will be received on connect)
+			// Connect to WebSocket (admin config will be received on connect)
+			setTimeout(() => {
+				connect();
 				setTimeout(() => {
-					connect();
-					setTimeout(() => {
 						scrollToBottom();
 					}, 100);
 				}, 50);
@@ -1070,6 +1114,8 @@
 		notificationAudio = null;
 	});
 </script>
+
+<EmojiTooltip bind:container={messagesContainer} />
 
 <div class="chat-container">
 	<div class="chat-messages" bind:this={messagesContainer}>
@@ -1454,7 +1500,7 @@
 		font-family: 'Courier New', monospace;
 	}
 
-	.custom-emoji-inline {
+	:global(.custom-emoji-inline) {
 		display: inline-block;
 		width: 1.375em;
 		height: 1.375em;
@@ -1510,7 +1556,7 @@
 		cursor: not-allowed;
 	}
 
-	.chat-input .emoji-inline {
+	.chat-input :global(.emoji-inline) {
 		width: 1.375em;
 		height: 1.375em;
 		max-width: 22px;
@@ -1520,6 +1566,47 @@
 		object-fit: contain;
 		image-rendering: -webkit-optimize-contrast;
 		image-rendering: crisp-edges;
+	}
+
+	:global(.emoji-hover) {
+		display: inline-block;
+		position: relative;
+		cursor: pointer;
+	}
+
+	:global(.emoji-hover .emoji-char) {
+		display: inline;
+	}
+
+	:global(.emoji-hover .emoji-tooltip-popup) {
+		display: none !important;
+		position: absolute;
+		visibility: hidden;
+		pointer-events: none;
+	}
+
+	:global(.emoji-hover .tooltip-emoji-char) {
+		font-size: 32px;
+		line-height: 1;
+		display: block;
+		text-align: center;
+	}
+
+	:global(.emoji-hover .tooltip-emoji-img) {
+		width: 40px;
+		height: 40px;
+		object-fit: contain;
+		display: block;
+		margin: 0 auto;
+	}
+
+	:global(.emoji-hover .tooltip-name) {
+		font-size: 11px;
+		color: #b0b0b0;
+		font-family: 'Courier New', monospace;
+		display: block;
+		text-align: center;
+		margin-top: 4px;
 	}
 
 	.send-button {
