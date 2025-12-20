@@ -3,6 +3,7 @@
 	import { browser } from '$app/environment';
 	import { MessageSquare, Send, Trash2, Smile, Loader2 } from 'lucide-svelte';
 	import AdminEmojiPicker from '$lib/admin/components/AdminEmojiPicker.svelte';
+	import { getEmojiFromName } from '$lib/shared/utils/emojiData';
 
 	interface ChatMessage {
 		id?: string;
@@ -460,61 +461,20 @@
 		
 		let emojiToInsert = emojiText;
 		if (emojiText.startsWith(':') && emojiText.endsWith(':')) {
-			const emojiName = emojiText.slice(1, -1).toLowerCase();
+			const emojiName = emojiText.slice(1, -1);
 			
-			const emoji = allEmojis.find(e => e.name.toLowerCase() === emojiName);
+			const emoji = allEmojis.find(e => e.name.toLowerCase() === emojiName.toLowerCase());
 			if (emoji) {
-				if (!emoji.isCustom) {
+				if (emoji.isCustom && emoji.imageUrl) {
+					// Custom emoji
+					emojiToInsert = emojiText;
+				} else {
 					emojiToInsert = emoji.emoji;
 				}
 			} else {
-				const emojiMap: Record<string, string> = {
-					// Smileys
-					'smile': '😀', 'grin': '😃', 'smile_big': '😄', 'grin_wide': '😁', 'laugh': '😆',
-					'sweat_smile': '😅', 'rofl': '🤣', 'joy': '😂', 'slight_smile': '🙂', 'upside_down': '🙃',
-					'wink': '😉', 'blush': '😊', 'innocent': '😇', 'love_eyes': '🥰', 'heart_eyes': '😍',
-					'star_eyes': '🤩', 'kiss': '😘', 'kiss_light': '😗', 'kiss_blush': '😚', 'kiss_smile': '😙',
-					// Hearts
-					'heart': '❤️', 'orange_heart': '🧡', 'yellow_heart': '💛', 'green_heart': '💚', 'blue_heart': '💙',
-					'purple_heart': '💜', 'black_heart': '🖤', 'white_heart': '🤍', 'brown_heart': '🤎', 'broken_heart': '💔',
-					'heart_fire': '❤️‍🔥', 'heart_bandage': '❤️‍🩹', 'two_hearts': '💕', 'revolving_hearts': '💞',
-					'beating_heart': '💓', 'growing_heart': '💗', 'sparkling_heart': '💖', 'cupid': '💘',
-					'gift_heart': '💝', 'heart_decoration': '💟',
-					// Gestures
-					'thumbsup': '👍', 'thumbsdown': '👎', 'ok_hand': '👌', 'peace': '✌️', 'crossed_fingers': '🤞',
-					'love_you': '🤟', 'rock_on': '🤘', 'call_me': '🤙', 'point_left': '👈', 'point_right': '👉',
-					'point_up': '👆', 'point_down': '👇', 'point_up_one': '☝️', 'clap': '👏', 'raised_hands': '🙌',
-					'open_hands': '👐', 'palms_up': '🤲', 'handshake': '🤝', 'pray': '🙏', 'writing': '✍️',
-					// Reactions
-					'fire': '🔥', 'hundred': '💯', 'star': '⭐', 'sparkles': '✨', 'star2': '🌟',
-					'dizzy': '💫', 'zap': '⚡', 'boom': '💥', 'anger': '💢', 'sweat_drops': '💦',
-					'dash': '💨', 'party': '🎉', 'confetti': '🎊', 'balloon': '🎈', 'gift': '🎁',
-					'trophy': '🏆', 'first_place': '🥇', 'second_place': '🥈', 'third_place': '🥉', 'medal': '🎖️',
-					// Animals
-					'dog': '🐶', 'cat': '🐱', 'mouse': '🐭', 'hamster': '🐹', 'rabbit': '🐰',
-					'fox': '🦊', 'bear': '🐻', 'panda': '🐼', 'koala': '🐨', 'tiger': '🐯',
-					'lion': '🦁', 'cow': '🐮', 'pig': '🐷', 'frog': '🐸', 'monkey': '🐵',
-					'chicken': '🐔', 'penguin': '🐧', 'bird': '🐦', 'baby_chick': '🐤', 'eagle': '🦅',
-					// Food
-					'apple': '🍎', 'banana': '🍌', 'grapes': '🍇', 'strawberry': '🍓', 'peach': '🍑',
-					'cherries': '🍒', 'pizza': '🍕', 'hamburger': '🍔', 'fries': '🍟', 'hotdog': '🌭',
-					'popcorn': '🍿', 'doughnut': '🍩', 'cookie': '🍪', 'birthday': '🎂', 'cake': '🍰',
-					'cupcake': '🧁', 'chocolate': '🍫', 'candy': '🍬', 'lollipop': '🍭', 'custard': '🍮',
-					// Objects (note: 'mouse' for computer mouse is handled separately if needed)
-					'computer': '💻', 'iphone': '📱', 'watch': '⌚', 'desktop': '🖥️', 'printer': '🖨️',
-					'keyboard': '⌨️', 'trackball': '🖲️', 'joystick': '🕹️', 'clamp': '🗜️',
-					'floppy_disk': '💾', 'cd': '💿', 'dvd': '📀', 'vhs': '📼', 'camera': '📷',
-					'camera_flash': '📸', 'video_camera': '📹', 'movie_camera': '🎥', 'tv': '📺', 'radio': '📻',
-					// Symbols
-					'check': '✅', 'x': '❌', 'o': '⭕', 'question': '❓', 'question_white': '❔',
-					'exclamation': '❗', 'exclamation_white': '❕', 'speech_balloon': '💬', 'thought_balloon': '💭',
-					'anger_balloon': '🗯️', 'spades': '♠️', 'hearts': '♥️', 'diamonds': '♦️', 'clubs': '♣️',
-					'joker': '🃏', 'mahjong': '🀄', 'flower_playing_cards': '🎴', 'performing_arts': '🎭',
-					'frame_photo': '🖼️', 'art': '🎨'
-				};
-				
-				if (emojiMap[emojiName]) {
-					emojiToInsert = emojiMap[emojiName];
+				const emojiChar = getEmojiFromName(emojiName);
+				if (emojiChar) {
+					emojiToInsert = emojiChar;
 				}
 			}
 		}
@@ -595,8 +555,19 @@
 		const completeMatch = beforeCursor.match(/:([a-zA-Z0-9_-]+):$/);
 		
 		if (completeMatch && completeMatch[1].length > 0) {
-			const emojiName = completeMatch[1].toLowerCase();
-			const emoji = allEmojis.find(e => e.name.toLowerCase() === emojiName);
+			const emojiName = completeMatch[1];
+			let emoji = allEmojis.find(e => e.name.toLowerCase() === emojiName.toLowerCase());
+			
+			if (!emoji) {
+				const emojiChar = getEmojiFromName(emojiName);
+				if (emojiChar) {
+					emoji = {
+						name: emojiName,
+						emoji: emojiChar,
+						isCustom: false
+					};
+				}
+			}
 			
 			if (emoji) {
 				const start = cursorPos - completeMatch[0].length;
@@ -663,9 +634,17 @@
 		if (showEmojiPicker && browser) {
 			const handleClickOutside = (event: MouseEvent) => {
 				const target = event.target as HTMLElement;
-				if (!target.closest('.admin-emoji-picker') && !target.closest('.emoji-btn')) {
-					showEmojiPicker = false;
+
+				if (
+					target.closest('.emoji-picker') || 
+					target.closest('.admin-emoji-picker') || 
+					target.closest('.emoji-btn') ||
+					target.closest('.picker-tabs') ||
+					target.closest('.picker-tab')
+				) {
+					return;
 				}
+				showEmojiPicker = false;
 			};
 			
 			document.addEventListener('click', handleClickOutside);
@@ -686,7 +665,19 @@
 		
 		// Replace :emojiname: with emoji images or characters
 		html = html.replace(/:([a-zA-Z0-9_-]+):/g, (match, name) => {
-			const emoji = allEmojis.find(e => e.name.toLowerCase() === name.toLowerCase());
+			let emoji = allEmojis.find(e => e.name.toLowerCase() === name.toLowerCase());
+			
+			if (!emoji) {
+				const emojiChar = getEmojiFromName(name);
+				if (emojiChar) {
+					emoji = {
+						name: name,
+						emoji: emojiChar,
+						isCustom: false
+					};
+				}
+			}
+			
 			if (emoji) {
 				if (emoji.isCustom && emoji.imageUrl) {
 					return `<img src="${emoji.imageUrl}" alt=":${emoji.name}:" class="custom-emoji-inline" title=":${emoji.name}:" style="width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">`;

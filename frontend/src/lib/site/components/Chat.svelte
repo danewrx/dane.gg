@@ -3,6 +3,7 @@
 	import { browser } from '$app/environment';
 	import EmojiPicker from './EmojiPicker.svelte';
 	import { Smile } from 'lucide-svelte';
+	import { getAllDefaultEmojis, getEmojiFromName, type EmojiData } from '$lib/shared/utils/emojiData';
 
 	let globalWsInstance: WebSocket | null = null;
 	
@@ -84,7 +85,7 @@
 	let emojiAutocompleteMatches = $state<Array<{ name: string; emoji: string; isCustom: boolean; imageUrl?: string }>>([]);
 	let emojiAutocompleteIndex = $state(0);
 	let emojiAutocompleteQuery = $state('');
-	let allEmojis = $state<Array<{ name: string; emoji: string; isCustom: boolean; imageUrl?: string }>>([]);
+	let allEmojis = $state<EmojiData[]>([]);
 	
 	let { userCount = $bindable(0) }: { userCount?: number } = $props();
 
@@ -592,44 +593,14 @@
 		if (!browser || isLoadingEmojis) return;
 		
 		try {
-			const defaultEmojis = [
-				// Smileys
-				{ name: 'smile', emoji: '😀', isCustom: false },
-				{ name: 'grin', emoji: '😃', isCustom: false },
-				{ name: 'joy', emoji: '😂', isCustom: false },
-				{ name: 'wink', emoji: '😉', isCustom: false },
-				{ name: 'blush', emoji: '😊', isCustom: false },
-				// Hearts
-				{ name: 'heart', emoji: '❤️', isCustom: false },
-				{ name: 'orange_heart', emoji: '🧡', isCustom: false },
-				{ name: 'yellow_heart', emoji: '💛', isCustom: false },
-				{ name: 'green_heart', emoji: '💚', isCustom: false },
-				{ name: 'blue_heart', emoji: '💙', isCustom: false },
-				{ name: 'purple_heart', emoji: '💜', isCustom: false },
-				// Gestures
-				{ name: 'thumbsup', emoji: '👍', isCustom: false },
-				{ name: 'thumbsdown', emoji: '👎', isCustom: false },
-				{ name: 'ok_hand', emoji: '👌', isCustom: false },
-				{ name: 'clap', emoji: '👏', isCustom: false },
-				{ name: 'pray', emoji: '🙏', isCustom: false },
-				// Reactions
-				{ name: 'fire', emoji: '🔥', isCustom: false },
-				{ name: 'star', emoji: '⭐', isCustom: false },
-				{ name: 'sparkles', emoji: '✨', isCustom: false },
-				{ name: 'party', emoji: '🎉', isCustom: false },
-				{ name: 'trophy', emoji: '🏆', isCustom: false },
-				// Symbols
-				{ name: 'check', emoji: '✅', isCustom: false },
-				{ name: 'x', emoji: '❌', isCustom: false },
-				{ name: 'question', emoji: '❓', isCustom: false },
-				{ name: 'exclamation', emoji: '❗', isCustom: false },
-			];
+
+			const defaultEmojis = getAllDefaultEmojis();
 			
 			// Load custom emojis
 			const response = await fetch('/api/emojis');
 			if (response.ok) {
 				const data = await response.json();
-				const customEmojis = (data.data || []).map((e: any) => ({
+				const customEmojis: EmojiData[] = (data.data || []).map((e: any) => ({
 					name: e.name,
 					emoji: `:${e.name}:`,
 					isCustom: true,
@@ -657,58 +628,13 @@
 			const emojiName = emojiText.slice(1, -1).toLowerCase();
 			
 			const emoji = allEmojis.find(e => e.name.toLowerCase() === emojiName);
-			if (emoji) {
-				if (!emoji.isCustom) {
-					emojiToInsert = emoji.emoji;
-				}
-			} else {
-				const emojiPickerMap: Record<string, string> = {
-					// Smileys
-					'smile': '😀', 'grin': '😃', 'smile_big': '😄', 'grin_wide': '😁', 'laugh': '😆',
-					'sweat_smile': '😅', 'rofl': '🤣', 'joy': '😂', 'slight_smile': '🙂', 'upside_down': '🙃',
-					'wink': '😉', 'blush': '😊', 'innocent': '😇', 'love_eyes': '🥰', 'heart_eyes': '😍',
-					'star_eyes': '🤩', 'kiss': '😘', 'kiss_light': '😗', 'kiss_blush': '😚', 'kiss_smile': '😙',
-					// Hearts
-					'heart': '❤️', 'orange_heart': '🧡', 'yellow_heart': '💛', 'green_heart': '💚', 'blue_heart': '💙',
-					'purple_heart': '💜', 'black_heart': '🖤', 'white_heart': '🤍', 'brown_heart': '🤎', 'broken_heart': '💔',
-					'heart_fire': '❤️‍🔥', 'heart_bandage': '❤️‍🩹', 'two_hearts': '💕', 'revolving_hearts': '💞',
-					'beating_heart': '💓', 'growing_heart': '💗', 'sparkling_heart': '💖', 'cupid': '💘',
-					'gift_heart': '💝', 'heart_decoration': '💟',
-					// Gestures
-					'thumbsup': '👍', 'thumbsdown': '👎', 'ok_hand': '👌', 'peace': '✌️', 'crossed_fingers': '🤞',
-					'love_you': '🤟', 'rock_on': '🤘', 'call_me': '🤙', 'point_left': '👈', 'point_right': '👉',
-					'point_up': '👆', 'point_down': '👇', 'point_up_one': '☝️', 'clap': '👏', 'raised_hands': '🙌',
-					'open_hands': '👐', 'palms_up': '🤲', 'handshake': '🤝', 'pray': '🙏', 'writing': '✍️',
-					// Reactions
-					'fire': '🔥', 'hundred': '💯', 'star': '⭐', 'sparkles': '✨', 'star2': '🌟',
-					'dizzy': '💫', 'zap': '⚡', 'boom': '💥', 'anger': '💢', 'sweat_drops': '💦',
-					'dash': '💨', 'party': '🎉', 'confetti': '🎊', 'balloon': '🎈', 'gift': '🎁',
-					'trophy': '🏆', 'first_place': '🥇', 'second_place': '🥈', 'third_place': '🥉', 'medal': '🎖️',
-					// Animals
-					'dog': '🐶', 'cat': '🐱', 'mouse': '🐭', 'hamster': '🐹', 'rabbit': '🐰',
-					'fox': '🦊', 'bear': '🐻', 'panda': '🐼', 'koala': '🐨', 'tiger': '🐯',
-					'lion': '🦁', 'cow': '🐮', 'pig': '🐷', 'frog': '🐸', 'monkey': '🐵',
-					'chicken': '🐔', 'penguin': '🐧', 'bird': '🐦', 'baby_chick': '🐤', 'eagle': '🦅',
-					// Food
-					'apple': '🍎', 'banana': '🍌', 'grapes': '🍇', 'strawberry': '🍓', 'peach': '🍑',
-					'cherries': '🍒', 'pizza': '🍕', 'hamburger': '🍔', 'fries': '🍟', 'hotdog': '🌭',
-					'popcorn': '🍿', 'doughnut': '🍩', 'cookie': '🍪', 'birthday': '🎂', 'cake': '🍰',
-					'cupcake': '🧁', 'chocolate': '🍫', 'candy': '🍬', 'lollipop': '🍭', 'custard': '🍮',
-					// Objects (note: 'mouse' for computer mouse is handled separately if needed)
-					'computer': '💻', 'iphone': '📱', 'watch': '⌚', 'desktop': '🖥️', 'printer': '🖨️',
-					'keyboard': '⌨️', 'trackball': '🖲️', 'joystick': '🕹️', 'clamp': '🗜️',
-					'floppy_disk': '💾', 'cd': '💿', 'dvd': '📀', 'vhs': '📼', 'camera': '📷',
-					'camera_flash': '📸', 'video_camera': '📹', 'movie_camera': '🎥', 'tv': '📺', 'radio': '📻',
-					// Symbols
-					'check': '✅', 'x': '❌', 'o': '⭕', 'question': '❓', 'question_white': '❔',
-					'exclamation': '❗', 'exclamation_white': '❕', 'speech_balloon': '💬', 'thought_balloon': '💭',
-					'anger_balloon': '🗯️', 'spades': '♠️', 'hearts': '♥️', 'diamonds': '♦️', 'clubs': '♣️',
-					'joker': '🃏', 'mahjong': '🀄', 'flower_playing_cards': '🎴', 'performing_arts': '🎭',
-					'frame_photo': '🖼️', 'art': '🎨'
-				};
+			if (emoji && !emoji.isCustom) {
+				emojiToInsert = emoji.emoji;
+			} else if (!emoji) {
 				
-				if (emojiPickerMap[emojiName]) {
-					emojiToInsert = emojiPickerMap[emojiName];
+				const emojiChar = getEmojiFromName(emojiName);
+				if (emojiChar) {
+					emojiToInsert = emojiChar;
 				}
 			}
 		}

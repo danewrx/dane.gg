@@ -3,6 +3,7 @@
 	import { Smile } from 'lucide-svelte';
 	import { browser } from '$app/environment';
 	import { onDestroy } from 'svelte';
+	import { getEmojiCategories, type EmojiData } from '$lib/shared/utils/emojiData';
 
 	const dispatch = createEventDispatcher<{
 		select: { emoji: string; isCustom?: boolean; imageUrl?: string };
@@ -24,208 +25,19 @@
 	let originalParent: Node | null = $state(null);
 	let originalNextSibling: Node | null = $state(null);
 
-	const emojiCategories = [
-		{
-			name: 'Smileys',
-			emojis: [
-				{ emoji: '😀', name: 'smile' },
-				{ emoji: '😃', name: 'grin' },
-				{ emoji: '😄', name: 'smile_big' },
-				{ emoji: '😁', name: 'grin_wide' },
-				{ emoji: '😆', name: 'laugh' },
-				{ emoji: '😅', name: 'sweat_smile' },
-				{ emoji: '🤣', name: 'rofl' },
-				{ emoji: '😂', name: 'joy' },
-				{ emoji: '🙂', name: 'slight_smile' },
-				{ emoji: '🙃', name: 'upside_down' },
-				{ emoji: '😉', name: 'wink' },
-				{ emoji: '😊', name: 'blush' },
-				{ emoji: '😇', name: 'innocent' },
-				{ emoji: '🥰', name: 'love_eyes' },
-				{ emoji: '😍', name: 'heart_eyes' },
-				{ emoji: '🤩', name: 'star_eyes' },
-				{ emoji: '😘', name: 'kiss' },
-				{ emoji: '😗', name: 'kiss_light' },
-				{ emoji: '😚', name: 'kiss_blush' },
-				{ emoji: '😙', name: 'kiss_smile' }
-			]
-		},
-		{
-			name: 'Hearts',
-			emojis: [
-				{ emoji: '❤️', name: 'heart' },
-				{ emoji: '🧡', name: 'orange_heart' },
-				{ emoji: '💛', name: 'yellow_heart' },
-				{ emoji: '💚', name: 'green_heart' },
-				{ emoji: '💙', name: 'blue_heart' },
-				{ emoji: '💜', name: 'purple_heart' },
-				{ emoji: '🖤', name: 'black_heart' },
-				{ emoji: '🤍', name: 'white_heart' },
-				{ emoji: '🤎', name: 'brown_heart' },
-				{ emoji: '💔', name: 'broken_heart' },
-				{ emoji: '❤️‍🔥', name: 'heart_fire' },
-				{ emoji: '❤️‍🩹', name: 'heart_bandage' },
-				{ emoji: '💕', name: 'two_hearts' },
-				{ emoji: '💞', name: 'revolving_hearts' },
-				{ emoji: '💓', name: 'beating_heart' },
-				{ emoji: '💗', name: 'growing_heart' },
-				{ emoji: '💖', name: 'sparkling_heart' },
-				{ emoji: '💘', name: 'cupid' },
-				{ emoji: '💝', name: 'gift_heart' },
-				{ emoji: '💟', name: 'heart_decoration' }
-			]
-		},
-		{
-			name: 'Gestures',
-			emojis: [
-				{ emoji: '👍', name: 'thumbsup' },
-				{ emoji: '👎', name: 'thumbsdown' },
-				{ emoji: '👌', name: 'ok_hand' },
-				{ emoji: '✌️', name: 'peace' },
-				{ emoji: '🤞', name: 'crossed_fingers' },
-				{ emoji: '🤟', name: 'love_you' },
-				{ emoji: '🤘', name: 'rock_on' },
-				{ emoji: '🤙', name: 'call_me' },
-				{ emoji: '👈', name: 'point_left' },
-				{ emoji: '👉', name: 'point_right' },
-				{ emoji: '👆', name: 'point_up' },
-				{ emoji: '👇', name: 'point_down' },
-				{ emoji: '☝️', name: 'point_up_one' },
-				{ emoji: '👏', name: 'clap' },
-				{ emoji: '🙌', name: 'raised_hands' },
-				{ emoji: '👐', name: 'open_hands' },
-				{ emoji: '🤲', name: 'palms_up' },
-				{ emoji: '🤝', name: 'handshake' },
-				{ emoji: '🙏', name: 'pray' },
-				{ emoji: '✍️', name: 'writing' }
-			]
-		},
-		{
-			name: 'Reactions',
-			emojis: [
-				{ emoji: '🔥', name: 'fire' },
-				{ emoji: '💯', name: 'hundred' },
-				{ emoji: '⭐', name: 'star' },
-				{ emoji: '✨', name: 'sparkles' },
-				{ emoji: '🌟', name: 'star2' },
-				{ emoji: '💫', name: 'dizzy' },
-				{ emoji: '⚡', name: 'zap' },
-				{ emoji: '💥', name: 'boom' },
-				{ emoji: '💢', name: 'anger' },
-				{ emoji: '💦', name: 'sweat_drops' },
-				{ emoji: '💨', name: 'dash' },
-				{ emoji: '🎉', name: 'party' },
-				{ emoji: '🎊', name: 'confetti' },
-				{ emoji: '🎈', name: 'balloon' },
-				{ emoji: '🎁', name: 'gift' },
-				{ emoji: '🏆', name: 'trophy' },
-				{ emoji: '🥇', name: 'first_place' },
-				{ emoji: '🥈', name: 'second_place' },
-				{ emoji: '🥉', name: 'third_place' },
-				{ emoji: '🎖️', name: 'medal' }
-			]
-		},
-		{
-			name: 'Animals',
-			emojis: [
-				{ emoji: '🐶', name: 'dog' },
-				{ emoji: '🐱', name: 'cat' },
-				{ emoji: '🐭', name: 'mouse' },
-				{ emoji: '🐹', name: 'hamster' },
-				{ emoji: '🐰', name: 'rabbit' },
-				{ emoji: '🦊', name: 'fox' },
-				{ emoji: '🐻', name: 'bear' },
-				{ emoji: '🐼', name: 'panda' },
-				{ emoji: '🐨', name: 'koala' },
-				{ emoji: '🐯', name: 'tiger' },
-				{ emoji: '🦁', name: 'lion' },
-				{ emoji: '🐮', name: 'cow' },
-				{ emoji: '🐷', name: 'pig' },
-				{ emoji: '🐸', name: 'frog' },
-				{ emoji: '🐵', name: 'monkey' },
-				{ emoji: '🐔', name: 'chicken' },
-				{ emoji: '🐧', name: 'penguin' },
-				{ emoji: '🐦', name: 'bird' },
-				{ emoji: '🐤', name: 'baby_chick' },
-				{ emoji: '🦅', name: 'eagle' }
-			]
-		},
-		{
-			name: 'Food',
-			emojis: [
-				{ emoji: '🍎', name: 'apple' },
-				{ emoji: '🍌', name: 'banana' },
-				{ emoji: '🍇', name: 'grapes' },
-				{ emoji: '🍓', name: 'strawberry' },
-				{ emoji: '🍑', name: 'peach' },
-				{ emoji: '🍒', name: 'cherries' },
-				{ emoji: '🍕', name: 'pizza' },
-				{ emoji: '🍔', name: 'hamburger' },
-				{ emoji: '🍟', name: 'fries' },
-				{ emoji: '🌭', name: 'hotdog' },
-				{ emoji: '🍿', name: 'popcorn' },
-				{ emoji: '🍩', name: 'doughnut' },
-				{ emoji: '🍪', name: 'cookie' },
-				{ emoji: '🎂', name: 'birthday' },
-				{ emoji: '🍰', name: 'cake' },
-				{ emoji: '🧁', name: 'cupcake' },
-				{ emoji: '🍫', name: 'chocolate' },
-				{ emoji: '🍬', name: 'candy' },
-				{ emoji: '🍭', name: 'lollipop' },
-				{ emoji: '🍮', name: 'custard' }
-			]
-		},
-		{
-			name: 'Objects',
-			emojis: [
-				{ emoji: '💻', name: 'computer' },
-				{ emoji: '📱', name: 'iphone' },
-				{ emoji: '⌚', name: 'watch' },
-				{ emoji: '🖥️', name: 'desktop' },
-				{ emoji: '🖨️', name: 'printer' },
-				{ emoji: '⌨️', name: 'keyboard' },
-				{ emoji: '🖱️', name: 'mouse' },
-				{ emoji: '🖲️', name: 'trackball' },
-				{ emoji: '🕹️', name: 'joystick' },
-				{ emoji: '🗜️', name: 'clamp' },
-				{ emoji: '💾', name: 'floppy_disk' },
-				{ emoji: '💿', name: 'cd' },
-				{ emoji: '📀', name: 'dvd' },
-				{ emoji: '📼', name: 'vhs' },
-				{ emoji: '📷', name: 'camera' },
-				{ emoji: '📸', name: 'camera_flash' },
-				{ emoji: '📹', name: 'video_camera' },
-				{ emoji: '🎥', name: 'movie_camera' },
-				{ emoji: '📺', name: 'tv' },
-				{ emoji: '📻', name: 'radio' }
-			]
-		},
-		{
-			name: 'Symbols',
-			emojis: [
-				{ emoji: '✅', name: 'check' },
-				{ emoji: '❌', name: 'x' },
-				{ emoji: '⭕', name: 'o' },
-				{ emoji: '❓', name: 'question' },
-				{ emoji: '❔', name: 'question_white' },
-				{ emoji: '❗', name: 'exclamation' },
-				{ emoji: '❕', name: 'exclamation_white' },
-				{ emoji: '💬', name: 'speech_balloon' },
-				{ emoji: '💭', name: 'thought_balloon' },
-				{ emoji: '🗯️', name: 'anger_balloon' },
-				{ emoji: '♠️', name: 'spades' },
-				{ emoji: '♥️', name: 'hearts' },
-				{ emoji: '♦️', name: 'diamonds' },
-				{ emoji: '♣️', name: 'clubs' },
-				{ emoji: '🃏', name: 'joker' },
-				{ emoji: '🀄', name: 'mahjong' },
-				{ emoji: '🎴', name: 'flower_playing_cards' },
-				{ emoji: '🎭', name: 'performing_arts' },
-				{ emoji: '🖼️', name: 'frame_photo' },
-				{ emoji: '🎨', name: 'art' }
-			]
-		}
-	];
+
+	function generateEmojiCategories(): Array<{ name: string; emojis: Array<{ emoji: string; name: string }> }> {
+		if (!browser) return [];
+		
+		const categories = getEmojiCategories();
+		
+		return categories.map((cat: { name: string; emojis: Array<{ emoji: string; name: string }> }) => ({
+			name: cat.name,
+			emojis: cat.emojis
+		}));
+	}
+
+	let emojiCategories = $state<Array<{ name: string; emojis: Array<{ emoji: string; name: string }> }>>([]);
 
 	let selectedCategory = $state('All');
 
@@ -375,6 +187,10 @@
 	});
 
 	onMount(() => {
+		if (browser) {
+			emojiCategories = generateEmojiCategories();
+			console.log('Emoji categories loaded:', emojiCategories.length, 'categories with', emojiCategories.reduce((sum, cat) => sum + cat.emojis.length, 0), 'total emojis');
+		}
 		if (!hasLoadedEmojis) {
 			loadCustomEmojis().then(() => {
 				hasLoadedEmojis = true;
