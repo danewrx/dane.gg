@@ -21,6 +21,7 @@
 		type ProjectTag
 	} from '$lib/admin/services/projectsService';
 	import { createEventDispatcher } from 'svelte';
+	import { PROJECT_STATUSES, getProjectStatusColor } from '$lib/shared/constants/projectConstants';
 
 	const dispatch = createEventDispatcher<{
 		save: void;
@@ -98,20 +99,6 @@
 	let loading = $state(false);
 	let saving = $state(false);
 
-	const activeStates = ['Active', 'In Progress', 'Complete', 'Abandoned', 'Archived'];
-	
-	// Color mapping for status options
-	const statusColors: Record<string, string> = {
-		'Active': '#10b981',      // Green
-		'In Progress': '#f97316',  // Orange
-		'Complete': '#10b981',      // Green
-		'Abandoned': '#ef4444',    // Red
-		'Archived': '#eab308'      // Yellow
-	};
-	
-	function getStatusColor(status: string): string {
-		return statusColors[status] || '#6b7280';
-	}
 
 	// Helper to convert icon name string to IconOption
 	async function iconNameToOption(iconName: string | null): Promise<IconOption | null> {
@@ -637,10 +624,10 @@
 			<div class="form-group">
 				<label for="active">Status</label>
 				<div class="status-select-wrapper">
-					<span class="status-indicator" style="background-color: {getStatusColor(active)};"></span>
+					<span class="status-indicator" style="background-color: {getProjectStatusColor(active)};"></span>
 					<select id="active" bind:value={active} class="form-input status-select">
-						{#each activeStates as state}
-							<option value={state} style="color: {getStatusColor(state)};">{state}</option>
+						{#each PROJECT_STATUSES as state}
+							<option value={state} style="color: {getProjectStatusColor(state)};">{state}</option>
 						{/each}
 					</select>
 				</div>

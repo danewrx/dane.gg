@@ -678,6 +678,118 @@ router.delete('/admin/:id', requireSession, async (req, res) => {
 });
 
 /**
+ * Get all published projects for a specific category (public endpoint)
+ */
+router.get('/category/:categoryId', generalLimiter, async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+
+    const [category] = await db
+      .select()
+      .from(projectCategories)
+      .where(eq(projectCategories.id, categoryId))
+      .limit(1);
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        error: 'Category not found'
+      });
+    }
+
+    const allProjects = await db
+      .select({
+        id: projects.id,
+        title: projects.title,
+        description: projects.description,
+        categoryId: projects.categoryId,
+        featured: projects.featured,
+        imageUrl: projects.imageUrl,
+        active: projects.active,
+        projectUrl: projects.projectUrl,
+        projectText: projects.projectText,
+        projectIcon: projects.projectIcon,
+        repoUrl: projects.repoUrl,
+        repoText: projects.repoText,
+        repoIcon: projects.repoIcon,
+        displayOrder: projects.displayOrder,
+        createdAt: projects.createdAt,
+        updatedAt: projects.updatedAt,
+        category: {
+          id: projectCategories.id,
+          name: projectCategories.name,
+          displayOrder: projectCategories.displayOrder,
+          createdAt: projectCategories.createdAt
+        }
+      })
+      .from(projects)
+      .innerJoin(projectCategories, eq(projects.categoryId, projectCategories.id))
+      .where(and(eq(projects.published, true), eq(projects.categoryId, categoryId)))
+      .orderBy(asc(projects.displayOrder), desc(projects.createdAt));
+
+    const projectsWithTags = await Promise.all(
+      allProjects.map(async (project) => {
+        const projectTagsList = await db
+          .select({
+            id: tags.id,
+            title: tags.title,
+            color: tags.color,
+            categoryId: tags.categoryId,
+            category: {
+              id: projectCategories.id,
+              name: projectCategories.name,
+              displayOrder: projectCategories.displayOrder,
+              createdAt: projectCategories.createdAt
+            }
+          })
+          .from(projectTags)
+          .innerJoin(tags, eq(projectTags.tagId, tags.id))
+          .leftJoin(projectCategories, eq(tags.categoryId, projectCategories.id))
+          .where(eq(projectTags.projectId, project.id));
+
+        return {
+          id: project.id,
+          title: project.title,
+          description: project.description,
+          featured: project.featured,
+          imageUrl: project.imageUrl,
+          active: project.active,
+          projectUrl: project.projectUrl,
+          projectText: project.projectText,
+          projectIcon: project.projectIcon,
+          repoUrl: project.repoUrl,
+          repoText: project.repoText,
+          repoIcon: project.repoIcon,
+          displayOrder: project.displayOrder,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt,
+          tags: projectTagsList
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      data: {
+        category: {
+          id: category.id,
+          name: category.name,
+          displayOrder: category.displayOrder,
+          createdAt: category.createdAt
+        },
+        projects: projectsWithTags
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching projects by category:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch projects'
+    });
+  }
+});
+
+/**
  * Get all project categories (public endpoint)
  */
 router.get('/categories', generalLimiter, async (req, res) => {

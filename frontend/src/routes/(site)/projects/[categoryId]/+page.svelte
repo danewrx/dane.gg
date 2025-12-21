@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
 	import Icon from '@iconify/svelte';
 	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
 	import { getProjectStatusColor } from '$lib/shared/constants/projectConstants';
@@ -35,7 +36,7 @@
 		tags: ProjectTag[];
 	}
 
-	interface CategoryGroup {
+	interface CategoryData {
 		category: {
 			id: string;
 			name: string;
@@ -45,51 +46,35 @@
 		projects: Project[];
 	}
 
-	let categories = $state<CategoryGroup[]>([]);
+	let categoryData = $state<CategoryData | null>(null);
 	let loading = $state(true);
 	let error = $state('');
 
-	onMount(async () => {
-		await loadProjects();
+	$effect(() => {
+		const categoryId = $page.params.categoryId;
+		if (categoryId) {
+			loadCategoryProjects(categoryId);
+		}
 	});
 
-	async function loadProjects() {
+	async function loadCategoryProjects(categoryId: string) {
 		try {
 			loading = true;
 			error = '';
-			const response = await fetch('/api/projects');
+			const response = await fetch(`/api/projects/category/${categoryId}`);
 			
 			if (!response.ok) {
+				if (response.status === 404) {
+					throw new Error('Category not found');
+				}
 				throw new Error('Failed to load projects');
 			}
 
 			const result = await response.json();
-			const allCategories: CategoryGroup[] = result.data || [];
-
-			// Filter projects: only show featured projects
-			const filteredCategories = allCategories
-				.map(categoryGroup => {
-					const visibleProjects = categoryGroup.projects.filter(project => {
-						return project.featured === true;
-					});
-
-					return {
-						...categoryGroup,
-						projects: visibleProjects
-					};
-				})
-				.filter(categoryGroup => categoryGroup.projects.length > 0)
-				// Sort by category displayOrder
-				.sort((a, b) => {
-					const orderDiff = (a.category.displayOrder || 0) - (b.category.displayOrder || 0);
-					if (orderDiff !== 0) return orderDiff;
-					return b.projects.length - a.projects.length;
-				});
-
-			categories = filteredCategories;
+			categoryData = result.data || null;
 		} catch (err) {
-			console.error('Error loading projects:', err);
-			error = 'Failed to load projects';
+			console.error('Error loading category projects:', err);
+			error = err instanceof Error ? err.message : 'Failed to load projects';
 		} finally {
 			loading = false;
 		}
@@ -98,7 +83,7 @@
 	function getImageUrl(imageUrl: string | null): string {
 		if (!imageUrl) return '';
 		
-		// If it's an external URL, return as-is
+		// If it's an external URL, return
 		if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
 			return imageUrl;
 		}
@@ -115,8 +100,8 @@
 </script>
 
 <svelte:head>
-	<title>Projects - dane.gg</title>
-	<meta name="description" content="Explore Dane's portfolio of software projects and designs." />
+	<title>{categoryData?.category.name || 'Projects'} - dane.gg</title>
+	<meta name="description" content="Explore {categoryData?.category.name || 'projects'} from Dane's portfolio." />
 </svelte:head>
 
 <div class="page-content">
@@ -127,121 +112,119 @@
 	{:else if error}
 		<div class="error">
 			<p>{error}</p>
+			<a href="/projects" class="back-link">← Back to Projects</a>
 		</div>
-	{:else if categories.length === 0}
+	{:else if !categoryData || categoryData.projects.length === 0}
 		<div class="empty">
-			<p>No projects available at the moment.</p>
+			<p>No projects available in this category.</p>
+			<a href="/projects" class="back-link">← Back to Projects</a>
 		</div>
 	{:else}
-		{#each categories as categoryGroup (categoryGroup.category.id)}
-			<section class="category-section">
-				<div class="category-header">
-					<h2 class="category-title">{categoryGroup.category.name}</h2>
-					<a href="/projects/{categoryGroup.category.id}" class="view-all-link">View all →</a>
-				</div>
-				
-				<div class="projects-grid">
-					{#each categoryGroup.projects as project (project.id)}
-						<article class="project-card">
-							{#if project.imageUrl}
-								<div class="project-image">
-									<img 
-										src={getImageUrl(project.imageUrl)} 
-										alt={project.title}
-										loading="lazy"
-									/>
-								</div>
+		<div class="category-header-section">
+			<a href="/projects" class="back-link">← Back to Projects</a>
+			<h1 class="category-title">{categoryData.category.name}</h1>
+		</div>
+		
+		<div class="projects-grid">
+			{#each categoryData.projects as project (project.id)}
+				<article class="project-card">
+					{#if project.imageUrl}
+						<div class="project-image">
+							<img 
+								src={getImageUrl(project.imageUrl)} 
+								alt={project.title}
+								loading="lazy"
+							/>
+						</div>
+					{/if}
+					
+					<div class="project-content">
+						<div class="project-header">
+							<h3 class="project-title">{project.title}</h3>
+							<div class="project-status">
+								<span class="status-indicator" style="background-color: {getProjectStatusColor(project.active)};"></span>
+								<span class="status-text">{project.active}</span>
+							</div>
+						</div>
+						
+						{#if project.tags && project.tags.length > 0}
+							<div class="project-tags">
+								{#each project.tags as tag (tag.id)}
+									<span 
+										class="tag" 
+										style="background-color: {tag.color}20; color: {tag.color}; border-color: {tag.color}40;"
+									>
+										{tag.title}
+									</span>
+								{/each}
+							</div>
+						{/if}
+						
+						<p class="project-description">{project.description}</p>
+						
+						<div class="project-actions">
+							{#if project.projectUrl}
+								{@const projectIconInfo = getIconRenderInfo(project.projectIcon)}
+								<a 
+									href={project.projectUrl} 
+									target="_blank" 
+									rel="noopener noreferrer"
+									class="action-button"
+								>
+									{#if projectIconInfo.type === 'component' && projectIconInfo.component}
+										{@const IconComponent = projectIconInfo.component}
+										<IconComponent size={16} />
+									{:else if projectIconInfo.type === 'iconify' && projectIconInfo.icon}
+										<Icon icon={projectIconInfo.icon} width="16" height="16" />
+									{:else if projectIconInfo.type === 'svg' && projectIconInfo.url}
+										<img src={projectIconInfo.url} alt="Icon" width="16" height="16" />
+									{:else if projectIconInfo.type === 'text' && projectIconInfo.text}
+										<span class="text-icon">{projectIconInfo.text}</span>
+									{:else}
+										{#if projectIconInfo.component}
+											{@const DefaultIcon = projectIconInfo.component}
+											<DefaultIcon size={16} />
+										{:else}
+											<Icon icon="lucide:external-link" width="16" height="16" />
+										{/if}
+									{/if}
+									{project.projectText || 'Visit Website'}
+								</a>
 							{/if}
 							
-							<div class="project-content">
-								<div class="project-header">
-									<h3 class="project-title">{project.title}</h3>
-									<div class="project-status">
-										<span class="status-indicator" style="background-color: {getProjectStatusColor(project.active)};"></span>
-										<span class="status-text">{project.active}</span>
-									</div>
-								</div>
-								
-								{#if project.tags && project.tags.length > 0}
-									<div class="project-tags">
-										{#each project.tags as tag (tag.id)}
-											<span 
-												class="tag" 
-												style="background-color: {tag.color}20; color: {tag.color}; border-color: {tag.color}40;"
-											>
-												{tag.title}
-											</span>
-										{/each}
-									</div>
-								{/if}
-								
-								<p class="project-description">{project.description}</p>
-								
-								<div class="project-actions">
-									{#if project.projectUrl}
-										{@const projectIconInfo = getIconRenderInfo(project.projectIcon)}
-										<a 
-											href={project.projectUrl} 
-											target="_blank" 
-											rel="noopener noreferrer"
-											class="action-button"
-										>
-											{#if projectIconInfo.type === 'component' && projectIconInfo.component}
-												{@const IconComponent = projectIconInfo.component}
-												<IconComponent size={16} />
-											{:else if projectIconInfo.type === 'iconify' && projectIconInfo.icon}
-												<Icon icon={projectIconInfo.icon} width="16" height="16" />
-											{:else if projectIconInfo.type === 'svg' && projectIconInfo.url}
-												<img src={projectIconInfo.url} alt="Icon" width="16" height="16" />
-											{:else if projectIconInfo.type === 'text' && projectIconInfo.text}
-												<span class="text-icon">{projectIconInfo.text}</span>
-											{:else}
-												{#if projectIconInfo.component}
-													{@const DefaultIcon = projectIconInfo.component}
-													<DefaultIcon size={16} />
-												{:else}
-													<Icon icon="lucide:external-link" width="16" height="16" />
-												{/if}
-											{/if}
-											{project.projectText || 'Visit Website'}
-										</a>
+							{#if project.repoUrl}
+								{@const repoIconInfo = getIconRenderInfo(project.repoIcon)}
+								<a 
+									href={project.repoUrl} 
+									target="_blank" 
+									rel="noopener noreferrer"
+									class="action-button"
+								>
+									{#if repoIconInfo.type === 'component' && repoIconInfo.component}
+										{@const IconComponent = repoIconInfo.component}
+										<IconComponent size={16} />
+									{:else if repoIconInfo.type === 'iconify' && repoIconInfo.icon}
+										<Icon icon={repoIconInfo.icon} width="16" height="16" />
+									{:else if repoIconInfo.type === 'svg' && repoIconInfo.url}
+										<img src={repoIconInfo.url} alt="Icon" width="16" height="16" />
+									{:else if repoIconInfo.type === 'text' && repoIconInfo.text}
+										<span class="text-icon">{repoIconInfo.text}</span>
+									{:else}
+										{#if repoIconInfo.component}
+											{@const DefaultIcon = repoIconInfo.component}
+											<DefaultIcon size={16} />
+										{:else}
+											<Icon icon="lucide:external-link" width="16" height="16" />
+										{/if}
 									{/if}
-									
-									{#if project.repoUrl}
-										{@const repoIconInfo = getIconRenderInfo(project.repoIcon)}
-										<a 
-											href={project.repoUrl} 
-											target="_blank" 
-											rel="noopener noreferrer"
-											class="action-button"
-										>
-											{#if repoIconInfo.type === 'component' && repoIconInfo.component}
-												{@const IconComponent = repoIconInfo.component}
-												<IconComponent size={16} />
-											{:else if repoIconInfo.type === 'iconify' && repoIconInfo.icon}
-												<Icon icon={repoIconInfo.icon} width="16" height="16" />
-											{:else if repoIconInfo.type === 'svg' && repoIconInfo.url}
-												<img src={repoIconInfo.url} alt="Icon" width="16" height="16" />
-											{:else if repoIconInfo.type === 'text' && repoIconInfo.text}
-												<span class="text-icon">{repoIconInfo.text}</span>
-											{:else}
-												{#if repoIconInfo.component}
-													{@const DefaultIcon = repoIconInfo.component}
-													<DefaultIcon size={16} />
-												{:else}
-													<Icon icon="lucide:external-link" width="16" height="16" />
-												{/if}
-											{/if}
-											{project.repoText || 'View on GitHub'}
-										</a>
-									{/if}
-								</div>
-							</div>
-						</article>
-					{/each}
-				</div>
-			</section>
-		{/each}
+									{project.repoText || 'View on GitHub'}
+								</a>
+							{/if}
+						</div>
+					</div>
+				</article>
+			{/each}
+		</div>
 	{/if}
 </div>
 
@@ -260,36 +243,30 @@
 		color: var(--text-secondary);
 	}
 
-	.category-section {
-		margin-bottom: 4rem;
+	.back-link {
+		display: inline-block;
+		color: var(--text-secondary);
+		text-decoration: none;
+		margin-bottom: 1.5rem;
+		transition: color 0.2s ease;
+		font-size: 0.875rem;
 	}
 
-	.category-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 1.5rem;
-		padding-bottom: 0.75rem;
+	.back-link:hover {
+		color: var(--accent-color);
+	}
+
+	.category-header-section {
+		margin-bottom: 2rem;
+		padding-bottom: 1rem;
 		border-bottom: 1px solid var(--border-color);
 	}
 
 	.category-title {
-		font-size: 2rem;
+		font-size: 2.5rem;
 		font-weight: 700;
 		color: var(--text-primary);
 		margin: 0;
-	}
-
-	.view-all-link {
-		color: var(--text-secondary);
-		text-decoration: none;
-		font-size: 0.875rem;
-		transition: color 0.2s ease;
-		white-space: nowrap;
-	}
-
-	.view-all-link:hover {
-		color: var(--accent-color);
 	}
 
 	.projects-grid {
@@ -491,7 +468,7 @@
 		}
 
 		.category-title {
-			font-size: 1.75rem;
+			font-size: 2rem;
 		}
 
 		.project-content {
@@ -514,6 +491,10 @@
 	}
 
 	@media (max-width: 480px) {
+		.category-title {
+			font-size: 1.75rem;
+		}
+
 		.project-title {
 			font-size: 1.125rem;
 		}
@@ -527,7 +508,6 @@
 		}
 	}
 
-
 	@media (min-width: 769px) and (max-width: 1024px) {
 		.projects-grid {
 			columns: 2;
@@ -540,3 +520,4 @@
 		}
 	}
 </style>
+
