@@ -43,6 +43,7 @@
 			createdAt: string;
 		};
 		projects: Project[];
+		allFeatured?: boolean;
 	}
 
 	let categories = $state<CategoryGroup[]>([]);
@@ -73,9 +74,13 @@
 						return project.featured === true;
 					});
 
+					const allFeatured = categoryGroup.projects.length > 0 && 
+						categoryGroup.projects.every(project => project.featured === true);
+
 					return {
 						...categoryGroup,
-						projects: visibleProjects
+						projects: visibleProjects,
+						allFeatured: allFeatured
 					};
 				})
 				.filter(categoryGroup => categoryGroup.projects.length > 0)
@@ -139,7 +144,9 @@
 			<section class="category-section">
 				<div class="category-header">
 					<h2 class="category-title">{categoryGroup.category.name}</h2>
-					<a href="/projects/{categoryGroup.category.id}" class="view-all-link">View all →</a>
+					{#if !categoryGroup.allFeatured}
+						<a href="/projects/{categoryGroup.category.id}" class="view-all-link">View all →</a>
+					{/if}
 				</div>
 				
 				<div class="projects-grid-container">
