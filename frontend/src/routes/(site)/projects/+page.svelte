@@ -3,7 +3,7 @@
 	import Icon from '@iconify/svelte';
 	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
 	import { getProjectStatusColor } from '$lib/shared/constants/projectConstants';
-
+	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 	interface ProjectTag {
 		id: string;
 		title: string;
@@ -119,6 +119,8 @@
 	<meta name="description" content="Explore Dane's portfolio of software projects and designs." />
 </svelte:head>
 
+<TypingHeader text="Projects" />
+
 <div class="page-content">
 	{#if loading}
 		<div class="loading">
@@ -140,9 +142,10 @@
 					<a href="/projects/{categoryGroup.category.id}" class="view-all-link">View all →</a>
 				</div>
 				
-				<div class="projects-grid">
-					{#each categoryGroup.projects as project (project.id)}
-						<article class="project-card">
+				<div class="projects-grid-container">
+					<div class="projects-grid">
+						{#each categoryGroup.projects as project (project.id)}
+							<article class="project-card">
 							{#if project.imageUrl}
 								<div class="project-image">
 									<img 
@@ -239,6 +242,7 @@
 							</div>
 						</article>
 					{/each}
+					</div>
 				</div>
 			</section>
 		{/each}
@@ -249,7 +253,7 @@
 	.page-content {
 		max-width: 1200px;
 		margin: 0 auto;
-		padding: 2rem 1rem;
+		padding: 0 1rem 2rem 1rem;
 	}
 
 	.loading,
@@ -261,7 +265,15 @@
 	}
 
 	.category-section {
-		margin-bottom: 4rem;
+		margin-bottom: 3rem;
+	}
+
+	.category-section:first-child {
+		margin-top: 0;
+	}
+
+	.projects-grid-container {
+		padding-bottom: 2rem;
 	}
 
 	.category-header {
@@ -274,7 +286,7 @@
 	}
 
 	.category-title {
-		font-size: 2rem;
+		font-size: 1.5rem;
 		font-weight: 700;
 		color: var(--text-primary);
 		margin: 0;
@@ -491,7 +503,7 @@
 		}
 
 		.category-title {
-			font-size: 1.75rem;
+			font-size: 1.375rem;
 		}
 
 		.project-content {

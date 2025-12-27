@@ -51,7 +51,7 @@ router.get('/', generalLimiter, async (req, res) => {
       .from(projects)
       .innerJoin(projectCategories, eq(projects.categoryId, projectCategories.id))
       .where(and(...whereConditions))
-      .orderBy(asc(projects.displayOrder), desc(projects.createdAt));
+      .orderBy(asc(projectCategories.displayOrder), asc(projects.displayOrder), desc(projects.updatedAt));
 
     // Get tags for each project
     const projectsWithTags = await Promise.all(
@@ -111,9 +111,22 @@ router.get('/', generalLimiter, async (req, res) => {
       return acc;
     }, {} as Record<string, { category: typeof projectCategories.$inferSelect; projects: any[] }>);
 
+    Object.values(projectsByCategory).forEach(categoryGroup => {
+      categoryGroup.projects.sort((a, b) => {
+        if (a.displayOrder !== b.displayOrder) {
+          return a.displayOrder - b.displayOrder;
+        }
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      });
+    });
+
+    const sortedCategories = Object.values(projectsByCategory).sort((a, b) => {
+      return (a.category.displayOrder || 0) - (b.category.displayOrder || 0);
+    });
+
     res.json({
       success: true,
-      data: Object.values(projectsByCategory)
+      data: sortedCategories
     });
   } catch (error) {
     console.error('Error fetching projects:', error);
@@ -725,7 +738,7 @@ router.get('/category/:categoryId', generalLimiter, async (req, res) => {
       .from(projects)
       .innerJoin(projectCategories, eq(projects.categoryId, projectCategories.id))
       .where(and(eq(projects.published, true), eq(projects.categoryId, categoryId)))
-      .orderBy(asc(projects.displayOrder), desc(projects.createdAt));
+      .orderBy(asc(projects.displayOrder), desc(projects.updatedAt));
 
     const projectsWithTags = await Promise.all(
       allProjects.map(async (project) => {

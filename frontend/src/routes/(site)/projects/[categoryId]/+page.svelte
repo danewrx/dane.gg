@@ -4,6 +4,7 @@
 	import Icon from '@iconify/svelte';
 	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
 	import { getProjectStatusColor } from '$lib/shared/constants/projectConstants';
+	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 
 	interface ProjectTag {
 		id: string;
@@ -104,7 +105,10 @@
 	<meta name="description" content="Explore {categoryData?.category.name || 'projects'} from Dane's portfolio." />
 </svelte:head>
 
+<TypingHeader text={categoryData?.category.name || 'Projects'} />
+
 <div class="page-content">
+
 	{#if loading}
 		<div class="loading">
 			<p>Loading projects...</p>
