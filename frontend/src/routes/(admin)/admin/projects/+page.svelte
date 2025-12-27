@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Plus, Edit, Trash2, Eye, EyeOff, FolderKanban, Calendar, Clock, Star, FolderTree, Tag } from 'lucide-svelte';
+	import { Plus, Edit, Trash2, Eye, EyeOff, FolderKanban, Star, FolderTree, Tag } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { getAllProjects, deleteProject, updateProjectOrder, type Project } from '$lib/admin/services/projectsService';
 	import SlideInPanel from '$lib/admin/components/ui/SlideInPanel.svelte';
@@ -13,7 +13,6 @@
 	let deleteConfirmId = $state<string | null>(null);
 	let isPanelOpen = $state(false);
 	let editingProjectId = $state<string | null>(null);
-	let sortBy = $state<'created' | 'updated'>('updated');
 	let showCategoryManager = $state(false);
 	let showTagManager = $state(false);
 
@@ -41,8 +40,8 @@
 				if (a.displayOrder !== b.displayOrder) {
 					return a.displayOrder - b.displayOrder;
 				}
-				const dateA = sortBy === 'created' ? new Date(a.createdAt) : new Date(a.updatedAt);
-				const dateB = sortBy === 'created' ? new Date(b.createdAt) : new Date(b.updatedAt);
+				const dateA = new Date(a.updatedAt);
+				const dateB = new Date(b.updatedAt);
 				return dateB.getTime() - dateA.getTime();
 			});
 		});
@@ -121,10 +120,6 @@
 				description: 'Please try again'
 			});
 		}
-	}
-
-	function toggleSort() {
-		sortBy = sortBy === 'created' ? 'updated' : 'created';
 	}
 
 	function formatDateTime(dateString: string): string {
@@ -250,15 +245,6 @@
 				Manage Tags
 			</button>
 			<div class="divider"></div>
-			<button class="sort-toggle" onclick={toggleSort} title={sortBy === 'created' ? 'Sorted by creation date' : 'Sorted by last updated'}>
-				{#if sortBy === 'created'}
-					<Calendar size={18} />
-					Created
-				{:else}
-					<Clock size={18} />
-					Updated
-				{/if}
-			</button>
 			<button class="create-button" onclick={createProject}>
 				<Plus size={20} />
 				New Project
@@ -286,7 +272,7 @@
 							<thead>
 								<tr>
 									<th>Title</th>
-									<th>{sortBy === 'created' ? 'Created' : 'Updated'}</th>
+									<th>Updated</th>
 									<th>Featured</th>
 									<th>Status</th>
 									<th>Actions</th>
@@ -321,7 +307,7 @@
 											</div>
 										</td>
 										<td class="timestamp-cell">
-											{formatDateTime(sortBy === 'created' ? project.createdAt : project.updatedAt)}
+											{formatDateTime(project.updatedAt)}
 										</td>
 										<td class="featured-cell">
 											{#if project.featured}
@@ -444,26 +430,6 @@
 		height: 24px;
 		background: var(--border-color, #3a3a3a);
 		flex-shrink: 0;
-	}
-
-	.sort-toggle {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		padding: 10px 20px;
-		background: var(--bg-secondary, #2d2d2d);
-		color: var(--text-primary, #ffffff);
-		border: 1px solid var(--border-color, #3a3a3a);
-		border-radius: 8px;
-		font-size: 14px;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.2s ease;
-	}
-
-	.sort-toggle:hover {
-		background: var(--bg-tertiary, #3a3a3a);
-		border-color: var(--accent-color, #6366f1);
 	}
 
 	.category-button {
@@ -869,11 +835,6 @@
 		.header-actions {
 			width: 100%;
 			justify-content: space-between;
-		}
-
-		.sort-toggle {
-			padding: 8px 16px;
-			font-size: 13px;
 		}
 
 		.create-button {
