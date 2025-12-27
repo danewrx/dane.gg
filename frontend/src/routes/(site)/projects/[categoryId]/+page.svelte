@@ -105,7 +105,13 @@
 	<meta name="description" content="Explore {categoryData?.category.name || 'projects'} from Dane's portfolio." />
 </svelte:head>
 
-<TypingHeader text={categoryData?.category.name || 'Projects'} />
+<div class="header-wrapper">
+	<TypingHeader text={categoryData?.category.name || 'Projects'} />
+	<a href="/projects" class="back-link">
+		<span class="back-arrow">←</span>
+		<span class="back-text">Back to Projects</span>
+	</a>
+</div>
 
 <div class="page-content">
 
@@ -124,10 +130,6 @@
 			<a href="/projects" class="back-link">← Back to Projects</a>
 		</div>
 	{:else}
-		<div class="category-header-section">
-			<a href="/projects" class="back-link">← Back to Projects</a>
-			<h1 class="category-title">{categoryData.category.name}</h1>
-		</div>
 		
 		<div class="projects-grid">
 			{#each categoryData.projects as project (project.id)}
@@ -236,7 +238,7 @@
 	.page-content {
 		max-width: 1200px;
 		margin: 0 auto;
-		padding: 2rem 1rem;
+		padding: 0rem 1rem 2rem 1rem;
 	}
 
 	.loading,
@@ -247,30 +249,49 @@
 		color: var(--text-secondary);
 	}
 
+	.header-wrapper {
+		position: relative;
+		margin-bottom: 24px;
+	}
+
 	.back-link {
-		display: inline-block;
-		color: var(--text-secondary);
+		position: absolute;
+		top: 0;
+		left: 0;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		color: var(--text-secondary, #a1a1aa);
 		text-decoration: none;
-		margin-bottom: 1.5rem;
-		transition: color 0.2s ease;
-		font-size: 0.875rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+		transition: all 0.2s ease;
+		z-index: 1;
+		padding: 0.5rem 0.75rem;
+		border-radius: 4px 0 0 0;
+		background: rgba(0, 0, 0, 0.3);
+		border-right: 1px solid var(--border-color, #4a4a4a);
+		border-bottom: 1px solid var(--border-color, #4a4a4a);
 	}
 
 	.back-link:hover {
-		color: var(--accent-color);
+		color: var(--accent-color, #6366f1);
+		background: rgba(99, 102, 241, 0.1);
 	}
 
-	.category-header-section {
-		margin-bottom: 2rem;
-		padding-bottom: 1rem;
-		border-bottom: 1px solid var(--border-color);
+	.back-link:hover .back-arrow {
+		transform: translateX(-2px);
 	}
 
-	.category-title {
-		font-size: 2.5rem;
-		font-weight: 700;
-		color: var(--text-primary);
-		margin: 0;
+	.back-arrow {
+		font-size: 0.875rem;
+		transition: transform 0.2s ease;
+	}
+
+	.back-text {
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		font-size: 0.7rem;
 	}
 
 	.projects-grid {
@@ -471,10 +492,6 @@
 			columns: 1;
 		}
 
-		.category-title {
-			font-size: 2rem;
-		}
-
 		.project-content {
 			padding: 1.25rem;
 		}
@@ -495,10 +512,6 @@
 	}
 
 	@media (max-width: 480px) {
-		.category-title {
-			font-size: 1.75rem;
-		}
-
 		.project-title {
 			font-size: 1.125rem;
 		}
