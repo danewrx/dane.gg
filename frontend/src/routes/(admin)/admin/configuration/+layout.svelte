@@ -10,7 +10,8 @@
 		Link,
 		MessageSquare,
 		Server,
-		Twitter
+		Twitter,
+		FileText
 	} from 'lucide-svelte';
 
 	let { children } = $props();
@@ -75,6 +76,18 @@
 			iconBgColor: '#60a5fa', // Light blue
 			path: '/admin/configuration/twitter',
 			section: 'home'
+		},
+		{
+			id: 'biography',
+			title: 'Biography',
+			description: 'Edit the about page biography content',
+			icon: FileText,
+			color: 'from-amber-500 to-orange-500',
+			bgColor: 'rgba(245, 158, 11, 0.1)',
+			borderColor: 'rgba(245, 158, 11, 0.2)',
+			iconBgColor: '#f59e0b',
+			path: '/admin/configuration/biography',
+			section: 'about'
 		}
 	];
 
@@ -144,6 +157,8 @@
 						<Server size={18} />
 					{:else if selectedCategory.icon === Twitter}
 						<Twitter size={18} />
+					{:else if selectedCategory.icon === FileText}
+						<FileText size={18} />
 					{/if}
 					{selectedCategory.title}
 				</h1>

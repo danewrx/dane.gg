@@ -7,7 +7,9 @@
 		Twitter,
 		ChevronRight,
 		Globe,
-		Home
+		Home,
+		User,
+		FileText
 	} from 'lucide-svelte';
 	import type { ComponentType } from 'svelte';
 
@@ -21,7 +23,7 @@
 		borderColor: string;
 		iconBgColor: string;
 		path: string;
-		section: 'general' | 'home';
+		section: 'general' | 'home' | 'about';
 	}
 
 	interface Props {
@@ -35,7 +37,8 @@
 	// Group categories by section
 	let groupedCategories = $derived({
 		general: categories.filter(c => c.section === 'general'),
-		home: categories.filter(c => c.section === 'home')
+		home: categories.filter(c => c.section === 'home'),
+		about: categories.filter(c => c.section === 'about')
 	});
 </script>
 
@@ -116,6 +119,43 @@
 								<Server size={20} stroke-width={1.5} />
 							{:else if category.icon === Twitter}
 								<Twitter size={20} stroke-width={1.5} />
+							{:else if category.icon === FileText}
+								<FileText size={20} stroke-width={1.5} />
+							{/if}
+						</div>
+						<span class="sidebar-title">{category.title}</span>
+						<div class="sidebar-chevron">
+							<ChevronRight size={18} />
+						</div>
+					</button>
+				{/each}
+			</div>
+		{/if}
+
+		{#if groupedCategories.about.length > 0}
+			<div class="section-header">
+				<User size={14} />
+				<span>About Page</span>
+			</div>
+			<div class="menu-group">
+				{#each groupedCategories.about as category, index (category.id)}
+					{@const isFirst = index === 0}
+					{@const isLast = index === groupedCategories.about.length - 1}
+					{@const isOnly = groupedCategories.about.length === 1}
+					<button 
+						class="sidebar-item"
+						class:active={selectedCategoryId === category.id}
+						class:first={isFirst || isOnly}
+						class:last={isLast || isOnly}
+						onclick={() => onItemClick(category)}
+					>
+						<div 
+							class="sidebar-icon"
+							class:active={selectedCategoryId === category.id}
+							style="color: {selectedCategoryId === category.id ? 'var(--accent-color, #6366f1)' : category.iconBgColor};"
+						>
+							{#if category.icon === FileText}
+								<FileText size={20} stroke-width={1.5} />
 							{/if}
 						</div>
 						<span class="sidebar-title">{category.title}</span>
