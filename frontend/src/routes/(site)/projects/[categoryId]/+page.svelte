@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import Icon from '@iconify/svelte';
 	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
@@ -295,9 +294,10 @@
 	}
 
 	.projects-grid {
-		columns: 2;
-		column-gap: 2rem;
-		column-fill: balance;
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 2rem;
+		align-items: start;
 	}
 
 	.project-card {
@@ -308,9 +308,6 @@
 		transition: all 0.2s ease;
 		display: flex;
 		flex-direction: column;
-		margin-bottom: 2rem;
-		break-inside: avoid;
-		page-break-inside: avoid;
 		width: 100%;
 		max-width: 100%;
 		box-sizing: border-box;
@@ -489,7 +486,7 @@
 
 	@media (max-width: 768px) {
 		.projects-grid {
-			columns: 1;
+			grid-template-columns: 1fr;
 		}
 
 		.project-content {
@@ -525,16 +522,5 @@
 		}
 	}
 
-	@media (min-width: 769px) and (max-width: 1024px) {
-		.projects-grid {
-			columns: 2;
-		}
-	}
-
-	@media (min-width: 1025px) {
-		.projects-grid {
-			columns: 2;
-		}
-	}
 </style>
 
