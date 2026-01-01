@@ -3,6 +3,7 @@
 		CloudRain,
 		Link,
 		MessageSquare,
+		MessageCircle,
 		Server,
 		Twitter,
 		ChevronRight,
@@ -73,6 +74,8 @@
 								<Server size={20} stroke-width={1.5} />
 							{:else if category.icon === Twitter}
 								<Twitter size={20} stroke-width={1.5} />
+							{:else if category.icon === MessageCircle}
+								<MessageCircle size={20} stroke-width={1.5} />
 							{/if}
 						</div>
 						<span class="sidebar-title">{category.title}</span>
@@ -116,6 +119,8 @@
 								<Server size={20} stroke-width={1.5} />
 							{:else if category.icon === Twitter}
 								<Twitter size={20} stroke-width={1.5} />
+							{:else if category.icon === MessageCircle}
+								<MessageCircle size={20} stroke-width={1.5} />
 							{/if}
 						</div>
 						<span class="sidebar-title">{category.title}</span>
