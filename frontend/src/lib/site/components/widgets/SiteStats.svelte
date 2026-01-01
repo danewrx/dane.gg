@@ -125,6 +125,10 @@
 		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
 		font-size: 16px;
 		font-weight: normal;
+		text-shadow: 
+			0 0 4px rgba(144, 238, 144, 0.6),
+			0 0 8px rgba(144, 238, 144, 0.4),
+			0 0 12px rgba(144, 238, 144, 0.2);
 	}
 </style>
 
