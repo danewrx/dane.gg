@@ -5,7 +5,9 @@
 		MessageSquare,
 		Server,
 		Twitter,
-		ChevronRight
+		ChevronRight,
+		Globe,
+		Home
 	} from 'lucide-svelte';
 	import type { ComponentType } from 'svelte';
 
@@ -19,6 +21,7 @@
 		borderColor: string;
 		iconBgColor: string;
 		path: string;
+		section: 'general' | 'home';
 	}
 
 	interface Props {
@@ -28,46 +31,101 @@
 	}
 
 	let { categories, selectedCategoryId, onItemClick }: Props = $props();
+
+	// Group categories by section
+	let groupedCategories = $derived({
+		general: categories.filter(c => c.section === 'general'),
+		home: categories.filter(c => c.section === 'home')
+	});
 </script>
 
 <aside class="settings-sidebar">
 	<nav class="sidebar-nav">
-		<div class="menu-group">
-			{#each categories as category, index (category.id)}
-				{@const isFirst = index === 0}
-				{@const isLast = index === categories.length - 1}
-				{@const isOnly = categories.length === 1}
-				<button 
-					class="sidebar-item"
-					class:active={selectedCategoryId === category.id}
-					class:first={isFirst || isOnly}
-					class:last={isLast || isOnly}
-					onclick={() => onItemClick(category)}
-				>
-				<div 
-					class="sidebar-icon"
-					class:active={selectedCategoryId === category.id}
-					style="color: {selectedCategoryId === category.id ? 'var(--accent-color, #6366f1)' : category.iconBgColor};"
-				>
-					{#if category.icon === CloudRain}
-						<CloudRain size={20} stroke-width={1.5} />
-					{:else if category.icon === Link}
-						<Link size={20} stroke-width={1.5} />
-					{:else if category.icon === MessageSquare}
-						<MessageSquare size={20} stroke-width={1.5} />
-					{:else if category.icon === Server}
-						<Server size={20} stroke-width={1.5} />
-					{:else if category.icon === Twitter}
-						<Twitter size={20} stroke-width={1.5} />
-					{/if}
-					</div>
-					<span class="sidebar-title">{category.title}</span>
-					<div class="sidebar-chevron">
-						<ChevronRight size={18} />
-					</div>
-				</button>
-			{/each}
-		</div>
+		{#if groupedCategories.general.length > 0}
+			<div class="section-header">
+				<Globe size={14} />
+				<span>General</span>
+			</div>
+			<div class="menu-group">
+				{#each groupedCategories.general as category, index (category.id)}
+					{@const isFirst = index === 0}
+					{@const isLast = index === groupedCategories.general.length - 1}
+					{@const isOnly = groupedCategories.general.length === 1}
+					<button 
+						class="sidebar-item"
+						class:active={selectedCategoryId === category.id}
+						class:first={isFirst || isOnly}
+						class:last={isLast || isOnly}
+						onclick={() => onItemClick(category)}
+					>
+						<div 
+							class="sidebar-icon"
+							class:active={selectedCategoryId === category.id}
+							style="color: {selectedCategoryId === category.id ? 'var(--accent-color, #6366f1)' : category.iconBgColor};"
+						>
+							{#if category.icon === CloudRain}
+								<CloudRain size={20} stroke-width={1.5} />
+							{:else if category.icon === Link}
+								<Link size={20} stroke-width={1.5} />
+							{:else if category.icon === MessageSquare}
+								<MessageSquare size={20} stroke-width={1.5} />
+							{:else if category.icon === Server}
+								<Server size={20} stroke-width={1.5} />
+							{:else if category.icon === Twitter}
+								<Twitter size={20} stroke-width={1.5} />
+							{/if}
+						</div>
+						<span class="sidebar-title">{category.title}</span>
+						<div class="sidebar-chevron">
+							<ChevronRight size={18} />
+						</div>
+					</button>
+				{/each}
+			</div>
+		{/if}
+
+		{#if groupedCategories.home.length > 0}
+			<div class="section-header">
+				<Home size={14} />
+				<span>Home Page</span>
+			</div>
+			<div class="menu-group">
+				{#each groupedCategories.home as category, index (category.id)}
+					{@const isFirst = index === 0}
+					{@const isLast = index === groupedCategories.home.length - 1}
+					{@const isOnly = groupedCategories.home.length === 1}
+					<button 
+						class="sidebar-item"
+						class:active={selectedCategoryId === category.id}
+						class:first={isFirst || isOnly}
+						class:last={isLast || isOnly}
+						onclick={() => onItemClick(category)}
+					>
+						<div 
+							class="sidebar-icon"
+							class:active={selectedCategoryId === category.id}
+							style="color: {selectedCategoryId === category.id ? 'var(--accent-color, #6366f1)' : category.iconBgColor};"
+						>
+							{#if category.icon === CloudRain}
+								<CloudRain size={20} stroke-width={1.5} />
+							{:else if category.icon === Link}
+								<Link size={20} stroke-width={1.5} />
+							{:else if category.icon === MessageSquare}
+								<MessageSquare size={20} stroke-width={1.5} />
+							{:else if category.icon === Server}
+								<Server size={20} stroke-width={1.5} />
+							{:else if category.icon === Twitter}
+								<Twitter size={20} stroke-width={1.5} />
+							{/if}
+						</div>
+						<span class="sidebar-title">{category.title}</span>
+						<div class="sidebar-chevron">
+							<ChevronRight size={18} />
+						</div>
+					</button>
+				{/each}
+			</div>
+		{/if}
 	</nav>
 </aside>
 
@@ -95,8 +153,29 @@
 		padding: 12px;
 		display: flex;
 		flex-direction: column;
+		gap: 8px;
 		width: 100%;
 		box-sizing: border-box;
+	}
+
+	.section-header {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 8px 12px 4px 12px;
+		color: var(--text-secondary, #a1a1aa);
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.section-header:not(:first-child) {
+		margin-top: 8px;
+	}
+
+	.section-header :global(svg) {
+		opacity: 0.7;
 	}
 
 	.menu-group {

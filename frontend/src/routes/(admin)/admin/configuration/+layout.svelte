@@ -25,18 +25,8 @@
 			bgColor: 'rgba(59, 130, 246, 0.1)',
 			borderColor: 'rgba(59, 130, 246, 0.2)',
 			iconBgColor: '#3b82f6', // Blue
-			path: '/admin/configuration/weather'
-		},
-		{
-			id: 'social-links',
-			title: 'Social Links',
-			description: 'Manage social media and external links',
-			icon: Link,
-			color: 'from-purple-500 to-pink-500',
-			bgColor: 'rgba(147, 51, 234, 0.1)',
-			borderColor: 'rgba(147, 51, 234, 0.2)',
-			iconBgColor: '#9333ea', // Purple
-			path: '/admin/configuration/social-links'
+			path: '/admin/configuration/weather',
+			section: 'general'
 		},
 		{
 			id: 'banner',
@@ -47,7 +37,20 @@
 			bgColor: 'rgba(34, 197, 94, 0.1)',
 			borderColor: 'rgba(34, 197, 94, 0.2)',
 			iconBgColor: '#22c55e', // Green
-			path: '/admin/configuration/banner'
+			path: '/admin/configuration/banner',
+			section: 'general'
+		},
+		{
+			id: 'social-links',
+			title: 'Social Links',
+			description: 'Manage social media and external links',
+			icon: Link,
+			color: 'from-purple-500 to-pink-500',
+			bgColor: 'rgba(147, 51, 234, 0.1)',
+			borderColor: 'rgba(147, 51, 234, 0.2)',
+			iconBgColor: '#9333ea', // Purple
+			path: '/admin/configuration/social-links',
+			section: 'home'
 		},
 		{
 			id: 'service-status',
@@ -58,7 +61,8 @@
 			bgColor: 'rgba(249, 115, 22, 0.1)',
 			borderColor: 'rgba(249, 115, 22, 0.2)',
 			iconBgColor: '#f97316', // Orange
-			path: '/admin/configuration/service-status'
+			path: '/admin/configuration/service-status',
+			section: 'home'
 		},
 		{
 			id: 'twitter',
@@ -69,7 +73,8 @@
 			bgColor: 'rgba(59, 130, 246, 0.1)',
 			borderColor: 'rgba(59, 130, 246, 0.2)',
 			iconBgColor: '#60a5fa', // Light blue
-			path: '/admin/configuration/twitter'
+			path: '/admin/configuration/twitter',
+			section: 'home'
 		}
 	];
 
