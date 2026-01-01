@@ -20,11 +20,18 @@
 		font-size: 14px;
 		font-weight: normal;
 		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
+		text-shadow: 
+			0 0 4px rgba(144, 238, 144, 0.6),
+			0 0 8px rgba(144, 238, 144, 0.4),
+			0 0 12px rgba(144, 238, 144, 0.2);
 	}
 
 	.user-count-display :global(svg) {
 		color: #90ee90;
 		stroke-width: 2;
+		filter: 
+			drop-shadow(0 0 4px rgba(144, 238, 144, 0.6))
+			drop-shadow(0 0 8px rgba(144, 238, 144, 0.4));
 	}
 </style>
 
