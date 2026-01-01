@@ -11,7 +11,8 @@
 		MessageSquare,
 		Server,
 		Twitter,
-		FileText
+		FileText,
+		Zap
 	} from 'lucide-svelte';
 
 	let { children } = $props();
@@ -88,6 +89,18 @@
 			iconBgColor: '#f59e0b',
 			path: '/admin/configuration/biography',
 			section: 'about'
+		},
+		{
+			id: 'skills',
+			title: 'Skills',
+			description: 'Manage skill categories and proficiency levels',
+			icon: Zap,
+			color: 'from-emerald-500 to-teal-500',
+			bgColor: 'rgba(16, 185, 129, 0.1)',
+			borderColor: 'rgba(16, 185, 129, 0.2)',
+			iconBgColor: '#10b981',
+			path: '/admin/configuration/skills',
+			section: 'about'
 		}
 	];
 
@@ -159,6 +172,8 @@
 						<Twitter size={18} />
 					{:else if selectedCategory.icon === FileText}
 						<FileText size={18} />
+					{:else if selectedCategory.icon === Zap}
+						<Zap size={18} />
 					{/if}
 					{selectedCategory.title}
 				</h1>

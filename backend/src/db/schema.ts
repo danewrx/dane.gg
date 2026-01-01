@@ -252,6 +252,27 @@ export const emojis = websiteSchema.table('emojis', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
 });
 
+// Skill categories table
+export const skillCategories = websiteSchema.table('skill_categories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 100 }).notNull().unique(),
+  color: varchar('color', { length: 100 }),
+  displayOrder: integer('display_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
+});
+
+// Skills table
+export const skills = websiteSchema.table('skills', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 100 }).notNull(),
+  level: integer('level').notNull().default(50),
+  categoryId: uuid('category_id').notNull().references(() => skillCategories.id, { onDelete: 'cascade' }),
+  displayOrder: integer('display_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
+});
+
 // Relations
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   category: one(projectCategories, {
@@ -318,6 +339,17 @@ export const userUploadsRelations = relations(userUploads, ({ one }) => ({
   })
 }));
 
+export const skillCategoriesRelations = relations(skillCategories, ({ many }) => ({
+  skills: many(skills)
+}));
+
+export const skillsRelations = relations(skills, ({ one }) => ({
+  category: one(skillCategories, {
+    fields: [skills.categoryId],
+    references: [skillCategories.id]
+  })
+}));
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -356,3 +388,7 @@ export type UptimeKumaMonitorCache = typeof uptimeKumaMonitors.$inferSelect;
 export type NewUptimeKumaMonitorCache = typeof uptimeKumaMonitors.$inferInsert;
 export type ApiKey = typeof apiKeys.$inferSelect;
 export type NewApiKey = typeof apiKeys.$inferInsert;
+export type SkillCategory = typeof skillCategories.$inferSelect;
+export type NewSkillCategory = typeof skillCategories.$inferInsert;
+export type Skill = typeof skills.$inferSelect;
+export type NewSkill = typeof skills.$inferInsert;

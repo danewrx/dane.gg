@@ -85,6 +85,7 @@ import apiKeysRoutes from './routes/apiKeys';
 import { generalLimiter } from './middleware/rateLimiting';
 import { chatService } from './services/chatService';
 import emojisRoutes from './routes/emojis';
+import skillsRoutes from './routes/skills';
 
 // Routes
 app.get('/api', (req, res) => {
@@ -172,6 +173,9 @@ app.use('/api/api-keys', apiKeysRoutes);
 app.use('/webhooks', webhooksRoutes);
 
 app.use('/api/emojis', emojisRoutes);
+
+// Skills routes
+app.use('/api/skills', skillsRoutes);
 
 // 404 handler for API routes
 app.use('/api', (req, res) => {

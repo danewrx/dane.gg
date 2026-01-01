@@ -1,46 +1,44 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 	import { ChevronLeft, ChevronRight } from 'lucide-svelte';
 
-	// Skills data - placeholder for now
-	const skills = {
-		languages: [
-			{ name: 'C#', level: 95 },
-			{ name: 'JavaScript', level: 90 },
-			{ name: 'TypeScript', level: 85 },
-			{ name: 'Python', level: 75 },
-			{ name: 'HTML', level: 95 },
-			{ name: 'CSS', level: 90 }
-		],
-		frameworks: [
-			{ name: '.NET Core', level: 95 },
-			{ name: '.NET Framework', level: 90 },
-			{ name: 'Node.js', level: 85 },
-			{ name: 'React', level: 80 },
-			{ name: 'Express', level: 85 }
-		],
-		infrastructure: [
-			{ name: 'Docker', level: 85 },
-			{ name: 'Kubernetes', level: 70 },
-			{ name: 'Terraform', level: 75 },
-			{ name: 'Azure', level: 90 },
-			{ name: 'AWS', level: 80 },
-			{ name: 'Cloudflare', level: 85 },
-			{ name: 'Linux Server', level: 80 },
-			{ name: 'Windows Server', level: 85 }
-		],
-		tools: [
-			{ name: 'Visual Studio', level: 95 },
-			{ name: 'Visual Studio Code', level: 95 },
-			{ name: 'JetBrains Rider', level: 85 },
-			{ name: 'Git', level: 90 },
-			{ name: 'Postman', level: 85 },
-			{ name: 'Insomnia', level: 80 },
-			{ name: 'Swagger', level: 85 },
-			{ name: 'Affinity Suite', level: 75 },
-			{ name: 'DaVinci Resolve', level: 70 }
-		]
-	};
+	interface Skill {
+		id: string;
+		name: string;
+		level: number;
+		categoryId: string;
+		displayOrder: number;
+	}
+
+	interface SkillCategory {
+		id: string;
+		name: string;
+		color: string;
+		displayOrder: number;
+		skills: Skill[];
+	}
+
+	let skillCategories = $state<SkillCategory[]>([]);
+	let isLoadingSkills = $state(true);
+
+	onMount(async () => {
+		await loadSkills();
+	});
+
+	async function loadSkills() {
+		try {
+			const response = await fetch('/api/skills');
+			if (response.ok) {
+				const result = await response.json();
+				skillCategories = result.data || [];
+			}
+		} catch (error) {
+			console.error('Error loading skills:', error);
+		} finally {
+			isLoadingSkills = false;
+		}
+	}
 
 	// Certifications data - placeholder for now
 	const certifications = [
@@ -117,67 +115,34 @@
 	<!-- Skills Section -->
 	<section class="skills-section">
 		<h2 class="section-title">Skills</h2>
-		<div class="skills-grid">
-			<!-- Languages -->
-			<div class="skill-card">
-				<h3 class="skill-category">Languages</h3>
-				<div class="skill-list">
-					{#each skills.languages as skill}
-						<div class="skill-item">
-							<span class="skill-name">{skill.name}</span>
-							<div class="skill-bar">
-								<div class="skill-fill languages" style="width: {skill.level}%"></div>
-							</div>
-						</div>
-					{/each}
-				</div>
+		{#if isLoadingSkills}
+			<div class="skills-loading">
+				<p>Loading skills...</p>
 			</div>
-
-			<!-- Frameworks -->
-			<div class="skill-card">
-				<h3 class="skill-category">Frameworks</h3>
-				<div class="skill-list">
-					{#each skills.frameworks as skill}
-						<div class="skill-item">
-							<span class="skill-name">{skill.name}</span>
-							<div class="skill-bar">
-								<div class="skill-fill frameworks" style="width: {skill.level}%"></div>
-							</div>
+		{:else if skillCategories.length > 0}
+			<div class="skills-grid">
+				{#each skillCategories as category (category.id)}
+					<div class="skill-card">
+						<h3 class="skill-category">{category.name}</h3>
+						<div class="skill-list">
+							{#each category.skills as skill (skill.id)}
+								<div class="skill-item">
+									<span class="skill-name">{skill.name}</span>
+									<div class="skill-bar">
+										<div 
+											class="skill-fill" 
+											style="width: {skill.level}%; background: {category.color || '#6366f1'}"
+										></div>
+									</div>
+								</div>
+							{/each}
 						</div>
-					{/each}
-				</div>
+					</div>
+				{/each}
 			</div>
-
-			<!-- Infrastructure -->
-			<div class="skill-card">
-				<h3 class="skill-category">Infrastructure</h3>
-				<div class="skill-list">
-					{#each skills.infrastructure as skill}
-						<div class="skill-item">
-							<span class="skill-name">{skill.name}</span>
-							<div class="skill-bar">
-								<div class="skill-fill infrastructure" style="width: {skill.level}%"></div>
-							</div>
-						</div>
-					{/each}
-				</div>
-			</div>
-
-			<!-- Tools -->
-			<div class="skill-card">
-				<h3 class="skill-category">Tools</h3>
-				<div class="skill-list">
-					{#each skills.tools as skill}
-						<div class="skill-item">
-							<span class="skill-name">{skill.name}</span>
-							<div class="skill-bar">
-								<div class="skill-fill tools" style="width: {skill.level}%"></div>
-							</div>
-						</div>
-					{/each}
-				</div>
-			</div>
-		</div>
+		{:else}
+			<p class="no-skills">No skills to display.</p>
+		{/if}
 	</section>
 
 	<!-- Certifications Section -->
@@ -316,21 +281,11 @@
 		transition: width 0.5s ease;
 	}
 
-	/* Skill bar colors */
-	.skill-fill.languages {
-		background: linear-gradient(90deg, #ec4899, #f472b6);
-	}
-
-	.skill-fill.frameworks {
-		background: linear-gradient(90deg, #10b981, #34d399);
-	}
-
-	.skill-fill.infrastructure {
-		background: linear-gradient(90deg, #3b82f6, #60a5fa);
-	}
-
-	.skill-fill.tools {
-		background: linear-gradient(90deg, #a3e635, #84cc16);
+	.skills-loading,
+	.no-skills {
+		text-align: center;
+		color: var(--text-secondary, #a1a1aa);
+		padding: 2rem;
 	}
 
 	/* Certifications Section */
