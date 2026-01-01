@@ -29,7 +29,7 @@ export const adminNavigation: NavigationItem[] = [
 	},
 	{
 		id: 'configuration',
-		label: 'Configuration',
+		label: 'Site Settings',
 		icon: Settings,
 		path: '/admin/configuration',
 		description: 'Site configuration and settings'

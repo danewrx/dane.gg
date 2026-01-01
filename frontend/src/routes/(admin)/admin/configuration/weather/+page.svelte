@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { siteConfig, loadSiteConfig } from '$lib/site/stores/siteConfig';
 	import { CloudRain } from 'lucide-svelte';
+	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
 
 	let localSettings = $state({
 		defaultWeatherType: 'none',
@@ -74,11 +75,6 @@
 		const input = event.target as HTMLInputElement;
 		localSettings.defaultWeatherSpeed = parseFloat(input.value);
 	}
-
-	function handleEnforceChange(event: Event) {
-		const checkbox = event.target as HTMLInputElement;
-		localSettings.enforceWeatherEffects = checkbox.checked;
-	}
 </script>
 
 <div class="weather-settings">
@@ -117,16 +113,13 @@
 		<p class="form-help">Adjust the default speed of weather effects (0.5x = slow, 3.0x = fast).</p>
 	</div>
 
-	<div class="form-group checkbox-group">
-		<label class="checkbox-label">
-			<input 
-				type="checkbox" 
-				class="checkbox-input"
-				checked={localSettings.enforceWeatherEffects}
-				onchange={handleEnforceChange}
+	<div class="form-group toggle-group">
+		<div class="toggle-wrapper">
+			<Toggle 
+				bind:checked={localSettings.enforceWeatherEffects}
 			/>
-			<span class="checkbox-text">Enforce weather effects (prevent users from changing)</span>
-		</label>
+			<span class="toggle-label">Enforce weather effects <span class="toggle-label-subtext">(prevent users from changing)</span></span>
+		</div>
 		<p class="form-help">When enabled, users won't be able to change weather settings from the frontend.</p>
 	</div>
 
@@ -157,11 +150,11 @@
 	.settings-description {
 		margin-bottom: 24px;
 		padding-bottom: 16px;
-		border-bottom: 1px solid #2a2a2a;
+		border-bottom: 1px solid var(--border-color, #3a3a3a);
 	}
 
 	.settings-description p {
-		color: #a1a1aa;
+		color: var(--text-secondary, #a1a1aa);
 		margin: 0;
 		font-size: 14px;
 		line-height: 1.5;
@@ -179,33 +172,57 @@
 		display: block;
 		font-size: 14px;
 		font-weight: 500;
-		color: #ffffff;
+		color: var(--text-primary, #ffffff);
 		margin-bottom: 8px;
 	}
 
-	.form-select,
-	.form-range {
+	.form-select {
 		width: 100%;
-		padding: 12px;
-		border: 1px solid #3a3a3a;
+		padding: 12px 16px;
+		border: 1px solid var(--border-color, #3a3a3a);
 		border-radius: 6px;
 		font-size: 14px;
 		transition: all 0.15s ease-in-out;
-		background: #1a1a1a;
-		color: #ffffff;
+		background: var(--bg-secondary, #2d2d2d);
+		color: var(--text-primary, #ffffff);
+		cursor: pointer;
+		appearance: none;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+		background-repeat: no-repeat;
+		background-position: right 16px center;
+		padding-right: 44px;
 	}
 
-	.form-select:focus,
+	.form-select:hover {
+		border-color: var(--border-color-hover, #4a4a4a);
+	}
+
+	.form-select:focus {
+		outline: none;
+		border-color: var(--accent-color, #6366f1);
+	}
+
+	.form-select option {
+		background: var(--bg-secondary, #2d2d2d);
+		color: var(--text-primary, #ffffff);
+		padding: 12px;
+	}
+
+	.form-range {
+		width: 100%;
+		transition: all 0.15s ease-in-out;
+	}
+
 	.form-range:focus {
 		outline: none;
-		border-color: #6366f1;
-		box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 	}
 
 	.form-range {
 		height: 6px;
 		border-radius: 3px;
-		background: #3a3a3a;
+		background: var(--bg-tertiary, #3a3a3a);
 		outline: none;
 		-webkit-appearance: none;
 		appearance: none;
@@ -218,7 +235,7 @@
 		width: 20px;
 		height: 20px;
 		border-radius: 50%;
-		background: #6366f1;
+		background: var(--accent-color, #6366f1);
 		cursor: pointer;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 	}
@@ -227,7 +244,7 @@
 		width: 20px;
 		height: 20px;
 		border-radius: 50%;
-		background: #6366f1;
+		background: var(--accent-color, #6366f1);
 		cursor: pointer;
 		border: none;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -236,40 +253,33 @@
 	.range-value {
 		text-align: center;
 		font-weight: 500;
-		color: #6366f1;
+		color: var(--accent-color, #6366f1);
 		margin-top: 8px;
 		font-size: 14px;
 	}
 
-	.checkbox-group {
+	.toggle-group {
 		margin-bottom: 0;
 	}
 
-	.checkbox-label {
+	.toggle-wrapper {
 		display: flex;
-		align-items: flex-start;
-		cursor: pointer;
-		font-size: 14px;
-		color: #ffffff;
+		align-items: center;
 		gap: 12px;
 	}
 
-	.checkbox-input {
-		margin: 0;
-		width: 16px;
-		height: 16px;
-		accent-color: #6366f1;
-		flex-shrink: 0;
-		margin-top: 2px;
-	}
-
-	.checkbox-text {
-		user-select: none;
+	.toggle-label {
+		font-size: 14px;
+		color: var(--text-primary, #ffffff);
 		line-height: 1.4;
 	}
 
+	.toggle-label-subtext {
+		color: var(--text-secondary, #a1a1aa);
+	}
+
 	.form-help {
-		color: #6b7280;
+		color: var(--text-muted, #6b7280);
 		font-size: 12px;
 		margin: 6px 0 0 0;
 		line-height: 1.4;
@@ -278,18 +288,18 @@
 	.form-actions {
 		margin-top: 32px;
 		padding-top: 20px;
-		border-top: 1px solid #2a2a2a;
+		border-top: 1px solid var(--border-color, #3a3a3a);
 		display: flex;
 		flex-direction: column;
 		gap: 16px;
 	}
 
 	.save-button {
-		background: #8b5cf6;
+		background: var(--accent-color, #6366f1);
 		color: #ffffff;
 		border: none;
 		padding: 12px 24px;
-		border-radius: 8px;
+		border-radius: 6px;
 		font-size: 14px;
 		font-weight: 500;
 		cursor: pointer;
@@ -298,14 +308,12 @@
 	}
 
 	.save-button:hover:not(:disabled) {
-		background: #7c3aed;
-		transform: translateY(-1px);
+		background: var(--accent-color-dark, #4f46e5);
 	}
 
 	.save-button:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
-		transform: none;
 	}
 
 	.save-message {

@@ -9,7 +9,6 @@
 		ChevronRight,
 		Link,
 		MessageSquare,
-		MessageCircle,
 		Server,
 		Twitter
 	} from 'lucide-svelte';
@@ -75,18 +74,6 @@
 			borderColor: 'rgba(59, 130, 246, 0.2)',
 			iconBgColor: '#60a5fa', // Light blue
 			path: '/admin/configuration/twitter',
-			section: 'home'
-		},
-		{
-			id: 'chat',
-			title: 'Chat',
-			description: 'Manage chat messages and settings',
-			icon: MessageCircle,
-			color: 'from-indigo-500 to-purple-500',
-			bgColor: 'rgba(99, 102, 241, 0.1)',
-			borderColor: 'rgba(99, 102, 241, 0.2)',
-			iconBgColor: '#6366f1', // Indigo
-			path: '/admin/configuration/chat',
 			section: 'home'
 		}
 	];
@@ -157,8 +144,6 @@
 						<Server size={18} />
 					{:else if selectedCategory.icon === Twitter}
 						<Twitter size={18} />
-					{:else if selectedCategory.icon === MessageCircle}
-						<MessageCircle size={18} />
 					{/if}
 					{selectedCategory.title}
 				</h1>
