@@ -86,7 +86,7 @@
 			bgColor: 'rgba(99, 102, 241, 0.1)',
 			borderColor: 'rgba(99, 102, 241, 0.2)',
 			iconBgColor: '#6366f1', // Indigo
-			path: '/admin/chat',
+			path: '/admin/configuration/chat',
 			section: 'home'
 		}
 	];
