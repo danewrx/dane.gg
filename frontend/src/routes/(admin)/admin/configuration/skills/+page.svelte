@@ -38,6 +38,9 @@
 	let editingCategoryName = $state('');
 	let editingCategoryColor = $state('');
 	
+	// Preview colors
+	let previewColors = $state<Record<string, string>>({});
+	
 	let editingSkillId = $state<string | null>(null);
 	let editingSkillName = $state('');
 	let editingSkillLevel = $state(50);
@@ -138,6 +141,8 @@
 			}
 
 			toast.success('Category updated');
+			const { [categoryId]: _, ...rest } = previewColors;
+			previewColors = rest;
 			editingCategoryId = null;
 			await loadSkills();
 		} catch (error: any) {
@@ -173,12 +178,26 @@
 		editingCategoryId = category.id;
 		editingCategoryName = category.name;
 		editingCategoryColor = category.color || '#6366f1';
+		previewColors = { ...previewColors, [category.id]: category.color || '#6366f1' };
 	}
 
 	function cancelEditingCategory() {
+		if (editingCategoryId) {
+			const { [editingCategoryId]: _, ...rest } = previewColors;
+			previewColors = rest;
+		}
 		editingCategoryId = null;
 		editingCategoryName = '';
 		editingCategoryColor = '';
+	}
+	
+	function updatePreviewColor(categoryId: string, color: string) {
+		previewColors = { ...previewColors, [categoryId]: color };
+		editingCategoryColor = color;
+	}
+	
+	function getCategoryColor(category: SkillCategory): string {
+		return previewColors[category.id] || category.color || '#6366f1';
 	}
 
 	// Skill operations
@@ -334,7 +353,8 @@
 								<input
 									type="color"
 									class="color-input"
-									bind:value={editingCategoryColor}
+									value={editingCategoryColor}
+									oninput={(e) => updatePreviewColor(category.id, (e.target as HTMLInputElement).value)}
 								/>
 								<button class="icon-btn save" onclick={() => updateCategory(category.id)} disabled={isSaving}>
 									<Save size={16} />
@@ -347,7 +367,7 @@
 							<div class="category-info">
 								<div 
 									class="category-color-dot" 
-									style="background: {category.color || '#6366f1'}"
+									style="background: {getCategoryColor(category)}"
 								></div>
 								<span class="category-name">{category.name}</span>
 								<span class="skill-count">({category.skills?.length || 0} skills)</span>
@@ -399,7 +419,7 @@
 												<div class="skill-bar-wrapper">
 													<div 
 														class="skill-bar" 
-														style="width: {skill.level}%; background: {category.color || '#6366f1'}"
+														style="width: {skill.level}%; background: {getCategoryColor(category)}"
 													></div>
 												</div>
 												<span class="skill-level">{skill.level}%</span>
