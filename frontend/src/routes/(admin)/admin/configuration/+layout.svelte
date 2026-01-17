@@ -13,7 +13,8 @@
 		Twitter,
 		FileText,
 		Zap,
-		Award
+		Award,
+		User
 	} from 'lucide-svelte';
 
 	let { children } = $props();
@@ -42,6 +43,18 @@
 			iconBgColor: '#22c55e', // Green
 			path: '/admin/configuration/banner',
 			section: 'general'
+		},
+		{
+			id: 'homepage-about',
+			title: 'About Me',
+			description: 'Edit the about me section on the homepage',
+			icon: User,
+			color: 'from-indigo-500 to-violet-500',
+			bgColor: 'rgba(99, 102, 241, 0.1)',
+			borderColor: 'rgba(99, 102, 241, 0.2)',
+			iconBgColor: '#6366f1', // Indigo
+			path: '/admin/configuration/homepage-about',
+			section: 'home'
 		},
 		{
 			id: 'social-links',
@@ -189,6 +202,8 @@
 						<Zap size={18} />
 					{:else if selectedCategory.icon === Award}
 						<Award size={18} />
+					{:else if selectedCategory.icon === User}
+						<User size={18} />
 					{/if}
 					{selectedCategory.title}
 				</h1>

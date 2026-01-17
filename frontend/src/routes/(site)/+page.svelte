@@ -14,6 +14,7 @@
 	import Chat from '$lib/site/components/Chat.svelte';
 	import ChatUserCount from '$lib/site/components/ChatUserCount.svelte';
 	import { Radio, Twitter } from 'lucide-svelte';
+	import { marked } from 'marked';
 	import type { PageData } from './$types';
 	
 	let { data }: { data: PageData } = $props();
@@ -25,6 +26,25 @@
 	
 	const musicHeaderText = $derived(musicData?.nowPlaying ? 'Now Playing' : 'Recently Played');
 	const tweetHeaderText = $derived('Status');
+
+	// Default about me content
+	const defaultAboutMe = `Hi, I'm Dane! I'm a software engineer & freelance designer. You can read my full, more professional bio <a href="/about" target="_blank">here</a>!
+
+<b>Some quick facts about me:</b>
+
+<ul>
+<li>I'm from Manchester in the UK.</li>
+<li>I currently work full-time as a software engineer @ a UK-based Azure Expert MSP</li>
+<li>My main languages are <span style="color: #9179E4;">C#</span>, <span style="color: #F1E05A;">JavaScript</span> & <span style="color: #3178C6;">TypeScript</span>.</li>
+<li>I first started coding at age 13, learning <span style="color: #9179E4;">Visual Basic (VB .NET)</span>.</li>
+<li>In my free time, I design for and run a small clothing brand called Partial Spaces.</li>
+<li>I'm a big fan of the old early 2000s internet and technology.</li>
+<li>I like cats!</li>
+<li>I don't like coffee.</li>
+</ul>`;
+
+	let aboutMeContent = $state(defaultAboutMe);
+	let loadingAboutMe = $state(true);
 	
 	function getStatusColor(status: string): string {
 		switch (status) {
@@ -52,8 +72,27 @@
 	let loadingPosts = $state(true);
 
 	onMount(async () => {
-		await loadRecentPosts();
+		await Promise.all([loadRecentPosts(), loadAboutMe()]);
 	});
+
+	async function loadAboutMe() {
+		try {
+			loadingAboutMe = true;
+			const response = await fetch('/api/config/homepage_about_me');
+			
+			if (response.ok) {
+				const result = await response.json();
+				if (result.data?.value) {
+					// Parse markdown to HTML
+					aboutMeContent = await marked.parse(result.data.value);
+				}
+			}
+		} catch (err) {
+			console.error('Error loading about me:', err);
+		} finally {
+			loadingAboutMe = false;
+		}
+	}
 
 	async function loadRecentPosts() {
 		try {
@@ -133,18 +172,9 @@
 		<div class="right-column">
 			<div class="widgets-section">
 				<BorderedBox padding="8px 16px" className="about-section" showHeader={true} headerText="About Me" dynamicHeight={true} contentPadding={true}>
-					<p>Hi, I'm Dane! I'm a software engineer & freelance designer. You can read my full, more professional bio <a href="/about" target="_blank">here</a>!</p>
-					<p><b>Some quick facts about me:</b></p>
-					<ul>
-						<li>I'm from Manchester in the UK.</li>
-						<li>I currently work full-time as a software engineer @ a UK-based Azure Expert MSP</li>
-						<li>My main languages are <span style="color: #9179E4;">C#</span>, <span style="color: #F1E05A;">JavaScript</span> & <span style="color: #3178C6;">TypeScript</span>.</li>
-						<li>I first started coding at age 13, learning <span style="color: #9179E4;">Visual Basic (VB .NET)</span>.</li>
-						<li>In my free time, I design for and run a small clothing brand called Partial Spaces.</li>
-						<li>I'm a big fan of the old early 2000s internet and technology.</li>
-						<li>I like cats!</li>
-						<li>I don't like coffee.</li>
-					</ul>
+					<div class="about-me-content">
+						{@html aboutMeContent}
+					</div>
 				</BorderedBox>
 
 				<BorderedBox padding="8px 16px" className="recent-posts-section" showHeader={true} headerText="Recent posts" dynamicHeight={true} contentPadding={true}>
@@ -333,6 +363,46 @@
 	/* About Me section styling */
 	:global(.about-section .bordered-box-content) {
 		padding: 16px !important;
+	}
+
+	.about-me-content {
+		color: var(--text-primary);
+		font-size: 14px;
+		line-height: 1.6;
+	}
+
+	.about-me-content :global(p) {
+		color: var(--text-primary);
+		margin-bottom: 12px;
+		line-height: 1.6;
+		font-size: 14px;
+	}
+
+	.about-me-content :global(ul) {
+		margin: 0;
+		padding-left: 20px;
+		list-style-type: disc;
+	}
+
+	.about-me-content :global(li) {
+		color: var(--text-primary);
+		margin-bottom: 4px;
+		line-height: 1.3;
+		font-size: 14px;
+	}
+
+	.about-me-content :global(a) {
+		color: var(--accent-color);
+		text-decoration: underline;
+	}
+
+	.about-me-content :global(a:hover) {
+		color: var(--accent-color-light);
+	}
+
+	.about-me-content :global(strong),
+	.about-me-content :global(b) {
+		font-weight: 700;
 	}
 
 	:global(.about-section p) {
@@ -622,12 +692,14 @@
 			padding: 12px !important;
 		}
 
-		:global(.about-section p) {
+		:global(.about-section p),
+		.about-me-content :global(p) {
 			font-size: 13px;
 			margin-bottom: 10px;
 		}
 
-		:global(.about-section li) {
+		:global(.about-section li),
+		.about-me-content :global(li) {
 			font-size: 13px;
 			margin-bottom: 3px;
 			line-height: 1.3;

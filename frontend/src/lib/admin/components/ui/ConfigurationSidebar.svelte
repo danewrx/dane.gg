@@ -123,6 +123,8 @@
 								<Twitter size={20} stroke-width={1.5} />
 							{:else if category.icon === FileText}
 								<FileText size={20} stroke-width={1.5} />
+							{:else if category.icon === User}
+								<User size={20} stroke-width={1.5} />
 							{/if}
 						</div>
 						<span class="sidebar-title">{category.title}</span>
