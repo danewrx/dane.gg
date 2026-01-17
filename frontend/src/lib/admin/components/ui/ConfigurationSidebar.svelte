@@ -10,7 +10,8 @@
 		Home,
 		User,
 		FileText,
-		Zap
+		Zap,
+		Award
 	} from 'lucide-svelte';
 	import type { ComponentType } from 'svelte';
 
@@ -159,6 +160,8 @@
 								<FileText size={20} stroke-width={1.5} />
 							{:else if category.icon === Zap}
 								<Zap size={20} stroke-width={1.5} />
+							{:else if category.icon === Award}
+								<Award size={20} stroke-width={1.5} />
 							{/if}
 						</div>
 						<span class="sidebar-title">{category.title}</span>
