@@ -19,11 +19,25 @@
 		skills: Skill[];
 	}
 
+	interface Certification {
+		id: string;
+		title: string;
+		earned: string | null;
+		endDate: string | null;
+		isPresent: boolean;
+		status: string;
+		imageUrl: string | null;
+		isExternal: boolean;
+		displayOrder: number;
+	}
+
 	let skillCategories = $state<SkillCategory[]>([]);
 	let isLoadingSkills = $state(true);
+	let certifications = $state<Certification[]>([]);
+	let isLoadingCerts = $state(true);
 
 	onMount(async () => {
-		await loadSkills();
+		await Promise.all([loadSkills(), loadCertifications()]);
 	});
 
 	async function loadSkills() {
@@ -40,27 +54,33 @@
 		}
 	}
 
-	// Certifications data - placeholder for now
-	const certifications = [
-		{
-			name: 'Microsoft Certified Trainer (MCT)',
-			earned: '2021',
-			status: 'Active',
-			image: '/assets/certs/mct.png'
-		},
-		{
-			name: 'Microsoft 365 Certified: Administrator Expert',
-			earned: '2021',
-			status: 'Active',
-			image: '/assets/certs/ms365-admin.png'
-		},
-		{
-			name: 'Azure Solutions Architect Expert',
-			earned: '2022',
-			status: 'Active',
-			image: '/assets/certs/azure-architect.png'
+	async function loadCertifications() {
+		try {
+			const response = await fetch('/api/certifications');
+			if (response.ok) {
+				const result = await response.json();
+				certifications = result.data || [];
+			}
+		} catch (error) {
+			console.error('Error loading certifications:', error);
+		} finally {
+			isLoadingCerts = false;
 		}
-	];
+	}
+
+	function getImageUrl(path: string | null, isExternal: boolean): string {
+		if (!path) return '';
+		// If it's an external URL, just return it
+		if (isExternal || path.startsWith('http://') || path.startsWith('https://')) {
+			return path;
+		}
+		// If starts with /uploads/, serve through the API
+		if (path.startsWith('/uploads/')) {
+			const filename = path.replace('/uploads/', '');
+			return `/api/upload/file/${filename}`;
+		}
+		return path;
+	}
 
 	let currentCertIndex = $state(0);
 	const certsPerPage = 2;
@@ -150,35 +170,64 @@
 		<h2 class="section-title">Certifications</h2>
 		<p class="section-subtitle">Here are some of the active certifications which I hold across various different technologies:</p>
 		
-		<div class="certifications-carousel">
-			<button 
-				class="carousel-nav prev" 
-				onclick={prevCerts}
-				disabled={currentCertIndex === 0}
-			>
-				<ChevronLeft size={24} />
-			</button>
-			
-			<div class="certifications-container">
-				{#each visibleCerts as cert}
-					<div class="certification-card">
-						<div class="cert-badge">
-							<img src={cert.image} alt={cert.name} onerror={(e) => (e.currentTarget as HTMLImageElement).style.display = 'none'} />
-						</div>
-						<h4 class="cert-name">{cert.name}</h4>
-						<p class="cert-meta">Earned {cert.earned} · {cert.status}</p>
-					</div>
-				{/each}
+		{#if isLoadingCerts}
+			<div class="certifications-loading">
+				<p>Loading certifications...</p>
 			</div>
-			
-			<button 
-				class="carousel-nav next" 
-				onclick={nextCerts}
-				disabled={currentCertIndex + certsPerPage >= certifications.length}
-			>
-				<ChevronRight size={24} />
-			</button>
-		</div>
+		{:else if certifications.length > 0}
+			<div class="certifications-carousel">
+				<button 
+					class="carousel-nav prev" 
+					onclick={prevCerts}
+					disabled={currentCertIndex === 0}
+				>
+					<ChevronLeft size={24} />
+				</button>
+				
+				<div class="certifications-container">
+					{#each visibleCerts as cert}
+						<div class="certification-card">
+							{#if cert.imageUrl}
+								<div class="cert-badge">
+									<img 
+										src={getImageUrl(cert.imageUrl, cert.isExternal)} 
+										alt={cert.title} 
+										onerror={(e) => (e.currentTarget as HTMLImageElement).style.display = 'none'} 
+									/>
+								</div>
+							{/if}
+							<h4 class="cert-name">{cert.title}</h4>
+							<p class="cert-meta">
+								{#if cert.earned}
+									{#if cert.isPresent}
+										{cert.earned} - Present
+									{:else if cert.endDate}
+										{cert.earned} - {cert.endDate}
+									{:else}
+										Earned {cert.earned}
+									{/if}
+									{#if cert.status && cert.status !== 'Active'}
+										· {cert.status}
+									{/if}
+								{:else if cert.status}
+									{cert.status}
+								{/if}
+							</p>
+						</div>
+					{/each}
+				</div>
+				
+				<button 
+					class="carousel-nav next" 
+					onclick={nextCerts}
+					disabled={currentCertIndex + certsPerPage >= certifications.length}
+				>
+					<ChevronRight size={24} />
+				</button>
+			</div>
+		{:else}
+			<p class="no-certifications">No certifications to display.</p>
+		{/if}
 	</section>
 </div>
 
@@ -283,6 +332,13 @@
 
 	.skills-loading,
 	.no-skills {
+		text-align: center;
+		color: var(--text-secondary, #a1a1aa);
+		padding: 2rem;
+	}
+
+	.certifications-loading,
+	.no-certifications {
 		text-align: center;
 		color: var(--text-secondary, #a1a1aa);
 		padding: 2rem;

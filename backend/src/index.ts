@@ -86,6 +86,7 @@ import { generalLimiter } from './middleware/rateLimiting';
 import { chatService } from './services/chatService';
 import emojisRoutes from './routes/emojis';
 import skillsRoutes from './routes/skills';
+import certificationsRoutes from './routes/certifications';
 
 // Routes
 app.get('/api', (req, res) => {
@@ -176,6 +177,9 @@ app.use('/api/emojis', emojisRoutes);
 
 // Skills routes
 app.use('/api/skills', skillsRoutes);
+
+// Certifications routes
+app.use('/api/certifications', certificationsRoutes);
 
 // 404 handler for API routes
 app.use('/api', (req, res) => {

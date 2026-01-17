@@ -12,7 +12,8 @@
 		Server,
 		Twitter,
 		FileText,
-		Zap
+		Zap,
+		Award
 	} from 'lucide-svelte';
 
 	let { children } = $props();
@@ -101,6 +102,18 @@
 			iconBgColor: '#10b981',
 			path: '/admin/configuration/skills',
 			section: 'about'
+		},
+		{
+			id: 'certifications',
+			title: 'Certifications',
+			description: 'Manage certifications displayed on the about page',
+			icon: Award,
+			color: 'from-yellow-500 to-amber-500',
+			bgColor: 'rgba(234, 179, 8, 0.1)',
+			borderColor: 'rgba(234, 179, 8, 0.2)',
+			iconBgColor: '#eab308',
+			path: '/admin/configuration/certifications',
+			section: 'about'
 		}
 	];
 
@@ -174,6 +187,8 @@
 						<FileText size={18} />
 					{:else if selectedCategory.icon === Zap}
 						<Zap size={18} />
+					{:else if selectedCategory.icon === Award}
+						<Award size={18} />
 					{/if}
 					{selectedCategory.title}
 				</h1>

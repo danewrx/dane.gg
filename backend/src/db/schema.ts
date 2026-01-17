@@ -273,6 +273,21 @@ export const skills = websiteSchema.table('skills', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
 });
 
+// Certifications table
+export const certifications = websiteSchema.table('certifications', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: varchar('title', { length: 255 }).notNull(),
+  earned: varchar('earned', { length: 50 }),
+  endDate: varchar('end_date', { length: 50 }),
+  isPresent: boolean('is_present').default(false),
+  status: varchar('status', { length: 50 }).notNull().default('Active'),
+  imageUrl: varchar('image_url', { length: 500 }),
+  isExternal: boolean('is_external').default(false),
+  displayOrder: integer('display_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
+});
+
 // Relations
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   category: one(projectCategories, {
@@ -392,3 +407,5 @@ export type SkillCategory = typeof skillCategories.$inferSelect;
 export type NewSkillCategory = typeof skillCategories.$inferInsert;
 export type Skill = typeof skills.$inferSelect;
 export type NewSkill = typeof skills.$inferInsert;
+export type Certification = typeof certifications.$inferSelect;
+export type NewCertification = typeof certifications.$inferInsert;
