@@ -358,8 +358,8 @@
 
 	.skill-card {
 		background: transparent;
-		border: 1px solid var(--border-color, #3a3a3a);
-		border-radius: 8px;
+		border: 1px solid var(--border-color, #ffffff);
+		border-radius: 0;
 		padding: 1.25rem;
 	}
 
@@ -426,36 +426,41 @@
 	.certifications-carousel {
 		display: flex;
 		align-items: center;
-		gap: 1rem;
-		background: var(--bg-secondary, #1f1f1f);
-		border: 1px solid var(--border-color, #3a3a3a);
-		border-radius: 8px;
-		padding: 2rem 1rem;
+		gap: 1.5rem;
+		background: transparent;
+		border: 1px solid var(--border-color, #ffffff);
+		padding: 2rem 1.5rem;
 	}
 
 	.carousel-nav {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 40px;
-		height: 40px;
-		background: var(--bg-tertiary, #2a2a2a);
-		border: 1px solid var(--border-color, #3a3a3a);
-		border-radius: 6px;
-		color: var(--text-secondary, #a1a1aa);
+		width: 48px;
+		height: 48px;
+		background: var(--bg-primary, #141414);
+		border: 1px solid var(--border-color, #ffffff);
+		border-radius: 0;
+		color: var(--text-primary, #ffffff);
 		cursor: pointer;
 		transition: all 0.2s ease;
 		flex-shrink: 0;
 	}
 
 	.carousel-nav:hover:not(:disabled) {
-		background: var(--bg-tertiary, #3a3a3a);
-		color: var(--text-primary, #ffffff);
+		background: var(--text-primary, #ffffff);
+		color: var(--bg-primary, #141414);
+		transform: scale(1.05);
+	}
+
+	.carousel-nav:active:not(:disabled) {
+		transform: scale(0.95);
 	}
 
 	.carousel-nav:disabled {
 		opacity: 0.3;
 		cursor: not-allowed;
+		border-color: var(--text-muted, #666);
 	}
 
 	.embla {
@@ -530,12 +535,13 @@
 
 		.certifications-carousel {
 			flex-direction: row;
-			padding: 1.5rem;
+			gap: 1rem;
+			padding: 1rem 0;
 		}
 
 		.carousel-nav {
-			width: 36px;
-			height: 36px;
+			width: 40px;
+			height: 40px;
 		}
 
 		.certification-card {
