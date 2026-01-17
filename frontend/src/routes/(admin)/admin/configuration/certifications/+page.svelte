@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { Loader2, Plus, Trash2, Edit2, Save, X, Image as ImageIcon } from 'lucide-svelte';
+	import { Loader2, Plus, Trash2, Edit2, Save, X, Image as ImageIcon, GripVertical } from 'lucide-svelte';
 	import FileUpload, { type UploadedFile } from '$lib/admin/components/ui/FileUpload.svelte';
 
 	interface Certification {
@@ -21,6 +21,9 @@
 	let certifications = $state<Certification[]>([]);
 	let isLoading = $state(true);
 	let isSaving = $state(false);
+	
+	let draggedIndex = $state<number | null>(null);
+	let dragOverIndex = $state<number | null>(null);
 	
 	// New certification form
 	let showNewCertForm = $state(false);
@@ -398,6 +401,85 @@
 		newCertImageIsExternal = false;
 		newCertImageFilename = null;
 	}
+
+	// Drag and drop handlers
+	function handleDragStart(event: DragEvent, index: number) {
+		if (editingCertId !== null || showNewCertForm) return;
+		draggedIndex = index;
+		if (event.dataTransfer) {
+			event.dataTransfer.effectAllowed = 'move';
+			event.dataTransfer.setData('text/html', '');
+		}
+	}
+
+	function handleDragOver(event: DragEvent, index: number) {
+		event.preventDefault();
+		if (event.dataTransfer) {
+			event.dataTransfer.dropEffect = 'move';
+		}
+		if (draggedIndex !== null && draggedIndex !== index) {
+			dragOverIndex = index;
+		}
+	}
+
+	function handleDragLeave() {
+		dragOverIndex = null;
+	}
+
+	async function handleDrop(event: DragEvent, dropIndex: number) {
+		event.preventDefault();
+		dragOverIndex = null;
+
+		if (draggedIndex === null || draggedIndex === dropIndex) {
+			draggedIndex = null;
+			return;
+		}
+
+		const newCerts = [...certifications];
+		const [draggedItem] = newCerts.splice(draggedIndex, 1);
+		newCerts.splice(dropIndex, 0, draggedItem);
+
+		// Update displayOrder for all certifications
+		const certOrders = newCerts.map((cert, index) => ({
+			id: cert.id,
+			displayOrder: index
+		}));
+
+		try {
+			isSaving = true;
+			const response = await fetch('/api/certifications/order', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({
+					certifications: certOrders
+				})
+			});
+
+			if (!response.ok) {
+				const error = await response.json();
+				throw new Error(error.error || 'Failed to update order');
+			}
+
+			toast.success('Certification order updated');
+			await loadCertifications();
+		} catch (err: any) {
+			console.error('Error updating certification order:', err);
+			toast.error('Failed to update certification order', {
+				description: err.message || 'Please try again'
+			});
+			// Reload to reset order
+			await loadCertifications();
+		} finally {
+			draggedIndex = null;
+			isSaving = false;
+		}
+	}
+
+	function handleDragEnd() {
+		draggedIndex = null;
+		dragOverIndex = null;
+	}
 </script>
 
 <div class="certifications-settings">
@@ -412,8 +494,19 @@
 		</div>
 	{:else}
 		<div class="certifications-list">
-			{#each certifications as cert (cert.id)}
-				<div class="certification-card">
+			{#each certifications as cert, index (cert.id)}
+				<div 
+					class="certification-card"
+					class:dragging={draggedIndex === index}
+					class:drag-over={dragOverIndex === index}
+					class:not-draggable={editingCertId !== null || showNewCertForm}
+					draggable={editingCertId === null && !showNewCertForm}
+					ondragstart={(e) => handleDragStart(e, index)}
+					ondragover={(e) => handleDragOver(e, index)}
+					ondragleave={handleDragLeave}
+					ondrop={(e) => handleDrop(e, index)}
+					ondragend={handleDragEnd}
+				>
 					{#if editingCertId === cert.id}
 						<div class="editing-certification">
 							<div class="form-group">
@@ -511,6 +604,11 @@
 							</div>
 						</div>
 					{:else}
+						{#if editingCertId === null && !showNewCertForm}
+							<div class="drag-handle" title="Drag to reorder">
+								<GripVertical size={18} />
+							</div>
+						{/if}
 						<div class="certification-info">
 							{#if cert.imageUrl}
 								<div class="cert-image">
@@ -693,6 +791,48 @@
 		display: flex;
 		align-items: center;
 		gap: 20px;
+		cursor: move;
+		transition: all 0.2s ease;
+		position: relative;
+	}
+
+	.certification-card.dragging {
+		opacity: 0.5;
+		cursor: grabbing;
+	}
+
+	.certification-card.drag-over {
+		border-color: var(--accent-color, #6366f1);
+		box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+	}
+
+	.certification-card:not(.dragging):not(.not-draggable):hover {
+		background: var(--bg-tertiary, #1f1f1f);
+	}
+
+	.certification-card.not-draggable {
+		cursor: default;
+	}
+
+	.drag-handle {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--text-secondary, #a1a1aa);
+		cursor: grab;
+		flex-shrink: 0;
+		padding: 4px;
+		border-radius: 4px;
+		transition: all 0.2s ease;
+	}
+
+	.drag-handle:hover {
+		color: var(--text-primary, #ffffff);
+		background: rgba(255, 255, 255, 0.05);
+	}
+
+	.certification-card.dragging .drag-handle {
+		cursor: grabbing;
 	}
 
 	.certification-info {

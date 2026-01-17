@@ -112,6 +112,40 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
+// PUT update certifications order (bulk) - MUST be before /:id route
+router.put('/order', requireAuth, async (req, res) => {
+  try {
+    const { certifications: certsToUpdate } = req.body;
+
+    if (!Array.isArray(certsToUpdate)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Certifications array is required'
+      });
+    }
+
+    for (const cert of certsToUpdate) {
+      await db.update(certifications)
+        .set({ 
+          displayOrder: cert.displayOrder,
+          updatedAt: new Date()
+        })
+        .where(eq(certifications.id, cert.id));
+    }
+
+    res.json({
+      success: true,
+      message: 'Certifications order updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating certifications order:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update certifications order'
+    });
+  }
+});
+
 // PUT update certification
 router.put('/:id', requireAuth, async (req, res) => {
   try {
@@ -193,40 +227,6 @@ router.delete('/:id', requireAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to delete certification'
-    });
-  }
-});
-
-// PUT update certifications order (bulk)
-router.put('/order', requireAuth, async (req, res) => {
-  try {
-    const { certifications: certsToUpdate } = req.body;
-
-    if (!Array.isArray(certsToUpdate)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Certifications array is required'
-      });
-    }
-
-    for (const cert of certsToUpdate) {
-      await db.update(certifications)
-        .set({ 
-          displayOrder: cert.displayOrder,
-          updatedAt: new Date()
-        })
-        .where(eq(certifications.id, cert.id));
-    }
-
-    res.json({
-      success: true,
-      message: 'Certifications order updated successfully'
-    });
-  } catch (error) {
-    console.error('Error updating certifications order:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to update certifications order'
     });
   }
 });
