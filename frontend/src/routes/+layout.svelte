@@ -5,15 +5,19 @@
 	import { trackingService } from '$lib/tracking';
 	import { onMount } from 'svelte';
 	
-	$: isAdminSection = $page.url.pathname.startsWith('/admin') || 
-	                   $page.url.pathname.startsWith('/login') || 
-	                   $page.url.pathname.startsWith('/logout');
+	$: isAdminSection = $page?.url?.pathname 
+		? ($page.url.pathname.startsWith('/admin') || 
+		   $page.url.pathname.startsWith('/login') || 
+		   $page.url.pathname.startsWith('/logout'))
+		: false;
 	
 	$: fontMode;
 	
 	// Track page views (only for public site)
 	onMount(() => {
 		const unsubscribe = page.subscribe((newPage) => {
+			if (!newPage?.url?.pathname) return;
+			
 			console.log('Layout: Page store updated. New path:', newPage.url.pathname);
 			const isAdmin = newPage.url.pathname.startsWith('/admin') || 
 			               newPage.url.pathname.startsWith('/login') || 

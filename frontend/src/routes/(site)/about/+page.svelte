@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 	import { ChevronLeft, ChevronRight } from 'lucide-svelte';
+	import emblaCarouselSvelte from 'embla-carousel-svelte';
 
 	interface Skill {
 		id: string;
@@ -37,7 +38,33 @@
 	let isLoadingCerts = $state(true);
 
 	onMount(async () => {
+		updateCertsPerPage();
+		
+		if (typeof window !== 'undefined') {
+			window.addEventListener('resize', updateCertsPerPage);
+		}
+		
 		await Promise.all([loadSkills(), loadCertifications()]);
+		
+		return () => {
+			if (typeof window !== 'undefined') {
+				window.removeEventListener('resize', updateCertsPerPage);
+			}
+		};
+	});
+
+	// Listen to select events when API is available
+	$effect(() => {
+		if (emblaApi) {
+			emblaApi.on('select', onSelect);
+			onSelect(); // Initial state
+			
+			return () => {
+				if (emblaApi) {
+					emblaApi.off('select', onSelect);
+				}
+			};
+		}
 	});
 
 	async function loadSkills() {
@@ -82,24 +109,62 @@
 		return path;
 	}
 
-	let currentCertIndex = $state(0);
-	const certsPerPage = 2;
+	// Embla Carousel setup
+	let emblaApi: any;
+	let canScrollPrev = $state(false);
+	let canScrollNext = $state(false);
 
-	function nextCerts() {
-		if (currentCertIndex + certsPerPage < certifications.length) {
-			currentCertIndex += certsPerPage;
+	// Update certsPerPage based on screen size
+	let certsPerPage = $state(2);
+	
+	function updateCertsPerPage() {
+		if (typeof window !== 'undefined') {
+			certsPerPage = window.innerWidth <= 768 ? 1 : 2;
 		}
 	}
 
-	function prevCerts() {
-		if (currentCertIndex > 0) {
-			currentCertIndex -= certsPerPage;
+	// Embla options - loop requires enough slides to work properly
+	let options = $derived({
+		loop: certifications.length > certsPerPage,
+		slidesToScroll: 1,
+		align: 'start',
+		dragFree: false,
+		containScroll: certifications.length > certsPerPage ? false : 'trimSnaps'
+	});
+
+	function onInit(event: CustomEvent) {
+		emblaApi = event.detail;
+		if (emblaApi) {
+			emblaApi.on('select', onSelect);
+			emblaApi.on('reInit', onSelect);
+			onSelect();
 		}
 	}
 
-	let visibleCerts = $derived(
-		certifications.slice(currentCertIndex, currentCertIndex + certsPerPage)
-	);
+	function onSelect() {
+		if (!emblaApi) {
+			canScrollPrev = false;
+			canScrollNext = false;
+			return;
+		}
+		// When loop is enabled, buttons should always be enabled
+		const isLooping = certifications.length > certsPerPage;
+		if (isLooping) {
+			canScrollPrev = true;
+			canScrollNext = true;
+		} else {
+			canScrollPrev = emblaApi.canScrollPrev();
+			canScrollNext = emblaApi.canScrollNext();
+		}
+	}
+
+	function scrollPrev() {
+		emblaApi?.scrollPrev();
+	}
+
+	function scrollNext() {
+		emblaApi?.scrollNext();
+	}
 </script>
 
 <svelte:head>
@@ -178,49 +243,57 @@
 			<div class="certifications-carousel">
 				<button 
 					class="carousel-nav prev" 
-					onclick={prevCerts}
-					disabled={currentCertIndex === 0}
+					onclick={scrollPrev}
+					disabled={!canScrollPrev}
 				>
 					<ChevronLeft size={24} />
 				</button>
 				
-				<div class="certifications-container">
-					{#each visibleCerts as cert}
-						<div class="certification-card">
-							{#if cert.imageUrl}
-								<div class="cert-badge">
-									<img 
-										src={getImageUrl(cert.imageUrl, cert.isExternal)} 
-										alt={cert.title} 
-										onerror={(e) => (e.currentTarget as HTMLImageElement).style.display = 'none'} 
-									/>
+				<div 
+					class="embla" 
+					use:emblaCarouselSvelte={{ options }}
+					onemblaInit={onInit}
+				>
+					<div class="embla__container">
+						{#each certifications as cert}
+							<div class="embla__slide">
+								<div class="certification-card">
+									{#if cert.imageUrl}
+										<div class="cert-badge">
+											<img 
+												src={getImageUrl(cert.imageUrl, cert.isExternal)} 
+												alt={cert.title} 
+												onerror={(e) => (e.currentTarget as HTMLImageElement).style.display = 'none'} 
+											/>
+										</div>
+									{/if}
+									<h4 class="cert-name">{cert.title}</h4>
+									<p class="cert-meta">
+										{#if cert.earned}
+											{#if cert.isPresent}
+												{cert.earned} - Present
+											{:else if cert.endDate}
+												{cert.earned} - {cert.endDate}
+											{:else}
+												Earned {cert.earned}
+											{/if}
+											{#if cert.status && cert.status !== 'Active'}
+												· {cert.status}
+											{/if}
+										{:else if cert.status}
+											{cert.status}
+										{/if}
+									</p>
 								</div>
-							{/if}
-							<h4 class="cert-name">{cert.title}</h4>
-							<p class="cert-meta">
-								{#if cert.earned}
-									{#if cert.isPresent}
-										{cert.earned} - Present
-									{:else if cert.endDate}
-										{cert.earned} - {cert.endDate}
-									{:else}
-										Earned {cert.earned}
-									{/if}
-									{#if cert.status && cert.status !== 'Active'}
-										· {cert.status}
-									{/if}
-								{:else if cert.status}
-									{cert.status}
-								{/if}
-							</p>
-						</div>
-					{/each}
+							</div>
+						{/each}
+					</div>
 				</div>
 				
 				<button 
 					class="carousel-nav next" 
-					onclick={nextCerts}
-					disabled={currentCertIndex + certsPerPage >= certifications.length}
+					onclick={scrollNext}
+					disabled={!canScrollNext}
 				>
 					<ChevronRight size={24} />
 				</button>
@@ -385,11 +458,22 @@
 		cursor: not-allowed;
 	}
 
-	.certifications-container {
+	.embla {
 		flex: 1;
+		overflow: hidden;
+		position: relative;
+	}
+
+	.embla__container {
 		display: flex;
-		justify-content: center;
-		gap: 4rem;
+	}
+
+	.embla__slide {
+		flex: 0 0 50%;
+		min-width: 0;
+		box-sizing: border-box;
+		position: relative;
+		padding: 0 1rem;
 	}
 
 	.certification-card {
@@ -398,6 +482,9 @@
 		align-items: center;
 		text-align: center;
 		gap: 0.75rem;
+		max-width: 250px;
+		margin: 0 auto;
+		width: 100%;
 	}
 
 	.cert-badge {
@@ -436,18 +523,23 @@
 			width: 100px;
 		}
 
-		.certifications-container {
-			flex-direction: column;
-			gap: 2rem;
+		.embla__slide {
+			flex: 0 0 100%;
+			padding: 0;
 		}
 
 		.certifications-carousel {
-			flex-direction: column;
+			flex-direction: row;
 			padding: 1.5rem;
 		}
 
 		.carousel-nav {
-			display: none;
+			width: 36px;
+			height: 36px;
+		}
+
+		.certification-card {
+			max-width: 100%;
 		}
 	}
 </style>

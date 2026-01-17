@@ -39,6 +39,7 @@
 		"@types/marked": "^5.0.2",
 		"chart.js": "^4.5.1",
 		"country-flag-colors": "^0.0.3",
+		"embla-carousel-svelte": "^8.6.0",
 		"emojibase": "^17.0.0",
 		"emojibase-data": "^17.0.0",
 		"flag-icons": "^7.5.0",
