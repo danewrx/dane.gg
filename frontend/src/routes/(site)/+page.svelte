@@ -27,23 +27,7 @@
 	const musicHeaderText = $derived(musicData?.nowPlaying ? 'Now Playing' : 'Recently Played');
 	const tweetHeaderText = $derived('Status');
 
-	// Default about me content
-	const defaultAboutMe = `Hi, I'm Dane! I'm a software engineer & freelance designer. You can read my full, more professional bio <a href="/about" target="_blank">here</a>!
-
-<b>Some quick facts about me:</b>
-
-<ul>
-<li>I'm from Manchester in the UK.</li>
-<li>I currently work full-time as a software engineer @ a UK-based Azure Expert MSP</li>
-<li>My main languages are <span style="color: #9179E4;">C#</span>, <span style="color: #F1E05A;">JavaScript</span> & <span style="color: #3178C6;">TypeScript</span>.</li>
-<li>I first started coding at age 13, learning <span style="color: #9179E4;">Visual Basic (VB .NET)</span>.</li>
-<li>In my free time, I design for and run a small clothing brand called Partial Spaces.</li>
-<li>I'm a big fan of the old early 2000s internet and technology.</li>
-<li>I like cats!</li>
-<li>I don't like coffee.</li>
-</ul>`;
-
-	let aboutMeContent = $state(defaultAboutMe);
+	let aboutMeContent = $state('');
 	let loadingAboutMe = $state(true);
 	
 	function getStatusColor(status: string): string {
@@ -85,10 +69,13 @@
 				if (result.data?.value) {
 					// Parse markdown to HTML
 					aboutMeContent = await marked.parse(result.data.value);
+				} else {
+					aboutMeContent = '';
 				}
 			}
 		} catch (err) {
 			console.error('Error loading about me:', err);
+			aboutMeContent = '';
 		} finally {
 			loadingAboutMe = false;
 		}
@@ -172,9 +159,19 @@
 		<div class="right-column">
 			<div class="widgets-section">
 				<BorderedBox padding="8px 16px" className="about-section" showHeader={true} headerText="About Me" dynamicHeight={true} contentPadding={true}>
-					<div class="about-me-content">
-						{@html aboutMeContent}
-					</div>
+					{#if loadingAboutMe}
+						<div class="about-me-loading">
+							<p>Loading...</p>
+						</div>
+					{:else if aboutMeContent}
+						<div class="about-me-content">
+							{@html aboutMeContent}
+						</div>
+					{:else}
+						<div class="about-me-empty">
+							<p>No data is available.</p>
+						</div>
+					{/if}
 				</BorderedBox>
 
 				<BorderedBox padding="8px 16px" className="recent-posts-section" showHeader={true} headerText="Recent posts" dynamicHeight={true} contentPadding={true}>
@@ -403,6 +400,18 @@
 	.about-me-content :global(strong),
 	.about-me-content :global(b) {
 		font-weight: 700;
+	}
+
+	.about-me-loading,
+	.about-me-empty {
+		color: var(--text-secondary, #a1a1aa);
+		font-size: 14px;
+		text-align: center;
+		padding: 2rem 0;
+	}
+
+	.about-me-empty p {
+		margin: 0;
 	}
 
 	:global(.about-section p) {

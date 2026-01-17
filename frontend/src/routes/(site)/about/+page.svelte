@@ -3,6 +3,7 @@
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 	import { ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import emblaCarouselSvelte from 'embla-carousel-svelte';
+	import { marked } from 'marked';
 
 	interface Skill {
 		id: string;
@@ -36,6 +37,8 @@
 	let isLoadingSkills = $state(true);
 	let certifications = $state<Certification[]>([]);
 	let isLoadingCerts = $state(true);
+	let biographyContent = $state('');
+	let isLoadingBiography = $state(true);
 
 	onMount(async () => {
 		updateCertsPerPage();
@@ -44,7 +47,7 @@
 			window.addEventListener('resize', updateCertsPerPage);
 		}
 		
-		await Promise.all([loadSkills(), loadCertifications()]);
+		await Promise.all([loadSkills(), loadCertifications(), loadBiography()]);
 		
 		return () => {
 			if (typeof window !== 'undefined') {
@@ -92,6 +95,27 @@
 			console.error('Error loading certifications:', error);
 		} finally {
 			isLoadingCerts = false;
+		}
+	}
+
+	async function loadBiography() {
+		try {
+			isLoadingBiography = true;
+			const response = await fetch('/api/config/about_biography');
+			
+			if (response.ok) {
+				const result = await response.json();
+				if (result.data?.value) {
+					biographyContent = await marked.parse(result.data.value);
+				} else {
+					biographyContent = '';
+				}
+			}
+		} catch (error) {
+			console.error('Error loading biography:', error);
+			biographyContent = '';
+		} finally {
+			isLoadingBiography = false;
 		}
 	}
 
@@ -179,21 +203,13 @@
 	<section class="about-section">
 		<h2 class="section-title">About Me</h2>
 		<div class="bio-content">
-			<p>
-				I'm a software engineer based in Manchester, currently working for a UK-based Managed Service Provider (MSP), where I've been involved in delivering complex development and infrastructure solutions for various large organizations. My main focus is backend development, but I'm also skilled in frontend technologies, making me a versatile developer across the stack. While C# is my primary language, I'm also proficient in JavaScript, TypeScript, and Python, which allows me to tackle a wide range of projects.
-			</p>
-			<p>
-				Professionally, I specialize in building scalable, reliable systems. I have strong expertise in DevOps practices and infrastructure tools like Docker, Kubernetes, and Terraform, which I use to create efficient, automated workflows. I also have extensive experience with cloud platforms such as Azure, AWS, and Cloudflare, as well as server management in both Linux and Windows Server environments. From designing deployment pipelines to implementing CI/CD workflows, I'm passionate about driving end-to-end system automation to enhance operational efficiency and consistency.
-			</p>
-			<p>
-				In addition to my development work, I have a solid background in Tier 3 support desk engineering, where I've troubleshooted and resolved complex issues for users and systems. I also have hands-on experience with Microsoft Intune, managing mobile devices and configuring modern workplace solutions. This blend of support and development experience gives me a unique ability to understand both the technical and user-facing aspects of systems, ensuring a well-rounded approach to problem-solving.
-			</p>
-			<p>
-				Beyond the technical side of things, I also enjoy expressing my creativity through graphic design and 3D modeling. I'm an avid fan of anime, gaming, DJing, and VR—activities that help me unwind and stay inspired.
-			</p>
-			<p>
-				This is my personal website where I showcase some of the side projects I'm working on, as well as write about my life, technology, development, and anything else that sparks my interest!
-			</p>
+			{#if isLoadingBiography}
+				<p>Loading...</p>
+			{:else if biographyContent}
+				{@html biographyContent}
+			{:else}
+				<p class="bio-empty">No data is available.</p>
+			{/if}
 		</div>
 	</section>
 
@@ -335,12 +351,19 @@
 		line-height: 1.7;
 	}
 
-	.bio-content p {
+	.bio-content :global(p) {
 		margin-bottom: 1rem;
 	}
 
-	.bio-content p:last-child {
+	.bio-content :global(p:last-child) {
 		margin-bottom: 0;
+	}
+
+	.bio-empty {
+		color: var(--text-secondary, #a1a1aa);
+		text-align: center;
+		padding: 2rem 0;
+		margin: 0;
 	}
 
 	/* Skills Section */
