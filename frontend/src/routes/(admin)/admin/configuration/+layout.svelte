@@ -14,7 +14,8 @@
 		FileText,
 		Zap,
 		Award,
-		User
+		User,
+		Mail
 	} from 'lucide-svelte';
 
 	let { children } = $props();
@@ -127,6 +128,18 @@
 			iconBgColor: '#eab308',
 			path: '/admin/configuration/certifications',
 			section: 'about'
+		},
+		{
+			id: 'contact-tagline',
+			title: 'Tagline',
+			description: 'Edit the tagline/intro message on the contact page',
+			icon: Mail,
+			color: 'from-blue-500 to-indigo-500',
+			bgColor: 'rgba(59, 130, 246, 0.1)',
+			borderColor: 'rgba(59, 130, 246, 0.2)',
+			iconBgColor: '#3b82f6',
+			path: '/admin/configuration/contact-tagline',
+			section: 'contact'
 		}
 	];
 
@@ -204,6 +217,8 @@
 						<Award size={18} />
 					{:else if selectedCategory.icon === User}
 						<User size={18} />
+					{:else if selectedCategory.icon === Mail}
+						<Mail size={18} />
 					{/if}
 					{selectedCategory.title}
 				</h1>

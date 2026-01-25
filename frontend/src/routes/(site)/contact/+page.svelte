@@ -1,7 +1,37 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { Mail } from 'lucide-svelte';
 	import Icon from '@iconify/svelte';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
+	import { marked } from 'marked';
+
+	let taglineContent = $state('');
+	let loadingTagline = $state(true);
+
+	onMount(async () => {
+		await loadTagline();
+	});
+
+	async function loadTagline() {
+		try {
+			loadingTagline = true;
+			const response = await fetch('/api/config/contact_tagline');
+			
+			if (response.ok) {
+				const result = await response.json();
+				if (result.data?.value) {
+					taglineContent = await marked.parse(result.data.value);
+				} else {
+					taglineContent = '';
+				}
+			}
+		} catch (error) {
+			console.error('Error loading contact tagline:', error);
+			taglineContent = '';
+		} finally {
+			loadingTagline = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -12,7 +42,15 @@
 <div class="page-content">
 	<TypingHeader text="Contact" />
 	<div class="intro-message">
-		<p>I'm always open to connecting, whether it's for collaborations, opportunities, or a friendly chat. You can reach out to me through email or on social media. Below, you'll find the best ways to get in touch. I look forward to hearing from you!</p>
+		{#if loadingTagline}
+			<p>Loading...</p>
+		{:else if taglineContent}
+			<div class="tagline-content">
+				{@html taglineContent}
+			</div>
+		{:else}
+			<p>No tagline content is available.</p>
+		{/if}
 	</div>
 
 	<hr class="section-divider" />
@@ -81,6 +119,20 @@
 		font-size: 1rem;
 		line-height: 1.6;
 		margin: 0;
+	}
+
+	.tagline-content {
+		color: var(--text-primary);
+		font-size: 1rem;
+		line-height: 1.6;
+	}
+
+	.tagline-content :global(p) {
+		margin-bottom: 1rem;
+	}
+
+	.tagline-content :global(p:last-child) {
+		margin-bottom: 0;
 	}
 
 	.section-divider {
