@@ -140,6 +140,18 @@
 			iconBgColor: '#3b82f6',
 			path: '/admin/configuration/contact-tagline',
 			section: 'contact'
+		},
+		{
+			id: 'contact-emails',
+			title: 'Emails',
+			description: 'Manage email addresses displayed on the contact page',
+			icon: Mail,
+			color: 'from-cyan-500 to-blue-500',
+			bgColor: 'rgba(6, 182, 212, 0.1)',
+			borderColor: 'rgba(6, 182, 212, 0.2)',
+			iconBgColor: '#06b6d4',
+			path: '/admin/configuration/contact-emails',
+			section: 'contact'
 		}
 	];
 

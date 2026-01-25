@@ -7,9 +7,11 @@
 
 	let taglineContent = $state('');
 	let loadingTagline = $state(true);
+	let contactEmails = $state<{ id: string; description: string; email: string }[]>([]);
+	let loadingEmails = $state(true);
 
 	onMount(async () => {
-		await loadTagline();
+		await Promise.all([loadTagline(), loadContactEmails()]);
 	});
 
 	async function loadTagline() {
@@ -30,6 +32,34 @@
 			taglineContent = '';
 		} finally {
 			loadingTagline = false;
+		}
+	}
+
+	async function loadContactEmails() {
+		try {
+			loadingEmails = true;
+			const response = await fetch('/api/config/contact_emails');
+			
+			if (response.ok) {
+				const result = await response.json();
+				if (result.data?.value) {
+					try {
+						const emails = JSON.parse(result.data.value);
+						contactEmails = emails
+							.filter((email: any) => email.isActive !== false)
+							.sort((a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0));
+					} catch (e) {
+						contactEmails = [];
+					}
+				} else {
+					contactEmails = [];
+				}
+			}
+		} catch (error) {
+			console.error('Error loading contact emails:', error);
+			contactEmails = [];
+		} finally {
+			loadingEmails = false;
 		}
 	}
 </script>
@@ -56,20 +86,21 @@
 	<hr class="section-divider" />
 	<div class="email-section">
 		<h2>Email</h2>
-		<div class="email-item">
-			<p class="email-description">If you would like to reach out to me for most things:</p>
-			<a href="mailto:me@dane.gg" class="email-link">
-				<Mail size={18} />
-				<span>me@dane.gg</span>
-			</a>
-		</div>
-		<div class="email-item">
-			<p class="email-description">If you would like to discuss anything regarding hiring, freelance work, or anything similar:</p>
-			<a href="mailto:biz@dane.gg" class="email-link">
-				<Mail size={18} />
-				<span>biz@dane.gg</span>
-			</a>
-		</div>
+		{#if loadingEmails}
+			<p>Loading emails...</p>
+		{:else if contactEmails.length === 0}
+			<p class="no-data">No email addresses are available.</p>
+		{:else}
+			{#each contactEmails as email (email.id)}
+				<div class="email-item">
+					<p class="email-description">{email.description}</p>
+					<a href="mailto:{email.email}" class="email-link">
+						<Mail size={18} />
+						<span>{email.email}</span>
+					</a>
+				</div>
+			{/each}
+		{/if}
 	</div>
 
 	<hr class="section-divider" />
@@ -163,6 +194,13 @@
 		font-size: 0.95rem;
 		margin-bottom: 0.5rem;
 		line-height: 1.5;
+	}
+
+	.no-data {
+		color: var(--text-secondary);
+		text-align: center;
+		padding: 2rem 0;
+		margin: 0;
 	}
 
 	.email-link {
