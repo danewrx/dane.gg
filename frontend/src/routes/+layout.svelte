@@ -7,7 +7,7 @@
 	
 	$: isAdminSection = $page?.url?.pathname 
 		? ($page.url.pathname.startsWith('/admin') || 
-		   $page.url.pathname.startsWith('/login') || 
+	                   $page.url.pathname.startsWith('/login') || 
 		   $page.url.pathname.startsWith('/logout'))
 		: false;
 	

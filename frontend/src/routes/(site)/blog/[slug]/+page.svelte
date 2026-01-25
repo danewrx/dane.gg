@@ -216,7 +216,7 @@
 	.blog-post-page {
 		max-width: 900px;
 		margin: 0 auto;
-		padding: 0 20px;
+		padding: 0 0.5rem 2rem 0.5rem;
 	}
 
 	.back-link {

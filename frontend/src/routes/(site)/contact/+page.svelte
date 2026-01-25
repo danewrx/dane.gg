@@ -1,5 +1,7 @@
 <script lang="ts">
-	// Contact page
+	import { Mail } from 'lucide-svelte';
+	import Icon from '@iconify/svelte';
+	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 </script>
 
 <svelte:head>
@@ -8,163 +10,190 @@
 </svelte:head>
 
 <div class="page-content">
-	<h1>Contact Me</h1>
-	<p class="subtitle">Let's work together</p>
-	
-	<div class="contact-info">
-		<div class="contact-method">
-			<h3>Email</h3>
-			<p>hello@dane.gg</p>
+	<TypingHeader text="Contact" />
+	<div class="intro-message">
+		<p>I'm always open to connecting, whether it's for collaborations, opportunities, or a friendly chat. You can reach out to me through email or on social media. Below, you'll find the best ways to get in touch. I look forward to hearing from you!</p>
+	</div>
+
+	<hr class="section-divider" />
+	<div class="email-section">
+		<h2>Email</h2>
+		<div class="email-item">
+			<p class="email-description">If you would like to reach out to me for most things:</p>
+			<a href="mailto:me@dane.gg" class="email-link">
+				<Mail size={18} />
+				<span>me@dane.gg</span>
+			</a>
 		</div>
-		
-		<div class="contact-method">
-			<h3>GitHub</h3>
-			<p>github.com/dane</p>
-		</div>
-		
-		<div class="contact-method">
-			<h3>LinkedIn</h3>
-			<p>linkedin.com/in/dane</p>
-		</div>
-		
-		<div class="contact-method">
-			<h3>Location</h3>
-			<p>Manchester, UK</p>
+		<div class="email-item">
+			<p class="email-description">If you would like to discuss anything regarding hiring, freelance work, or anything similar:</p>
+			<a href="mailto:biz@dane.gg" class="email-link">
+				<Mail size={18} />
+				<span>biz@dane.gg</span>
+			</a>
 		</div>
 	</div>
-	
-	<div class="contact-form">
-		<h2>Send a Message</h2>
-		<form>
-			<div class="form-group">
-				<label for="name">Name</label>
-				<input type="text" id="name" name="name" required />
-			</div>
-			
-			<div class="form-group">
-				<label for="email">Email</label>
-				<input type="email" id="email" name="email" required />
-			</div>
-			
-			<div class="form-group">
-				<label for="message">Message</label>
-				<textarea id="message" name="message" rows="5" required></textarea>
-			</div>
-			
-			<button type="submit" class="submit-btn">Send Message</button>
-		</form>
+
+	<hr class="section-divider" />
+	<div class="social-section">
+		<h2>Social</h2>
+		<p class="social-description">If you want to contact me through social media, please do so via the following channels. I am most active here and will likely respond the quickest:</p>
+		<div class="social-links">
+			<a href="https://x.com" target="_blank" rel="noopener noreferrer" class="social-link">
+				<Icon icon="simple-icons:x" width="20" height="20" />
+				<span>X (Twitter)</span>
+			</a>
+			<a href="https://bsky.app" target="_blank" rel="noopener noreferrer" class="social-link">
+				<Icon icon="simple-icons:bluesky" width="20" height="20" />
+				<span>Bluesky</span>
+			</a>
+			<a href="https://discord.com" target="_blank" rel="noopener noreferrer" class="social-link">
+				<Icon icon="simple-icons:discord" width="20" height="20" />
+				<span>Discord</span>
+			</a>
+		</div>
+	</div>
+
+	<div class="footer-section">
+		<div class="character-container">
+			<img src="/assets/img/misc/miku.gif" alt="Hatsune Miku" class="character-image" />
+		</div>
+		<div class="closing-message">
+			<p>Thank you for visiting my website!</p>
+		</div>
 	</div>
 </div>
 
 <style>
 	.page-content {
-		max-width: 800px;
-		margin: 0 auto;
+		width: 100%;
+		padding: 0 0.5rem 2rem 0.5rem;
+		position: relative;
 	}
 
-	h1 {
-		font-size: 2.5rem;
-		font-weight: 700;
-		color: var(--text-primary);
-		margin-bottom: 1rem;
+	.intro-message {
 		text-align: center;
-	}
-
-	.subtitle {
-		font-size: 1.2rem;
-		color: var(--text-secondary);
 		margin-bottom: 2rem;
-		text-align: center;
 	}
 
-	.contact-info {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-		gap: 1.5rem;
-		margin-bottom: 3rem;
-	}
-
-	.contact-method {
-		background: var(--bg-secondary);
-		border: 1px solid var(--border-color);
-		border-radius: 8px;
-		padding: 1.5rem;
-		text-align: center;
-		transition: all 0.3s ease;
-	}
-
-	.contact-method:hover {
-		background: var(--bg-hover);
-		border-color: var(--accent-color);
-		transform: translateY(-2px);
-	}
-
-	.contact-method h3 {
-		color: var(--accent-color);
-		margin-bottom: 0.5rem;
-		font-size: 1.2rem;
-	}
-
-	.contact-method p {
-		color: var(--text-secondary);
+	.intro-message p {
+		color: var(--text-primary);
+		font-size: 1rem;
+		line-height: 1.6;
 		margin: 0;
 	}
 
-	.contact-form {
-		background: var(--bg-secondary);
-		border: 1px solid var(--border-color);
-		border-radius: 8px;
-		padding: 2rem;
-	}
-
-	.contact-form h2 {
-		color: var(--accent-color);
-		margin-bottom: 1.5rem;
-		font-size: 1.5rem;
-	}
-
-	.form-group {
-		margin-bottom: 1.5rem;
-	}
-
-	.form-group label {
-		display: block;
-		color: var(--text-primary);
-		margin-bottom: 0.5rem;
-		font-weight: 500;
-	}
-
-	.form-group input,
-	.form-group textarea {
-		width: 100%;
-		padding: 0.75rem;
-		background: var(--bg-primary);
-		border: 1px solid var(--border-color);
-		border-radius: 4px;
-		color: var(--text-primary);
-		font-family: inherit;
-		transition: border-color 0.2s ease;
-	}
-
-	.form-group input:focus,
-	.form-group textarea:focus {
-		outline: none;
-		border-color: var(--accent-color);
-	}
-
-	.submit-btn {
-		background: var(--accent-color);
-		color: var(--bg-primary);
+	.section-divider {
 		border: none;
-		padding: 0.75rem 2rem;
-		border-radius: 4px;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s ease;
+		border-top: 1px solid var(--border-color);
+		margin: 2rem 0;
 	}
 
-	.submit-btn:hover {
-		background: var(--accent-hover);
-		transform: translateY(-1px);
+	.email-section,
+	.social-section {
+		margin-bottom: 2rem;
+	}
+
+	.email-section h2,
+	.social-section h2 {
+		color: var(--text-primary);
+		font-size: 1.5rem;
+		font-weight: 700;
+		margin-bottom: 1rem;
+	}
+
+	.email-item {
+		margin-bottom: 1.5rem;
+	}
+
+	.email-description {
+		color: var(--text-secondary);
+		font-size: 0.95rem;
+		margin-bottom: 0.5rem;
+		line-height: 1.5;
+	}
+
+	.email-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		color: var(--text-primary);
+		text-decoration: none;
+		font-size: 1rem;
+		transition: color 0.2s ease;
+	}
+
+	.email-link:hover {
+		color: var(--accent-color);
+	}
+
+	.social-description {
+		color: var(--text-secondary);
+		font-size: 0.95rem;
+		margin-bottom: 1rem;
+		line-height: 1.5;
+	}
+
+	.social-links {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.social-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.75rem;
+		color: var(--text-primary);
+		text-decoration: none;
+		font-size: 1rem;
+		transition: color 0.2s ease;
+	}
+
+	.social-link:hover {
+		color: var(--accent-color);
+	}
+
+	.footer-section {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		margin-top: 3rem;
+		padding-bottom: 2rem;
+		position: relative;
+	}
+
+	.character-container {
+		margin-bottom: 1rem;
+	}
+
+	.character-image {
+		display: block;
+		margin: 0 auto;
+	}
+
+	.closing-message {
+		text-align: center;
+	}
+
+	.closing-message p {
+		color: var(--text-primary);
+		font-size: 1rem;
+		margin: 0;
+	}
+
+	.character-image {
+		width: 120px;
+		height: auto;
+		image-rendering: pixelated;
+		image-rendering: -moz-crisp-edges;
+		image-rendering: crisp-edges;
+	}
+
+	@media (max-width: 768px) {
+		.character-image {
+			width: 100px;
+		}
 	}
 </style>

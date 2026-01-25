@@ -322,9 +322,8 @@
 
 <style>
 	.page-content {
-		max-width: 1200px;
-		margin: 0 auto;
-		padding: 0 1rem 2rem 1rem;
+		width: 100%;
+		padding: 0 0.5rem 2rem 0.5rem;
 	}
 
 	.section-title {
