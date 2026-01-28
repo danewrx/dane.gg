@@ -152,6 +152,18 @@
 			iconBgColor: '#06b6d4',
 			path: '/admin/configuration/contact-emails',
 			section: 'contact'
+		},
+		{
+			id: 'contact-social-links',
+			title: 'Social Links',
+			description: 'Select social links to display on the contact page',
+			icon: Link,
+			color: 'from-pink-500 to-rose-500',
+			bgColor: 'rgba(236, 72, 153, 0.1)',
+			borderColor: 'rgba(236, 72, 153, 0.2)',
+			iconBgColor: '#ec4899',
+			path: '/admin/configuration/contact-social-links',
+			section: 'contact'
 		}
 	];
 

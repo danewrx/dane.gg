@@ -9,9 +9,12 @@
 	let loadingTagline = $state(true);
 	let contactEmails = $state<{ id: string; description: string; email: string }[]>([]);
 	let loadingEmails = $state(true);
+	let socialLinks = $state<{ id: string; name: string; url: string; iconType: string; iconName?: string; iconText?: string; svgUrl?: string }[]>([]);
+	let socialHeader = $state('');
+	let loadingSocial = $state(true);
 
 	onMount(async () => {
-		await Promise.all([loadTagline(), loadContactEmails()]);
+		await Promise.all([loadTagline(), loadContactEmails(), loadSocialLinks()]);
 	});
 
 	async function loadTagline() {
@@ -62,6 +65,55 @@
 			loadingEmails = false;
 		}
 	}
+
+	async function loadSocialLinks() {
+		try {
+			loadingSocial = true;
+			
+			// Fetch link IDs and header
+			const [linksConfigResponse, headerResponse, allLinksResponse] = await Promise.all([
+				fetch('/api/config/contact_social_links'),
+				fetch('/api/config/contact_social_header'),
+				fetch('/api/social-links')
+			]);
+
+			// Get link IDs
+			let selectedLinkIds: string[] = [];
+			if (linksConfigResponse.ok) {
+				const linksConfigData = await linksConfigResponse.json();
+				if (linksConfigData.success && linksConfigData.data?.value) {
+					try {
+						selectedLinkIds = JSON.parse(linksConfigData.data.value);
+					} catch (e) {
+						selectedLinkIds = [];
+					}
+				}
+			}
+
+			// Get header text
+			if (headerResponse.ok) {
+				const headerData = await headerResponse.json();
+				if (headerData.success && headerData.data?.value) {
+					socialHeader = headerData.data.value;
+				}
+			}
+
+			if (allLinksResponse.ok && selectedLinkIds.length > 0) {
+				const allLinksData = await allLinksResponse.json();
+				if (allLinksData.success && allLinksData.data) {
+					const allLinks = allLinksData.data;
+					socialLinks = allLinks
+						.filter((link: any) => selectedLinkIds.includes(link.id))
+						.sort((a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0));
+				}
+			}
+		} catch (error) {
+			console.error('Error loading social links:', error);
+			socialLinks = [];
+		} finally {
+			loadingSocial = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -103,25 +155,39 @@
 		{/if}
 	</div>
 
-	<hr class="section-divider" />
-	<div class="social-section">
-		<h2>Social</h2>
-		<p class="social-description">If you want to contact me through social media, please do so via the following channels. I am most active here and will likely respond the quickest:</p>
-		<div class="social-links">
-			<a href="https://x.com" target="_blank" rel="noopener noreferrer" class="social-link">
-				<Icon icon="simple-icons:x" width="20" height="20" />
-				<span>X (Twitter)</span>
-			</a>
-			<a href="https://bsky.app" target="_blank" rel="noopener noreferrer" class="social-link">
-				<Icon icon="simple-icons:bluesky" width="20" height="20" />
-				<span>Bluesky</span>
-			</a>
-			<a href="https://discord.com" target="_blank" rel="noopener noreferrer" class="social-link">
-				<Icon icon="simple-icons:discord" width="20" height="20" />
-				<span>Discord</span>
-			</a>
+	{#if !loadingSocial && socialLinks.length > 0}
+		<hr class="section-divider" />
+		<div class="social-section">
+			<h2>Social</h2>
+			{#if socialHeader}
+				<p class="social-description">{socialHeader}</p>
+			{/if}
+			<div class="social-links">
+				{#each socialLinks as link (link.id)}
+					<a href={link.url} target="_blank" rel="noopener noreferrer" class="social-link">
+						{#if link.iconType === 'custom-text' && link.iconText}
+							<span class="text-icon">{link.iconText}</span>
+						{:else if link.iconType === 'svg-url' && link.svgUrl}
+							<img 
+								src={link.svgUrl} 
+								alt={link.name}
+								class="svg-icon"
+							/>
+						{:else if link.iconType === 'coreui-brand' && link.iconName}
+							<Icon 
+								icon={`cib:${link.iconName.replace('cb-', '')}`} 
+								width="20" 
+								height="20"
+							/>
+						{:else}
+							<Icon icon="simple-icons:link" width="20" height="20" />
+						{/if}
+						<span>{link.name}</span>
+					</a>
+				{/each}
+			</div>
 		</div>
-	</div>
+	{/if}
 
 	<div class="footer-section">
 		<div class="character-container">
@@ -228,6 +294,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
+		padding-top: 0.5rem;
 	}
 
 	.social-link {
@@ -242,6 +309,17 @@
 
 	.social-link:hover {
 		color: var(--accent-color);
+	}
+
+	.text-icon {
+		font-size: 18px;
+		line-height: 1;
+	}
+
+	.svg-icon {
+		width: 20px;
+		height: 20px;
+		object-fit: contain;
 	}
 
 	.footer-section {
