@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { Loader2, Link2 } from 'lucide-svelte';
+	import { Loader2, Link2, Edit2, Check, X } from 'lucide-svelte';
 	import Icon from '@iconify/svelte';
 
 	interface SocialLink {
@@ -21,6 +21,8 @@
 	let socialHeader = $state('');
 	let isLoading = $state(true);
 	let isSaving = $state(false);
+	let isEditingHeader = $state(false);
+	let tempHeaderText = $state('');
 
 	onMount(async () => {
 		await Promise.all([loadSocialLinks(), loadContactSocialConfig()]);
@@ -86,6 +88,46 @@
 			selectedLinkIds = selectedLinkIds.filter(id => id !== linkId);
 		} else {
 			selectedLinkIds = [...selectedLinkIds, linkId];
+		}
+	}
+
+	function startEditingHeader() {
+		tempHeaderText = socialHeader;
+		isEditingHeader = true;
+	}
+
+	function cancelEditingHeader() {
+		tempHeaderText = '';
+		isEditingHeader = false;
+	}
+
+	async function saveHeader() {
+		try {
+			const response = await fetch('/api/config/contact_social_header', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				credentials: 'include',
+				body: JSON.stringify({
+					value: tempHeaderText,
+					dataType: 'string'
+				})
+			});
+
+			const data = await response.json();
+
+			if (data.success) {
+				socialHeader = tempHeaderText;
+				isEditingHeader = false;
+				tempHeaderText = '';
+				toast.success('Header text saved successfully');
+			} else {
+				toast.error('Failed to save header text');
+			}
+		} catch (error) {
+			console.error('Error saving header:', error);
+			toast.error('Failed to save header text');
 		}
 	}
 
@@ -164,21 +206,61 @@
 	{:else}
 		<div class="form-section">
 			<div class="form-group">
-				<label for="socialHeader">Social Links Section Header</label>
-				<input 
-					id="socialHeader"
-					type="text" 
-					bind:value={socialHeader}
-					placeholder="e.g., If you want to contact me through social media, please do so via the following channels. I am most active here and will likely respond the quickest:"
-					class="header-input"
-				/>
-				<p class="field-hint">This text will appear above the social links on the contact page.</p>
+				<label>Header</label>
+				{#if isEditingHeader}
+					<div class="header-edit-container">
+						<input 
+							type="text" 
+							bind:value={tempHeaderText}
+							placeholder="e.g., If you want to contact me through social media, please do so via the following channels. I am most active here and will likely respond the quickest:"
+							class="header-input"
+						/>
+						<div class="header-edit-actions">
+							<button 
+								type="button"
+								class="icon-button save-icon-button"
+								onclick={saveHeader}
+								title="Save"
+							>
+								<Check size={16} />
+							</button>
+							<button 
+								type="button"
+								class="icon-button cancel-icon-button"
+								onclick={cancelEditingHeader}
+								title="Cancel"
+							>
+								<X size={16} />
+							</button>
+						</div>
+					</div>
+					<p class="field-hint">This text will appear above the social links on the contact page.</p>
+				{:else}
+					<div class="header-view-container">
+						<div class="header-view-text">
+							{#if socialHeader}
+								{socialHeader}
+							{:else}
+								<span class="empty-text">No header text set. Click edit to add one.</span>
+							{/if}
+						</div>
+						<button 
+							type="button"
+							class="icon-button edit-icon-button"
+							onclick={startEditingHeader}
+							title="Edit header"
+						>
+							<Edit2 size={16} />
+						</button>
+					</div>
+					<p class="field-hint">This text will appear above the social links on the contact page.</p>
+				{/if}
 			</div>
 		</div>
 
 		<div class="form-section">
 			<div class="form-group">
-				<label>Select Social Links to Display</label>
+				<label>Social Links</label>
 				<p class="field-hint">Check the social links you want to show on the contact page. Links are displayed in their configured display order.</p>
 				
 				{#if allSocialLinks.length === 0}
@@ -305,8 +387,38 @@
 		line-height: 1.4;
 	}
 
+	.header-view-container {
+		display: flex;
+		align-items: flex-start;
+		gap: 12px;
+		padding: 12px;
+		background: var(--bg-secondary, #2d2d2d);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		min-height: 48px;
+	}
+
+	.header-view-text {
+		flex: 1;
+		color: var(--text-primary, #ffffff);
+		font-size: 14px;
+		line-height: 1.5;
+		word-wrap: break-word;
+	}
+
+	.header-view-text .empty-text {
+		color: var(--text-secondary, #a1a1aa);
+		font-style: italic;
+	}
+
+	.header-edit-container {
+		display: flex;
+		align-items: flex-start;
+		gap: 8px;
+	}
+
 	.header-input {
-		width: 100%;
+		flex: 1;
 		padding: 12px;
 		background: var(--bg-primary, #1a1a1a);
 		border: 1px solid var(--border-color, #3a3a3a);
@@ -322,12 +434,57 @@
 		border-color: var(--accent-color, #6366f1);
 	}
 
+	.header-edit-actions {
+		display: flex;
+		gap: 4px;
+		flex-shrink: 0;
+	}
+
+	.icon-button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		padding: 0;
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		background: var(--bg-primary, #1a1a1a);
+		color: var(--text-secondary, #a1a1aa);
+		cursor: pointer;
+		transition: all 0.2s ease;
+		flex-shrink: 0;
+	}
+
+	.icon-button:hover {
+		background: var(--bg-tertiary, #3a3a3a);
+		border-color: var(--accent-color, #6366f1);
+		color: var(--text-primary, #ffffff);
+	}
+
+	.edit-icon-button {
+		margin-top: 0;
+	}
+
+	.save-icon-button:hover {
+		background: rgba(34, 197, 94, 0.1);
+		border-color: #22c55e;
+		color: #22c55e;
+	}
+
+	.cancel-icon-button:hover {
+		background: rgba(239, 68, 68, 0.1);
+		border-color: #ef4444;
+		color: #ef4444;
+	}
+
 	.empty-state {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		padding: 48px 24px;
+		padding: 64px 24px 48px 24px;
+		margin-top: 0.75rem;
 		text-align: center;
 		border: 1px dashed var(--border-color, #3a3a3a);
 		border-radius: 8px;
