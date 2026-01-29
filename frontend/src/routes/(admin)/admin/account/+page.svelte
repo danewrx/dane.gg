@@ -908,15 +908,15 @@
 	}
 
 	.account-type.admin {
-		background: rgba(34, 197, 94, 0.1);
-		color: #22c55e;
-		border: 1px solid rgba(34, 197, 94, 0.2);
+		background: color-mix(in srgb, var(--accent-color, #6366f1) 10%, transparent);
+		color: var(--accent-color, #6366f1);
+		border: 1px solid color-mix(in srgb, var(--accent-color, #6366f1) 20%, transparent);
 	}
 
 	.account-type.user {
-		background: rgba(59, 130, 246, 0.1);
-		color: #3b82f6;
-		border: 1px solid rgba(59, 130, 246, 0.2);
+		background: rgba(161, 161, 170, 0.1);
+		color: var(--text-secondary, #a1a1aa);
+		border: 1px solid rgba(161, 161, 170, 0.2);
 	}
 
 	.totp-manager-container {
