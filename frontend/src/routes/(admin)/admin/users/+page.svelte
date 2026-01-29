@@ -333,43 +333,64 @@
 	<div class="modal-overlay" onclick={closeAddModal}>
 		<div class="modal" onclick={(e) => e.stopPropagation()}>
 			<div class="modal-header">
-				<h2>Add New User</h2>
+				<div class="modal-header-content">
+					<div class="modal-header-icon">
+						<UserIcon size={24} />
+					</div>
+					<div>
+						<h2>Add New User</h2>
+						<p class="modal-subtitle">Create a new user account</p>
+					</div>
+				</div>
 				<button class="close-button" onclick={closeAddModal}>
 					<X size={20} />
 				</button>
 			</div>
 			<form class="modal-form" onsubmit={(e) => { e.preventDefault(); handleAddUser(); }}>
-				<div class="form-group">
-					<label for="add-username">Username *</label>
-					<input
-						id="add-username"
-						type="text"
-						bind:value={addForm.username}
-						placeholder="Enter username"
-						required
-						disabled={isSubmitting}
-					/>
-				</div>
-				<div class="form-group">
-					<label for="add-password">Password *</label>
-					<input
-						id="add-password"
-						type="password"
-						bind:value={addForm.password}
-						placeholder="Enter password"
-						required
-						disabled={isSubmitting}
-					/>
-				</div>
-				<div class="form-group checkbox-group">
-					<label class="checkbox-label">
+				<div class="form-content">
+					<div class="form-group">
+						<label for="add-username">Username</label>
 						<input
-							type="checkbox"
-							bind:checked={addForm.isAdmin}
+							id="add-username"
+							type="text"
+							bind:value={addForm.username}
+							placeholder="Enter username"
+							required
 							disabled={isSubmitting}
 						/>
-						<span>Admin privileges</span>
-					</label>
+					</div>
+					<div class="form-group">
+						<label for="add-password">Password</label>
+						<div class="password-input-group">
+							<input
+								id="add-password"
+								type={showPassword ? 'text' : 'password'}
+								bind:value={addForm.password}
+								placeholder="Enter password (min 6 characters)"
+								required
+								disabled={isSubmitting}
+							/>
+							<button
+								type="button"
+								class="password-toggle"
+								onclick={() => showPassword = !showPassword}
+								disabled={isSubmitting}
+							>
+								{#if showPassword}
+									<EyeOff size={16} />
+								{:else}
+									<Eye size={16} />
+								{/if}
+							</button>
+						</div>
+					</div>
+					<div class="control-item">
+						<div class="control-label-group">
+							<span class="control-label">Admin Access</span>
+							<span class="control-description">Grant administrative privileges to this user</span>
+						</div>
+						<Toggle bind:checked={addForm.isAdmin} disabled={isSubmitting} />
+					</div>
 				</div>
 				<div class="modal-actions">
 					<button type="button" class="cancel-button" onclick={closeAddModal} disabled={isSubmitting}>
@@ -871,17 +892,42 @@
 
 	.modal-header {
 		display: flex;
-		align-items: center;
+		align-items: flex-start;
 		justify-content: space-between;
 		padding: 20px 24px;
 		border-bottom: 1px solid var(--border-color, #3a3a3a);
+		gap: 16px;
+	}
+
+	.modal-header-content {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+	}
+
+	.modal-header-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 48px;
+		height: 48px;
+		border-radius: 12px;
+		background: color-mix(in srgb, var(--accent-color, #6366f1) 15%, transparent);
+		color: var(--accent-color, #6366f1);
+		flex-shrink: 0;
 	}
 
 	.modal-header h2 {
 		margin: 0;
-		font-size: 20px;
+		font-size: 18px;
 		font-weight: 600;
 		color: var(--text-primary, #ffffff);
+	}
+
+	.modal-subtitle {
+		margin: 4px 0 0 0;
+		font-size: 13px;
+		color: var(--text-secondary, #a1a1aa);
 	}
 
 	.close-button {
