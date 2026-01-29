@@ -22,6 +22,8 @@
 	let categories = $state<SkillCategory[]>([]);
 	let isLoading = $state(true);
 	let isSaving = $state(false);
+	let draggedIndex = $state<number | null>(null);
+	let dragOverIndex = $state<number | null>(null);
 	
 	// New category form
 	let showNewCategoryForm = $state(false);
@@ -314,6 +316,73 @@
 		newSkillName = '';
 		newSkillLevel = 50;
 	}
+
+	function handleDragStart(index: number) {
+		if (editingCategoryId || showNewCategoryForm) return;
+		draggedIndex = index;
+	}
+
+	function handleDragOver(e: DragEvent, index: number) {
+		e.preventDefault();
+		if (editingCategoryId || showNewCategoryForm || draggedIndex === null || draggedIndex === index) return;
+		dragOverIndex = index;
+	}
+
+	function handleDragLeave() {
+		dragOverIndex = null;
+	}
+
+	async function handleDrop(e: DragEvent, index: number) {
+		e.preventDefault();
+		if (editingCategoryId || showNewCategoryForm || draggedIndex === null || draggedIndex === index) {
+			draggedIndex = null;
+			dragOverIndex = null;
+			return;
+		}
+
+		const items = [...categories];
+		const [draggedItem] = items.splice(draggedIndex, 1);
+		items.splice(index, 0, draggedItem);
+
+		try {
+			const categoriesToUpdate = items.map((item, idx) => ({
+				id: item.id,
+				displayOrder: idx
+			}));
+
+			const response = await fetch('/api/skills/categories/order', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				credentials: 'include',
+				body: JSON.stringify({ categories: categoriesToUpdate })
+			});
+
+			const data = await response.json();
+
+			if (data.success) {
+				await loadSkills();
+			} else {
+				toast.error('Failed to reorder categories', {
+					description: data.error
+				});
+			}
+		} catch (error) {
+			console.error('Error reordering categories:', error);
+			toast.error('Error reordering categories', {
+				description: 'An unexpected error occurred. Please try again.'
+			});
+		} finally {
+			draggedIndex = null;
+			dragOverIndex = null;
+		}
+	}
+
+	function handleDragEnd() {
+		draggedIndex = null;
+		dragOverIndex = null;
+	}
 </script>
 
 <div class="skills-settings">
@@ -328,9 +397,25 @@
 		</div>
 	{:else}
 		<div class="categories-list">
-			{#each categories as category (category.id)}
-				<div class="category-card">
+			{#each categories as category, index (category.id)}
+				<div 
+					class="category-card"
+					class:dragging={draggedIndex === index}
+					class:drag-over={dragOverIndex === index}
+					class:not-draggable={editingCategoryId !== null || showNewCategoryForm}
+					draggable={editingCategoryId === null && !showNewCategoryForm}
+					ondragstart={() => handleDragStart(index)}
+					ondragover={(e) => handleDragOver(e, index)}
+					ondragleave={handleDragLeave}
+					ondrop={(e) => handleDrop(e, index)}
+					ondragend={handleDragEnd}
+				>
 					<div class="category-header">
+						{#if editingCategoryId === null && !showNewCategoryForm}
+							<div class="drag-handle" title="Drag to reorder">
+								<GripVertical size={18} />
+							</div>
+						{/if}
 						<button 
 							class="expand-toggle"
 							onclick={() => toggleCategory(category.id)}
@@ -551,6 +636,43 @@
 		border: 1px solid var(--border-color, #3a3a3a);
 		border-radius: 8px;
 		overflow: hidden;
+		cursor: move;
+		transition: all 0.2s ease;
+	}
+
+	.category-card.not-draggable {
+		cursor: default;
+	}
+
+	.category-card.dragging {
+		opacity: 0.5;
+		cursor: grabbing;
+	}
+
+	.category-card.drag-over {
+		border-color: var(--accent-color, #6366f1);
+		box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+	}
+
+	.category-card:not(.dragging):not(.not-draggable):hover {
+		border-color: var(--accent-color, #6366f1);
+	}
+
+	.drag-handle {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--text-secondary, #a1a1aa);
+		cursor: grab;
+		flex-shrink: 0;
+		padding: 4px;
+		border-radius: 4px;
+		transition: all 0.2s ease;
+	}
+
+	.drag-handle:hover {
+		color: var(--text-primary, #ffffff);
+		background: rgba(255, 255, 255, 0.05);
 	}
 
 	.category-header {

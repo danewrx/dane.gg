@@ -92,6 +92,41 @@ router.post('/categories', requireAuth, async (req, res) => {
   }
 });
 
+// Update category order (bulk)
+router.put('/categories/order', requireAuth, async (req, res) => {
+  try {
+    const { categories } = req.body;
+
+    if (!Array.isArray(categories)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Categories array is required'
+      });
+    }
+
+    // Update category display order
+    for (const cat of categories) {
+      await db.update(skillCategories)
+        .set({ 
+          displayOrder: cat.displayOrder,
+          updatedAt: new Date()
+        })
+        .where(eq(skillCategories.id, cat.id));
+    }
+
+    res.json({
+      success: true,
+      message: 'Category order updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating category order:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update category order'
+    });
+  }
+});
+
 // PUT update a skill category
 router.put('/categories/:id', requireAuth, async (req, res) => {
   try {
@@ -162,41 +197,6 @@ router.delete('/categories/:id', requireAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to delete skill category'
-    });
-  }
-});
-
-// PUT update category order (bulk)
-router.put('/categories/order', requireAuth, async (req, res) => {
-  try {
-    const { categories } = req.body;
-
-    if (!Array.isArray(categories)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Categories array is required'
-      });
-    }
-
-    // Update each category's display order
-    for (const cat of categories) {
-      await db.update(skillCategories)
-        .set({ 
-          displayOrder: cat.displayOrder,
-          updatedAt: new Date()
-        })
-        .where(eq(skillCategories.id, cat.id));
-    }
-
-    res.json({
-      success: true,
-      message: 'Category order updated successfully'
-    });
-  } catch (error) {
-    console.error('Error updating category order:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to update category order'
     });
   }
 });
