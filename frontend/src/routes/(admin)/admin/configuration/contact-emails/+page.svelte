@@ -79,9 +79,10 @@
 			}
 
 			let updatedEmails: ContactEmail[];
-			if (editingEmail) {
+			const currentEditingEmail = editingEmail;
+			if (currentEditingEmail) {
 				updatedEmails = contactEmails.map(email => 
-					email.id === editingEmail.id ? { ...formData, id: editingEmail.id } : email
+					email.id === currentEditingEmail.id ? { ...formData, id: currentEditingEmail.id } : email
 				);
 			} else {
 				updatedEmails = [...contactEmails, formData as ContactEmail];
@@ -331,13 +332,8 @@
 </svelte:head>
 
 <div class="contact-emails-page">
-	<div class="page-header">
-		<div class="header-content">
-			<div class="header-text">
-				<h1>Contact Emails</h1>
-				<p>Manage email addresses displayed on the contact page</p>
-			</div>
-		</div>
+	<div class="settings-description">
+		<p>Manage email addresses displayed on the contact page and customize the header text for the email addresses section.</p>
 	</div>
 
 	<div class="form-group header-form-group">
@@ -392,10 +388,6 @@
 		{/if}
 	</div>
 
-	<div class="section-heading">
-		<h2>Email Addresses</h2>
-	</div>
-
 	{#if isLoading}
 		<div class="loading">
 			<div class="loading-spinner"></div>
@@ -424,8 +416,8 @@
 					{/if}
 					<div class="email-info">
 						<div class="email-details">
-							<h3>{email.description}</h3>
-							<p class="email-address">{email.email}</p>
+							<h3 class="email-address">{email.email}</h3>
+							<p class="email-description">{email.description}</p>
 							<div class="email-meta">
 								<span class="display-order">Order: {email.displayOrder}</span>
 							</div>
@@ -526,37 +518,25 @@
 
 <style>
 	.contact-emails-page {
-		padding: 24px;
-		max-width: 1400px;
-		margin: 0 auto;
+		width: 100%;
+		max-width: 800px;
 	}
 
-	.page-header {
-		margin-bottom: 32px;
+	.settings-description {
+		margin-bottom: 24px;
+		padding-bottom: 16px;
+		border-bottom: 1px solid var(--border-color, #3a3a3a);
 	}
 
-	.header-content {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	.header-text h1 {
-		color: var(--text-primary, #ffffff);
-		margin: 0 0 8px 0;
-		font-size: 28px;
-		font-weight: 600;
-	}
-
-	.header-text p {
+	.settings-description p {
 		color: var(--text-secondary, #a1a1aa);
 		margin: 0;
 		font-size: 14px;
+		line-height: 1.5;
 	}
 
 
-	.loading,
-	.empty-state {
+	.loading {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -578,23 +558,6 @@
 	@keyframes spin {
 		0% { transform: rotate(0deg); }
 		100% { transform: rotate(360deg); }
-	}
-
-	.empty-icon {
-		color: var(--text-secondary, #a1a1aa);
-		margin-bottom: 16px;
-		opacity: 0.5;
-	}
-
-	.empty-state h3 {
-		color: var(--text-primary, #ffffff);
-		margin: 0 0 8px 0;
-		font-size: 20px;
-	}
-
-	.empty-state p {
-		color: var(--text-secondary, #a1a1aa);
-		margin: 0 0 24px 0;
 	}
 
 	.emails-list {
@@ -647,14 +610,14 @@
 		flex: 1;
 	}
 
-	.email-details h3 {
+	.email-details .email-address {
 		color: var(--text-primary, #ffffff);
-		margin: 0 0 8px 0;
+		margin: 0 0 4px 0;
 		font-size: 16px;
 		font-weight: 500;
 	}
 
-	.email-address {
+	.email-details .email-description {
 		color: var(--text-secondary, #a1a1aa);
 		margin: 0 0 8px 0;
 		font-size: 14px;
@@ -782,10 +745,6 @@
 		border-color: var(--accent-color, #6366f1);
 	}
 
-	.checkbox-group {
-		margin-top: 24px;
-	}
-
 	.checkbox-label {
 		display: flex;
 		align-items: center;
@@ -796,11 +755,6 @@
 	.checkbox-label input[type="checkbox"] {
 		width: auto;
 		cursor: pointer;
-	}
-
-	.checkbox-text {
-		color: var(--text-primary, #ffffff);
-		font-size: 14px;
 	}
 
 	.form-actions {
@@ -905,16 +859,6 @@
 		margin-bottom: 24px;
 	}
 
-	.section-heading {
-		margin-bottom: 8px;
-	}
-
-	.section-heading h2 {
-		color: var(--text-primary, #ffffff);
-		font-size: 14px;
-		font-weight: 500;
-		margin: 0;
-	}
 
 	.header-view-container {
 		display: flex;
