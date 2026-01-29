@@ -901,11 +901,11 @@
 	}
 
 	.icon-btn.save {
-		color: #22c55e;
+		color: var(--accent-color, #6366f1);
 	}
 
 	.icon-btn.save:hover {
-		background: rgba(34, 197, 94, 0.2);
+		background: rgba(99, 102, 241, 0.2);
 	}
 
 	.icon-btn.cancel {
