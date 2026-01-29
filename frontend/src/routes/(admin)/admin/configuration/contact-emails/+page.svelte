@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { Mail, Plus, Edit, Trash2, Eye, EyeOff, GripVertical } from 'lucide-svelte';
+	import { Mail, Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Edit2, Check, X } from 'lucide-svelte';
 
 	interface ContactEmail {
 		id: string;
@@ -16,6 +16,9 @@
 	let isSaving = $state(false);
 	let showAddForm = $state(false);
 	let editingEmail: ContactEmail | null = $state(null);
+	let emailsHeader = $state('');
+	let isEditingHeader = $state(false);
+	let tempHeaderText = $state('');
 
 	let formData = $state<{
 		id?: string;
@@ -34,7 +37,7 @@
 	let dragOverIndex = $state<number | null>(null);
 
 	onMount(() => {
-		loadContactEmails();
+		Promise.all([loadContactEmails(), loadEmailsHeader()]);
 	});
 
 	async function loadContactEmails() {
@@ -130,7 +133,7 @@
 		formData = {
 			description: '',
 			email: '',
-			displayOrder: 0,
+			displayOrder: contactEmails.length,
 			isActive: true
 		};
 		showAddForm = false;
@@ -208,7 +211,7 @@
 
 	function handleDragOver(e: DragEvent, index: number) {
 		e.preventDefault();
-		if (draggedIndex === null || draggedIndex === index) return;
+		if (editingEmail || showAddForm || draggedIndex === null || draggedIndex === index) return;
 		dragOverIndex = index;
 	}
 
@@ -218,7 +221,7 @@
 
 	async function handleDrop(e: DragEvent, index: number) {
 		e.preventDefault();
-		if (draggedIndex === null || draggedIndex === index) {
+		if (editingEmail || showAddForm || draggedIndex === null || draggedIndex === index) {
 			draggedIndex = null;
 			dragOverIndex = null;
 			return;
@@ -265,6 +268,62 @@
 		draggedIndex = null;
 		dragOverIndex = null;
 	}
+
+	async function loadEmailsHeader() {
+		try {
+			const response = await fetch('/api/config/contact_emails_header', {
+				credentials: 'include'
+			});
+			if (response.ok) {
+				const data = await response.json();
+				if (data.success && data.data?.value) {
+					emailsHeader = data.data.value;
+				}
+			}
+		} catch (error) {
+			console.error('Error loading emails header:', error);
+		}
+	}
+
+	function startEditingHeader() {
+		tempHeaderText = emailsHeader;
+		isEditingHeader = true;
+	}
+
+	function cancelEditingHeader() {
+		tempHeaderText = '';
+		isEditingHeader = false;
+	}
+
+	async function saveHeader() {
+		try {
+			const response = await fetch('/api/config/contact_emails_header', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				credentials: 'include',
+				body: JSON.stringify({
+					value: tempHeaderText,
+					dataType: 'string'
+				})
+			});
+
+			const data = await response.json();
+
+			if (data.success) {
+				emailsHeader = tempHeaderText;
+				isEditingHeader = false;
+				tempHeaderText = '';
+				toast.success('Header text saved successfully');
+			} else {
+				toast.error('Failed to save header text');
+			}
+		} catch (error) {
+			console.error('Error saving header:', error);
+			toast.error('Failed to save header text');
+		}
+	}
 </script>
 
 <svelte:head>
@@ -278,15 +337,63 @@
 				<h1>Contact Emails</h1>
 				<p>Manage email addresses displayed on the contact page</p>
 			</div>
-			<button 
-				class="add-button" 
-				onclick={() => { resetForm(); showAddForm = true; }}
-				disabled={isSaving}
-			>
-				<Plus size={20} />
-				Add Email
-			</button>
 		</div>
+	</div>
+
+	<div class="form-group header-form-group">
+		<label>Header</label>
+		{#if isEditingHeader}
+			<div class="header-edit-container">
+				<input 
+					type="text" 
+					bind:value={tempHeaderText}
+					placeholder="e.g., Email"
+					class="header-input"
+				/>
+				<div class="header-edit-actions">
+					<button 
+						type="button"
+						class="icon-button save-icon-button"
+						onclick={saveHeader}
+						title="Save"
+					>
+						<Check size={16} />
+					</button>
+					<button 
+						type="button"
+						class="icon-button cancel-icon-button"
+						onclick={cancelEditingHeader}
+						title="Cancel"
+					>
+						<X size={16} />
+					</button>
+				</div>
+			</div>
+			<p class="field-hint">This text will appear above the email addresses on the contact page.</p>
+		{:else}
+			<div class="header-view-container">
+				<div class="header-view-text">
+					{#if emailsHeader}
+						{emailsHeader}
+					{:else}
+						<span class="empty-text">No header text set. Click edit to add one.</span>
+					{/if}
+				</div>
+				<button 
+					type="button"
+					class="icon-button edit-icon-button"
+					onclick={startEditingHeader}
+					title="Edit header"
+				>
+					<Edit2 size={16} />
+				</button>
+			</div>
+			<p class="field-hint">This text will appear above the email addresses on the contact page.</p>
+		{/if}
+	</div>
+
+	<div class="section-heading">
+		<h2>Email Addresses</h2>
 	</div>
 
 	{#if isLoading}
@@ -294,22 +401,10 @@
 			<div class="loading-spinner"></div>
 			<p>Loading contact emails...</p>
 		</div>
-	{:else if contactEmails.length === 0}
-		<div class="empty-state">
-			<Mail size={48} class="empty-icon" />
-			<h3>No contact emails yet</h3>
-			<p>Add your first email address to get started</p>
-			<button 
-				class="add-button" 
-				onclick={() => { resetForm(); showAddForm = true; }}
-			>
-				<Plus size={20} />
-				Add Your First Email
-			</button>
-		</div>
 	{:else}
 		<div class="emails-list">
-			{#each contactEmails as email, index (email.id)}
+			{#if contactEmails.length > 0}
+				{#each contactEmails as email, index (email.id)}
 				<div 
 					class="email-item"
 					class:dragging={draggedIndex === index}
@@ -322,9 +417,11 @@
 					ondrop={(e) => handleDrop(e, index)}
 					ondragend={handleDragEnd}
 				>
-					<div class="drag-handle">
-						<GripVertical size={20} />
-					</div>
+					{#if editingEmail === null && !showAddForm}
+						<div class="drag-handle" title="Drag to reorder">
+							<GripVertical size={20} />
+						</div>
+					{/if}
 					<div class="email-info">
 						<div class="email-details">
 							<h3>{email.description}</h3>
@@ -362,73 +459,67 @@
 						</button>
 					</div>
 				</div>
-			{/each}
-		</div>
-	{/if}
+				{/each}
+			{/if}
 
-	{#if showAddForm}
-		<div class="modal-overlay" onclick={resetForm}>
-			<div class="modal" onclick={(e) => e.stopPropagation()}>
-				<div class="modal-header">
-					<h2>{editingEmail ? 'Edit Email' : 'Add New Email'}</h2>
-					<button class="close-button" onclick={resetForm}>
-						×
-					</button>
-				</div>
+			{#if showAddForm}
+				<div class="new-email-form">
+					<h3>{editingEmail ? 'Edit Email' : 'New Email'}</h3>
+					<form onsubmit={(e) => { e.preventDefault(); saveEmail(); }}>
+						<div class="form-group">
+							<label for="description">Description *</label>
+							<textarea 
+								id="description"
+								class="edit-input"
+								bind:value={formData.description}
+								placeholder="e.g., If you would like to reach out to me for most things:"
+								required
+								rows="3"
+							></textarea>
+						</div>
 
-				<form class="modal-form" onsubmit={(e) => { e.preventDefault(); saveEmail(); }}>
-					<div class="form-group">
-						<label for="description">Description *</label>
-						<textarea 
-							id="description"
-							bind:value={formData.description}
-							placeholder="e.g., If you would like to reach out to me for most things:"
-							required
-							rows="3"
-						></textarea>
-					</div>
-
-					<div class="form-group">
-						<label for="email">Email Address *</label>
-						<input 
-							type="email" 
-							id="email"
-							bind:value={formData.email}
-							placeholder="me@dane.gg"
-							required
-						/>
-					</div>
-
-					<div class="form-group">
-						<label for="displayOrder">Display Order</label>
-						<input 
-							type="number" 
-							id="displayOrder"
-							bind:value={formData.displayOrder}
-							min="0"
-						/>
-					</div>
-
-					<div class="form-group checkbox-group">
-						<label class="checkbox-label">
+						<div class="form-group">
+							<label for="email">Email Address *</label>
 							<input 
-								type="checkbox" 
-								bind:checked={formData.isActive}
+								type="email" 
+								id="email"
+								class="edit-input"
+								bind:value={formData.email}
+								placeholder="me@dane.gg"
+								required
 							/>
-							<span class="checkbox-text">Active (visible on website)</span>
-						</label>
-					</div>
+						</div>
 
-					<div class="form-actions">
-						<button type="button" class="cancel-button" onclick={resetForm}>
-							Cancel
-						</button>
-						<button type="submit" class="save-button" disabled={isSaving}>
-							{isSaving ? 'Saving...' : (editingEmail ? 'Update Email' : 'Add Email')}
-						</button>
-					</div>
-				</form>
-			</div>
+						<div class="form-group">
+							<label class="checkbox-label">
+								<input 
+									type="checkbox" 
+									bind:checked={formData.isActive}
+								/>
+								<span>Active (visible on website)</span>
+							</label>
+						</div>
+
+						<div class="form-actions">
+							<button type="submit" class="save-btn" disabled={isSaving}>
+								{isSaving ? 'Saving...' : (editingEmail ? 'Update Email' : 'Add Email')}
+							</button>
+							<button type="button" class="cancel-btn" onclick={resetForm}>
+								Cancel
+							</button>
+						</div>
+					</form>
+				</div>
+			{:else}
+				<button 
+					class="add-email-btn" 
+					onclick={() => { resetForm(); showAddForm = true; }}
+					disabled={isSaving || editingEmail !== null}
+				>
+					<Plus size={18} />
+					Add Email
+				</button>
+			{/if}
 		</div>
 	{/if}
 </div>
@@ -463,31 +554,6 @@
 		font-size: 14px;
 	}
 
-	.add-button {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		padding: 12px 24px;
-		background: var(--accent-color, #6366f1);
-		color: white;
-		border: none;
-		border-radius: 8px;
-		font-size: 14px;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.2s ease;
-	}
-
-	.add-button:hover:not(:disabled) {
-		background: var(--accent-hover, #5558e3);
-		transform: translateY(-1px);
-	}
-
-	.add-button:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-		transform: none;
-	}
 
 	.loading,
 	.empty-state {
@@ -633,69 +699,24 @@
 		color: #ef4444;
 	}
 
-	.modal-overlay {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: rgba(0, 0, 0, 0.7);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 1000;
-		padding: 20px;
-	}
-
-	.modal {
+	.new-email-form {
 		background: var(--bg-secondary, #2d2d2d);
 		border: 1px solid var(--border-color, #3a3a3a);
-		border-radius: 12px;
+		border-radius: 8px;
+		padding: 24px;
 		width: 100%;
-		max-width: 600px;
-		max-height: 90vh;
-		overflow-y: auto;
-	}
-
-	.modal-header {
+		box-sizing: border-box;
 		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: 24px;
-		border-bottom: 1px solid var(--border-color, #3a3a3a);
+		flex-direction: column;
+		gap: 24px;
 	}
 
-	.modal-header h2 {
-		color: var(--text-primary, #ffffff);
+	.new-email-form h3 {
 		margin: 0;
-		font-size: 20px;
-		font-weight: 600;
-	}
-
-	.close-button {
-		background: none;
-		border: none;
-		color: var(--text-secondary, #a1a1aa);
-		font-size: 28px;
-		cursor: pointer;
-		line-height: 1;
-		padding: 0;
-		width: 32px;
-		height: 32px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border-radius: 6px;
-		transition: all 0.2s ease;
-	}
-
-	.close-button:hover {
-		background: var(--bg-tertiary, #3a3a3a);
 		color: var(--text-primary, #ffffff);
-	}
-
-	.modal-form {
-		padding: 24px;
+		font-size: 18px;
+		font-weight: 600;
+		margin-bottom: 4px;
 	}
 
 	.form-group {
@@ -708,6 +729,33 @@
 		font-size: 14px;
 		font-weight: 500;
 		margin-bottom: 8px;
+	}
+
+	.edit-input {
+		width: 100%;
+		padding: 12px;
+		background: var(--bg-primary, #1a1a1a);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		color: var(--text-primary, #ffffff);
+		font-size: 14px;
+		font-family: inherit;
+		box-sizing: border-box;
+	}
+
+	.edit-input:focus {
+		outline: none;
+		border-color: var(--accent-color, #6366f1);
+	}
+
+	.edit-input[rows] {
+		resize: vertical;
+		min-height: 80px;
+	}
+
+	textarea.edit-input {
+		resize: vertical;
+		min-height: 80px;
 	}
 
 	.form-group input,
@@ -757,44 +805,205 @@
 
 	.form-actions {
 		display: flex;
-		justify-content: flex-end;
 		gap: 12px;
-		margin-top: 32px;
-		padding-top: 24px;
-		border-top: 1px solid var(--border-color, #3a3a3a);
+		margin-top: 0;
+		padding-top: 0;
+		border-top: none;
 	}
 
-	.cancel-button,
-	.save-button {
-		padding: 12px 24px;
+	.save-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		background: var(--accent-color, #6366f1);
+		color: #ffffff;
+		border: none;
+		padding: 10px 20px;
+		border-radius: 6px;
+		font-size: 14px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: background 0.2s ease;
+	}
+
+	.save-btn:hover:not(:disabled) {
+		background: var(--accent-color-dark, #4f46e5);
+	}
+
+	.save-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+
+	.cancel-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		background: transparent;
+		color: var(--text-secondary, #a1a1aa);
+		border: 1px solid var(--border-color, #3a3a3a);
+		padding: 10px 20px;
 		border-radius: 6px;
 		font-size: 14px;
 		font-weight: 500;
 		cursor: pointer;
 		transition: all 0.2s ease;
-		border: none;
 	}
 
-	.cancel-button {
+	.cancel-btn:hover {
 		background: var(--bg-tertiary, #3a3a3a);
+		color: var(--text-primary, #ffffff);
+		border-color: var(--accent-color, #6366f1);
+	}
+
+	.add-email-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		padding: 16px;
+		background: transparent;
+		border: 2px dashed var(--border-color, #3a3a3a);
+		border-radius: 8px;
+		color: var(--text-secondary, #a1a1aa);
+		font-size: 15px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		width: 100%;
+		margin-top: 12px;
+	}
+
+	.add-email-btn:hover:not(:disabled) {
+		border-color: var(--accent-color, #6366f1);
+		color: var(--accent-color, #6366f1);
+		background: rgba(99, 102, 241, 0.05);
+	}
+
+	.add-email-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.form-group > label {
+		display: block;
+		font-size: 14px;
+		font-weight: 500;
+		color: var(--text-primary, #ffffff);
+		margin-bottom: 8px;
+	}
+
+	.field-hint {
+		color: var(--text-secondary, #a1a1aa);
+		font-size: 12px;
+		margin-top: 6px;
+		margin-bottom: 0;
+		line-height: 1.4;
+	}
+
+	.header-form-group {
+		margin-bottom: 24px;
+	}
+
+	.section-heading {
+		margin-bottom: 8px;
+	}
+
+	.section-heading h2 {
+		color: var(--text-primary, #ffffff);
+		font-size: 14px;
+		font-weight: 500;
+		margin: 0;
+	}
+
+	.header-view-container {
+		display: flex;
+		align-items: flex-start;
+		gap: 12px;
+		padding: 12px;
+		background: var(--bg-secondary, #2d2d2d);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		min-height: 48px;
+	}
+
+	.header-view-text {
+		flex: 1;
+		color: var(--text-primary, #ffffff);
+		font-size: 14px;
+		line-height: 1.5;
+		word-wrap: break-word;
+	}
+
+	.header-view-text .empty-text {
+		color: var(--text-secondary, #a1a1aa);
+		font-style: italic;
+	}
+
+	.header-edit-container {
+		display: flex;
+		align-items: flex-start;
+		gap: 8px;
+	}
+
+	.header-input {
+		flex: 1;
+		padding: 12px;
+		background: var(--bg-primary, #1a1a1a);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		color: var(--text-primary, #ffffff);
+		font-size: 14px;
+		font-family: inherit;
+		box-sizing: border-box;
+	}
+
+	.header-input:focus {
+		outline: none;
+		border-color: var(--accent-color, #6366f1);
+	}
+
+	.header-edit-actions {
+		display: flex;
+		gap: 4px;
+		flex-shrink: 0;
+	}
+
+	.icon-button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		padding: 0;
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		background: var(--bg-primary, #1a1a1a);
+		color: var(--text-secondary, #a1a1aa);
+		cursor: pointer;
+		transition: all 0.2s ease;
+		flex-shrink: 0;
+	}
+
+	.icon-button:hover {
+		background: var(--bg-tertiary, #3a3a3a);
+		border-color: var(--accent-color, #6366f1);
 		color: var(--text-primary, #ffffff);
 	}
 
-	.cancel-button:hover {
-		background: var(--bg-hover, #474747);
+	.edit-icon-button {
+		margin-top: 0;
 	}
 
-	.save-button {
-		background: var(--accent-color, #6366f1);
-		color: white;
+	.save-icon-button:hover {
+		background: rgba(34, 197, 94, 0.1);
+		border-color: #22c55e;
+		color: #22c55e;
 	}
 
-	.save-button:hover:not(:disabled) {
-		background: var(--accent-hover, #5558e3);
-	}
-
-	.save-button:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
+	.cancel-icon-button:hover {
+		background: rgba(239, 68, 68, 0.1);
+		border-color: #ef4444;
+		color: #ef4444;
 	}
 </style>

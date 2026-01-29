@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { Loader2, Link2, Edit2, Check, X } from 'lucide-svelte';
+	import { Loader2, Link2, Edit2, Check, X, Plus } from 'lucide-svelte';
 	import Icon from '@iconify/svelte';
 
 	interface SocialLink {
@@ -486,9 +486,9 @@
 		padding: 64px 24px 48px 24px;
 		margin-top: 0.75rem;
 		text-align: center;
-		border: 1px dashed var(--border-color, #3a3a3a);
+		border: 2px dashed var(--border-color, #3a3a3a);
 		border-radius: 8px;
-		background: var(--bg-secondary, #2d2d2d);
+		background: transparent;
 	}
 
 	.empty-icon {

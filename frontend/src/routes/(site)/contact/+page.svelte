@@ -9,12 +9,14 @@
 	let loadingTagline = $state(true);
 	let contactEmails = $state<{ id: string; description: string; email: string }[]>([]);
 	let loadingEmails = $state(true);
+	let emailsHeader = $state('');
+	let loadingEmailsHeader = $state(true);
 	let socialLinks = $state<{ id: string; name: string; url: string; iconType: string; iconName?: string; iconText?: string; svgUrl?: string }[]>([]);
 	let socialHeader = $state('');
 	let loadingSocial = $state(true);
 
 	onMount(async () => {
-		await Promise.all([loadTagline(), loadContactEmails(), loadSocialLinks()]);
+		await Promise.all([loadTagline(), loadContactEmails(), loadEmailsHeader(), loadSocialLinks()]);
 	});
 
 	async function loadTagline() {
@@ -63,6 +65,24 @@
 			contactEmails = [];
 		} finally {
 			loadingEmails = false;
+		}
+	}
+
+	async function loadEmailsHeader() {
+		try {
+			loadingEmailsHeader = true;
+			const response = await fetch('/api/config/contact_emails_header');
+			
+			if (response.ok) {
+				const result = await response.json();
+				if (result.success && result.data?.value) {
+					emailsHeader = result.data.value;
+				}
+			}
+		} catch (error) {
+			console.error('Error loading emails header:', error);
+		} finally {
+			loadingEmailsHeader = false;
 		}
 	}
 
@@ -137,7 +157,11 @@
 
 	<hr class="section-divider" />
 	<div class="email-section">
-		<h2>Email</h2>
+		{#if !loadingEmailsHeader && emailsHeader}
+			<h2>{emailsHeader}</h2>
+		{:else if !loadingEmailsHeader}
+			<h2>Email</h2>
+		{/if}
 		{#if loadingEmails}
 			<p>Loading emails...</p>
 		{:else if contactEmails.length === 0}
