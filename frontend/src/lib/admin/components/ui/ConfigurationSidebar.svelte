@@ -203,6 +203,8 @@
 						>
 							{#if category.icon === Mail}
 								<Mail size={20} stroke-width={1.5} />
+							{:else if category.icon === Link}
+								<Link size={20} stroke-width={1.5} />
 							{/if}
 						</div>
 						<span class="sidebar-title">{category.title}</span>
