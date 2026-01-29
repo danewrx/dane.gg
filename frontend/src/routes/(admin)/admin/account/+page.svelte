@@ -1261,12 +1261,12 @@
 	}
 
 	.save-button {
-		background: #22c55e;
+		background: var(--accent-color, #6366f1);
 		color: white;
 	}
 
 	.save-button:hover {
-		background: #16a34a;
+		background: var(--accent-color-dark, #4f46e5);
 	}
 
 	.cancel-button {
