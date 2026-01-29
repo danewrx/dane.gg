@@ -277,6 +277,40 @@ router.post('/skills', requireAuth, async (req, res) => {
   }
 });
 
+router.put('/skills/order', requireAuth, async (req, res) => {
+  try {
+    const { skills: skillsToUpdate } = req.body;
+
+    if (!Array.isArray(skillsToUpdate)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Skills array is required'
+      });
+    }
+
+    // Update each skill's display order
+    for (const skill of skillsToUpdate) {
+      await db.update(skills)
+        .set({ 
+          displayOrder: skill.displayOrder,
+          updatedAt: new Date()
+        })
+        .where(eq(skills.id, skill.id));
+    }
+
+    res.json({
+      success: true,
+      message: 'Skills order updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating skills order:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update skills order'
+    });
+  }
+});
+
 // PUT update a skill
 router.put('/skills/:id', requireAuth, async (req, res) => {
   try {
@@ -342,41 +376,6 @@ router.delete('/skills/:id', requireAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to delete skill'
-    });
-  }
-});
-
-// PUT update skills order within a category (bulk)
-router.put('/skills/order', requireAuth, async (req, res) => {
-  try {
-    const { skills: skillsToUpdate } = req.body;
-
-    if (!Array.isArray(skillsToUpdate)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Skills array is required'
-      });
-    }
-
-    // Update each skill's display order
-    for (const skill of skillsToUpdate) {
-      await db.update(skills)
-        .set({ 
-          displayOrder: skill.displayOrder,
-          updatedAt: new Date()
-        })
-        .where(eq(skills.id, skill.id));
-    }
-
-    res.json({
-      success: true,
-      message: 'Skills order updated successfully'
-    });
-  } catch (error) {
-    console.error('Error updating skills order:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to update skills order'
     });
   }
 });

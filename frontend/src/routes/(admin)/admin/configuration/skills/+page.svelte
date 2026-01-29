@@ -24,6 +24,9 @@
 	let isSaving = $state(false);
 	let draggedIndex = $state<number | null>(null);
 	let dragOverIndex = $state<number | null>(null);
+	let draggedSkillIndex = $state<number | null>(null);
+	let dragOverSkillIndex = $state<number | null>(null);
+	let draggedSkillCategoryId = $state<string | null>(null);
 	
 	// New category form
 	let showNewCategoryForm = $state(false);
@@ -383,6 +386,85 @@
 		draggedIndex = null;
 		dragOverIndex = null;
 	}
+
+	function handleSkillDragStart(categoryId: string, skillIndex: number) {
+		if (editingSkillId || addingSkillToCategoryId) return;
+		draggedSkillIndex = skillIndex;
+		draggedSkillCategoryId = categoryId;
+	}
+
+	function handleSkillDragOver(e: DragEvent, categoryId: string, skillIndex: number) {
+		e.preventDefault();
+		if (editingSkillId || addingSkillToCategoryId || draggedSkillIndex === null || draggedSkillCategoryId !== categoryId || draggedSkillIndex === skillIndex) return;
+		dragOverSkillIndex = skillIndex;
+	}
+
+	function handleSkillDragLeave() {
+		dragOverSkillIndex = null;
+	}
+
+	async function handleSkillDrop(e: DragEvent, categoryId: string, skillIndex: number) {
+		e.preventDefault();
+		if (editingSkillId || addingSkillToCategoryId || draggedSkillIndex === null || draggedSkillCategoryId !== categoryId || draggedSkillIndex === skillIndex) {
+			draggedSkillIndex = null;
+			dragOverSkillIndex = null;
+			draggedSkillCategoryId = null;
+			return;
+		}
+
+		const category = categories.find(cat => cat.id === categoryId);
+		if (!category || !category.skills) {
+			draggedSkillIndex = null;
+			dragOverSkillIndex = null;
+			draggedSkillCategoryId = null;
+			return;
+		}
+
+		const skills = [...category.skills];
+		const [draggedSkill] = skills.splice(draggedSkillIndex, 1);
+		skills.splice(skillIndex, 0, draggedSkill);
+
+		try {
+			const skillsToUpdate = skills.map((skill, idx) => ({
+				id: skill.id,
+				displayOrder: idx
+			}));
+
+			const response = await fetch('/api/skills/skills/order', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				credentials: 'include',
+				body: JSON.stringify({ skills: skillsToUpdate })
+			});
+
+			const data = await response.json();
+
+			if (data.success) {
+				await loadSkills();
+			} else {
+				toast.error('Failed to reorder skills', {
+					description: data.error
+				});
+			}
+		} catch (error) {
+			console.error('Error reordering skills:', error);
+			toast.error('Error reordering skills', {
+				description: 'An unexpected error occurred. Please try again.'
+			});
+		} finally {
+			draggedSkillIndex = null;
+			dragOverSkillIndex = null;
+			draggedSkillCategoryId = null;
+		}
+	}
+
+	function handleSkillDragEnd() {
+		draggedSkillIndex = null;
+		dragOverSkillIndex = null;
+		draggedSkillCategoryId = null;
+	}
 </script>
 
 <div class="skills-settings">
@@ -402,8 +484,10 @@
 					class="category-card"
 					class:dragging={draggedIndex === index}
 					class:drag-over={dragOverIndex === index}
-					class:not-draggable={editingCategoryId !== null || showNewCategoryForm}
-					draggable={editingCategoryId === null && !showNewCategoryForm}
+					class:not-draggable={editingCategoryId !== null || showNewCategoryForm || editingSkillId !== null || addingSkillToCategoryId !== null}
+					role="button"
+					tabindex="0"
+					draggable={editingCategoryId === null && !showNewCategoryForm && editingSkillId === null && addingSkillToCategoryId === null}
 					ondragstart={() => handleDragStart(index)}
 					ondragover={(e) => handleDragOver(e, index)}
 					ondragleave={handleDragLeave}
@@ -411,7 +495,7 @@
 					ondragend={handleDragEnd}
 				>
 					<div class="category-header">
-						{#if editingCategoryId === null && !showNewCategoryForm}
+						{#if editingCategoryId === null && !showNewCategoryForm && editingSkillId === null && addingSkillToCategoryId === null}
 							<div class="drag-handle" title="Drag to reorder">
 								<GripVertical size={18} />
 							</div>
@@ -471,8 +555,26 @@
 					{#if expandedCategories.has(category.id)}
 						<div class="skills-list">
 							{#if category.skills && category.skills.length > 0}
-								{#each category.skills as skill (skill.id)}
-									<div class="skill-item">
+								{#each category.skills as skill, skillIndex (skill.id)}
+									<div 
+										class="skill-item"
+										class:dragging={draggedSkillIndex === skillIndex && draggedSkillCategoryId === category.id}
+										class:drag-over={dragOverSkillIndex === skillIndex && draggedSkillCategoryId === category.id}
+										class:not-draggable={editingSkillId !== null || addingSkillToCategoryId !== null}
+										role="button"
+										tabindex="0"
+										draggable={editingSkillId === null && addingSkillToCategoryId === null}
+										ondragstart={() => handleSkillDragStart(category.id, skillIndex)}
+										ondragover={(e) => handleSkillDragOver(e, category.id, skillIndex)}
+										ondragleave={handleSkillDragLeave}
+										ondrop={(e) => handleSkillDrop(e, category.id, skillIndex)}
+										ondragend={handleSkillDragEnd}
+									>
+										{#if editingSkillId === null && addingSkillToCategoryId === null}
+											<div class="skill-drag-handle" title="Drag to reorder">
+												<GripVertical size={16} />
+											</div>
+										{/if}
 										{#if editingSkillId === skill.id}
 											<div class="editing-skill">
 												<input
@@ -481,16 +583,18 @@
 													bind:value={editingSkillName}
 													placeholder="Skill name"
 												/>
-												<div class="level-input-group">
-													<input
-														type="range"
-														class="level-range"
-														bind:value={editingSkillLevel}
-														min="0"
-														max="100"
-													/>
-													<span class="level-value">{editingSkillLevel}%</span>
-												</div>
+											<div class="level-input-group">
+												<input
+													type="range"
+													class="level-range"
+													bind:value={editingSkillLevel}
+													min="0"
+													max="100"
+													ondragstart={(e) => e.stopPropagation()}
+													onmousedown={(e) => e.stopPropagation()}
+												/>
+												<span class="level-value">{editingSkillLevel}%</span>
+											</div>
 												<button class="icon-btn save" onclick={() => updateSkill(skill.id)} disabled={isSaving}>
 													<Save size={16} />
 												</button>
@@ -539,6 +643,8 @@
 											bind:value={newSkillLevel}
 											min="0"
 											max="100"
+											ondragstart={(e) => e.stopPropagation()}
+											onmousedown={(e) => e.stopPropagation()}
 										/>
 										<span class="level-value">{newSkillLevel}%</span>
 									</div>
@@ -825,6 +931,43 @@
 		background: var(--bg-primary, #1a1a1a);
 		border-radius: 6px;
 		border: 1px solid var(--border-color, #3a3a3a);
+		cursor: move;
+		transition: all 0.2s ease;
+	}
+
+	.skill-item.not-draggable {
+		cursor: default;
+	}
+
+	.skill-item.dragging {
+		opacity: 0.5;
+		cursor: grabbing;
+	}
+
+	.skill-item.drag-over {
+		border-color: var(--accent-color, #6366f1);
+		box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+	}
+
+	.skill-item:not(.dragging):not(.not-draggable):hover {
+		border-color: var(--accent-color, #6366f1);
+	}
+
+	.skill-drag-handle {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--text-secondary, #a1a1aa);
+		cursor: grab;
+		flex-shrink: 0;
+		padding: 4px;
+		border-radius: 4px;
+		transition: all 0.2s ease;
+	}
+
+	.skill-drag-handle:hover {
+		color: var(--text-primary, #ffffff);
+		background: rgba(255, 255, 255, 0.05);
 	}
 
 	.skill-info {
