@@ -87,6 +87,7 @@ import { chatService } from './services/chatService';
 import emojisRoutes from './routes/emojis';
 import skillsRoutes from './routes/skills';
 import certificationsRoutes from './routes/certifications';
+import contactRoutes from './routes/contact';
 
 // Routes
 app.get('/api', (req, res) => {
@@ -180,6 +181,9 @@ app.use('/api/skills', skillsRoutes);
 
 // Certifications routes
 app.use('/api/certifications', certificationsRoutes);
+
+// Contact page routes
+app.use('/api/contact', contactRoutes);
 
 // 404 handler for API routes
 app.use('/api', (req, res) => {

@@ -43,17 +43,13 @@
 	async function loadContactEmails() {
 		try {
 			isLoading = true;
-			const response = await fetch('/api/config/contact_emails', {
+			const response = await fetch('/api/contact/emails/all', {
 				credentials: 'include'
 			});
 			const data = await response.json();
 
-			if (data.success && data.data?.value) {
-				try {
-					contactEmails = JSON.parse(data.data.value);
-				} catch (e) {
-					contactEmails = [];
-				}
+			if (data.success && data.data) {
+				contactEmails = data.data;
 			} else {
 				contactEmails = [];
 			}
@@ -74,32 +70,38 @@
 				return;
 			}
 
-			if (!editingEmail) {
-				formData.id = crypto.randomUUID();
-			}
-
-			let updatedEmails: ContactEmail[];
 			const currentEditingEmail = editingEmail;
-			if (currentEditingEmail) {
-				updatedEmails = contactEmails.map(email => 
-					email.id === currentEditingEmail.id ? { ...formData, id: currentEditingEmail.id } : email
-				);
-			} else {
-				updatedEmails = [...contactEmails, formData as ContactEmail];
-			}
+			let response;
 
-			// Save to config
-			const response = await fetch('/api/config/contact_emails', {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				credentials: 'include',
-				body: JSON.stringify({
-					value: JSON.stringify(updatedEmails),
-					dataType: 'string'
-				})
-			});
+			if (currentEditingEmail) {
+				// Update existing email
+				response = await fetch(`/api/contact/emails/${currentEditingEmail.id}`, {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					credentials: 'include',
+					body: JSON.stringify({
+						description: formData.description,
+						email: formData.email,
+						isActive: formData.isActive
+					})
+				});
+			} else {
+				// Create new email
+				response = await fetch('/api/contact/emails', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					credentials: 'include',
+					body: JSON.stringify({
+						description: formData.description,
+						email: formData.email,
+						isActive: formData.isActive
+					})
+				});
+			}
 
 			const data = await response.json();
 
@@ -146,18 +148,9 @@
 		}
 
 		try {
-			const updatedEmails = contactEmails.filter(email => email.id !== id);
-
-			const response = await fetch('/api/config/contact_emails', {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				credentials: 'include',
-				body: JSON.stringify({
-					value: JSON.stringify(updatedEmails),
-					dataType: 'string'
-				})
+			const response = await fetch(`/api/contact/emails/${id}`, {
+				method: 'DELETE',
+				credentials: 'include'
 			});
 
 			const data = await response.json();
@@ -176,19 +169,17 @@
 
 	async function toggleActive(id: string) {
 		try {
-			const updatedEmails = contactEmails.map(email => 
-				email.id === id ? { ...email, isActive: !email.isActive } : email
-			);
+			const email = contactEmails.find(e => e.id === id);
+			if (!email) return;
 
-			const response = await fetch('/api/config/contact_emails', {
+			const response = await fetch(`/api/contact/emails/${id}`, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json'
 				},
 				credentials: 'include',
 				body: JSON.stringify({
-					value: JSON.stringify(updatedEmails),
-					dataType: 'string'
+					isActive: !email.isActive
 				})
 			});
 
@@ -234,19 +225,18 @@
 
 		try {
 			const updatedEmails = items.map((item, idx) => ({
-				...item,
+				id: item.id,
 				displayOrder: idx
 			}));
 
-			const response = await fetch('/api/config/contact_emails', {
+			const response = await fetch('/api/contact/emails/order', {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json'
 				},
 				credentials: 'include',
 				body: JSON.stringify({
-					value: JSON.stringify(updatedEmails),
-					dataType: 'string'
+					emails: updatedEmails
 				})
 			});
 
@@ -272,7 +262,7 @@
 
 	async function loadEmailsHeader() {
 		try {
-			const response = await fetch('/api/config/contact_emails_header', {
+			const response = await fetch('/api/contact/settings/emails_header', {
 				credentials: 'include'
 			});
 			if (response.ok) {
@@ -298,15 +288,14 @@
 
 	async function saveHeader() {
 		try {
-			const response = await fetch('/api/config/contact_emails_header', {
+			const response = await fetch('/api/contact/settings/emails_header', {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json'
 				},
 				credentials: 'include',
 				body: JSON.stringify({
-					value: tempHeaderText,
-					dataType: 'string'
+					value: tempHeaderText
 				})
 			});
 
@@ -334,7 +323,7 @@
 <div class="contact-emails-page">
 	<div class="settings-description">
 		<p>Manage email addresses displayed on the contact page and customize the header text for the email addresses section.</p>
-	</div>
+			</div>
 
 	<div class="form-group header-form-group">
 		<label>Header</label>
@@ -347,7 +336,7 @@
 					class="header-input"
 				/>
 				<div class="header-edit-actions">
-					<button 
+			<button 
 						type="button"
 						class="icon-button save-icon-button"
 						onclick={saveHeader}
@@ -360,10 +349,10 @@
 						class="icon-button cancel-icon-button"
 						onclick={cancelEditingHeader}
 						title="Cancel"
-					>
+			>
 						<X size={16} />
-					</button>
-				</div>
+			</button>
+		</div>
 			</div>
 			<p class="field-hint">This text will appear above the email addresses on the contact page.</p>
 		{:else}
@@ -396,7 +385,7 @@
 	{:else}
 		<div class="emails-list">
 			{#if contactEmails.length > 0}
-				{#each contactEmails as email, index (email.id)}
+			{#each contactEmails as email, index (email.id)}
 				<div 
 					class="email-item"
 					class:dragging={draggedIndex === index}
@@ -411,8 +400,8 @@
 				>
 					{#if editingEmail === null && !showAddForm}
 						<div class="drag-handle" title="Drag to reorder">
-							<GripVertical size={20} />
-						</div>
+						<GripVertical size={20} />
+					</div>
 					{/if}
 					<div class="email-info">
 						<div class="email-details">
@@ -451,57 +440,57 @@
 						</button>
 					</div>
 				</div>
-				{/each}
-			{/if}
+			{/each}
+	{/if}
 
-			{#if showAddForm}
+	{#if showAddForm}
 				<div class="new-email-form">
 					<h3>{editingEmail ? 'Edit Email' : 'New Email'}</h3>
 					<form onsubmit={(e) => { e.preventDefault(); saveEmail(); }}>
-						<div class="form-group">
-							<label for="description">Description *</label>
-							<textarea 
-								id="description"
+					<div class="form-group">
+						<label for="description">Description *</label>
+						<textarea 
+							id="description"
 								class="edit-input"
-								bind:value={formData.description}
-								placeholder="e.g., If you would like to reach out to me for most things:"
-								required
-								rows="3"
-							></textarea>
-						</div>
+							bind:value={formData.description}
+							placeholder="e.g., If you would like to reach out to me for most things:"
+							required
+							rows="3"
+						></textarea>
+					</div>
 
-						<div class="form-group">
-							<label for="email">Email Address *</label>
+					<div class="form-group">
+						<label for="email">Email Address *</label>
+						<input 
+							type="email" 
+							id="email"
+								class="edit-input"
+							bind:value={formData.email}
+							placeholder="me@dane.gg"
+							required
+						/>
+					</div>
+
+					<div class="form-group">
+						<label class="checkbox-label">
 							<input 
-								type="email" 
-								id="email"
-								class="edit-input"
-								bind:value={formData.email}
-								placeholder="me@dane.gg"
-								required
+								type="checkbox" 
+								bind:checked={formData.isActive}
 							/>
-						</div>
-
-						<div class="form-group">
-							<label class="checkbox-label">
-								<input 
-									type="checkbox" 
-									bind:checked={formData.isActive}
-								/>
 								<span>Active (visible on website)</span>
-							</label>
-						</div>
+						</label>
+					</div>
 
-						<div class="form-actions">
+					<div class="form-actions">
 							<button type="submit" class="save-btn" disabled={isSaving}>
-								{isSaving ? 'Saving...' : (editingEmail ? 'Update Email' : 'Add Email')}
-							</button>
+							{isSaving ? 'Saving...' : (editingEmail ? 'Update Email' : 'Add Email')}
+						</button>
 							<button type="button" class="cancel-btn" onclick={resetForm}>
 								Cancel
 							</button>
-						</div>
-					</form>
-				</div>
+					</div>
+				</form>
+			</div>
 			{:else}
 				<button 
 					class="add-email-btn" 

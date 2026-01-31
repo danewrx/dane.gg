@@ -288,6 +288,26 @@ export const certifications = websiteSchema.table('certifications', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
 });
 
+// Contact emails table
+export const contactEmails = websiteSchema.table('contact_emails', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  description: text('description').notNull(),
+  email: varchar('email', { length: 255 }).notNull(),
+  displayOrder: integer('display_order').notNull().default(0),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
+});
+
+// Contact page settings table
+export const contactPageSettings = websiteSchema.table('contact_page_settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  key: varchar('key', { length: 100 }).notNull().unique(),
+  value: text('value').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
+});
+
 // Relations
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   category: one(projectCategories, {
@@ -409,3 +429,7 @@ export type Skill = typeof skills.$inferSelect;
 export type NewSkill = typeof skills.$inferInsert;
 export type Certification = typeof certifications.$inferSelect;
 export type NewCertification = typeof certifications.$inferInsert;
+export type ContactEmail = typeof contactEmails.$inferSelect;
+export type NewContactEmail = typeof contactEmails.$inferInsert;
+export type ContactPageSetting = typeof contactPageSettings.$inferSelect;
+export type NewContactPageSetting = typeof contactPageSettings.$inferInsert;

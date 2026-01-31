@@ -10,7 +10,9 @@ import {
   postTags,
   messages,
   siteConfig,
-  visitorStats
+  visitorStats,
+  contactEmails,
+  contactPageSettings
 } from './schema';
 
 export async function seed() {
@@ -36,6 +38,8 @@ export async function seed() {
     await db.delete(blogTags);
     await db.delete(messages);
     await db.delete(siteConfig);
+    await db.delete(contactEmails);
+    await db.delete(contactPageSettings);
 
     // Seed project categories
     console.log('📁 Seeding project categories...');
@@ -460,6 +464,50 @@ Stay tuned for the full article!`,
       }
     ]);
 
+    // Seed contact emails
+    console.log('📧 Seeding contact emails...');
+    const contactEmailSeeds = await db.insert(contactEmails).values([
+      {
+        description: 'For general inquiries and collaboration requests:',
+        email: 'hello@dane.gg',
+        displayOrder: 0,
+        isActive: true
+      },
+      {
+        description: 'For business and professional matters:',
+        email: 'business@dane.gg',
+        displayOrder: 1,
+        isActive: true
+      },
+      {
+        description: 'For security-related concerns:',
+        email: 'security@dane.gg',
+        displayOrder: 2,
+        isActive: true
+      }
+    ]).returning();
+
+    // Seed contact page settings
+    console.log('📝 Seeding contact page settings...');
+    await db.insert(contactPageSettings).values([
+      {
+        key: 'tagline',
+        value: 'I\'m always happy to connect! Whether you want to discuss a project, ask a question, or just say hi, feel free to reach out through any of the channels below.'
+      },
+      {
+        key: 'emails_header',
+        value: 'Email'
+      },
+      {
+        key: 'social_header',
+        value: 'If you prefer social media, you can find me on the following platforms:'
+      },
+      {
+        key: 'social_links',
+        value: '[]' // Empty array, will be populated with social link IDs
+      }
+    ]);
+
     console.log('✅ Database seeded successfully!');
     console.log(`📊 Seeded data:`);
     console.log(`   - ${categories.length} project categories`);
@@ -639,6 +687,8 @@ Stay tuned for the full article!`,
     console.log(`   - ${projectTagLinks.length} project-tag relationships`);
     console.log(`   - ${postTagLinks.length} post-tag relationships`);
     console.log(`   - 5 site configuration settings`);
+    console.log(`   - ${contactEmailSeeds.length} contact emails`);
+    console.log(`   - 4 contact page settings`);
     console.log(`   - ${testVisitorData.length} visitor statistics records`);
 
   } catch (error) {

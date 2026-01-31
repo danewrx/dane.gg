@@ -49,10 +49,10 @@
 	async function loadContactSocialConfig() {
 		try {
 			const [linksResponse, headerResponse] = await Promise.all([
-				fetch('/api/config/contact_social_links', {
+				fetch('/api/contact/settings/social_links', {
 					credentials: 'include'
 				}),
-				fetch('/api/config/contact_social_header', {
+				fetch('/api/contact/settings/social_header', {
 					credentials: 'include'
 				})
 			]);
@@ -103,15 +103,14 @@
 
 	async function saveHeader() {
 		try {
-			const response = await fetch('/api/config/contact_social_header', {
+			const response = await fetch('/api/contact/settings/social_header', {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json'
 				},
 				credentials: 'include',
 				body: JSON.stringify({
-					value: tempHeaderText,
-					dataType: 'string'
+					value: tempHeaderText
 				})
 			});
 
@@ -136,28 +135,26 @@
 			isSaving = true;
 
 			// Save selected link IDs
-			const linksResponse = await fetch('/api/config/contact_social_links', {
+			const linksResponse = await fetch('/api/contact/settings/social_links', {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json'
 				},
 				credentials: 'include',
 				body: JSON.stringify({
-					value: JSON.stringify(selectedLinkIds),
-					dataType: 'string'
+					value: JSON.stringify(selectedLinkIds)
 				})
 			});
 
 			// Save header text
-			const headerResponse = await fetch('/api/config/contact_social_header', {
+			const headerResponse = await fetch('/api/contact/settings/social_header', {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json'
 				},
 				credentials: 'include',
 				body: JSON.stringify({
-					value: socialHeader,
-					dataType: 'string'
+					value: socialHeader
 				})
 			});
 
