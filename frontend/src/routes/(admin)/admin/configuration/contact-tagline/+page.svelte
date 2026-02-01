@@ -15,13 +15,17 @@
 	async function loadTagline() {
 		try {
 			isLoading = true;
-			const response = await fetch('/api/config/contact_tagline', {
+			const response = await fetch('/api/contact/settings/tagline', {
 				credentials: 'include'
 			});
 			
 			if (response.ok) {
 				const result = await response.json();
-				tagline = result.data?.value || '';
+				if (result.success && result.data?.value) {
+					tagline = result.data.value;
+				} else {
+					tagline = '';
+				}
 			}
 		} catch (error) {
 			console.error('Error loading contact tagline:', error);
@@ -35,23 +39,24 @@
 		try {
 			isSaving = true;
 			
-			const response = await fetch('/api/config/contact_tagline', {
+			const response = await fetch('/api/contact/settings/tagline', {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json'
 				},
 				credentials: 'include',
 				body: JSON.stringify({
-					value: tagline,
-					dataType: 'string'
+					value: tagline
 				})
 			});
 			
-			if (!response.ok) {
-				throw new Error('Failed to save contact tagline');
-			}
+			const result = await response.json();
 			
-			toast.success('Contact tagline saved successfully');
+			if (result.success) {
+				toast.success('Contact tagline saved successfully');
+			} else {
+				throw new Error(result.error || 'Failed to save contact tagline');
+			}
 		} catch (error) {
 			console.error('Error saving contact tagline:', error);
 			toast.error('Failed to save contact tagline');

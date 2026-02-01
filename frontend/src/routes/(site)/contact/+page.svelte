@@ -22,11 +22,11 @@
 	async function loadTagline() {
 		try {
 			loadingTagline = true;
-			const response = await fetch('/api/config/contact_tagline');
+			const response = await fetch('/api/contact/settings/tagline');
 			
 			if (response.ok) {
 				const result = await response.json();
-				if (result.data?.value) {
+				if (result.success && result.data?.value) {
 					taglineContent = await marked.parse(result.data.value);
 				} else {
 					taglineContent = '';
@@ -43,19 +43,12 @@
 	async function loadContactEmails() {
 		try {
 			loadingEmails = true;
-			const response = await fetch('/api/config/contact_emails');
+			const response = await fetch('/api/contact/emails');
 			
 			if (response.ok) {
 				const result = await response.json();
-				if (result.data?.value) {
-					try {
-						const emails = JSON.parse(result.data.value);
-						contactEmails = emails
-							.filter((email: any) => email.isActive !== false)
-							.sort((a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0));
-					} catch (e) {
-						contactEmails = [];
-					}
+				if (result.success && result.data) {
+					contactEmails = result.data;
 				} else {
 					contactEmails = [];
 				}
@@ -71,7 +64,7 @@
 	async function loadEmailsHeader() {
 		try {
 			loadingEmailsHeader = true;
-			const response = await fetch('/api/config/contact_emails_header');
+			const response = await fetch('/api/contact/settings/emails_header');
 			
 			if (response.ok) {
 				const result = await response.json();
@@ -92,8 +85,8 @@
 			
 			// Fetch link IDs and header
 			const [linksConfigResponse, headerResponse, allLinksResponse] = await Promise.all([
-				fetch('/api/config/contact_social_links'),
-				fetch('/api/config/contact_social_header'),
+				fetch('/api/contact/settings/social_links'),
+				fetch('/api/contact/settings/social_header'),
 				fetch('/api/social-links')
 			]);
 
