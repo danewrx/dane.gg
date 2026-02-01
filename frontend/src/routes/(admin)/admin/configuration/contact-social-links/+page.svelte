@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { Loader2, Link2, Edit2, Check, X, Plus } from 'lucide-svelte';
+	import { Loader2, Link2, Edit2, Check, X, Plus, GripVertical } from 'lucide-svelte';
 	import Icon from '@iconify/svelte';
 
 	interface SocialLink {
@@ -23,6 +23,8 @@
 	let isSaving = $state(false);
 	let isEditingHeader = $state(false);
 	let tempHeaderText = $state('');
+	let draggedIndex = $state<number | null>(null);
+	let dragOverIndex = $state<number | null>(null);
 
 	onMount(async () => {
 		await Promise.all([loadSocialLinks(), loadContactSocialConfig()]);
@@ -185,10 +187,47 @@
 		return '🔗';
 	}
 
+	function handleDragStart(index: number) {
+		draggedIndex = index;
+	}
+
+	function handleDragOver(e: DragEvent, index: number) {
+		e.preventDefault();
+		if (draggedIndex === null || draggedIndex === index) return;
+		dragOverIndex = index;
+	}
+
+	function handleDragLeave() {
+		dragOverIndex = null;
+	}
+
+	async function handleDrop(e: DragEvent, index: number) {
+		e.preventDefault();
+		if (draggedIndex === null || draggedIndex === index) {
+			draggedIndex = null;
+			dragOverIndex = null;
+			return;
+		}
+
+		const reorderedIds = [...selectedLinkIds];
+		const [draggedId] = reorderedIds.splice(draggedIndex, 1);
+		reorderedIds.splice(index, 0, draggedId);
+		
+		selectedLinkIds = reorderedIds;
+
+		draggedIndex = null;
+		dragOverIndex = null;
+	}
+
+	function handleDragEnd() {
+		draggedIndex = null;
+		dragOverIndex = null;
+	}
+
 	let selectedLinks = $derived(
-		allSocialLinks
-			.filter(link => selectedLinkIds.includes(link.id))
-			.sort((a, b) => a.displayOrder - b.displayOrder)
+		selectedLinkIds
+			.map(id => allSocialLinks.find(link => link.id === id))
+			.filter((link): link is SocialLink => link !== undefined)
 	);
 
 	let unselectedLinks = $derived(
@@ -280,8 +319,23 @@
 					</div>
 				{:else}
 					<div class="links-list">
-						{#each selectedLinks as link (link.id)}
-							<div class="link-item selected">
+						{#each selectedLinks as link, index (link.id)}
+							<div 
+								class="link-item selected"
+								class:dragging={draggedIndex === index}
+								class:drag-over={dragOverIndex === index}
+								role="button"
+								tabindex="0"
+								draggable={true}
+								ondragstart={() => handleDragStart(index)}
+								ondragover={(e) => handleDragOver(e, index)}
+								ondragleave={handleDragLeave}
+								ondrop={(e) => handleDrop(e, index)}
+								ondragend={handleDragEnd}
+							>
+								<div class="drag-handle" title="Drag to reorder">
+									<GripVertical size={20} />
+								</div>
 								<label class="link-checkbox">
 									<input 
 										type="checkbox"
@@ -600,6 +654,10 @@
 		border-radius: 6px;
 		background: var(--bg-secondary, #2d2d2d);
 		transition: all 0.2s ease;
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		cursor: move;
 	}
 
 	.link-item:hover {
@@ -612,6 +670,28 @@
 		background: rgba(99, 102, 241, 0.1);
 	}
 
+	.link-item.dragging {
+		opacity: 0.5;
+	}
+
+	.link-item.drag-over {
+		border-color: var(--accent-color, #6366f1);
+		background: rgba(99, 102, 241, 0.2);
+	}
+
+	.drag-handle {
+		color: var(--text-secondary, #a1a1aa);
+		cursor: grab;
+		display: flex;
+		align-items: center;
+		flex-shrink: 0;
+		padding: 0 4px;
+	}
+
+	.drag-handle:active {
+		cursor: grabbing;
+	}
+
 	.link-checkbox {
 		display: flex !important;
 		flex-direction: row !important;
@@ -621,7 +701,7 @@
 		cursor: pointer;
 		margin: 0;
 		gap: 12px;
-		width: 100%;
+		flex: 1;
 		min-height: 56px;
 		box-sizing: border-box;
 	}

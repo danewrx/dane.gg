@@ -115,9 +115,10 @@
 				const allLinksData = await allLinksResponse.json();
 				if (allLinksData.success && allLinksData.data) {
 					const allLinks = allLinksData.data;
-					socialLinks = allLinks
-						.filter((link: any) => selectedLinkIds.includes(link.id))
-						.sort((a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0));
+					// Maintain order from selectedLinkIds
+					socialLinks = selectedLinkIds
+						.map(id => allLinks.find((link: any) => link.id === id))
+						.filter((link): link is any => link !== undefined);
 				}
 			}
 		} catch (error) {
