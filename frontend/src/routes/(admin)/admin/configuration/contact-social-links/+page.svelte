@@ -184,6 +184,18 @@
 		}
 		return '🔗';
 	}
+
+	let selectedLinks = $derived(
+		allSocialLinks
+			.filter(link => selectedLinkIds.includes(link.id))
+			.sort((a, b) => a.displayOrder - b.displayOrder)
+	);
+
+	let unselectedLinks = $derived(
+		allSocialLinks
+			.filter(link => !selectedLinkIds.includes(link.id))
+			.sort((a, b) => a.displayOrder - b.displayOrder)
+	);
 </script>
 
 <svelte:head>
@@ -255,27 +267,88 @@
 			</div>
 		</div>
 
+		<!-- Selected Links Section -->
 		<div class="form-section">
 			<div class="form-group">
-				<label>Social Links</label>
-				<p class="field-hint">Check the social links you want to show on the contact page. Links are displayed in their configured display order.</p>
+				<label>Selected Social Links</label>
+				<p class="field-hint">These links will be displayed on the contact page. Uncheck to remove them from the selection.</p>
+				
+				{#if selectedLinks.length === 0}
+					<div class="empty-state">
+						<Link2 size={48} class="empty-icon" />
+						<p>No links selected. Select links from the available links section below.</p>
+					</div>
+				{:else}
+					<div class="links-list">
+						{#each selectedLinks as link (link.id)}
+							<div class="link-item selected">
+								<label class="link-checkbox">
+									<input 
+										type="checkbox"
+										checked={true}
+										onchange={() => toggleLinkSelection(link.id)}
+										class="checkbox-input"
+									/>
+									<div class="link-content">
+										<div class="link-icon">
+											{#if link.iconType === 'custom-text' && link.iconText}
+												<span class="text-icon">{link.iconText}</span>
+											{:else if link.iconType === 'svg-url' && link.svgUrl}
+												<img 
+													src={link.svgUrl} 
+													alt={link.name}
+													class="svg-icon"
+												/>
+											{:else if link.iconType === 'coreui-brand' && link.iconName}
+												<Icon 
+													icon={`cib:${link.iconName.replace('cb-', '')}`} 
+													width="20" 
+													height="20"
+												/>
+											{:else}
+												<Link2 size={20} />
+											{/if}
+										</div>
+										<div class="link-info">
+											<span class="link-name">{link.name}</span>
+											<span class="link-url">{link.url}</span>
+										</div>
+										{#if !link.isActive}
+											<span class="inactive-badge">Inactive</span>
+										{/if}
+									</div>
+								</label>
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</div>
+		</div>
+
+		<!-- Available Links Section -->
+		<div class="form-section">
+			<div class="form-group">
+				<label>Available Social Links</label>
+				<p class="field-hint">Check the social links you want to add to the contact page. Links are displayed in their configured display order.</p>
 				
 				{#if allSocialLinks.length === 0}
 					<div class="empty-state">
 						<Link2 size={48} class="empty-icon" />
 						<p>No social links available. Add social links in the <a href="/admin/configuration/social-links">Social Links</a> settings first.</p>
 					</div>
+				{:else if unselectedLinks.length === 0}
+					<div class="empty-state">
+						<Link2 size={48} class="empty-icon" />
+						<p>All available links are already selected.</p>
+					</div>
 				{:else}
 					<div class="links-list">
-						{#each allSocialLinks as link (link.id)}
-							<div 
-								class="link-item"
-								class:selected={selectedLinkIds.includes(link.id)}
-							>
+						{#each unselectedLinks as link (link.id)}
+							<div class="link-item">
 								<label class="link-checkbox">
 									<input 
 										type="checkbox"
-										checked={selectedLinkIds.includes(link.id)}
+										checked={false}
 										onchange={() => toggleLinkSelection(link.id)}
 										class="checkbox-input"
 									/>
@@ -361,6 +434,12 @@
 	}
 
 	.form-section {
+		margin-bottom: 32px;
+	}
+
+	.form-section:nth-of-type(2) {
+		padding-bottom: 24px;
+		border-bottom: 1px solid var(--border-color, #3a3a3a);
 		margin-bottom: 32px;
 	}
 
