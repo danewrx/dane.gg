@@ -3,6 +3,7 @@
 	import { siteConfig, loadSiteConfig } from '$lib/site/stores/siteConfig';
 	import { CloudRain } from 'lucide-svelte';
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
+	import { toast } from 'svelte-sonner';
 
 	let localSettings = $state({
 		defaultWeatherType: 'none',
@@ -11,7 +12,6 @@
 	});
 
 	let isSaving = $state(false);
-	let saveMessage = $state('');
 
 	onMount(() => {
 		// Load current settings from site config
@@ -24,7 +24,6 @@
 
 	async function saveSettings() {
 		isSaving = true;
-		saveMessage = '';
 		
 		try {
 			// Update site configuration
@@ -40,6 +39,7 @@
 					headers: {
 						'Content-Type': 'application/json'
 					},
+					credentials: 'include',
 					body: JSON.stringify({
 						value: update.value,
 						dataType: update.key.includes('speed') ? 'number' : 
@@ -48,21 +48,21 @@
 				});
 
 				if (!response.ok) {
-					throw new Error(`Failed to update ${update.key}`);
+					const data = await response.json();
+					throw new Error(data.error || `Failed to update ${update.key}`);
 				}
 			}
 
 			// Reload site config
 			await loadSiteConfig();
-			saveMessage = 'Weather settings saved successfully!';
+			toast.success('Weather settings saved successfully');
 		} catch (error: any) {
 			console.error('Failed to save weather settings:', error);
-			saveMessage = `Failed to save weather settings: ${error.message}`;
+			toast.error('Failed to save weather settings', {
+				description: error.message || 'Please try again'
+			});
 		} finally {
 			isSaving = false;
-			setTimeout(() => {
-				saveMessage = '';
-			}, 3000);
 		}
 	}
 
@@ -132,12 +132,6 @@
 		>
 			{isSaving ? 'Saving...' : 'Save Settings'}
 		</button>
-		
-		{#if saveMessage}
-			<div class="save-message" class:error={saveMessage.includes('Failed')}>
-				{saveMessage}
-			</div>
-		{/if}
 	</div>
 </div>
 
@@ -314,21 +308,5 @@
 	.save-button:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
-	}
-
-	.save-message {
-		padding: 8px 16px;
-		border-radius: 6px;
-		font-size: 14px;
-		font-weight: 500;
-		background: rgba(16, 185, 129, 0.1);
-		color: #10b981;
-		border: 1px solid rgba(16, 185, 129, 0.3);
-	}
-
-	.save-message.error {
-		background: rgba(239, 68, 68, 0.1);
-		color: #ef4444;
-		border-color: rgba(239, 68, 68, 0.3);
 	}
 </style>

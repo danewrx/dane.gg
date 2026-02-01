@@ -9,6 +9,7 @@
 	import BannerDisplay from '$lib/site/components/BannerDisplay.svelte';
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
 	import MarkdownEditor from '$lib/admin/components/MarkdownEditor.svelte';
+	import { toast } from 'svelte-sonner';
 
 	let config = $state<BannerConfig>({
 		text: '',
@@ -21,19 +22,18 @@
 
 	let loading = $state(true);
 	let saving = $state(false);
-	let error = $state('');
-	let success = $state('');
 
 	async function loadConfig() {
 		try {
 			loading = true;
-			error = '';
 
 			const data = await getBannerConfig();
 			config = data;
 		} catch (err) {
 			console.error('Error loading banner config:', err);
-			error = err instanceof Error ? err.message : 'Failed to load configuration';
+			toast.error('Failed to load banner configuration', {
+				description: err instanceof Error ? err.message : 'Please try refreshing the page'
+			});
 		} finally {
 			loading = false;
 		}
@@ -42,25 +42,23 @@
 	async function saveConfig() {
 		try {
 			saving = true;
-			error = '';
-			success = '';
 
 			// Validation
 			if (!config.text.trim()) {
-				error = 'Banner text is required';
+				toast.error('Validation failed', {
+					description: 'Banner text is required'
+				});
 				return;
 			}
 
 			const data = await saveBannerConfig(config);
 			config = data;
-			success = 'Banner configuration saved successfully!';
-			
-			setTimeout(() => {
-				success = '';
-			}, 3000);
+			toast.success('Banner configuration saved successfully');
 		} catch (err) {
 			console.error('Error saving banner config:', err);
-			error = err instanceof Error ? err.message : 'Failed to save configuration';
+			toast.error('Failed to save banner configuration', {
+				description: err instanceof Error ? err.message : 'Please try again'
+			});
 		} finally {
 			saving = false;
 		}
@@ -202,19 +200,6 @@
 					<div class="preview-wrapper">
 						<BannerDisplay config={config} />
 					</div>
-				</div>
-			{/if}
-
-			<!-- Messages -->
-			{#if error}
-				<div class="message error-message">
-					{error}
-				</div>
-			{/if}
-
-			{#if success}
-				<div class="message success-message">
-					{success}
 				</div>
 			{/if}
 
@@ -474,24 +459,6 @@
 
 	.preview-wrapper :global(.banner-container) {
 		border-bottom: none;
-	}
-
-	.message {
-		padding: 12px 16px;
-		border-radius: 8px;
-		font-size: 14px;
-	}
-
-	.error-message {
-		background: rgba(239, 68, 68, 0.1);
-		border: 1px solid rgba(239, 68, 68, 0.3);
-		color: #ef4444;
-	}
-
-	.success-message {
-		background: rgba(34, 197, 94, 0.1);
-		border: 1px solid rgba(34, 197, 94, 0.3);
-		color: #22c55e;
 	}
 
 	.form-actions {
