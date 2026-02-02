@@ -6,14 +6,10 @@
 	import Header from '$lib/site/components/layout/Header.svelte';
 	import WeatherEffects from '$lib/site/components/effects/WeatherEffects.svelte';
 	import ScrollingBanner from '$lib/site/components/ScrollingBanner.svelte';
-	import { onMount } from 'svelte';
+	import ThemeProvider from '$lib/site/components/ThemeProvider.svelte';
 
 	let { children } = $props();
 	let settingsOpen = $state(false);
-
-	onMount(() => {
-		// Site initialization
-	});
 
 	function handleSettingsToggle() {
 		settingsOpen = !settingsOpen;
@@ -32,6 +28,8 @@
 
 <!-- Public website layout -->
 <div class="main-container dark-theme">
+	<ThemeProvider />
+	
 	<!-- Weather Effects -->
 	<WeatherEffects />
 	
@@ -65,38 +63,41 @@
 </div>
 
 <style>
-	/* Static CSS Variables - Dark Grey Theme */
 	:global(:root) {
-		/* Dark grey color scheme */
-		--bg-primary: #141414;
-		--bg-secondary: #2d2d2d;
+		/* Default values - overridden by theme */
+		--theme-primary: #ffffff;
+		--theme-secondary: #a1a1aa;
+		--theme-accent: #6366f1;
+		--theme-background: #0a0a0a;
+		--theme-surface: #1a1a1a;
+		--theme-border: #2a2a2a;
+		--theme-text-primary: #ffffff;
+		--theme-text-secondary: #a1a1aa;
+		--theme-text-muted: #71717a;
+		--theme-border-radius: 8px;
+		--theme-font-scale: 1;
+		
+		--bg-primary: var(--theme-surface);
+		--bg-secondary: var(--theme-background);
 		--bg-tertiary: #3a3a3a;
 		--bg-hover: #474747;
-		--text-primary: #ffffff;
-		--text-secondary: #e0e0e0;
-		--text-muted: #b0b0b0;
-		--border-color: #ffffff;
-		--accent-color: #4a9eff;
-		--accent-hover: #357abd;
+		--text-primary: var(--theme-text-primary);
+		--text-secondary: var(--theme-text-secondary);
+		--text-muted: var(--theme-text-muted);
+		--border-color: var(--theme-border);
+		--accent-color: var(--theme-accent);
+		--accent-hover: var(--theme-accent);
 		--shadow: rgba(0, 0, 0, 0.3);
 		--content-bg: rgba(45, 45, 45, 0.95);
 	}
 
 	:global(html) {
-		background-image: url('/assets/img/backgrounds/1.png') !important;
-		background-size: cover !important;
-		background-position: center !important;
-		background-repeat: no-repeat !important;
-		background-attachment: fixed !important;
+		background: var(--theme-background) !important;
 		transition: all 0.3s ease;
 	}
 	
 	:global(body) {
-		background-image: url('/assets/img/backgrounds/1.png') !important;
-		background-size: cover !important;
-		background-position: center !important;
-		background-repeat: no-repeat !important;
-		background-attachment: fixed !important;
+		background: transparent !important;
 		margin: 0;
 		padding: 0;
 		transition: all 0.3s ease;
@@ -115,7 +116,7 @@
 	.content-window {
 		background: var(--content-bg);
 		border: 1px solid var(--border-color);
-		border-radius: 0;
+		border-radius: var(--theme-border-radius, 0);
 		width: 90%;
 		max-width: 900px;
 		height: 90vh;

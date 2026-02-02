@@ -12,7 +12,8 @@ import {
   siteConfig,
   visitorStats,
   contactEmails,
-  contactPageSettings
+  contactPageSettings,
+  themes
 } from './schema';
 
 export async function seed() {
@@ -40,6 +41,7 @@ export async function seed() {
     await db.delete(siteConfig);
     await db.delete(contactEmails);
     await db.delete(contactPageSettings);
+    await db.delete(themes);
 
     // Seed project categories
     console.log('📁 Seeding project categories...');
@@ -508,6 +510,47 @@ Stay tuned for the full article!`,
       }
     ]);
 
+    // Seed default theme
+    console.log('🎨 Seeding default theme...');
+    const themeSeeds = await db.insert(themes).values([
+      {
+        name: 'Default',
+        description: 'The default site theme with a dark aesthetic and background image',
+        isActive: true,
+        isDefault: true,
+        
+        // Colors
+        primaryColor: '#ffffff',
+        secondaryColor: '#a1a1aa',
+        accentColor: '#6366f1',
+        backgroundColor: '#0a0a0a',
+        surfaceColor: '#1a1a1a',
+        borderColor: '#2a2a2a',
+        textPrimary: '#ffffff',
+        textSecondary: '#a1a1aa',
+        textMuted: '#71717a',
+        
+        // Background
+        backgroundImage: '/assets/img/backgrounds/1.png',
+        backgroundImageExternal: false,
+        backgroundOverlay: 'rgba(0, 0, 0, 0.7)',
+        backgroundBlur: 0,
+        backgroundPosition: 'center center',
+        backgroundSize: 'cover',
+        backgroundAttachment: 'fixed',
+        
+        // Typography
+        fontFamily: 'Inter',
+        headingFontFamily: 'Inter',
+        fontScale: '1',
+        
+        // Other
+        borderRadius: '8px',
+        customCss: null,
+        displayOrder: 0
+      }
+    ]).returning();
+
     console.log('✅ Database seeded successfully!');
     console.log(`📊 Seeded data:`);
     console.log(`   - ${categories.length} project categories`);
@@ -689,6 +732,7 @@ Stay tuned for the full article!`,
     console.log(`   - 5 site configuration settings`);
     console.log(`   - ${contactEmailSeeds.length} contact emails`);
     console.log(`   - 4 contact page settings`);
+    console.log(`   - ${themeSeeds.length} themes`);
     console.log(`   - ${testVisitorData.length} visitor statistics records`);
 
   } catch (error) {
