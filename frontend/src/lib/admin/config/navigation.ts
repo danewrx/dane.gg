@@ -5,8 +5,7 @@ import {
 	Sliders,
 	TrendingUp,
 	FolderKanban,
-	MessageSquare,
-	Key
+	MessageSquare
 } from 'lucide-svelte';
 import type { ComponentType } from 'svelte';
 
@@ -61,13 +60,6 @@ export const adminNavigation: NavigationItem[] = [
 		icon: Users,
 		path: '/admin/users',
 		description: 'Manage user accounts'
-	},
-	{
-		id: 'api-keys',
-		label: 'API Keys',
-		icon: Key,
-		path: '/admin/api-keys',
-		description: 'Manage API keys for bots and integrations'
 	},
 	{
 		id: 'settings',
