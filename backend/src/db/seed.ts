@@ -510,8 +510,8 @@ Stay tuned for the full article!`,
       }
     ]);
 
-    // Seed default theme
-    console.log('🎨 Seeding default theme...');
+    // Seed themes
+    console.log('🎨 Seeding themes...');
     const themeSeeds = await db.insert(themes).values([
       {
         name: 'Default',
@@ -525,7 +525,7 @@ Stay tuned for the full article!`,
         accentColor: '#6366f1',
         backgroundColor: '#0a0a0a',
         surfaceColor: '#1a1a1a',
-        borderColor: '#2a2a2a',
+        borderColor: '#ffffff',
         textPrimary: '#ffffff',
         textSecondary: '#a1a1aa',
         textMuted: '#71717a',
@@ -545,9 +545,101 @@ Stay tuned for the full article!`,
         fontScale: '1',
         
         // Other
-        borderRadius: '8px',
+        borderRadius: '0px',
         customCss: null,
         displayOrder: 0
+      },
+      {
+        name: 'Cyberpunk Neon',
+        description: 'A futuristic cyberpunk theme with neon cyan and magenta accents, inspired by rainy neo-noir cityscapes',
+        isActive: false,
+        isDefault: false,
+        
+        // Colors - Neon cyan/magenta on dark backgrounds
+        primaryColor: '#e0f7ff',
+        secondaryColor: '#00d4ff',
+        accentColor: '#ff0080',
+        backgroundColor: '#0a0a12',
+        surfaceColor: 'rgba(20, 20, 35, 0.9)',
+        borderColor: '#00ffff',
+        textPrimary: '#e0f7ff',
+        textSecondary: '#00d4ff',
+        textMuted: '#6080a0',
+        
+        // Background
+        backgroundImage: '/assets/img/backgrounds/3.jpg',
+        backgroundImageExternal: false,
+        backgroundOverlay: 'rgba(10, 10, 18, 0.6)',
+        backgroundBlur: 0,
+        backgroundPosition: 'center center',
+        backgroundSize: 'cover',
+        backgroundAttachment: 'fixed',
+        
+        // Typography - Techy fonts
+        fontFamily: 'Rajdhani',
+        headingFontFamily: 'Orbitron',
+        fontScale: '1',
+        
+        // Other - Sharp edges for cyberpunk aesthetic
+        borderRadius: '0px',
+        customCss: `
+/* Cyberpunk glow effects */
+.nav-link:hover, .btn:hover {
+  text-shadow: 0 0 10px #00d4ff, 0 0 20px #00d4ff;
+}
+.card, .surface {
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.15), inset 0 0 30px rgba(0, 212, 255, 0.03);
+}
+`,
+        displayOrder: 1
+      },
+      {
+        name: 'Kawaii Pink',
+        description: 'A cute and cozy theme with soft pinks and warm pastels, perfect for a kawaii aesthetic',
+        isActive: false,
+        isDefault: false,
+        
+        // Colors - Soft pinks and warm tones
+        primaryColor: '#5d4037',
+        secondaryColor: '#8d6e63',
+        accentColor: '#f06292',
+        backgroundColor: '#fce4ec',
+        surfaceColor: 'rgba(255, 245, 247, 0.95)',
+        borderColor: '#f06292',
+        textPrimary: '#4e342e',
+        textSecondary: '#6d4c41',
+        textMuted: '#a1887f',
+        
+        // Background
+        backgroundImage: '/assets/img/backgrounds/2.jpg',
+        backgroundImageExternal: false,
+        backgroundOverlay: 'rgba(252, 228, 236, 0.3)',
+        backgroundBlur: 0,
+        backgroundPosition: 'right bottom',
+        backgroundSize: 'contain',
+        backgroundAttachment: 'fixed',
+        
+        // Typography - Soft, rounded fonts
+        fontFamily: 'Quicksand',
+        headingFontFamily: 'Comfortaa',
+        fontScale: '1',
+        
+        // Other - Rounded corners for soft aesthetic
+        borderRadius: '0px',
+        customCss: `
+/* Kawaii soft shadows and effects */
+.card, .surface {
+  box-shadow: 0 4px 20px rgba(240, 98, 146, 0.15);
+}
+.btn {
+  box-shadow: 0 3px 10px rgba(240, 98, 146, 0.3);
+}
+::selection {
+  background: #f8bbd0;
+  color: #4e342e;
+}
+`,
+        displayOrder: 2
       }
     ]).returning();
 

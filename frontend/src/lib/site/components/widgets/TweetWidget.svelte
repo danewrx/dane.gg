@@ -309,8 +309,8 @@
 		flex-shrink: 0;
 		width: 52px;
 		height: 52px;
-		border: 1px solid rgba(255, 255, 255, 0.15);
-		background: var(--background-secondary, #2a2a2a);
+		border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.15));
+		background: var(--theme-background, var(--background-secondary, #2a2a2a));
 		display: flex;
 		align-items: center;
 		justify-content: center;

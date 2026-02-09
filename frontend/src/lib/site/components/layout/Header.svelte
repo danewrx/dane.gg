@@ -78,7 +78,7 @@
 		text-align: left;
 		margin-bottom: 16px;
 		padding-bottom: 10px;
-		border-bottom: 1px solid var(--text-primary);
+		border-bottom: 2px solid var(--theme-border, var(--text-primary));
 	}
 
 	.ascii-container {
@@ -153,12 +153,11 @@
 	}
 
 	@keyframes softColorCycle {
-		0% { color: #ffd5d5; }
-		20% { color: #c9ffd7; }
-		40% { color: #c6e4ff; }
-		60% { color: #d7c8ff; }
-		80% { color: #ffcbcb; }
-		100% { color: #ffd5d5; }
+		0% { color: var(--theme-text-primary, #ffd5d5); }
+		25% { color: var(--theme-accent, #c6e4ff); }
+		50% { color: var(--theme-secondary, #d7c8ff); }
+		75% { color: var(--theme-accent, #c6e4ff); }
+		100% { color: var(--theme-text-primary, #ffd5d5); }
 	}
 
 	.nav {

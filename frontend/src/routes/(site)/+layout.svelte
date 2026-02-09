@@ -70,7 +70,7 @@
 		--theme-accent: #6366f1;
 		--theme-background: #0a0a0a;
 		--theme-surface: #1a1a1a;
-		--theme-border: #2a2a2a;
+		--theme-border: #ffffff;
 		--theme-text-primary: #ffffff;
 		--theme-text-secondary: #a1a1aa;
 		--theme-text-muted: #71717a;
@@ -114,8 +114,8 @@
 	}
 
 	.content-window {
-		background: var(--content-bg);
-		border: 1px solid var(--border-color);
+		background: var(--theme-surface, var(--content-bg));
+		border: 2px solid var(--theme-border, var(--border-color));
 		border-radius: var(--theme-border-radius, 0);
 		width: 90%;
 		max-width: 900px;
@@ -130,7 +130,7 @@
 	}
 
 	.content-area {
-		background: var(--bg-primary);
+		background: var(--theme-surface, var(--bg-primary));
 		height: 100%;
 		padding: 1rem 1rem 3rem 1rem;
 		overflow-y: auto;
@@ -164,15 +164,14 @@
 
 
 
-	/* Content styling - static dark theme */
 	.content-window {
-		background: var(--content-bg);
-		border-color: var(--border-color);
+		background: var(--theme-surface, var(--content-bg));
+		border-color: var(--theme-border, var(--border-color));
 	}
 
 	.content-area {
-		background: var(--bg-primary);
-		color: var(--text-primary);
+		background: var(--theme-surface, var(--bg-primary));
+		color: var(--theme-text-primary, var(--text-primary));
 	}
 
 	/* Responsive design */

@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import FontSelector from './FontSelector.svelte';
 	import WeatherControls from './WeatherControls.svelte';
+	import ThemeSelector from './ThemeSelector.svelte';
 	import ChatNotificationControl from '$lib/site/components/settings/ChatNotificationControl.svelte';
 
 	export let isOpen: boolean = false;
@@ -29,7 +30,12 @@
 <div class="settings-panel" class:open={isOpen}>
 	<div class="settings-content">
 		<div class="settings-section">
-			<h3>Appearance</h3>
+			<h3>Theme</h3>
+			<ThemeSelector />
+		</div>
+
+		<div class="settings-section">
+			<h3>Font</h3>
 			<FontSelector />
 		</div>
 
@@ -62,7 +68,7 @@
 		bottom: 20px;
 		right: 0;
 		width: 280px;
-		height: auto;
+		max-height: calc(100vh - 100px);
 		background: #1a1a1a;
 		border: 1px solid #444444;
 		border-right: none;
@@ -83,6 +89,8 @@
 	.settings-content {
 		padding: 16px;
 		background: #1a1a1a;
+		overflow-y: auto;
+		flex: 1;
 	}
 
 	.settings-section {

@@ -52,7 +52,7 @@ export const DEFAULT_THEME: SiteTheme = {
 	accentColor: '#6366f1',
 	backgroundColor: '#0a0a0a',
 	surfaceColor: '#1a1a1a',
-	borderColor: '#2a2a2a',
+	borderColor: '#ffffff',
 	textPrimary: '#ffffff',
 	textSecondary: '#a1a1aa',
 	textMuted: '#71717a',
@@ -72,7 +72,7 @@ export const DEFAULT_THEME: SiteTheme = {
 	fontScale: '1',
 	
 	// Other
-	borderRadius: '8px',
+	borderRadius: '0px',
 	customCss: null
 };
 

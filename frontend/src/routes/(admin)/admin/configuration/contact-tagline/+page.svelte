@@ -53,7 +53,7 @@
 			const result = await response.json();
 			
 			if (result.success) {
-				toast.success('Contact tagline saved successfully');
+			toast.success('Contact tagline saved successfully');
 			} else {
 				throw new Error(result.error || 'Failed to save contact tagline');
 			}

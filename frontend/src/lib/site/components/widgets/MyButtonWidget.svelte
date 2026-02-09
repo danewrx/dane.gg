@@ -137,8 +137,8 @@
 	}
 
 	.code-block {
-		background: #1a1a1a;
-		border: 1px solid #333;
+		background: var(--theme-background, #1a1a1a);
+		border: 1px solid var(--theme-border, #333);
 		border-radius: 4px 0 0 4px;
 		padding: 4px 8px;
 		flex: 1;
@@ -153,7 +153,7 @@
 		margin: 0;
 		font-family: 'Courier New', monospace;
 		font-size: 13px;
-		color: #e5e5e5;
+		color: var(--theme-text-primary, #e5e5e5);
 		white-space: pre-wrap;
 		word-break: break-all;
 		overflow-y: auto;
@@ -165,9 +165,9 @@
 	}
 
 	.copy-button {
-		background: #333;
-		color: #e5e5e5;
-		border: 1px solid #333;
+		background: var(--theme-border, #333);
+		color: var(--theme-text-primary, #e5e5e5);
+		border: 1px solid var(--theme-border, #333);
 		border-left: none;
 		border-radius: 0 4px 4px 0;
 		padding: 2px 4px;
@@ -183,7 +183,7 @@
 	}
 
 	.copy-button:hover {
-		background: #444;
+		background: var(--theme-surface, #444);
 		transform: translateY(-1px);
 	}
 

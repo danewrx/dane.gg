@@ -176,14 +176,14 @@
 		align-items: center;
 		gap: 8px;
 		padding: 16px;
-		color: var(--text-secondary, #9ca3af);
+		color: var(--theme-text-secondary, var(--text-secondary, #9ca3af));
 		font-size: 14px;
 		justify-content: center;
 		font-family: var(--ascii-font-family, 'JetBrains Mono', 'Courier New', monospace);
 	}
 
 	.error-state {
-		color: #ff0000;
+		color: var(--theme-accent, #ff0000);
 	}
 
 	.status-container {
@@ -216,8 +216,8 @@
 
 	.status-name {
 		font-size: 14px;
-		color: var(--text-primary, #ffffff);
-		font-weight: normal;
+		color: var(--theme-text-primary, #333333);
+		font-weight: 500;
 		flex-shrink: 0;
 	}
 
@@ -236,7 +236,7 @@
 		gap: 6px;
 		padding: 8px 0;
 		font-size: 12px;
-		color: var(--text-secondary, #9ca3af);
+		color: var(--theme-text-secondary, var(--text-secondary, #9ca3af));
 	}
 
 	.spinning {

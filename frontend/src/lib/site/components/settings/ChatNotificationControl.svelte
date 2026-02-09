@@ -54,7 +54,7 @@
 		height: 16px;
 		margin: 0;
 		cursor: pointer;
-		accent-color: #000080;
+		accent-color: var(--theme-accent, #6366f1);
 	}
 
 	.checkbox-text {

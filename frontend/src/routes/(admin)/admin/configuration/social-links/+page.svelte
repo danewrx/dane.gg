@@ -356,7 +356,7 @@
 
 <div class="social-links-page">
 	<div class="settings-description">
-		<p>Manage your social media and external links displayed on the website</p>
+				<p>Manage your social media and external links displayed on the website</p>
 	</div>
 
 	{#if isLoading}
@@ -417,7 +417,7 @@
 									<div class="form-group">
 										<label>Icon</label>
 										<div class="icon-selection-section">
-											<button
+			<button 
 												type="button"
 												class="icon-button"
 												onclick={() => iconPickerOpen = true}
@@ -441,7 +441,7 @@
 												{:else}
 													<Icon icon="lucide:image" width="20" height="20" />
 												{/if}
-											</button>
+			</button>
 											<div class="icon-info">
 												{#if selectedIcon}
 													<div class="icon-name">{selectedIcon.displayName}</div>
@@ -451,8 +451,8 @@
 														 selectedIcon.type === 'svg-url' ? 'Custom SVG' : 
 														 selectedIcon.type === 'custom-text' ? 'Custom Text' : 
 														 'Unknown'}
-													</div>
-												{:else}
+		</div>
+	{:else}
 													<div class="icon-name">No icon selected</div>
 													<div class="icon-pack">Click to choose</div>
 												{/if}
@@ -481,161 +481,161 @@
 								</form>
 							</div>
 						{:else}
-							<div class="link-info">
-								<div class="link-icon">
-									{#if link.iconType === 'custom-text' && link.iconText}
-										<span class="text-icon">{link.iconText}</span>
-									{:else if link.iconType === 'svg-url' && link.svgUrl}
-										<img src={link.svgUrl} alt={link.name} width="20" height="20" />
-									{:else if link.iconType === 'coreui-brand' && link.iconName}
-										<Icon icon={`cib:${link.iconName.replace('cb-', '')}`} width="20" height="20" />
-									{:else if link.iconType === 'lucide' && link.iconName}
-										{@const iconInfo = getIconRenderInfo(link.iconName)}
-										{#if iconInfo.type === 'component' && iconInfo.component}
-											{@const IconComponent = iconInfo.component}
-											<IconComponent size={20} />
-										{:else}
-											<Icon icon="lucide:external-link" width="20" height="20" />
-										{/if}
-									{:else}
-										<Icon icon="lucide:external-link" width="20" height="20" class="default-icon" />
-									{/if}
-								</div>
-								<div class="link-details">
-									<h3>{link.name}</h3>
-									<p>{link.url}</p>
-									<div class="link-meta">
-										<span class="icon-type">{link.iconType}</span>
-										<span class="display-order">Order: {link.displayOrder}</span>
-									</div>
-								</div>
+					<div class="link-info">
+						<div class="link-icon">
+							{#if link.iconType === 'custom-text' && link.iconText}
+								<span class="text-icon">{link.iconText}</span>
+							{:else if link.iconType === 'svg-url' && link.svgUrl}
+								<img src={link.svgUrl} alt={link.name} width="20" height="20" />
+							{:else if link.iconType === 'coreui-brand' && link.iconName}
+								<Icon icon={`cib:${link.iconName.replace('cb-', '')}`} width="20" height="20" />
+							{:else if link.iconType === 'lucide' && link.iconName}
+								{@const iconInfo = getIconRenderInfo(link.iconName)}
+								{#if iconInfo.type === 'component' && iconInfo.component}
+									{@const IconComponent = iconInfo.component}
+									<IconComponent size={20} />
+								{:else}
+									<Icon icon="lucide:external-link" width="20" height="20" />
+								{/if}
+							{:else}
+								<Icon icon="lucide:external-link" width="20" height="20" class="default-icon" />
+							{/if}
+						</div>
+						<div class="link-details">
+							<h3>{link.name}</h3>
+							<p>{link.url}</p>
+							<div class="link-meta">
+								<span class="icon-type">{link.iconType}</span>
+								<span class="display-order">Order: {link.displayOrder}</span>
 							</div>
-							<div class="link-actions">
-								<button 
-									class="action-button" 
-									onclick={() => toggleActive(link.id)}
-									title={link.isActive ? 'Hide link' : 'Show link'}
-								>
-									{#if link.isActive}
-										<Eye size={16} />
-									{:else}
-										<EyeOff size={16} />
-									{/if}
-								</button>
-								<button 
-									class="action-button" 
-									onclick={() => editLink(link)}
-									title="Edit link"
-								>
-									<Edit size={16} />
-								</button>
-								<button 
-									class="action-button danger" 
-									onclick={() => deleteLink(link.id)}
-									title="Delete link"
-								>
-									<Trash2 size={16} />
-								</button>
-							</div>
-						{/if}
+						</div>
 					</div>
-				{/each}
-			{/if}
+					<div class="link-actions">
+						<button 
+							class="action-button" 
+							onclick={() => toggleActive(link.id)}
+							title={link.isActive ? 'Hide link' : 'Show link'}
+						>
+							{#if link.isActive}
+								<Eye size={16} />
+							{:else}
+								<EyeOff size={16} />
+							{/if}
+						</button>
+						<button 
+							class="action-button" 
+							onclick={() => editLink(link)}
+							title="Edit link"
+						>
+							<Edit size={16} />
+						</button>
+						<button 
+							class="action-button danger" 
+							onclick={() => deleteLink(link.id)}
+							title="Delete link"
+						>
+							<Trash2 size={16} />
+						</button>
+					</div>
+						{/if}
+				</div>
+			{/each}
+	{/if}
 
 			{#if showAddForm && !editingLink}
 				<div class="new-link-form">
 					<h3>Add New Link</h3>
 					<form onsubmit={(e) => { e.preventDefault(); saveLink(); }}>
-						<div class="form-group">
+					<div class="form-group">
 							<label for="name-new">Link Name *</label>
-							<input 
-								type="text" 
+						<input 
+							type="text" 
 								id="name-new"
 								class="edit-input"
-								bind:value={formData.name}
-								placeholder="e.g., Twitter, GitHub, Portfolio"
-								required
-							/>
-						</div>
+							bind:value={formData.name}
+							placeholder="e.g., Twitter, GitHub, Portfolio"
+							required
+						/>
+					</div>
 
-						<div class="form-group">
+					<div class="form-group">
 							<label for="url-new">URL *</label>
-							<input 
-								type="url" 
+						<input 
+							type="url" 
 								id="url-new"
 								class="edit-input"
-								bind:value={formData.url}
-								placeholder="https://example.com"
-								required
-							/>
-						</div>
+							bind:value={formData.url}
+							placeholder="https://example.com"
+							required
+						/>
+					</div>
 
-						<div class="form-group">
-							<label>Icon</label>
-							<div class="icon-selection-section">
-								<button
-									type="button"
-									class="icon-button"
-									onclick={() => iconPickerOpen = true}
-									title="Choose icon"
-								>
-									{#if selectedIcon}
-										{@const iconName = getIconNameFromOption(selectedIcon)}
-										{@const iconInfo = getIconRenderInfo(iconName)}
-										{#if iconInfo.type === 'component' && iconInfo.component}
-											{@const IconComponent = iconInfo.component}
-											<IconComponent size={20} />
-										{:else if iconInfo.type === 'iconify' && iconInfo.icon}
-											<Icon icon={iconInfo.icon} width="20" height="20" />
-										{:else if iconInfo.type === 'svg' && iconInfo.url}
-											<img src={iconInfo.url} alt="Icon" width="20" height="20" />
-										{:else if iconInfo.type === 'text' && iconInfo.text}
-											<span class="text-icon-small">{iconInfo.text}</span>
-										{:else}
-											<Icon icon="lucide:image" width="20" height="20" />
-										{/if}
+					<div class="form-group">
+						<label>Icon</label>
+						<div class="icon-selection-section">
+							<button
+								type="button"
+								class="icon-button"
+								onclick={() => iconPickerOpen = true}
+								title="Choose icon"
+							>
+								{#if selectedIcon}
+									{@const iconName = getIconNameFromOption(selectedIcon)}
+									{@const iconInfo = getIconRenderInfo(iconName)}
+									{#if iconInfo.type === 'component' && iconInfo.component}
+										{@const IconComponent = iconInfo.component}
+										<IconComponent size={20} />
+									{:else if iconInfo.type === 'iconify' && iconInfo.icon}
+										<Icon icon={iconInfo.icon} width="20" height="20" />
+									{:else if iconInfo.type === 'svg' && iconInfo.url}
+										<img src={iconInfo.url} alt="Icon" width="20" height="20" />
+									{:else if iconInfo.type === 'text' && iconInfo.text}
+										<span class="text-icon-small">{iconInfo.text}</span>
 									{:else}
 										<Icon icon="lucide:image" width="20" height="20" />
 									{/if}
-								</button>
-								<div class="icon-info">
-									{#if selectedIcon}
-										<div class="icon-name">{selectedIcon.displayName}</div>
-										<div class="icon-pack">
-											{selectedIcon.type === 'coreui-brand' ? 'CoreUI' : 
-											 selectedIcon.type === 'lucide' ? 'Lucide' : 
-											 selectedIcon.type === 'svg-url' ? 'Custom SVG' : 
-											 selectedIcon.type === 'custom-text' ? 'Custom Text' : 
-											 'Unknown'}
-										</div>
-									{:else}
-										<div class="icon-name">No icon selected</div>
-										<div class="icon-pack">Click to choose</div>
-									{/if}
-								</div>
+								{:else}
+									<Icon icon="lucide:image" width="20" height="20" />
+								{/if}
+							</button>
+							<div class="icon-info">
+								{#if selectedIcon}
+									<div class="icon-name">{selectedIcon.displayName}</div>
+									<div class="icon-pack">
+										{selectedIcon.type === 'coreui-brand' ? 'CoreUI' : 
+										 selectedIcon.type === 'lucide' ? 'Lucide' : 
+										 selectedIcon.type === 'svg-url' ? 'Custom SVG' : 
+										 selectedIcon.type === 'custom-text' ? 'Custom Text' : 
+										 'Unknown'}
+									</div>
+								{:else}
+									<div class="icon-name">No icon selected</div>
+									<div class="icon-pack">Click to choose</div>
+								{/if}
 							</div>
 						</div>
+					</div>
 
-						<div class="form-group">
-							<label class="checkbox-label">
-								<input 
-									type="checkbox" 
-									bind:checked={formData.isActive}
-								/>
+					<div class="form-group">
+						<label class="checkbox-label">
+							<input 
+								type="checkbox" 
+								bind:checked={formData.isActive}
+							/>
 								<span>Active (visible on website)</span>
-							</label>
-						</div>
+						</label>
+					</div>
 
-						<div class="form-actions">
+					<div class="form-actions">
 							<button type="submit" class="save-btn" disabled={isSaving}>
 								{isSaving ? 'Saving...' : 'Add Link'}
 							</button>
 							<button type="button" class="cancel-btn" onclick={resetForm}>
-								Cancel
-							</button>
-						</div>
-					</form>
-				</div>
+							Cancel
+						</button>
+					</div>
+				</form>
+			</div>
 			{/if}
 
 			{#if !showAddForm && editingLink === null}

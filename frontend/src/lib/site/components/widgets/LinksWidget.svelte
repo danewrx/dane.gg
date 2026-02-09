@@ -133,8 +133,8 @@ interface SocialLink {
 	.loading-spinner {
 		width: 24px;
 		height: 24px;
-		border: 2px solid #374151;
-		border-top: 2px solid #6366f1;
+		border: 2px solid var(--theme-border, #374151);
+		border-top: 2px solid var(--theme-accent, #6366f1);
 		border-radius: 50%;
 		animation: spin 1s linear infinite;
 	}

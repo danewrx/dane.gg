@@ -490,13 +490,13 @@
 		overflow: hidden;
 		font-family: 'MS Sans Serif', 'Segoe UI', sans-serif;
 		font-size: 12px;
-		border: 2px outset #4a4a4a;
-		background: #2a2a2a;
+		border: 2px outset var(--theme-border, #4a4a4a);
+		background: var(--theme-surface, #2a2a2a);
 		box-shadow: 
-			inset -1px -1px 0 #000000,
-			inset 1px 1px 0 #666666,
-			inset -2px -2px 0 #1a1a1a,
-			inset 2px 2px 0 #555555;
+			inset -1px -1px 0 rgba(0,0,0,0.5),
+			inset 1px 1px 0 rgba(255,255,255,0.1),
+			inset -2px -2px 0 rgba(0,0,0,0.3),
+			inset 2px 2px 0 rgba(255,255,255,0.05);
 		box-sizing: border-box;
 	}
 

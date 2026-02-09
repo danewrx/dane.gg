@@ -49,8 +49,8 @@
 	.tab-container {
 		position: relative;
 		display: flex;
-		background: var(--bg-tertiary);
-		border: 2px solid var(--border-color);
+		background: var(--theme-background, var(--bg-tertiary));
+		border: 2px solid var(--theme-border, var(--border-color));
 		border-radius: 8px;
 		padding: 4px;
 		box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);

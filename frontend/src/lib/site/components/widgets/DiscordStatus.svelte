@@ -123,7 +123,7 @@
 	.status-prefix {
 		font-size: 20px;
 		font-weight: normal;
-		color: #cccccc;
+		color: var(--theme-text-secondary, #cccccc);
 		display: inline-block;
 		margin-right: 4px;
 		line-height: 1;

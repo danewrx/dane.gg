@@ -11,6 +11,11 @@
 	function createTooltip() {
 		if (!browser || tooltipElement) return;
 
+		// Get computed theme styles
+		const computedStyle = getComputedStyle(document.documentElement);
+		const surface = computedStyle.getPropertyValue('--theme-surface').trim() || '#1a1a1a';
+		const border = computedStyle.getPropertyValue('--theme-border').trim() || '#3a3a3a';
+
 		tooltipElement = document.createElement('div');
 		tooltipElement.className = 'emoji-global-tooltip';
 		tooltipElement.innerHTML = `
@@ -22,8 +27,8 @@
 			position: fixed;
 			z-index: 99999;
 			pointer-events: none;
-			background: #1a1a1a;
-			border: 1px solid #3a3a3a;
+			background: ${surface};
+			border: 1px solid ${border};
 			border-radius: 4px;
 			padding: 10px 14px;
 			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
@@ -91,7 +96,8 @@
 			tooltipEmoji.style.cssText = 'font-size: 28px; line-height: 1; text-align: center;';
 		}
 		tooltipName.textContent = nameContent.textContent;
-		tooltipName.style.cssText = 'font-size: 11px; color: #888; font-family: "Courier New", monospace; text-align: center; white-space: nowrap;';
+		const textMuted = getComputedStyle(document.documentElement).getPropertyValue('--theme-text-muted').trim() || '#888';
+		tooltipName.style.cssText = `font-size: 11px; color: ${textMuted}; font-family: "Courier New", monospace; text-align: center; white-space: nowrap;`;
 
 		tooltipElement.style.display = 'flex';
 		positionTooltip(e);

@@ -3,9 +3,9 @@
 
 	// Define props
 	export let padding: string = '16px';
-	export let borderColor: string = '#ffffff';
-	export let backgroundColor: string = '#1a1a1a';
-	export let hoverBackground: string = '#222222';
+	export let borderColor: string = '';
+	export let backgroundColor: string = '';
+	export let hoverBackground: string = '';
 	export let className: string = '';
 	export let showHeader: boolean = false;
 	export let headerText: string = '';
@@ -25,9 +25,9 @@
 	class:no-content-padding-mobile={noContentPaddingOnMobile}
 	style="
 		--padding: {padding};
-		--border-color: {borderColor};
-		--background-color: {backgroundColor};
-		--hover-background: {hoverBackground};
+		{borderColor ? `--box-border-color: ${borderColor};` : ''}
+		{backgroundColor ? `--box-background-color: ${backgroundColor};` : ''}
+		{hoverBackground ? `--box-hover-background: ${hoverBackground};` : ''}
 	"
 >
 	{#if showHeader && headerText}
@@ -87,8 +87,8 @@
 	}
 	.bordered-box {
 		width: 100%;
-		background: var(--background-color);
-		border: 1px solid var(--border-color);
+		background: var(--box-background-color, var(--theme-surface, #1a1a1a));
+		border: 2px solid var(--box-border-color, var(--theme-border, #ffffff));
 		padding: 0 12px;
 		transition: all 0.3s ease;
 		box-sizing: border-box;
@@ -100,7 +100,7 @@
 	}
 
 	.bordered-box:hover {
-		background: var(--background-color);
+		background: var(--box-hover-background, var(--box-background-color, var(--theme-surface, #1a1a1a)));
 	}
 
 	.bordered-box:focus {
@@ -136,7 +136,7 @@
 	.header-text {
 		font-size: 16px;
 		font-weight: bold;
-		color: var(--text-primary, #ffffff);
+		color: var(--theme-text-primary, var(--text-primary, #ffffff));
 		margin: 0 0 4px 0;
 		padding: 0;
 		line-height: 1.2;
@@ -165,23 +165,12 @@
 	.header-divider {
 		width: 100%;
 		height: 2px;
-		background: var(--border-color, #ffffff);
+		background: var(--box-border-color, var(--theme-border, #ffffff));
 		margin: 0;
 		padding: 0;
 	}
 
-	/* Dark mode support */
-	:global(html.dark) .bordered-box {
-		--background-color: #1a1a1a;
-		--border-color: #ffffff;
-		--hover-background: #222222;
-	}
-
-	:global(html:not(.dark)) .bordered-box {
-		--background-color: #f0f0f0;
-		--border-color: #000000;
-		--hover-background: #e0e0e0;
-	}
+	/* Theme variables are now handled by ThemeProvider */
 
 	/* Responsive padding */
 	@media (max-width: 768px) {

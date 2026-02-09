@@ -108,27 +108,27 @@
 		justify-content: space-between;
 		align-items: center;
 		width: 100%;
-		background: rgba(144, 238, 144, 0.015);
+		background: color-mix(in srgb, var(--theme-accent, #90ee90) 3%, transparent);
 		padding: 4px 8px;
 		border-radius: 2px;
 	}
 
 	.stat-label {
-		color: var(--text-secondary, #a1a1aa);
+		color: var(--theme-text-secondary, var(--text-secondary, #a1a1aa));
 		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
 		font-size: 16px;
 		font-weight: normal;
 	}
 
 	.stat-value {
-		color: #90ee90;
+		color: var(--theme-accent, #90ee90);
 		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
 		font-size: 16px;
 		font-weight: normal;
 		text-shadow: 
-			0 0 4px rgba(144, 238, 144, 0.6),
-			0 0 8px rgba(144, 238, 144, 0.4),
-			0 0 12px rgba(144, 238, 144, 0.2);
+			0 0 10px var(--theme-accent, #90ee90),
+			0 0 20px var(--theme-accent, #90ee90),
+			0 0 30px var(--theme-accent, #90ee90);
 	}
 </style>
 

@@ -323,9 +323,20 @@
 	}
 
 	:global(.status-icon.playing) {
-		color: #22c55e;
+		color: var(--theme-accent, #22c55e);
 		width: 16px;
 		height: 16px;
+		filter: drop-shadow(0 0 8px var(--theme-accent, #22c55e)) drop-shadow(0 0 16px var(--theme-accent, #22c55e));
+		animation: pulse-glow 2s ease-in-out infinite;
+	}
+
+	@keyframes pulse-glow {
+		0%, 100% {
+			filter: drop-shadow(0 0 8px var(--theme-accent, #22c55e)) drop-shadow(0 0 16px var(--theme-accent, #22c55e));
+		}
+		50% {
+			filter: drop-shadow(0 0 12px var(--theme-accent, #22c55e)) drop-shadow(0 0 24px var(--theme-accent, #22c55e));
+		}
 	}
 
 	:global(.status-icon.offline) {

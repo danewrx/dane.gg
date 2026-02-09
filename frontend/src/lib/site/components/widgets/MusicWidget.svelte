@@ -465,20 +465,20 @@
 		height: 52px;
 		border-radius: 0;
 		object-fit: cover;
-		border: 1px solid rgba(255, 255, 255, 0.15);
+		border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.15));
 	}
 
 	.no-image {
 		width: 52px;
 		height: 52px;
-		background: var(--background-secondary, #2a2a2a);
+		background: var(--theme-background, var(--background-secondary, #2a2a2a));
 		border-radius: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		font-size: 18px;
-		color: var(--text-muted, #999999);
-		border: 1px solid rgba(255, 255, 255, 0.15);
+		color: var(--theme-text-muted, var(--text-muted, #999999));
+		border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.15));
 	}
 
 

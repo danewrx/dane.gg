@@ -272,7 +272,7 @@
 	}
 
 	.error-message {
-		color: #ef4444;
+		color: var(--theme-accent, #ef4444);
 		font-size: 16px;
 		margin: 0 0 20px 0;
 	}
@@ -360,13 +360,14 @@
 	.post-content :global(h3) { font-size: 1.3em; }
 
 	.post-content :global(a) {
-		color: #6366f1;
+		color: var(--theme-accent, #6366f1);
 		text-decoration: none;
 		transition: color 0.2s ease;
 	}
 
 	.post-content :global(a:hover) {
-		color: #818cf8;
+		color: var(--theme-accent, #818cf8);
+		opacity: 0.8;
 		text-decoration: underline;
 	}
 

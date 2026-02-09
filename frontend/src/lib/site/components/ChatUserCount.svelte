@@ -16,22 +16,20 @@
 		display: flex;
 		align-items: center;
 		gap: 4px;
-		color: #90ee90;
+		color: var(--theme-accent, #90ee90);
 		font-size: 14px;
 		font-weight: normal;
 		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
 		text-shadow: 
-			0 0 4px rgba(144, 238, 144, 0.6),
-			0 0 8px rgba(144, 238, 144, 0.4),
-			0 0 12px rgba(144, 238, 144, 0.2);
+			0 0 10px var(--theme-accent, #90ee90),
+			0 0 20px var(--theme-accent, #90ee90),
+			0 0 30px var(--theme-accent, #90ee90);
 	}
 
 	.user-count-display :global(svg) {
-		color: #90ee90;
+		color: var(--theme-accent, #90ee90);
 		stroke-width: 2;
-		filter: 
-			drop-shadow(0 0 4px rgba(144, 238, 144, 0.6))
-			drop-shadow(0 0 8px rgba(144, 238, 144, 0.4));
+		filter: drop-shadow(0 0 8px var(--theme-accent, #90ee90)) drop-shadow(0 0 16px var(--theme-accent, #90ee90));
 	}
 </style>
 
