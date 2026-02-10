@@ -58,7 +58,7 @@
 	<!-- Settings Panel -->
 	<SettingsPanel 
 		isOpen={settingsOpen} 
-		on:close={handleSettingsClose}
+		onClose={handleSettingsClose}
 	/>
 </div>
 

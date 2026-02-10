@@ -46,7 +46,7 @@
 		gap: 8px;
 		cursor: pointer;
 		font-size: 12px;
-		color: var(--text-primary, #ffffff);
+		color: var(--theme-text-primary, #ffffff);
 	}
 
 	.checkbox-label input[type="checkbox"] {

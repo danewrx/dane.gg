@@ -1,20 +1,24 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	import { Palette } from 'lucide-svelte';
 	import FontSelector from './FontSelector.svelte';
 	import WeatherControls from './WeatherControls.svelte';
-	import ThemeSelector from './ThemeSelector.svelte';
+	import ThemeSwitcherWindow from './ThemeSwitcherWindow.svelte';
 	import ChatNotificationControl from '$lib/site/components/settings/ChatNotificationControl.svelte';
 
-	export let isOpen: boolean = false;
-
-	const dispatch = createEventDispatcher<{
-		close: void;
-	}>();
+	let { isOpen = false, onClose }: { isOpen?: boolean; onClose?: () => void } = $props();
+	let themeWindowOpen = $state(false);
 
 	function handleClose() {
-		dispatch('close');
+		onClose?.();
+	}
+	
+	function openThemeWindow() {
+		themeWindowOpen = true;
 	}
 </script>
+
+<!-- Theme Switcher Window -->
+<ThemeSwitcherWindow bind:isOpen={themeWindowOpen} />
 
 <!-- Settings Panel -->
 {#if isOpen}
@@ -31,7 +35,10 @@
 	<div class="settings-content">
 		<div class="settings-section">
 			<h3>Theme</h3>
-			<ThemeSelector />
+			<button class="theme-button" onclick={openThemeWindow}>
+				<Palette size={16} />
+				<span>Change Theme</span>
+			</button>
 		</div>
 
 		<div class="settings-section">
@@ -69,11 +76,13 @@
 		right: 0;
 		width: 280px;
 		max-height: calc(100vh - 100px);
-		background: #1a1a1a;
-		border: 1px solid #444444;
+		background: var(--theme-surface, #1a1a1a);
+		border: 2px solid var(--theme-border, #ffffff);
 		border-right: none;
-		border-radius: 6px 0 0 6px;
-		box-shadow: -4px 0 12px rgba(0, 0, 0, 0.5);
+		border-radius: 0;
+		box-shadow: 
+			-4px 0 12px rgba(0, 0, 0, 0.5),
+			0 0 30px var(--theme-accent, #90ee90);
 		z-index: 1001;
 		transform: translateX(100%);
 		transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -88,9 +97,27 @@
 
 	.settings-content {
 		padding: 16px;
-		background: #1a1a1a;
+		background: var(--theme-surface, #1a1a1a);
 		overflow-y: auto;
 		flex: 1;
+	}
+	
+	/* Scrollbar styling */
+	.settings-content::-webkit-scrollbar {
+		width: 8px;
+	}
+	
+	.settings-content::-webkit-scrollbar-track {
+		background: var(--theme-background, #0a0a0a);
+	}
+	
+	.settings-content::-webkit-scrollbar-thumb {
+		background: var(--theme-border, #ffffff);
+		border: 1px solid var(--theme-background, #0a0a0a);
+	}
+	
+	.settings-content::-webkit-scrollbar-thumb:hover {
+		background: var(--theme-accent, #90ee90);
 	}
 
 	.settings-section {
@@ -103,11 +130,44 @@
 
 	.settings-section h3 {
 		margin: 0 0 12px 0;
-		color: #ffffff;
+		color: var(--theme-text-primary, #ffffff);
 		font-size: 12px;
 		font-weight: bold;
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
+	}
+	
+	.theme-button {
+		width: 100%;
+		padding: 12px 16px;
+		background: var(--theme-background, #0a0a0a);
+		border: 2px solid var(--theme-border, #ffffff);
+		color: var(--theme-text-primary, #ffffff);
+		font-size: 13px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		transition: all 0.2s ease;
+		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
+	}
+	
+	.theme-button:hover {
+		background: var(--theme-accent, #90ee90);
+		border-color: var(--theme-accent, #90ee90);
+		color: var(--theme-background, #0a0a0a);
+		box-shadow: 
+			0 0 15px var(--theme-accent, #90ee90),
+			0 0 30px var(--theme-accent, #90ee90);
+		transform: translateY(-2px);
+	}
+	
+	.theme-button:active {
+		transform: translateY(0);
 	}
 
 	/* Animations */

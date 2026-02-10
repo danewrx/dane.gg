@@ -110,7 +110,7 @@ export const themeFonts = derived(siteTheme, ($theme) => ({
 }));
 
 /**
- * Load active theme
+ * Load active theme (or user's preferred theme)
  */
 export async function loadSiteTheme(): Promise<void> {
 	if (!browser) return;
@@ -119,6 +119,23 @@ export async function loadSiteTheme(): Promise<void> {
 	themeError.set(null);
 
 	try {
+		const savedThemeId = localStorage.getItem('selectedTheme');
+		
+		if (savedThemeId) {
+			const themesResponse = await fetch('/api/themes');
+			
+			if (themesResponse.ok) {
+				const themesData = await themesResponse.json();
+				const savedTheme = themesData.data?.find((t: SiteTheme) => t.id === savedThemeId);
+				
+				if (savedTheme) {
+					siteTheme.set(savedTheme);
+					themeLoading.set(false);
+					return;
+				}
+			}
+		}
+		
 		const response = await fetch('/api/themes/active');
 		
 		if (!response.ok) {

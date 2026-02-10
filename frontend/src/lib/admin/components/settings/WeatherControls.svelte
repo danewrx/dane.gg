@@ -39,7 +39,7 @@
 	<!-- Weather Type -->
 	<div class="control-group">
 		<label class="control-label" for="weather-type">
-			Weather Effects
+			Effect
 			{#if $enforceWeatherEffects}
 				<span class="enforced-indicator">(Enforced)</span>
 			{/if}
@@ -102,7 +102,7 @@
 	.control-label {
 		font-size: 11px;
 		font-weight: bold;
-		color: var(--text-primary);
+		color: var(--theme-text-primary, #ffffff);
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
 		margin: 0;
@@ -110,7 +110,7 @@
 
 	.enforced-indicator {
 		font-size: 9px;
-		color: var(--text-muted);
+		color: var(--theme-text-muted, #71717a);
 		font-weight: normal;
 		text-transform: none;
 		margin-left: 4px;
@@ -118,9 +118,9 @@
 
 	.weather-select,
 	.weather-slider {
-		background: #ffffff;
-		border: 2px inset #c0c0c0;
-		color: #000000;
+		background: var(--theme-background, #0a0a0a);
+		border: 2px solid var(--theme-border, #ffffff);
+		color: var(--theme-text-primary, #ffffff);
 		padding: 4px 6px;
 		font-size: 12px;
 		height: 28px;
@@ -136,23 +136,23 @@
 
 	.weather-select:focus,
 	.weather-slider:focus {
-		border-color: #000080;
-		box-shadow: 0 0 0 1px #000080;
+		border-color: var(--theme-accent, #90ee90);
+		box-shadow: 0 0 0 1px var(--theme-accent, #90ee90);
 	}
 
 	.weather-select:hover {
-		background: #e0e0e0;
+		background: color-mix(in srgb, var(--theme-background, #0a0a0a) 90%, var(--theme-accent, #90ee90) 10%);
 	}
 
 	.weather-select:active {
-		border: 2px inset #808080;
+		border-color: var(--theme-accent, #90ee90);
 	}
 
 	.weather-slider {
 		padding: 0;
 		height: 18px;
-		background: #c0c0c0;
-		border: 2px inset #808080;
+		background: var(--theme-surface, #1a1a1a);
+		border: 2px solid var(--theme-border, #ffffff);
 	}
 
 	.weather-slider::-webkit-slider-thumb {
@@ -160,19 +160,21 @@
 		appearance: none;
 		width: 16px;
 		height: 16px;
-		background: #000080;
-		border: 1px outset #c0c0c0;
+		background: var(--theme-accent, #90ee90);
+		border: 1px solid var(--theme-border, #ffffff);
 		cursor: grab;
 		border-radius: 0;
+		box-shadow: 0 0 10px var(--theme-accent, #90ee90);
 	}
 
 	.weather-slider::-moz-range-thumb {
 		width: 16px;
 		height: 16px;
-		background: #000080;
-		border: 1px outset #c0c0c0;
+		background: var(--theme-accent, #90ee90);
+		border: 1px solid var(--theme-border, #ffffff);
 		cursor: grab;
 		border-radius: 0;
+		box-shadow: 0 0 10px var(--theme-accent, #90ee90);
 	}
 
 	.weather-slider::-webkit-slider-runnable-track {
@@ -188,20 +190,20 @@
 	/* Disabled state */
 	.weather-select.disabled,
 	.weather-slider.disabled {
-		background: #e0e0e0;
-		color: #888888;
+		background: var(--theme-surface, #1a1a1a);
+		color: var(--theme-text-muted, #71717a);
 		cursor: not-allowed;
 		opacity: 0.6;
 	}
 
 	.weather-select.disabled:hover,
 	.weather-slider.disabled:hover {
-		background: #e0e0e0;
+		background: var(--theme-surface, #1a1a1a);
 	}
 
 	.weather-select.disabled:focus,
 	.weather-slider.disabled:focus {
-		border-color: #c0c0c0;
+		border-color: var(--theme-border, #ffffff);
 		box-shadow: none;
 	}
 
