@@ -315,6 +315,7 @@ export const themes = websiteSchema.table('themes', {
   description: text('description'),
   isActive: boolean('is_active').default(false),
   isDefault: boolean('is_default').default(false),
+  isVisible: boolean('is_visible').default(true),
   
   // Colors
   primaryColor: varchar('primary_color', { length: 50 }).default('#ffffff'),

@@ -120,21 +120,31 @@ export async function loadSiteTheme(): Promise<void> {
 
 	try {
 		const savedThemeId = localStorage.getItem('selectedTheme');
+		console.log('[Theme] Saved theme ID from localStorage:', savedThemeId);
 		
 		if (savedThemeId) {
+			console.log('[Theme] Fetching visible themes from API...');
 			const themesResponse = await fetch('/api/themes');
 			
 			if (themesResponse.ok) {
 				const themesData = await themesResponse.json();
+				console.log('[Theme] Visible themes from API:', themesData.data?.map((t: any) => ({ id: t.id, name: t.name, isVisible: t.isVisible })));
 				const savedTheme = themesData.data?.find((t: SiteTheme) => t.id === savedThemeId);
 				
 				if (savedTheme) {
+					console.log('[Theme] Found saved theme, applying:', savedTheme.name);
 					siteTheme.set(savedTheme);
 					themeLoading.set(false);
 					return;
+				} else {
+					// Saved theme is no longer visible, clear from localStorage
+					console.log('[Theme] Saved theme is NO LONGER VISIBLE, clearing localStorage and falling back to default');
+					localStorage.removeItem('selectedTheme');
 				}
 			}
 		}
+		
+		console.log('[Theme] No saved theme or saved theme not found, loading site default...');
 		
 		const response = await fetch('/api/themes/active');
 		

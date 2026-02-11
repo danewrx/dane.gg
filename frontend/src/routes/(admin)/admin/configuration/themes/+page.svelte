@@ -13,6 +13,7 @@
 		Image as ImageIcon,
 		GripVertical,
 		Eye,
+		EyeOff,
 		Palette
 	} from 'lucide-svelte';
 	import FileUpload, { type UploadedFile } from '$lib/admin/components/ui/FileUpload.svelte';
@@ -23,6 +24,7 @@
 		description: string | null;
 		isActive: boolean;
 		isDefault: boolean;
+		isVisible: boolean;
 		primaryColor: string;
 		secondaryColor: string;
 		accentColor: string;
@@ -81,6 +83,9 @@
 	let isLoading = $state(true);
 	let isSaving = $state(false);
 	
+	let visibleThemes = $derived(themes.filter(t => t.isVisible));
+	let invisibleThemes = $derived(themes.filter(t => !t.isVisible));
+	
 	// Drag state
 	let draggedIndex = $state<number | null>(null);
 	let dragOverIndex = $state<number | null>(null);
@@ -94,6 +99,7 @@
 	let formData = $state({
 		name: '',
 		description: '',
+		isVisible: true,
 		primaryColor: '#ffffff',
 		secondaryColor: '#a1a1aa',
 		accentColor: '#6366f1',
@@ -164,7 +170,8 @@
 			headingFontFamily: 'Inter',
 			fontScale: '1',
 			borderRadius: '8px',
-			customCss: ''
+			customCss: '',
+			isVisible: false
 		};
 	}
 
@@ -178,6 +185,7 @@
 		formData = {
 			name: theme.name,
 			description: theme.description || '',
+			isVisible: theme.isVisible,
 			primaryColor: theme.primaryColor,
 			secondaryColor: theme.secondaryColor,
 			accentColor: theme.accentColor,
@@ -255,10 +263,11 @@
 		try {
 			isSaving = true;
 			
-			const payload = {
-				name: formData.name.trim(),
-				description: formData.description.trim() || null,
-				primaryColor: formData.primaryColor,
+		const payload = {
+			name: formData.name.trim(),
+			description: formData.description.trim() || null,
+			isVisible: formData.isVisible,
+			primaryColor: formData.primaryColor,
 				secondaryColor: formData.secondaryColor,
 				accentColor: formData.accentColor,
 				backgroundColor: formData.backgroundColor,
@@ -328,6 +337,39 @@
 			await loadThemes();
 		} catch (error) {
 			toast.error('Failed to activate theme');
+		}
+	}
+
+	async function toggleVisibility(theme: Theme) {
+		try {
+			const newVisibility = !theme.isVisible;
+			const response = await fetch(`/api/themes/${theme.id}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ isVisible: newVisibility })
+			});
+
+			if (!response.ok) {
+				throw new Error('Failed to update theme visibility');
+			}
+
+			if (!newVisibility) {
+				const savedThemeId = localStorage.getItem('selectedTheme');
+				if (savedThemeId === theme.id) {
+					localStorage.removeItem('selectedTheme');
+					toast.success('Theme is now hidden. The site will reload to apply the default theme.');
+					setTimeout(() => {
+						window.location.reload();
+					}, 1000);
+					return;
+				}
+			}
+
+			toast.success(newVisibility ? 'Theme is now visible' : 'Theme is now hidden');
+			await loadThemes();
+		} catch (error) {
+			toast.error('Failed to update theme visibility');
 		}
 	}
 
@@ -479,16 +521,28 @@
 								placeholder="My Custom Theme"
 							/>
 						</div>
-						<div class="form-group">
-							<label>Description</label>
-							<textarea
-								class="form-input"
-								bind:value={formData.description}
-								placeholder="A brief description of this theme..."
-								rows="2"
-							></textarea>
+					<div class="form-group">
+						<label>Description</label>
+						<textarea
+							class="form-input"
+							bind:value={formData.description}
+							placeholder="A brief description of this theme..."
+							rows="2"
+						></textarea>
+					</div>
+					<div class="form-group">
+						<label class="checkbox-label">
+							<input
+								type="checkbox"
+								bind:checked={formData.isVisible}
+							/>
+							<span>Visible in theme selector</span>
+						</label>
+						<div class="field-hint">
+							When unchecked, this theme will not be available for selection on the frontend
 						</div>
-					</section>
+					</div>
+				</section>
 
 					<!-- Colors -->
 					<section class="editor-section">
@@ -837,7 +891,14 @@
 	{:else}
 		<!-- Theme List -->
 		<div class="themes-list">
-			{#each themes as theme, index (theme.id)}
+			<!-- Visible Themes Section -->
+			{#if visibleThemes.length > 0}
+				<div class="themes-section">
+					<h3 class="section-header">
+						<Eye size={16} />
+						Visible Themes ({visibleThemes.length})
+					</h3>
+					{#each visibleThemes as theme, index (theme.id)}
 				<div 
 					class="theme-card"
 					class:active={theme.isActive}
@@ -904,42 +965,181 @@
 						{/if}
 					</div>
 
-					<div class="theme-actions">
-						{#if !theme.isActive}
-							<button 
-								class="action-btn activate" 
-								onclick={() => activateTheme(theme.id)}
-								title="Activate theme"
-							>
-								<Check size={16} />
-							</button>
-						{/if}
+				<div class="theme-actions">
+					{#if !theme.isActive}
 						<button 
-							class="action-btn edit" 
-							onclick={() => startEditing(theme)}
-							title="Edit theme"
+							class="action-btn activate" 
+							onclick={() => activateTheme(theme.id)}
+							title="Activate theme"
 						>
-							<Edit2 size={16} />
+							<Check size={16} />
 						</button>
-						<button 
-							class="action-btn duplicate" 
-							onclick={() => duplicateTheme(theme.id)}
-							title="Duplicate theme"
-						>
-							<Copy size={16} />
-						</button>
-						{#if !theme.isDefault}
-							<button 
-								class="action-btn delete" 
-								onclick={() => deleteTheme(theme)}
-								title="Delete theme"
-							>
-								<Trash2 size={16} />
-							</button>
+					{/if}
+					<button 
+						class="action-btn visibility"
+						class:visible={theme.isVisible}
+						onclick={() => toggleVisibility(theme)}
+						title={theme.isVisible ? 'Hide from theme selector' : 'Show in theme selector'}
+					>
+						{#if theme.isVisible}
+							<Eye size={16} />
+						{:else}
+							<EyeOff size={16} />
 						{/if}
-					</div>
+					</button>
+					<button 
+						class="action-btn edit" 
+						onclick={() => startEditing(theme)}
+						title="Edit theme"
+					>
+						<Edit2 size={16} />
+					</button>
+					<button 
+						class="action-btn duplicate" 
+						onclick={() => duplicateTheme(theme.id)}
+						title="Duplicate theme"
+					>
+						<Copy size={16} />
+					</button>
+					{#if !theme.isDefault}
+						<button 
+							class="action-btn delete" 
+							onclick={() => deleteTheme(theme)}
+							title="Delete theme"
+						>
+							<Trash2 size={16} />
+						</button>
+					{/if}
 				</div>
-			{/each}
+				</div>
+					{/each}
+				</div>
+			{/if}
+
+			<!-- Invisible Themes Section -->
+			{#if invisibleThemes.length > 0}
+				<div class="themes-section invisible-section">
+					<h3 class="section-header">
+						<EyeOff size={16} />
+						Hidden Themes ({invisibleThemes.length})
+					</h3>
+					{#each invisibleThemes as theme, index (theme.id)}
+						<div 
+							class="theme-card"
+							class:active={theme.isActive}
+							class:dragging={draggedIndex === (visibleThemes.length + index)}
+							class:drag-over={dragOverIndex === (visibleThemes.length + index)}
+							draggable={true}
+							ondragstart={(e) => handleDragStart(e, visibleThemes.length + index)}
+							ondragover={(e) => handleDragOver(e, visibleThemes.length + index)}
+							ondragleave={handleDragLeave}
+							ondrop={(e) => handleDrop(e, visibleThemes.length + index)}
+							ondragend={handleDragEnd}
+						>
+							<div class="drag-handle">
+								<GripVertical size={18} />
+							</div>
+							
+							<div 
+								class="theme-preview-mini"
+								style="
+									background: {theme.backgroundColor};
+									border-color: {theme.borderColor};
+								"
+							>
+								{#if theme.backgroundImage}
+									<div 
+										class="mini-bg-image"
+										style="background-image: url('{getImageUrl(theme.backgroundImage, theme.backgroundImageExternal)}');"
+									></div>
+									<div 
+										class="mini-overlay"
+										style="background: {theme.backgroundOverlay};"
+									></div>
+								{/if}
+								<div class="mini-content">
+									<div 
+										class="mini-card"
+										style="
+											background: {theme.surfaceColor};
+											border-color: {theme.borderColor};
+										"
+									>
+										<div class="mini-text" style="background: {theme.textPrimary};"></div>
+										<div class="mini-text short" style="background: {theme.textSecondary};"></div>
+										<div class="mini-accent" style="background: {theme.accentColor};"></div>
+									</div>
+								</div>
+							</div>
+
+							<div class="theme-info">
+								<div class="theme-name-row">
+									<h4>{theme.name}</h4>
+									{#if theme.isActive}
+										<span class="active-badge">
+											<Check size={12} />
+											Active
+										</span>
+									{/if}
+									{#if theme.isDefault}
+										<span class="default-badge">Default</span>
+									{/if}
+								</div>
+								{#if theme.description}
+									<p class="theme-description">{theme.description}</p>
+								{/if}
+							</div>
+
+							<div class="theme-actions">
+								{#if !theme.isActive}
+									<button 
+										class="action-btn activate" 
+										onclick={() => activateTheme(theme.id)}
+										title="Activate theme"
+									>
+										<Check size={16} />
+									</button>
+								{/if}
+								<button 
+									class="action-btn visibility"
+									class:visible={theme.isVisible}
+									onclick={() => toggleVisibility(theme)}
+									title={theme.isVisible ? 'Hide from theme selector' : 'Show in theme selector'}
+								>
+									{#if theme.isVisible}
+										<Eye size={16} />
+									{:else}
+										<EyeOff size={16} />
+									{/if}
+								</button>
+								<button 
+									class="action-btn edit" 
+									onclick={() => startEditing(theme)}
+									title="Edit theme"
+								>
+									<Edit2 size={16} />
+								</button>
+								<button 
+									class="action-btn duplicate" 
+									onclick={() => duplicateTheme(theme.id)}
+									title="Duplicate theme"
+								>
+									<Copy size={16} />
+								</button>
+								{#if !theme.isDefault}
+									<button 
+										class="action-btn delete" 
+										onclick={() => deleteTheme(theme)}
+										title="Delete theme"
+									>
+										<Trash2 size={16} />
+									</button>
+								{/if}
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
 
 			<button class="add-theme-btn" onclick={startCreating}>
 				<Plus size={18} />
@@ -980,7 +1180,33 @@
 	.themes-list {
 		display: flex;
 		flex-direction: column;
+		gap: 24px;
+	}
+
+	.themes-section {
+		display: flex;
+		flex-direction: column;
 		gap: 12px;
+	}
+
+	.themes-section.invisible-section {
+		opacity: 0.8;
+	}
+
+	.section-header {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 14px;
+		font-weight: 600;
+		color: var(--text-primary, #ffffff);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		margin: 0;
+		padding: 8px 12px;
+		background: var(--bg-secondary, #2a2a2a);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
 	}
 
 	.theme-card {
@@ -1149,6 +1375,26 @@
 	.action-btn.activate:hover {
 		background: rgba(34, 197, 94, 0.2);
 		color: #22c55e;
+	}
+
+	.action-btn.visibility {
+		opacity: 0.5;
+	}
+
+	.action-btn.visibility.visible {
+		opacity: 1;
+		color: #22c55e;
+	}
+
+	.action-btn.visibility:hover {
+		opacity: 1;
+		background: rgba(34, 197, 94, 0.2);
+		color: #22c55e;
+	}
+
+	.action-btn.visibility:not(.visible):hover {
+		background: rgba(239, 68, 68, 0.2);
+		color: #ef4444;
 	}
 
 	.action-btn.edit:hover {

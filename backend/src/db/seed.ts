@@ -518,6 +518,7 @@ Stay tuned for the full article!`,
         description: 'The default site theme with a dark aesthetic and background image',
         isActive: true,
         isDefault: true,
+        isVisible: true,
         
         // Colors
         primaryColor: '#ffffff',
@@ -554,6 +555,7 @@ Stay tuned for the full article!`,
         description: 'A futuristic cyberpunk theme with neon cyan and magenta accents, inspired by rainy neo-noir cityscapes',
         isActive: false,
         isDefault: false,
+        isVisible: true,
         
         // Colors - Neon cyan/magenta on dark backgrounds
         primaryColor: '#e0f7ff',
@@ -598,6 +600,7 @@ Stay tuned for the full article!`,
         description: 'A cute and cozy theme with soft pinks and warm pastels, perfect for a kawaii aesthetic',
         isActive: false,
         isDefault: false,
+        isVisible: true,
         
         // Colors - Soft pinks and warm tones
         primaryColor: '#5d4037',

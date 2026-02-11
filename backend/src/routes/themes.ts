@@ -1,29 +1,48 @@
 import { Router } from 'express';
 import { db } from '../db';
 import { themes } from '../db/schema';
-import { eq, asc } from 'drizzle-orm';
+import { eq, asc, and } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
-// GET active theme (public)
+// GET active theme (public - only if visible)
 router.get('/active', async (req, res) => {
   try {
     const [activeTheme] = await db.select()
       .from(themes)
-      .where(eq(themes.isActive, true))
+      .where(and(eq(themes.isActive, true), eq(themes.isVisible, true)))
       .limit(1);
 
-    if (!activeTheme) {
+    if (activeTheme) {
       return res.json({
         success: true,
-        data: null
+        data: activeTheme
       });
     }
 
+    // If no visible active theme, fall back to the first visible default theme
+    const [defaultTheme] = await db.select()
+      .from(themes)
+      .where(and(eq(themes.isDefault, true), eq(themes.isVisible, true)))
+      .limit(1);
+
+    if (defaultTheme) {
+      return res.json({
+        success: true,
+        data: defaultTheme
+      });
+    }
+
+    const [firstVisibleTheme] = await db.select()
+      .from(themes)
+      .where(eq(themes.isVisible, true))
+      .orderBy(asc(themes.displayOrder))
+      .limit(1);
+
     res.json({
       success: true,
-      data: activeTheme
+      data: firstVisibleTheme || null
     });
   } catch (error) {
     console.error('Error fetching active theme:', error);
@@ -34,16 +53,17 @@ router.get('/active', async (req, res) => {
   }
 });
 
-// GET all themes (public)
+// GET all themes (public - only visible themes)
 router.get('/', async (req, res) => {
   try {
-    const allThemes = await db.select()
+    const visibleThemes = await db.select()
       .from(themes)
+      .where(eq(themes.isVisible, true))
       .orderBy(asc(themes.displayOrder));
 
     res.json({
       success: true,
-      data: allThemes
+      data: visibleThemes
     });
   } catch (error) {
     console.error('Error fetching themes:', error);
@@ -154,6 +174,7 @@ router.post('/', requireAuth, async (req, res) => {
       description: description || null,
       isActive: isActive || false,
       isDefault: false,
+      isVisible: true,
       primaryColor: primaryColor || '#ffffff',
       secondaryColor: secondaryColor || '#a1a1aa',
       accentColor: accentColor || '#6366f1',
@@ -293,6 +314,7 @@ router.put('/:id', requireAuth, async (req, res) => {
       name,
       description,
       isActive,
+      isVisible,
       primaryColor,
       secondaryColor,
       accentColor,
@@ -323,6 +345,7 @@ router.put('/:id', requireAuth, async (req, res) => {
 
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
+    if (isVisible !== undefined) updateData.isVisible = isVisible;
     if (primaryColor !== undefined) updateData.primaryColor = primaryColor;
     if (secondaryColor !== undefined) updateData.secondaryColor = secondaryColor;
     if (accentColor !== undefined) updateData.accentColor = accentColor;
@@ -407,6 +430,7 @@ router.post('/:id/duplicate', requireAuth, async (req, res) => {
       description: originalTheme.description,
       isActive: false,
       isDefault: false,
+      isVisible: true,
       primaryColor: originalTheme.primaryColor,
       secondaryColor: originalTheme.secondaryColor,
       accentColor: originalTheme.accentColor,
