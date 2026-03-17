@@ -13,7 +13,8 @@
 		GripVertical,
 		Eye,
 		EyeOff,
-		Palette
+		Palette,
+		Star
 	} from 'lucide-svelte';
 	import FileUpload, { type UploadedFile } from '$lib/admin/components/ui/FileUpload.svelte';
 
@@ -317,6 +318,24 @@
 			toast.error(error.message);
 		} finally {
 			isSaving = false;
+		}
+	}
+
+	async function setAsDefault(themeId: string) {
+		try {
+			const response = await fetch(`/api/themes/${themeId}/set-default`, {
+				method: 'PUT',
+				credentials: 'include'
+			});
+
+			if (!response.ok) {
+				throw new Error('Failed to set default theme');
+			}
+
+			toast.success('Default theme updated');
+			await loadThemes();
+		} catch (error) {
+			toast.error('Failed to set default theme');
 		}
 	}
 
@@ -939,6 +958,15 @@
 					</div>
 
 				<div class="theme-actions">
+					{#if !theme.isDefault}
+						<button 
+							class="action-btn set-default" 
+							onclick={() => setAsDefault(theme.id)}
+							title="Set as default theme"
+						>
+							<Star size={16} />
+						</button>
+					{/if}
 					<button 
 						class="action-btn visibility"
 						class:visible={theme.isVisible}
@@ -1048,6 +1076,15 @@
 							</div>
 
 							<div class="theme-actions">
+								{#if !theme.isDefault}
+									<button 
+										class="action-btn set-default" 
+										onclick={() => setAsDefault(theme.id)}
+										title="Set as default theme"
+									>
+										<Star size={16} />
+									</button>
+								{/if}
 								<button 
 									class="action-btn visibility"
 									class:visible={theme.isVisible}
@@ -1301,6 +1338,11 @@
 		color: var(--text-secondary, #a1a1aa);
 		cursor: pointer;
 		transition: all 0.2s ease;
+	}
+
+	.action-btn.set-default:hover {
+		background: rgba(234, 179, 8, 0.2);
+		color: #eab308;
 	}
 
 	.action-btn.visibility {

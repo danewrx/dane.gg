@@ -227,6 +227,45 @@ router.put('/order', requireAuth, async (req, res) => {
   }
 });
 
+// PUT set theme as default
+router.put('/:id/set-default', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [existingTheme] = await db.select()
+      .from(themes)
+      .where(eq(themes.id, id));
+
+    if (!existingTheme) {
+      return res.status(404).json({
+        success: false,
+        error: 'Theme not found'
+      });
+    }
+
+    await db.update(themes)
+      .set({ isDefault: false, updatedAt: new Date() })
+      .where(eq(themes.isDefault, true));
+
+    const [defaultTheme] = await db.update(themes)
+      .set({ isDefault: true, updatedAt: new Date() })
+      .where(eq(themes.id, id))
+      .returning();
+
+    res.json({
+      success: true,
+      data: defaultTheme,
+      message: 'Default theme updated successfully'
+    });
+  } catch (error) {
+    console.error('Error setting default theme:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to set default theme'
+    });
+  }
+});
+
 // PUT update theme
 router.put('/:id', requireAuth, async (req, res) => {
   try {

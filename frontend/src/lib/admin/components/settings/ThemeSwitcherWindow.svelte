@@ -7,6 +7,7 @@
 		id: string;
 		name: string;
 		description: string;
+		isDefault?: boolean;
 		primaryColor: string;
 		secondaryColor: string;
 		accentColor: string;
@@ -51,7 +52,8 @@
 			}
 			
 			const result = await response.json();
-			themes = result.data || [];
+			const raw = result.data || [];
+			themes = [...raw].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
 			
 			const savedThemeId = localStorage.getItem('selectedTheme');
 			if (savedThemeId && themes.some(t => t.id === savedThemeId)) {
@@ -189,7 +191,12 @@
 								
 								<!-- Theme Info -->
 								<div class="theme-info">
-									<div class="theme-name">{theme.name}</div>
+									<div class="theme-name-row">
+										<span class="theme-name">{theme.name}</span>
+										{#if theme.isDefault}
+											<span class="default-badge">Default</span>
+										{/if}
+									</div>
 									{#if theme.id === selectedThemeId}
 										<div class="active-badge">Active</div>
 									{/if}
@@ -444,13 +451,37 @@
 		gap: 8px;
 		background: var(--theme-surface, #1a1a1a);
 	}
-	
+
+	.theme-name-row {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		min-width: 0;
+		flex: 1;
+	}
+
 	.theme-name {
 		font-size: 13px;
 		font-weight: bold;
 		color: var(--theme-text-primary, #ffffff);
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.default-badge {
+		font-size: 9px;
+		padding: 2px 6px;
+		background: color-mix(in srgb, var(--theme-accent, #eab308) 25%, transparent);
+		color: var(--theme-accent, #eab308);
+		border-radius: 4px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		flex-shrink: 0;
 	}
 	
 	.active-badge {
