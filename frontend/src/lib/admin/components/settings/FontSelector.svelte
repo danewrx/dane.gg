@@ -6,16 +6,16 @@
 
 <div class="font-selector" class:className>
 	<label class="font-label" for="font-select">
-		Font Family
+		Font
 	</label>
-	<select 
+	<select
 		id="font-select"
 		class="font-select"
 		bind:value={$fontMode}
 		onchange={(e) => {
 			const target = e.target as HTMLSelectElement;
 			if (target) {
-				setFontMode(target.value as 'w95' | 'system');
+				setFontMode(target.value as 'theme' | 'system');
 			}
 		}}
 	>
@@ -59,11 +59,11 @@
 		width: 100%;
 		height: 24px;
 		box-sizing: border-box;
-		
+
 		appearance: none;
 		-moz-appearance: none;
 		-webkit-appearance: none;
-		
+
 		background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23ffffff' d='M4 6l4 4 4-4z'/%3E%3C/svg%3E");
 		background-repeat: no-repeat;
 		background-position: right 6px center;
@@ -100,18 +100,17 @@
 		font-size: 11px;
 	}
 
-	/* Responsive adjustments */
 	@media (max-width: 480px) {
 		.font-select {
 			font-size: 10px;
 			height: 22px;
 			padding: 3px 5px;
 		}
-		
+
 		.font-label {
 			font-size: 10px;
 		}
-		
+
 		.font-description {
 			font-size: 9px;
 		}
