@@ -8,7 +8,6 @@
 		Edit2, 
 		Save, 
 		X, 
-		Check, 
 		Copy,
 		Image as ImageIcon,
 		GripVertical,
@@ -22,7 +21,6 @@
 		id: string;
 		name: string;
 		description: string | null;
-		isActive: boolean;
 		isDefault: boolean;
 		isVisible: boolean;
 		primaryColor: string;
@@ -319,24 +317,6 @@
 			toast.error(error.message);
 		} finally {
 			isSaving = false;
-		}
-	}
-
-	async function activateTheme(themeId: string) {
-		try {
-			const response = await fetch(`/api/themes/${themeId}/activate`, {
-				method: 'PUT',
-				credentials: 'include'
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to activate theme');
-			}
-
-			toast.success('Theme activated');
-			await loadThemes();
-		} catch (error) {
-			toast.error('Failed to activate theme');
 		}
 	}
 
@@ -901,7 +881,6 @@
 					{#each visibleThemes as theme, index (theme.id)}
 				<div 
 					class="theme-card"
-					class:active={theme.isActive}
 					class:dragging={draggedIndex === index}
 					class:drag-over={dragOverIndex === index}
 					draggable={true}
@@ -950,12 +929,6 @@
 					<div class="theme-info">
 						<div class="theme-name-row">
 							<h4>{theme.name}</h4>
-							{#if theme.isActive}
-								<span class="active-badge">
-									<Check size={12} />
-									Active
-								</span>
-							{/if}
 							{#if theme.isDefault}
 								<span class="default-badge">Default</span>
 							{/if}
@@ -966,15 +939,6 @@
 					</div>
 
 				<div class="theme-actions">
-					{#if !theme.isActive}
-						<button 
-							class="action-btn activate" 
-							onclick={() => activateTheme(theme.id)}
-							title="Activate theme"
-						>
-							<Check size={16} />
-						</button>
-					{/if}
 					<button 
 						class="action-btn visibility"
 						class:visible={theme.isVisible}
@@ -1026,7 +990,6 @@
 					{#each invisibleThemes as theme, index (theme.id)}
 						<div 
 							class="theme-card"
-							class:active={theme.isActive}
 							class:dragging={draggedIndex === (visibleThemes.length + index)}
 							class:drag-over={dragOverIndex === (visibleThemes.length + index)}
 							draggable={true}
@@ -1075,12 +1038,6 @@
 							<div class="theme-info">
 								<div class="theme-name-row">
 									<h4>{theme.name}</h4>
-									{#if theme.isActive}
-										<span class="active-badge">
-											<Check size={12} />
-											Active
-										</span>
-									{/if}
 									{#if theme.isDefault}
 										<span class="default-badge">Default</span>
 									{/if}
@@ -1091,15 +1048,6 @@
 							</div>
 
 							<div class="theme-actions">
-								{#if !theme.isActive}
-									<button 
-										class="action-btn activate" 
-										onclick={() => activateTheme(theme.id)}
-										title="Activate theme"
-									>
-										<Check size={16} />
-									</button>
-								{/if}
 								<button 
 									class="action-btn visibility"
 									class:visible={theme.isVisible}
@@ -1221,11 +1169,6 @@
 		transition: all 0.2s ease;
 	}
 
-	.theme-card.active {
-		border-color: var(--accent-color, #6366f1);
-		box-shadow: 0 0 0 1px var(--accent-color, #6366f1);
-	}
-
 	.theme-card.dragging {
 		opacity: 0.5;
 	}
@@ -1322,18 +1265,6 @@
 		color: var(--text-primary, #ffffff);
 	}
 
-	.active-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		padding: 2px 8px;
-		background: rgba(34, 197, 94, 0.2);
-		color: #22c55e;
-		border-radius: 4px;
-		font-size: 11px;
-		font-weight: 500;
-	}
-
 	.default-badge {
 		padding: 2px 8px;
 		background: rgba(99, 102, 241, 0.2);
@@ -1370,11 +1301,6 @@
 		color: var(--text-secondary, #a1a1aa);
 		cursor: pointer;
 		transition: all 0.2s ease;
-	}
-
-	.action-btn.activate:hover {
-		background: rgba(34, 197, 94, 0.2);
-		color: #22c55e;
 	}
 
 	.action-btn.visibility {

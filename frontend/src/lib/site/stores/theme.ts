@@ -194,12 +194,9 @@ export function applyThemeStyles(theme: SiteTheme): void {
 	root.style.setProperty('--theme-font-family', bodyFont);
 	root.style.setProperty('--theme-heading-font', headingFont);
 
-	// Apply background image
 	if (theme.backgroundImage) {
-		const bgUrl = theme.backgroundImageExternal 
-			? theme.backgroundImage 
-			: theme.backgroundImage;
-		root.style.setProperty('--theme-bg-image', `url('${bgUrl}')`);
+		const url = theme.backgroundImage.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+		root.style.setProperty('--theme-bg-image', `url('${url}')`);
 	} else {
 		root.style.setProperty('--theme-bg-image', 'none');
 	}

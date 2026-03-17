@@ -6,22 +6,9 @@ import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
-// GET active theme (public - only if visible)
+// GET default theme for public site
 router.get('/active', async (req, res) => {
   try {
-    const [activeTheme] = await db.select()
-      .from(themes)
-      .where(and(eq(themes.isActive, true), eq(themes.isVisible, true)))
-      .limit(1);
-
-    if (activeTheme) {
-      return res.json({
-        success: true,
-        data: activeTheme
-      });
-    }
-
-    // If no visible active theme, fall back to the first visible default theme
     const [defaultTheme] = await db.select()
       .from(themes)
       .where(and(eq(themes.isDefault, true), eq(themes.isVisible, true)))
@@ -130,6 +117,7 @@ router.post('/', requireAuth, async (req, res) => {
       name,
       description,
       isActive,
+      isVisible,
       primaryColor,
       secondaryColor,
       accentColor,
@@ -163,18 +151,11 @@ router.post('/', requireAuth, async (req, res) => {
     const allThemes = await db.select().from(themes);
     const maxOrder = allThemes.reduce((max, t) => Math.max(max, t.displayOrder), -1);
 
-    if (isActive) {
-      await db.update(themes)
-        .set({ isActive: false, updatedAt: new Date() })
-        .where(eq(themes.isActive, true));
-    }
-
     const [newTheme] = await db.insert(themes).values({
       name,
       description: description || null,
-      isActive: isActive || false,
       isDefault: false,
-      isVisible: true,
+      isVisible: isVisible !== false,
       primaryColor: primaryColor || '#ffffff',
       secondaryColor: secondaryColor || '#a1a1aa',
       accentColor: accentColor || '#6366f1',
@@ -246,66 +227,6 @@ router.put('/order', requireAuth, async (req, res) => {
   }
 });
 
-// PUT activate a theme
-router.put('/:id/activate', requireAuth, async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Verify theme exists
-    const [existingTheme] = await db.select()
-      .from(themes)
-      .where(eq(themes.id, id));
-
-    if (!existingTheme) {
-      return res.status(404).json({
-        success: false,
-        error: 'Theme not found'
-      });
-    }
-
-    await db.update(themes)
-      .set({ isActive: false, updatedAt: new Date() })
-      .where(eq(themes.isActive, true));
-
-    const [activatedTheme] = await db.update(themes)
-      .set({ isActive: true, updatedAt: new Date() })
-      .where(eq(themes.id, id))
-      .returning();
-
-    res.json({
-      success: true,
-      data: activatedTheme,
-      message: 'Theme activated successfully'
-    });
-  } catch (error) {
-    console.error('Error activating theme:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to activate theme'
-    });
-  }
-});
-
-// PUT deactivate all themes (use default)
-router.put('/deactivate', requireAuth, async (req, res) => {
-  try {
-    await db.update(themes)
-      .set({ isActive: false, updatedAt: new Date() })
-      .where(eq(themes.isActive, true));
-
-    res.json({
-      success: true,
-      message: 'All themes deactivated'
-    });
-  } catch (error) {
-    console.error('Error deactivating themes:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to deactivate themes'
-    });
-  }
-});
-
 // PUT update theme
 router.put('/:id', requireAuth, async (req, res) => {
   try {
@@ -313,7 +234,6 @@ router.put('/:id', requireAuth, async (req, res) => {
     const {
       name,
       description,
-      isActive,
       isVisible,
       primaryColor,
       secondaryColor,
@@ -369,17 +289,6 @@ router.put('/:id', requireAuth, async (req, res) => {
     if (customCss !== undefined) updateData.customCss = customCss;
     if (displayOrder !== undefined) updateData.displayOrder = displayOrder;
 
-    // Handle isActive separately to ensure only one theme is active
-    if (isActive === true) {
-      // Deactivate all other themes first
-      await db.update(themes)
-        .set({ isActive: false, updatedAt: new Date() })
-        .where(eq(themes.isActive, true));
-      updateData.isActive = true;
-    } else if (isActive === false) {
-      updateData.isActive = false;
-    }
-
     const [updatedTheme] = await db.update(themes)
       .set(updateData)
       .where(eq(themes.id, id))
@@ -428,7 +337,6 @@ router.post('/:id/duplicate', requireAuth, async (req, res) => {
     const [duplicatedTheme] = await db.insert(themes).values({
       name: newName || `${originalTheme.name} (Copy)`,
       description: originalTheme.description,
-      isActive: false,
       isDefault: false,
       isVisible: true,
       primaryColor: originalTheme.primaryColor,

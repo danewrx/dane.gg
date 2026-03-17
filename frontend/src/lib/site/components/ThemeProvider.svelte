@@ -9,9 +9,10 @@
 		await loadSiteTheme();
 	});
 
-	function getBackgroundUrl(): string {
+	function getBgUrlCss(): string {
 		if (!theme?.backgroundImage) return 'none';
-		return theme.backgroundImage;
+		const url = theme.backgroundImage.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+		return `url('${url}')`;
 	}
 </script>
 
@@ -20,7 +21,7 @@
 	class="theme-background" 
 	class:loading
 	style="
-		--bg-url: url('{getBackgroundUrl()}');
+		--bg-url: {getBgUrlCss()};
 		--bg-overlay: {theme?.backgroundOverlay ?? 'rgba(0, 0, 0, 0.7)'};
 		--bg-blur: {theme?.backgroundBlur ?? 0}px;
 		--bg-position: {theme?.backgroundPosition ?? 'center center'};

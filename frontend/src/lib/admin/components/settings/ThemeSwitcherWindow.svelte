@@ -1,13 +1,12 @@
 <script lang="ts">
 	import { X, Palette } from 'lucide-svelte';
 	import { onMount } from 'svelte';
-	import { siteTheme, applyThemeStyles, loadGoogleFonts, applyCustomCss } from '$lib/site/stores/theme';
+	import { siteTheme } from '$lib/site/stores/theme';
 	
 	interface Theme {
 		id: string;
 		name: string;
 		description: string;
-		isActive: boolean;
 		primaryColor: string;
 		secondaryColor: string;
 		accentColor: string;
@@ -54,13 +53,11 @@
 			const result = await response.json();
 			themes = result.data || [];
 			
-			// Check localStorage for user preference
 			const savedThemeId = localStorage.getItem('selectedTheme');
 			if (savedThemeId && themes.some(t => t.id === savedThemeId)) {
 				selectedThemeId = savedThemeId;
 			} else {
-				const activeTheme = themes.find(t => t.isActive);
-				selectedThemeId = activeTheme?.id || null;
+				selectedThemeId = themes[0]?.id ?? null;
 			}
 		} catch (error) {
 			console.error('Error loading themes:', error);
@@ -84,11 +81,7 @@
 			// Save to localStorage
 			localStorage.setItem('selectedTheme', themeId);
 			
-			// Apply theme
 			siteTheme.set(theme as any);
-			applyThemeStyles(theme as any);
-			loadGoogleFonts([theme.fontFamily, theme.headingFontFamily]);
-			applyCustomCss(theme.customCss);
 			
 			applying = false;
 		} catch (error) {
