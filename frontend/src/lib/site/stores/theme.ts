@@ -32,6 +32,10 @@ export interface SiteTheme {
 	fontFamily: string;
 	headingFontFamily: string;
 	fontScale: string;
+	/** Custom font file URL for body */
+	bodyFontUrl?: string | null;
+	/** Custom font file URL for headings */
+	headingFontUrl?: string | null;
 	
 	// Other
 	borderRadius: string;
@@ -164,6 +168,9 @@ export async function loadSiteTheme(): Promise<void> {
 export function applyThemeStyles(theme: SiteTheme): void {
 	if (!browser) return;
 
+	// Inject @font-face for custom fonts
+	injectCustomFontFaces(theme);
+
 	const root = document.documentElement;
 
 	// Colors
@@ -237,6 +244,42 @@ export function loadGoogleFonts(fonts: string[]): void {
 }
 
 /**
+ * Inject @font-face for custom theme fonts
+ * Uses single style tag so it can be replaced when theme changes
+ */
+function injectCustomFontFaces(theme: SiteTheme): void {
+	if (!browser) return;
+
+	const existing = document.querySelector('style[data-theme-custom-fonts]');
+	const rules: string[] = [];
+
+	if (theme.bodyFontUrl && theme.fontFamily) {
+		const url = theme.bodyFontUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+		const family = theme.fontFamily.replace(/'/g, "\\'");
+		rules.push(`@font-face { font-family: '${family}'; src: url('${url}'); }`);
+	}
+	if (theme.headingFontUrl && theme.headingFontFamily && theme.headingFontFamily !== theme.fontFamily) {
+		const url = theme.headingFontUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+		const family = theme.headingFontFamily.replace(/'/g, "\\'");
+		rules.push(`@font-face { font-family: '${family}'; src: url('${url}'); }`);
+	} else if (theme.headingFontUrl && theme.headingFontFamily) {
+		const url = theme.headingFontUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+		const family = theme.headingFontFamily.replace(/'/g, "\\'");
+		rules.push(`@font-face { font-family: '${family}'; src: url('${url}'); }`);
+	}
+
+	if (rules.length === 0) {
+		existing?.remove();
+		return;
+	}
+
+	const style = existing ?? document.createElement('style');
+	style.setAttribute('data-theme-custom-fonts', 'true');
+	style.textContent = rules.join('\n');
+	if (!existing) document.head.appendChild(style);
+}
+
+/**
  * Apply custom CSS from theme
  */
 export function applyCustomCss(css: string | null): void {
@@ -262,10 +305,12 @@ export function applyCustomCss(css: string | null): void {
 if (browser) {
 	siteTheme.subscribe((theme) => {
 		applyThemeStyles(theme);
-		
-		const fontsToLoad = [theme.fontFamily, theme.headingFontFamily].filter(Boolean);
+		const fontsToLoad: string[] = [];
+		if (!theme.bodyFontUrl && theme.fontFamily) fontsToLoad.push(theme.fontFamily);
+		if (!theme.headingFontUrl && theme.headingFontFamily && theme.headingFontFamily !== theme.fontFamily) {
+			fontsToLoad.push(theme.headingFontFamily);
+		}
 		loadGoogleFonts(fontsToLoad);
-		
 		applyCustomCss(theme.customCss);
 	});
 }

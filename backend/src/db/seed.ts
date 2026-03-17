@@ -13,7 +13,8 @@ import {
   visitorStats,
   contactEmails,
   contactPageSettings,
-  themes
+  themes,
+  fonts
 } from './schema';
 
 export async function seed() {
@@ -42,6 +43,24 @@ export async function seed() {
     await db.delete(contactEmails);
     await db.delete(contactPageSettings);
     await db.delete(themes);
+    await db.delete(fonts);
+
+    console.log('🔤 Seeding fonts...');
+    const googleFontsList = [
+      'Inter', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Poppins', 'Source Sans Pro',
+      'Nunito', 'Raleway', 'Ubuntu', 'Playfair Display', 'Merriweather', 'PT Sans',
+      'Oswald', 'Quicksand', 'Work Sans', 'Fira Sans', 'Rubik', 'Karla', 'Manrope',
+      'Space Grotesk', 'DM Sans', 'JetBrains Mono', 'Fira Code', 'Rajdhani', 'Orbitron'
+    ];
+    await db.insert(fonts).values(
+      googleFontsList.map((name, i) => ({
+        name,
+        type: 'google',
+        googleFontFamily: name,
+        filePath: null,
+        displayOrder: i
+      }))
+    );
 
     // Seed project categories
     console.log('📁 Seeding project categories...');

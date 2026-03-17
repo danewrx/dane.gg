@@ -17,6 +17,7 @@
 		Star
 	} from 'lucide-svelte';
 	import FileUpload, { type UploadedFile } from '$lib/admin/components/ui/FileUpload.svelte';
+	import FontPicker from '$lib/admin/components/ui/FontPicker.svelte';
 
 	interface Theme {
 		id: string;
@@ -49,34 +50,6 @@
 		createdAt: string;
 		updatedAt: string;
 	}
-
-	// Popular Google Fonts
-	const popularFonts = [
-		'Inter',
-		'Roboto',
-		'Open Sans',
-		'Lato',
-		'Montserrat',
-		'Poppins',
-		'Source Sans Pro',
-		'Nunito',
-		'Raleway',
-		'Ubuntu',
-		'Playfair Display',
-		'Merriweather',
-		'PT Sans',
-		'Oswald',
-		'Quicksand',
-		'Work Sans',
-		'Fira Sans',
-		'Rubik',
-		'Karla',
-		'Manrope',
-		'Space Grotesk',
-		'DM Sans',
-		'JetBrains Mono',
-		'Fira Code'
-	];
 
 	let themes = $state<Theme[]>([]);
 	let isLoading = $state(true);
@@ -693,20 +666,22 @@
 						<h3>Typography</h3>
 						<div class="form-row">
 							<div class="form-group">
-								<label>Body Font</label>
-								<select class="form-input" bind:value={formData.fontFamily}>
-									{#each popularFonts as font}
-										<option value={font}>{font}</option>
-									{/each}
-								</select>
+								<FontPicker
+									value={formData.fontFamily}
+									onChange={(v) => { formData.fontFamily = v; }}
+									label="Body Font"
+									id="theme-body-font"
+									allowUpload={true}
+								/>
 							</div>
 							<div class="form-group">
-								<label>Heading Font</label>
-								<select class="form-input" bind:value={formData.headingFontFamily}>
-									{#each popularFonts as font}
-										<option value={font}>{font}</option>
-									{/each}
-								</select>
+								<FontPicker
+									value={formData.headingFontFamily}
+									onChange={(v) => { formData.headingFontFamily = v; }}
+									label="Heading Font"
+									id="theme-heading-font"
+									allowUpload={true}
+								/>
 							</div>
 						</div>
 						<div class="form-row">

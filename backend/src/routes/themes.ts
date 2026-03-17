@@ -1,10 +1,29 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { themes } from '../db/schema';
+import { themes, fonts } from '../db/schema';
 import { eq, asc, and } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
 
 const router = Router();
+
+async function enrichThemesWithFontUrls(themesData: any[]): Promise<any[]> {
+  if (themesData.length === 0) return themesData;
+  const customFonts = await db.select().from(fonts).where(eq(fonts.type, 'custom'));
+  const byName = new Map(customFonts.map(f => [f.name, f]));
+  return themesData.map(t => {
+    const bodyFont = t.fontFamily ? byName.get(t.fontFamily) : null;
+    const headingFont = t.headingFontFamily ? byName.get(t.headingFontFamily) : null;
+    return {
+      ...t,
+      bodyFontUrl: bodyFont?.filePath ?? null,
+      headingFontUrl: headingFont?.filePath ?? null
+    };
+  });
+}
+
+function enrichThemeWithFontUrls(theme: any): Promise<any> {
+  return enrichThemesWithFontUrls([theme]).then(arr => arr[0]);
+}
 
 // GET default theme for public site
 router.get('/active', async (req, res) => {
@@ -15,9 +34,10 @@ router.get('/active', async (req, res) => {
       .limit(1);
 
     if (defaultTheme) {
+      const enriched = await enrichThemeWithFontUrls(defaultTheme);
       return res.json({
         success: true,
-        data: defaultTheme
+        data: enriched
       });
     }
 
@@ -27,9 +47,10 @@ router.get('/active', async (req, res) => {
       .orderBy(asc(themes.displayOrder))
       .limit(1);
 
+    const enriched = firstVisibleTheme ? await enrichThemeWithFontUrls(firstVisibleTheme) : null;
     res.json({
       success: true,
-      data: firstVisibleTheme || null
+      data: enriched
     });
   } catch (error) {
     console.error('Error fetching active theme:', error);
@@ -48,9 +69,10 @@ router.get('/', async (req, res) => {
       .where(eq(themes.isVisible, true))
       .orderBy(asc(themes.displayOrder));
 
+    const enriched = await enrichThemesWithFontUrls(visibleThemes);
     res.json({
       success: true,
-      data: visibleThemes
+      data: enriched
     });
   } catch (error) {
     console.error('Error fetching themes:', error);
@@ -68,9 +90,10 @@ router.get('/all', requireAuth, async (req, res) => {
       .from(themes)
       .orderBy(asc(themes.displayOrder));
 
+    const enriched = await enrichThemesWithFontUrls(allThemes);
     res.json({
       success: true,
-      data: allThemes
+      data: enriched
     });
   } catch (error) {
     console.error('Error fetching themes:', error);
@@ -97,9 +120,10 @@ router.get('/:id', requireAuth, async (req, res) => {
       });
     }
 
+    const enriched = await enrichThemeWithFontUrls(theme);
     res.json({
       success: true,
-      data: theme
+      data: enriched
     });
   } catch (error) {
     console.error('Error fetching theme:', error);

@@ -134,6 +134,13 @@
       "when": 1770768311385,
       "tag": "0018_empty_stryfe",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1773787037529,
+      "tag": "0019_low_lilith",
+      "breakpoints": true
     }
   ]
 }
