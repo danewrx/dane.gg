@@ -230,7 +230,7 @@
 		border: 2px solid var(--border-color, #ffffff);
 		border-radius: 0;
 		color: var(--text-primary, #ffffff);
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		cursor: pointer;
 		transition: all 0.2s ease;
 	}
@@ -273,7 +273,7 @@
 
 	.error-message {
 		color: var(--theme-accent, #ef4444);
-		font-size: 16px;
+		font-size: calc(16 * 1em / 14);
 		margin: 0 0 20px 0;
 	}
 
@@ -304,7 +304,7 @@
 
 	.post-title {
 		color: var(--text-primary, #ffffff);
-		font-size: 36px;
+		font-size: calc(36 * 1em / 14);
 		font-weight: 700;
 		line-height: 1.2;
 		margin: 0 0 16px 0;
@@ -318,7 +318,7 @@
 		flex-wrap: wrap;
 		margin-bottom: 32px;
 		color: var(--text-muted, #9ca3af);
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 	}
 
 	.meta-item {
@@ -333,7 +333,7 @@
 	.post-content {
 		color: var(--text-primary, #ffffff);
 		line-height: 1.8;
-		font-size: 16px;
+		font-size: calc(16 * 1em / 14);
 		margin-bottom: 32px;
 	}
 
@@ -358,6 +358,9 @@
 	.post-content :global(h1) { font-size: 2em; }
 	.post-content :global(h2) { font-size: 1.6em; }
 	.post-content :global(h3) { font-size: 1.3em; }
+	.post-content :global(h4) { font-size: 1.15em; }
+	.post-content :global(h5) { font-size: 1.05em; }
+	.post-content :global(h6) { font-size: 1em; }
 
 	.post-content :global(a) {
 		color: var(--theme-accent, #6366f1);
@@ -393,6 +396,7 @@
 		border-radius: 6px;
 		overflow-x: auto;
 		margin: 1.5em 0;
+		font-size: 0.9em;
 	}
 
 	.post-content :global(pre code) {
@@ -444,7 +448,7 @@
 		padding: 6px 12px;
 		background: var(--bg-tertiary, #2a2a2a);
 		border-radius: 4px;
-		font-size: 13px;
+		font-size: calc(13 * 1em / 14);
 		color: var(--text-secondary, #b0b0b0);
 	}
 
@@ -473,7 +477,7 @@
 		padding: 0;
 		color: var(--text-primary, #ffffff);
 		text-decoration: none;
-		font-size: 16px;
+		font-size: calc(16 * 1em / 14);
 		cursor: pointer;
 		transition: color 0.2s ease;
 		font-family: inherit;
@@ -501,15 +505,15 @@
 		}
 
 		.post-title {
-			font-size: 28px;
+			font-size: calc(28 * 1em / 14);
 		}
 
 		.post-meta {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 		}
 
 		.post-content {
-			font-size: 15px;
+			font-size: calc(15 * 1em / 14);
 		}
 
 		.post-content :global(h1) {
@@ -545,7 +549,7 @@
 		}
 
 		.nav-link {
-			font-size: 14px;
+			font-size: calc(14 * 1em / 14);
 		}
 
 		.nav-next {

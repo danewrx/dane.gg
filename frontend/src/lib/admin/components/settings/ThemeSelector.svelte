@@ -117,7 +117,7 @@
 							style="
 								background: {theme.surfaceColor};
 								border-color: {theme.borderColor};
-								border-radius: {theme.borderRadius};
+								border-radius: {theme.widgetBorderRadius ?? theme.borderRadius};
 							"
 						>
 							<div 

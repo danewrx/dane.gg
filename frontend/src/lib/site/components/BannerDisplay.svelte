@@ -109,7 +109,7 @@
 
 	.banner-content {
 		display: inline-block;
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		font-weight: 500;
 		letter-spacing: 0.5px;
 		white-space: nowrap;
@@ -124,7 +124,7 @@
 		}
 
 		.banner-content {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 		}
 	}
 
@@ -136,7 +136,7 @@
 		}
 
 		.banner-content {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 		}
 	}
 </style>

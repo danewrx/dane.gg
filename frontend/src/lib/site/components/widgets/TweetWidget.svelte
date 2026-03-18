@@ -331,7 +331,7 @@
 		justify-content: flex-start;
 		padding: 6px 8px;
 		color: var(--text-primary, #ffffff);
-		font-size: 11px;
+		font-size: calc(11 * 1em / 14);
 		font-weight: 500;
 		line-height: 1.2;
 		overflow: hidden;
@@ -364,7 +364,7 @@
 
 	.author-name {
 		font-weight: 600;
-		font-size: 15px;
+		font-size: calc(15 * 1em / 14);
 		color: var(--text-primary, #ffffff);
 		text-decoration: none;
 		white-space: nowrap;
@@ -377,7 +377,7 @@
 	}
 
 	.author-username {
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 		color: var(--text-muted, #71767a);
 		text-decoration: none;
 		white-space: nowrap;
@@ -397,14 +397,14 @@
 	}
 
 	.time-separator {
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 		color: var(--text-muted, #71767a);
 		flex-shrink: 0;
 		margin: 0 2px;
 	}
 
 	.tweet-time {
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 		color: var(--text-primary, #ffffff);
 		white-space: nowrap;
 		flex-shrink: 0;
@@ -421,7 +421,7 @@
 	}
 
 	.tweet-text {
-		font-size: 15px;
+		font-size: calc(15 * 1em / 14);
 		line-height: 1.4;
 		color: var(--text-primary, #ffffff);
 		text-decoration: none;
@@ -464,7 +464,7 @@
 
 	.tweet-title {
 		font-weight: 500;
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		color: var(--text-primary, #ffffff);
 		margin: 0;
 		padding: 0;
@@ -472,7 +472,7 @@
 	}
 
 	.tweet-subtitle {
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		color: var(--text-muted, #999999);
 		margin: 0;
 		padding: 0;
@@ -480,7 +480,7 @@
 	}
 
 	.tweet-status {
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 		margin: 0;
 		padding: 0;
 		line-height: 1.4;
@@ -500,41 +500,41 @@
 		}
 
 		.no-image {
-			font-size: 17px;
+			font-size: calc(17 * 1em / 14);
 		}
 
 		.author-name {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 		}
 
 		.author-username {
-			font-size: 11px;
+			font-size: calc(11 * 1em / 14);
 		}
 
 		.time-separator {
-			font-size: 11px;
+			font-size: calc(11 * 1em / 14);
 		}
 
 		.tweet-time {
-			font-size: 11px;
+			font-size: calc(11 * 1em / 14);
 		}
 
 		.tweet-text {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 			-webkit-line-clamp: 2;
 			line-clamp: 2;
 		}
 
 		.tweet-title {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 		}
 
 		.tweet-subtitle {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 		}
 
 		.tweet-status {
-			font-size: 11px;
+			font-size: calc(11 * 1em / 14);
 		}
 	}
 
@@ -550,41 +550,41 @@
 		}
 
 		.no-image {
-			font-size: 16px;
+			font-size: calc(16 * 1em / 14);
 		}
 
 		.author-name {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 		}
 
 		.author-username {
-			font-size: 10px;
+			font-size: calc(10 * 1em / 14);
 		}
 
 		.time-separator {
-			font-size: 10px;
+			font-size: calc(10 * 1em / 14);
 		}
 
 		.tweet-time {
-			font-size: 10px;
+			font-size: calc(10 * 1em / 14);
 		}
 
 		.tweet-text {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 			-webkit-line-clamp: 2;
 			line-clamp: 2;
 		}
 
 		.tweet-title {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 		}
 
 		.tweet-subtitle {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 		}
 
 		.tweet-status {
-			font-size: 10px;
+			font-size: calc(10 * 1em / 14);
 		}
 	}
 
@@ -600,41 +600,41 @@
 		}
 
 		.no-image {
-			font-size: 16px;
+			font-size: calc(16 * 1em / 14);
 		}
 
 		.author-name {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 		}
 
 		.author-username {
-			font-size: 11px;
+			font-size: calc(11 * 1em / 14);
 		}
 
 		.time-separator {
-			font-size: 11px;
+			font-size: calc(11 * 1em / 14);
 		}
 
 		.tweet-time {
-			font-size: 11px;
+			font-size: calc(11 * 1em / 14);
 		}
 
 		.tweet-text {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 			-webkit-line-clamp: 2;
 			line-clamp: 2;
 		}
 
 		.tweet-title {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 		}
 
 		.tweet-subtitle {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 		}
 
 		.tweet-status {
-			font-size: 11px;
+			font-size: calc(11 * 1em / 14);
 		}
 	}
 
@@ -650,41 +650,41 @@
 		}
 
 		.no-image {
-			font-size: 15px;
+			font-size: calc(15 * 1em / 14);
 		}
 
 		.author-name {
-			font-size: 11px;
+			font-size: calc(11 * 1em / 14);
 		}
 
 		.author-username {
-			font-size: 9px;
+			font-size: calc(9 * 1em / 14);
 		}
 
 		.time-separator {
-			font-size: 9px;
+			font-size: calc(9 * 1em / 14);
 		}
 
 		.tweet-time {
-			font-size: 9px;
+			font-size: calc(9 * 1em / 14);
 		}
 
 		.tweet-text {
-			font-size: 11px;
+			font-size: calc(11 * 1em / 14);
 			-webkit-line-clamp: 2;
 			line-clamp: 2;
 		}
 
 		.tweet-title {
-			font-size: 11px;
+			font-size: calc(11 * 1em / 14);
 		}
 
 		.tweet-subtitle {
-			font-size: 11px;
+			font-size: calc(11 * 1em / 14);
 		}
 
 		.tweet-status {
-			font-size: 9px;
+			font-size: calc(9 * 1em / 14);
 		}
 	}
 
@@ -700,41 +700,41 @@
 		}
 
 		.no-image {
-			font-size: 14px;
+			font-size: calc(14 * 1em / 14);
 		}
 
 		.author-name {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 		}
 
 		.author-username {
-			font-size: 10px;
+			font-size: calc(10 * 1em / 14);
 		}
 
 		.time-separator {
-			font-size: 10px;
+			font-size: calc(10 * 1em / 14);
 		}
 
 		.tweet-time {
-			font-size: 10px;
+			font-size: calc(10 * 1em / 14);
 		}
 
 		.tweet-text {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 			-webkit-line-clamp: 2;
 			line-clamp: 2;
 		}
 
 		.tweet-title {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 		}
 
 		.tweet-subtitle {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 		}
 
 		.tweet-status {
-			font-size: 10px;
+			font-size: calc(10 * 1em / 14);
 		}
 	}
 </style>

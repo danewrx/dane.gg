@@ -294,7 +294,7 @@
 
 	.post-title {
 		color: var(--text-primary, #ffffff);
-		font-size: 20px;
+		font-size: calc(20 * 1em / 14);
 		font-weight: 600;
 		margin: 0;
 		line-height: 1.3;
@@ -312,7 +312,7 @@
 
 	.post-date {
 		color: var(--text-muted, #9ca3af);
-		font-size: 13px;
+		font-size: calc(13 * 1em / 14);
 		margin: 0;
 		display: flex;
 		align-items: center;
@@ -332,7 +332,7 @@
 		padding: 6px 12px;
 		background: var(--bg-tertiary, #2a2a2a);
 		border-radius: 0;
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 		color: var(--text-secondary, #d1d5db);
 		border: 1px solid var(--border-color, #4a4a4a);
 	}
@@ -343,7 +343,7 @@
 		background: none;
 		border: none;
 		color: var(--text-primary, #ffffff);
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		text-align: left;
 		cursor: pointer;
 		transition: color 0.2s ease;
@@ -384,7 +384,7 @@
 
 	.loading-more p {
 		color: var(--text-secondary, #9ca3af);
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		margin: 0;
 	}
 
@@ -404,20 +404,20 @@
 		}
 
 		.post-title {
-			font-size: 18px;
+			font-size: calc(18 * 1em / 14);
 		}
 
 		.post-date {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 		}
 
 		.tag {
-			font-size: 11px;
+			font-size: calc(11 * 1em / 14);
 			padding: 5px 10px;
 		}
 
 		.read-more {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 		}
 	}
 </style>

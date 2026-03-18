@@ -28,6 +28,7 @@
 		headingFontFamily: string;
 		fontScale: string;
 		borderRadius: string;
+		widgetBorderRadius?: string;
 		customCss: string | null;
 	}
 	

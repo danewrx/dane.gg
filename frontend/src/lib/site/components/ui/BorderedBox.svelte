@@ -89,9 +89,11 @@
 		width: 100%;
 		background: var(--box-background-color, var(--theme-surface, #1a1a1a));
 		border: 2px solid var(--box-border-color, var(--theme-border, #ffffff));
+		border-radius: var(--theme-widget-border-radius, var(--theme-border-radius, 0px));
 		padding: 0 12px;
 		transition: all 0.3s ease;
 		box-sizing: border-box;
+		overflow: hidden;
 	}
 	
 	.bordered-box.dynamic-height {
@@ -134,7 +136,7 @@
 	}
 
 	.header-text {
-		font-size: 16px;
+		font-size: calc(16 * 1em / 14);
 		font-weight: bold;
 		color: var(--theme-text-primary, var(--text-primary, #ffffff));
 		margin: 0 0 4px 0;

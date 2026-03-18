@@ -418,7 +418,7 @@
 
 	.default-placeholder .track-title {
 		font-weight: 500;
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		color: var(--text-primary, #ffffff);
 		margin: 0;
 		padding: 0;
@@ -428,7 +428,7 @@
 	}
 
 	.default-placeholder .track-artist {
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		color: var(--text-muted, #999999);
 		margin: 0;
 		padding: 0;
@@ -438,7 +438,7 @@
 	}
 
 	.default-placeholder .track-status {
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 		margin: 0;
 		padding: 0;
 		line-height: 1.4;
@@ -476,7 +476,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 18px;
+		font-size: calc(18 * 1em / 14);
 		color: var(--theme-text-muted, var(--text-muted, #999999));
 		border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.15));
 	}
@@ -496,7 +496,7 @@
 
 	.track-title {
 		font-weight: 600;
-		font-size: 15px;
+		font-size: calc(15 * 1em / 14);
 		color: var(--text-primary, #ffffff);
 		margin: 0;
 		padding: 0;
@@ -518,7 +518,7 @@
 	}
 
 	.track-artist {
-		font-size: 15px;
+		font-size: calc(15 * 1em / 14);
 		color: var(--text-primary, #ffffff);
 		margin: 0;
 		padding: 0;
@@ -535,7 +535,7 @@
 	}
 
 	.track-status {
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 		margin: 0;
 		padding: 0;
 		line-height: 1.4;
@@ -591,27 +591,27 @@
 		}
 		
 		.track-title {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 		}
 		
 		.track-artist {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 		}
 		
 		.track-status {
-			font-size: 11px;
+			font-size: calc(11 * 1em / 14);
 		}
 
 		.default-placeholder .track-title {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 		}
 
 		.default-placeholder .track-artist {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 		}
 
 		.default-placeholder .track-status {
-			font-size: 11px;
+			font-size: calc(11 * 1em / 14);
 		}
 		
 		:global(.track-title.scroll),
@@ -636,27 +636,27 @@
 		}
 		
 		.track-title {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 		}
 		
 		.track-artist {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 		}
 		
 		.track-status {
-			font-size: 10px;
+			font-size: calc(10 * 1em / 14);
 		}
 
 		.default-placeholder .track-title {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 		}
 
 		.default-placeholder .track-artist {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 		}
 
 		.default-placeholder .track-status {
-			font-size: 10px;
+			font-size: calc(10 * 1em / 14);
 		}
 	}
 </style>

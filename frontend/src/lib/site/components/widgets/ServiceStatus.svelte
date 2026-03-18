@@ -177,7 +177,7 @@
 		gap: 8px;
 		padding: 16px;
 		color: var(--theme-text-secondary, var(--text-secondary, #9ca3af));
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		justify-content: center;
 		font-family: var(--ascii-font-family, 'JetBrains Mono', 'Courier New', monospace);
 	}
@@ -215,14 +215,14 @@
 	}
 
 	.status-name {
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		color: var(--theme-text-primary, #333333);
 		font-weight: 500;
 		flex-shrink: 0;
 	}
 
 	.status-indicator {
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		color: var(--status-color, #00ff00);
 		font-weight: normal;
 		white-space: nowrap;
@@ -235,7 +235,7 @@
 		justify-content: center;
 		gap: 6px;
 		padding: 8px 0;
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 		color: var(--theme-text-secondary, var(--text-secondary, #9ca3af));
 	}
 

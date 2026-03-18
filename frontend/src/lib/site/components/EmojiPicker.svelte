@@ -489,7 +489,7 @@
 		z-index: 10000;
 		overflow: hidden;
 		font-family: 'MS Sans Serif', 'Segoe UI', sans-serif;
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 		border: 2px outset var(--theme-border, #4a4a4a);
 		background: var(--theme-surface, #2a2a2a);
 		box-shadow: 
@@ -526,7 +526,7 @@
 		color: #e0e0e0;
 		padding: 0 3px;
 		font-weight: bold;
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 		user-select: none;
 		cursor: default;
 		border-bottom: 1px solid #1a1a1a;
@@ -540,7 +540,7 @@
 		align-items: center;
 		justify-content: center;
 		margin: 0 3px;
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 	}
 
 	.titlebar-text {
@@ -561,7 +561,7 @@
 		border: 1px solid #4a4a4a;
 		background: #3a3a3a;
 		color: #e0e0e0;
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 		line-height: 1;
 		cursor: pointer;
 		display: flex;
@@ -591,7 +591,7 @@
 
 	.titlebar-button.close {
 		font-weight: bold;
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 	}
 
 	.win95-menubar {
@@ -608,7 +608,7 @@
 		padding: 3px 10px;
 		cursor: default;
 		color: #e0e0e0;
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 		user-select: none;
 	}
 
@@ -651,7 +651,7 @@
 		background: #3a3a3a;
 		border: 1px outset #3a3a3a;
 		color: #e0e0e0;
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 		cursor: pointer;
 		white-space: nowrap;
 		font-family: inherit;
@@ -721,7 +721,7 @@
 
 	.category-heading {
 		color: #e0e0e0;
-		font-size: 13px;
+		font-size: calc(13 * 1em / 14);
 		font-weight: bold;
 		padding: 4px 0;
 		border-bottom: 1px solid #3a3a3a;
@@ -751,7 +751,7 @@
 		min-width: 36px;
 		background: #1a1a1a;
 		border: 1px solid #3a3a3a;
-		font-size: 20px;
+		font-size: calc(20 * 1em / 14);
 		line-height: 1;
 		cursor: pointer;
 		padding: 0;
@@ -767,7 +767,7 @@
 	@media (max-width: 480px) {
 		.win95-char-button {
 			min-width: 32px;
-			font-size: 18px;
+			font-size: calc(18 * 1em / 14);
 		}
 	}
 
@@ -801,7 +801,7 @@
 		border-bottom: 1px solid #555555;
 		padding: 0 6px;
 		align-items: center;
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 		color: #e0e0e0;
 	}
 

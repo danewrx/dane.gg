@@ -116,14 +116,14 @@
 	.stat-label {
 		color: var(--theme-text-secondary, var(--text-secondary, #a1a1aa));
 		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
-		font-size: 16px;
+		font-size: calc(16 * 1em / 14);
 		font-weight: normal;
 	}
 
 	.stat-value {
 		color: var(--theme-accent, #90ee90);
 		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
-		font-size: 16px;
+		font-size: calc(16 * 1em / 14);
 		font-weight: normal;
 		text-shadow: 
 			0 0 10px var(--theme-accent, #90ee90),

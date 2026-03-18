@@ -77,14 +77,14 @@
 
 	.typing-text {
 		color: var(--text-primary, #ffffff);
-		font-size: 24px;
+		font-size: calc(24 * 1em / 14);
 		font-weight: 600;
 		letter-spacing: 1px;
 	}
 
 	.cursor {
 		color: var(--text-primary, #ffffff);
-		font-size: 24px;
+		font-size: calc(24 * 1em / 14);
 		font-weight: 600;
 		animation: blink 1s infinite;
 		margin-left: 2px;
@@ -107,7 +107,7 @@
 
 		.typing-text,
 		.cursor {
-			font-size: 20px;
+			font-size: calc(20 * 1em / 14);
 		}
 	}
 </style>

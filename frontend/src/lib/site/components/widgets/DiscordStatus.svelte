@@ -121,7 +121,7 @@
 	}
 
 	.status-prefix {
-		font-size: 20px;
+		font-size: calc(20 * 1em / 14);
 		font-weight: normal;
 		color: var(--theme-text-secondary, #cccccc);
 		display: inline-block;
@@ -138,7 +138,7 @@
 	}
 
 	.status-state {
-		font-size: 28px;
+		font-size: calc(28 * 1em / 14);
 		font-weight: bold;
 		background: linear-gradient(to bottom, #440000, #ff0000, #ff4444);
 		-webkit-background-clip: text;
@@ -172,7 +172,7 @@
 	}
 
 	.status-exclaim {
-		font-size: 28px;
+		font-size: calc(28 * 1em / 14);
 		font-weight: bold;
 		background: linear-gradient(to bottom, #440000, #ff0000, #ff4444);
 		-webkit-background-clip: text;
@@ -222,11 +222,11 @@
 		}
 		
 		.status-prefix {
-			font-size: 20px;
+			font-size: calc(20 * 1em / 14);
 		}
 		
 		.status-state, .status-exclaim {
-			font-size: 26px;
+			font-size: calc(26 * 1em / 14);
 		}
 		
 	}
@@ -237,11 +237,11 @@
 		}
 		
 		.status-prefix {
-			font-size: 18px;
+			font-size: calc(18 * 1em / 14);
 		}
 		
 		.status-state, .status-exclaim {
-			font-size: 24px;
+			font-size: calc(24 * 1em / 14);
 		}
 		
 	}

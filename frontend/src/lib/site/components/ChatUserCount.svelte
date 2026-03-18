@@ -17,7 +17,7 @@
 		align-items: center;
 		gap: 4px;
 		color: var(--theme-accent, #90ee90);
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		font-weight: normal;
 		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
 		text-shadow: 

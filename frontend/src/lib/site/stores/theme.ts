@@ -1,5 +1,6 @@
 import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
+import { clampThemeFontScale } from '$lib/site/constants/themeFontScale';
 
 export interface SiteTheme {
 	id: string;
@@ -39,6 +40,7 @@ export interface SiteTheme {
 	
 	// Other
 	borderRadius: string;
+	widgetBorderRadius?: string;
 	customCss: string | null;
 }
 
@@ -77,6 +79,7 @@ export const DEFAULT_THEME: SiteTheme = {
 	
 	// Other
 	borderRadius: '0px',
+	widgetBorderRadius: '0px',
 	customCss: null
 };
 
@@ -110,7 +113,7 @@ export const themeBackground = derived(siteTheme, ($theme) => ({
 export const themeFonts = derived(siteTheme, ($theme) => ({
 	body: $theme.fontFamily,
 	heading: $theme.headingFontFamily,
-	scale: $theme.fontScale
+	scale: clampThemeFontScale($theme.fontScale)
 }));
 
 /**
@@ -192,8 +195,17 @@ export function applyThemeStyles(theme: SiteTheme): void {
 	root.style.setProperty('--theme-bg-attachment', theme.backgroundAttachment);
 
 	// Typography
-	root.style.setProperty('--theme-font-scale', theme.fontScale);
-	root.style.setProperty('--theme-border-radius', theme.borderRadius);
+	root.style.setProperty(
+		'--theme-font-scale',
+		clampThemeFontScale(theme.fontScale)
+	);
+	root.style.setProperty(
+		'--theme-border-radius',
+		theme.borderRadius?.trim() || '0px'
+	);
+	const widgetR =
+		theme.widgetBorderRadius?.trim() || theme.borderRadius?.trim() || '0px';
+	root.style.setProperty('--theme-widget-border-radius', widgetR);
 	
 	// Font families (with fallbacks)
 	const bodyFont = theme.fontFamily ? `'${theme.fontFamily}', sans-serif` : 'sans-serif';

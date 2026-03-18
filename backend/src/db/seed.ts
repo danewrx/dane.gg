@@ -566,6 +566,7 @@ Stay tuned for the full article!`,
         
         // Other
         borderRadius: '0px',
+        widgetBorderRadius: '0px',
         customCss: null,
         displayOrder: 0
       },
@@ -603,6 +604,7 @@ Stay tuned for the full article!`,
         
         // Other - Sharp edges for cyberpunk aesthetic
         borderRadius: '0px',
+        widgetBorderRadius: '0px',
         customCss: `
 /* Cyberpunk glow effects */
 .nav-link:hover, .btn:hover {
@@ -648,6 +650,7 @@ Stay tuned for the full article!`,
         
         // Other - Rounded corners for soft aesthetic
         borderRadius: '0px',
+        widgetBorderRadius: '0px',
         customCss: `
 /* Kawaii soft shadows and effects */
 .card, .surface {

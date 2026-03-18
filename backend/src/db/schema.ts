@@ -344,6 +344,7 @@ export const themes = websiteSchema.table('themes', {
   
   // Additional styling
   borderRadius: varchar('border_radius', { length: 20 }).default('8px'),
+  widgetBorderRadius: varchar('widget_border_radius', { length: 20 }).default('8px'),
   
   // Custom CSS (advanced users)
   customCss: text('custom_css'),

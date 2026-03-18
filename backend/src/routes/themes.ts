@@ -162,6 +162,7 @@ router.post('/', requireAuth, async (req, res) => {
       headingFontFamily,
       fontScale,
       borderRadius,
+      widgetBorderRadius,
       customCss
     } = req.body;
 
@@ -200,6 +201,7 @@ router.post('/', requireAuth, async (req, res) => {
       headingFontFamily: headingFontFamily || 'Inter',
       fontScale: fontScale || '1',
       borderRadius: borderRadius || '8px',
+      widgetBorderRadius: widgetBorderRadius || borderRadius || '8px',
       customCss: customCss || null,
       displayOrder: maxOrder + 1
     }).returning();
@@ -318,6 +320,7 @@ router.put('/:id', requireAuth, async (req, res) => {
       headingFontFamily,
       fontScale,
       borderRadius,
+      widgetBorderRadius,
       customCss,
       displayOrder
     } = req.body;
@@ -349,6 +352,7 @@ router.put('/:id', requireAuth, async (req, res) => {
     if (headingFontFamily !== undefined) updateData.headingFontFamily = headingFontFamily;
     if (fontScale !== undefined) updateData.fontScale = fontScale;
     if (borderRadius !== undefined) updateData.borderRadius = borderRadius;
+    if (widgetBorderRadius !== undefined) updateData.widgetBorderRadius = widgetBorderRadius;
     if (customCss !== undefined) updateData.customCss = customCss;
     if (displayOrder !== undefined) updateData.displayOrder = displayOrder;
 
@@ -422,6 +426,7 @@ router.post('/:id/duplicate', requireAuth, async (req, res) => {
       headingFontFamily: originalTheme.headingFontFamily,
       fontScale: originalTheme.fontScale,
       borderRadius: originalTheme.borderRadius,
+      widgetBorderRadius: originalTheme.widgetBorderRadius ?? originalTheme.borderRadius,
       customCss: originalTheme.customCss,
       displayOrder: maxOrder + 1
     }).returning();

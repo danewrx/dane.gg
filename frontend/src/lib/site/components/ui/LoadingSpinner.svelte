@@ -49,7 +49,7 @@
 
   .loading-text {
     color: var(--theme-text-secondary, #6b7280);
-    font-size: 0.875rem;
+    font-size: calc(14 * 1em / 14);
     margin: 0;
   }
 

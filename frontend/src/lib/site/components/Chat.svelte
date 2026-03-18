@@ -1378,7 +1378,7 @@
 		overflow-x: hidden;
 		padding: 0;
 		color: var(--theme-text-primary, #e8e8e8);
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		line-height: 1.5;
 		min-height: 0;
 	}
@@ -1604,7 +1604,7 @@
 		cursor: pointer;
 		width: 100%;
 		text-align: left;
-		font-size: 13px;
+		font-size: calc(13 * 1em / 14);
 		transition: background 0.1s;
 	}
 
@@ -1625,7 +1625,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 16px;
+		font-size: calc(16 * 1em / 14);
 	}
 
 	.autocomplete-emoji-img {
@@ -1652,7 +1652,7 @@
 
 	.input-prompt {
 		color: var(--theme-text-primary, #e8e8e8);
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		font-weight: bold;
 		user-select: none;
 		line-height: 1;
@@ -1667,7 +1667,7 @@
 		border: none;
 		color: var(--theme-text-primary, #e8e8e8);
 		font-family: 'Courier New', monospace;
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		line-height: 1.5;
 		min-height: 20px;
 		height: auto;
@@ -1724,7 +1724,7 @@
 	}
 
 	:global(.emoji-hover .tooltip-emoji-char) {
-		font-size: 32px;
+		font-size: calc(32 * 1em / 14);
 		line-height: 1;
 		display: block;
 		text-align: center;
@@ -1739,7 +1739,7 @@
 	}
 
 	:global(.emoji-hover .tooltip-name) {
-		font-size: 11px;
+		font-size: calc(11 * 1em / 14);
 		color: var(--theme-text-muted, #b0b0b0);
 		font-family: 'Courier New', monospace;
 		display: block;
@@ -1754,7 +1754,7 @@
 		padding: 6px 12px;
 		cursor: pointer;
 		font-family: 'Courier New', monospace;
-		font-size: 15px;
+		font-size: calc(15 * 1em / 14);
 		font-weight: bold;
 		min-width: 40px;
 		height: 28px;
@@ -1790,12 +1790,12 @@
 		}
 
 		.chat-messages {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 			padding: 10px;
 		}
 
 		.chat-input {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 			padding: 6px 10px;
 		}
 	}

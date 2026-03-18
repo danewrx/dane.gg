@@ -45,7 +45,7 @@
 		align-items: center;
 		gap: 8px;
 		cursor: pointer;
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 		color: var(--theme-text-primary, #ffffff);
 	}
 

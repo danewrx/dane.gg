@@ -67,7 +67,7 @@
 		border-radius: 6px;
 		color: var(--text-secondary);
 		font-family: inherit;
-		font-size: 0.875rem;
+		font-size: calc(14 * 1em / 14);
 		font-weight: 500;
 		cursor: pointer;
 		transition: all 0.2s ease;
@@ -121,7 +121,7 @@
 	@media (max-width: 480px) {
 		.tab-option {
 			padding: 6px 12px;
-			font-size: 0.75rem;
+			font-size: calc(12 * 1em / 14);
 		}
 	}
 </style>

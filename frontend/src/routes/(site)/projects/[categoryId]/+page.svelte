@@ -262,7 +262,7 @@
 		gap: 0.5rem;
 		color: var(--theme-text-secondary, #a1a1aa);
 		text-decoration: none;
-		font-size: 0.75rem;
+		font-size: calc(0.75 * 16 * 1em / 14);
 		font-weight: 500;
 		transition: all 0.2s ease;
 		z-index: 1;
@@ -283,14 +283,14 @@
 	}
 
 	.back-arrow {
-		font-size: 0.875rem;
+		font-size: calc(0.875 * 16 * 1em / 14);
 		transition: transform 0.2s ease;
 	}
 
 	.back-text {
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
-		font-size: 0.7rem;
+		font-size: calc(0.7 * 16 * 1em / 14);
 	}
 
 	.projects-grid {
@@ -360,7 +360,7 @@
 	}
 
 	.project-title {
-		font-size: 1.5rem;
+		font-size: calc(1.5 * 16 * 1em / 14);
 		font-weight: 700;
 		color: var(--theme-text-primary, #ffffff);
 		margin: 0;
@@ -400,7 +400,7 @@
 	}
 
 	.status-text {
-		font-size: 0.75rem;
+		font-size: calc(0.75 * 16 * 1em / 14);
 		font-weight: 500;
 		color: var(--theme-text-secondary, #a1a1aa);
 		white-space: nowrap;
@@ -423,7 +423,7 @@
 	.tag {
 		padding: 0.2rem 0.45rem;
 		border-radius: 0;
-		font-size: 0.7rem;
+		font-size: calc(0.7 * 16 * 1em / 14);
 		font-weight: 500;
 		border: 1px solid;
 		display: inline-block;
@@ -460,7 +460,7 @@
 		border: 1px solid var(--theme-border, #ffffff);
 		border-radius: 0;
 		text-decoration: none;
-		font-size: 0.875rem;
+		font-size: calc(0.875 * 16 * 1em / 14);
 		font-weight: 500;
 		transition: all 0.2s ease;
 		flex: 1;
@@ -479,7 +479,7 @@
 	}
 
 	.action-button .text-icon {
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 		font-weight: 600;
 		line-height: 1;
 	}
@@ -494,7 +494,7 @@
 		}
 
 		.project-title {
-			font-size: 1.25rem;
+			font-size: calc(1.25 * 16 * 1em / 14);
 		}
 
 		.project-header {
@@ -510,7 +510,7 @@
 
 	@media (max-width: 480px) {
 		.project-title {
-			font-size: 1.125rem;
+			font-size: calc(1.125 * 16 * 1em / 14);
 		}
 
 		.project-header {

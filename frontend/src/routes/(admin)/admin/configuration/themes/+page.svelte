@@ -18,6 +18,12 @@
 	} from 'lucide-svelte';
 	import FileUpload, { type UploadedFile } from '$lib/admin/components/ui/FileUpload.svelte';
 	import FontPicker from '$lib/admin/components/ui/FontPicker.svelte';
+	import {
+		THEME_FONT_SCALE_MIN,
+		THEME_FONT_SCALE_MAX,
+		THEME_FONT_SCALE_STEP,
+		clampThemeFontScale
+	} from '$lib/site/constants/themeFontScale';
 
 	interface Theme {
 		id: string;
@@ -45,6 +51,7 @@
 		headingFontFamily: string;
 		fontScale: string;
 		borderRadius: string;
+		widgetBorderRadius?: string;
 		customCss: string | null;
 		displayOrder: number;
 		createdAt: string;
@@ -67,6 +74,14 @@
 	let isCreating = $state(false);
 	let previewMode = $state<'site' | 'colors'>('site');
 	
+	function setFontScaleFromSlider(e: Event) {
+		formData.fontScale = (e.target as HTMLInputElement).value;
+	}
+
+	function clampFontScaleInput() {
+		formData.fontScale = clampThemeFontScale(formData.fontScale);
+	}
+
 	// Form state
 	let formData = $state({
 		name: '',
@@ -92,8 +107,11 @@
 		headingFontFamily: 'Inter',
 		fontScale: '1',
 		borderRadius: '8px',
+		widgetBorderRadius: '8px',
 		customCss: ''
 	});
+
+	let fontScaleNumeric = $derived(parseFloat(clampThemeFontScale(formData.fontScale)));
 
 	onMount(async () => {
 		await loadThemes();
@@ -142,6 +160,7 @@
 			headingFontFamily: 'Inter',
 			fontScale: '1',
 			borderRadius: '8px',
+			widgetBorderRadius: '8px',
 			customCss: '',
 			isVisible: false
 		};
@@ -176,8 +195,9 @@
 			backgroundAttachment: theme.backgroundAttachment,
 			fontFamily: theme.fontFamily,
 			headingFontFamily: theme.headingFontFamily,
-			fontScale: theme.fontScale,
+			fontScale: clampThemeFontScale(theme.fontScale),
 			borderRadius: theme.borderRadius,
+			widgetBorderRadius: theme.widgetBorderRadius ?? theme.borderRadius,
 			customCss: theme.customCss || ''
 		};
 		editingTheme = theme;
@@ -257,8 +277,9 @@
 				backgroundAttachment: formData.backgroundAttachment,
 				fontFamily: formData.fontFamily,
 				headingFontFamily: formData.headingFontFamily,
-				fontScale: formData.fontScale,
+				fontScale: clampThemeFontScale(formData.fontScale),
 				borderRadius: formData.borderRadius,
+				widgetBorderRadius: formData.widgetBorderRadius,
 				customCss: formData.customCss.trim() || null
 			};
 
@@ -685,17 +706,32 @@
 							</div>
 						</div>
 						<div class="form-row">
-							<div class="form-group">
+							<div class="form-group font-scale-group">
 								<label>Font Scale</label>
-								<select class="form-input" bind:value={formData.fontScale}>
-									<option value="0.875">Small (0.875)</option>
-									<option value="1">Normal (1)</option>
-									<option value="1.125">Large (1.125)</option>
-									<option value="1.25">Extra Large (1.25)</option>
-								</select>
+								<div class="font-scale-controls">
+									<input
+										type="range"
+										class="range-input font-scale-slider"
+										min={THEME_FONT_SCALE_MIN}
+										max={THEME_FONT_SCALE_MAX}
+										step={THEME_FONT_SCALE_STEP}
+										value={fontScaleNumeric}
+										oninput={setFontScaleFromSlider}
+									/>
+									<input
+										type="number"
+										class="form-input font-scale-input"
+										min={THEME_FONT_SCALE_MIN}
+										max={THEME_FONT_SCALE_MAX}
+										step={THEME_FONT_SCALE_STEP}
+										bind:value={formData.fontScale}
+										onblur={clampFontScaleInput}
+									/>
+								</div>
+								<span class="form-hint">{(fontScaleNumeric * 100).toFixed(1)}% — subtle range {THEME_FONT_SCALE_MIN}–{THEME_FONT_SCALE_MAX}</span>
 							</div>
 							<div class="form-group">
-								<label>Border Radius</label>
+								<label>Main window radius</label>
 								<select class="form-input" bind:value={formData.borderRadius}>
 									<option value="0px">None (0px)</option>
 									<option value="4px">Small (4px)</option>
@@ -703,6 +739,18 @@
 									<option value="12px">Large (12px)</option>
 									<option value="16px">Extra Large (16px)</option>
 								</select>
+								<span class="form-hint">Outer site shell (the big frame around the page).</span>
+							</div>
+							<div class="form-group">
+								<label>Widget box radius</label>
+								<select class="form-input" bind:value={formData.widgetBorderRadius}>
+									<option value="0px">None (0px)</option>
+									<option value="4px">Small (4px)</option>
+									<option value="8px">Medium (8px)</option>
+									<option value="12px">Large (12px)</option>
+									<option value="16px">Extra Large (16px)</option>
+								</select>
+								<span class="form-hint">Status, Chat, About, and other bordered panels.</span>
 							</div>
 						</div>
 					</section>
@@ -750,7 +798,9 @@
 						--preview-text-secondary: {formData.textSecondary};
 						--preview-text-muted: {formData.textMuted};
 						--preview-accent: {formData.accentColor};
-						--preview-radius: {formData.borderRadius};
+						--preview-shell-radius: {formData.borderRadius};
+						--preview-widget-radius: {formData.widgetBorderRadius};
+						--preview-font-scale: {clampThemeFontScale(formData.fontScale)};
 					"
 				>
 					{#if formData.backgroundImage}
@@ -768,6 +818,7 @@
 					{/if}
 					<div class="preview-content">
 						{#if previewMode === 'site'}
+							<div class="preview-shell">
 							<div class="preview-site">
 								<div class="preview-site-header" style="background: {formData.surfaceColor};">
 									<span class="preview-site-logo" style="font-family: '{formData.headingFontFamily}', sans-serif;">
@@ -798,6 +849,7 @@
 										</div>
 									</div>
 								</div>
+							</div>
 							</div>
 						{:else}
 							<div class="preview-colors">
@@ -1572,6 +1624,30 @@
 		cursor: pointer;
 	}
 
+	.font-scale-group .font-scale-controls {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.font-scale-slider {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.font-scale-input {
+		width: 72px;
+		flex-shrink: 0;
+		text-align: center;
+	}
+
+	.form-hint {
+		display: block;
+		margin-top: 4px;
+		font-size: 11px;
+		color: var(--text-muted, #71717a);
+	}
+
 	.code-input {
 		font-family: 'JetBrains Mono', monospace;
 		font-size: 13px;
@@ -1688,6 +1764,16 @@
 		align-items: center;
 		justify-content: center;
 		padding: 24px;
+		font-size: calc(14px * var(--preview-font-scale, 1));
+	}
+
+	.preview-shell {
+		width: 100%;
+		max-width: 440px;
+		border: 2px solid var(--preview-border);
+		border-radius: var(--preview-shell-radius);
+		overflow: hidden;
+		background: var(--preview-surface);
 	}
 
 	/* Full Site Preview */
@@ -1733,7 +1819,7 @@
 	.preview-card {
 		background: var(--preview-surface);
 		border: 1px solid var(--preview-border);
-		border-radius: var(--preview-radius);
+		border-radius: var(--preview-widget-radius);
 		padding: 20px;
 		width: 100%;
 		max-width: 400px;
@@ -1761,7 +1847,7 @@
 		background: var(--preview-accent);
 		color: white;
 		border: none;
-		border-radius: calc(var(--preview-radius) / 2);
+		border-radius: calc(var(--preview-widget-radius) / 2);
 		padding: 8px 16px;
 		font-size: 12px;
 		cursor: pointer;
@@ -1771,7 +1857,7 @@
 		background: transparent;
 		color: var(--preview-text-secondary);
 		border: 1px solid var(--preview-border);
-		border-radius: calc(var(--preview-radius) / 2);
+		border-radius: calc(var(--preview-widget-radius) / 2);
 		padding: 8px 16px;
 		font-size: 12px;
 		cursor: pointer;

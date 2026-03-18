@@ -75,6 +75,7 @@
 		--theme-text-secondary: #a1a1aa;
 		--theme-text-muted: #71717a;
 		--theme-border-radius: 8px;
+		--theme-widget-border-radius: 8px;
 		--theme-font-scale: 1;
 		
 		--bg-primary: var(--theme-surface);

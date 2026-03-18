@@ -23,6 +23,7 @@
   --theme-text-secondary: #a1a1aa;
   --theme-text-muted: #71717a;
   --theme-border-radius: 8px;
+  --theme-widget-border-radius: 8px;
   --theme-font-scale: 1;
   
   /* Legacy variables mapped to theme */
@@ -48,6 +49,10 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
 }
 
 html, body {
@@ -87,7 +92,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1rem;
+  padding: 32px 16px;
 }
 
 /* Content window - clean terminal style */
@@ -107,14 +112,21 @@ body {
 }
 
 
-/* Content area */
+/* Content area — theme font scale applies to typography only (layout padding stays in px) */
 .content-area {
-  padding: 2rem;
+  padding: 24px;
   flex: 1;
   overflow-y: auto;
   background: var(--theme-background, #000000);
   color: var(--theme-text-primary, #ffffff);
   height: 100%;
+  /* Base = 14px × theme scale; use calc(N * 1em / 14) or inherit for body text */
+  font-size: calc(14px * var(--theme-font-scale, 1));
+}
+
+/* Flow text inherits scaled base (markdown HTML, :global slots); widgets with explicit font-size still win */
+.content-area :not(.ascii-box) :is(p, li, dd, dt, blockquote, figcaption) {
+  font-size: inherit;
 }
 
 /* Scrollbar styling */
@@ -146,7 +158,7 @@ body {
 
 @media (max-width: 768px) {
   .main-container {
-    padding: 1rem 0.5rem;
+    padding: 16px 8px;
   }
   
   .content-window {
@@ -156,13 +168,13 @@ body {
   }
   
   .content-area {
-    padding: 1rem;
+    padding: 16px;
   }
 }
 
 @media (max-width: 480px) {
   .main-container {
-    padding: 0.5rem;
+    padding: 8px;
   }
   
   .content-window {
@@ -171,7 +183,7 @@ body {
   }
   
   .content-area {
-    padding: 0.75rem;
+    padding: 12px;
   }
 }
 
