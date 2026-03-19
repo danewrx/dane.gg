@@ -337,6 +337,16 @@ export function applyCustomCss(css: string | null): void {
 	}
 }
 
+/**
+ * Used by theme preview iframe: updates store; subscriber applies CSS + fonts + customCss.
+ */
+export function applyThemePreviewPayload(theme: SiteTheme): void {
+	if (!browser) return;
+	siteTheme.set(theme);
+	themeLoading.set(false);
+	themeError.set(null);
+}
+
 // Subscribe to theme changes and apply styles
 if (browser) {
 	siteTheme.subscribe((theme) => {

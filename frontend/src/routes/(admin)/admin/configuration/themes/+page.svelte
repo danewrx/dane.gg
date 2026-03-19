@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
+	import { page } from '$app/stores';
 	import { toast } from 'svelte-sonner';
 	import { 
 		Loader2, 
@@ -24,6 +26,21 @@
 		THEME_FONT_SCALE_STEP,
 		clampThemeFontScale
 	} from '$lib/site/constants/themeFontScale';
+	import type { SiteTheme } from '$lib/site/stores/theme';
+	import {
+		THEME_PREVIEW_SEARCH_PARAM,
+		THEME_PREVIEW_MSG_APPLY,
+		THEME_PREVIEW_MSG_READY
+	} from '$lib/site/themePreview';
+
+	const PREVIEW_ROUTES = [
+		{ label: 'Home', path: '/' },
+		{ label: 'About', path: '/about' },
+		{ label: 'Projects', path: '/projects' },
+		{ label: 'Contact', path: '/contact' },
+		{ label: 'Blog', path: '/blog' }
+	] as const;
+
 	interface Theme {
 		id: string;
 		name: string;
@@ -52,6 +69,8 @@
 		borderRadius: string;
 		widgetBorderRadius?: string;
 		customCss: string | null;
+		bodyFontUrl?: string | null;
+		headingFontUrl?: string | null;
 		displayOrder: number;
 		createdAt: string;
 		updatedAt: string;
@@ -71,7 +90,90 @@
 	// Edit/Create mode
 	let editingTheme = $state<Theme | null>(null);
 	let isCreating = $state(false);
+	let editorWorkspaceTab = $state<'editor' | 'preview'>('editor');
 	let previewMode = $state<'site' | 'colors'>('site');
+	let previewPath = $state<string>(PREVIEW_ROUTES[0].path);
+	let previewIframeReady = $state(false);
+	let previewIframeEl = $state<HTMLIFrameElement | null>(null);
+
+	let previewIframeSrc = $derived.by(() => {
+		if (!browser) return '';
+		try {
+			const u = new URL(previewPath, $page.url.origin);
+			u.searchParams.set(THEME_PREVIEW_SEARCH_PARAM, '1');
+			return u.toString();
+		} catch {
+			return '';
+		}
+	});
+
+	function buildPreviewSiteTheme(): SiteTheme {
+		return {
+			id: editingTheme?.id ?? 'preview',
+			name: formData.name?.trim() || 'Preview',
+			description: formData.description?.trim() || null,
+			isActive: true,
+			isDefault: false,
+			primaryColor: formData.primaryColor,
+			secondaryColor: formData.secondaryColor,
+			accentColor: formData.accentColor,
+			backgroundColor: formData.backgroundColor,
+			surfaceColor: formData.surfaceColor,
+			borderColor: formData.borderColor,
+			textPrimary: formData.textPrimary,
+			textSecondary: formData.textSecondary,
+			textMuted: formData.textMuted,
+			backgroundImage: formData.backgroundImage?.trim() || null,
+			backgroundImageExternal: formData.backgroundImageExternal,
+			backgroundOverlay: formData.backgroundOverlay,
+			backgroundBlur: formData.backgroundBlur,
+			backgroundPosition: formData.backgroundPosition,
+			backgroundSize: formData.backgroundSize,
+			backgroundAttachment: formData.backgroundAttachment,
+			fontFamily: formData.fontFamily,
+			headingFontFamily: formData.headingFontFamily,
+			fontScale: clampThemeFontScale(formData.fontScale),
+			borderRadius: formData.borderRadius,
+			widgetBorderRadius: formData.widgetBorderRadius,
+			customCss: formData.customCss?.trim() || null,
+			bodyFontUrl: editingTheme?.bodyFontUrl ?? null,
+			headingFontUrl: editingTheme?.headingFontUrl ?? null
+		};
+	}
+
+	function pushPreviewToIframe(): void {
+		if (!browser || !previewIframeReady) return;
+		const win = previewIframeEl?.contentWindow;
+		if (!win) return;
+		win.postMessage(
+			{ type: THEME_PREVIEW_MSG_APPLY, theme: buildPreviewSiteTheme() },
+			window.location.origin
+		);
+	}
+
+	$effect(() => {
+		previewPath;
+		previewIframeReady = false;
+	});
+
+	$effect(() => {
+		if (previewMode !== 'site') {
+			previewIframeReady = false;
+		}
+	});
+
+	$effect(() => {
+		if (!browser || previewMode !== 'site') return;
+		JSON.stringify(formData);
+		editingTheme?.id;
+		editingTheme?.bodyFontUrl;
+		editingTheme?.headingFontUrl;
+		if (!previewIframeReady) return;
+		const t = window.setTimeout(() => {
+			pushPreviewToIframe();
+		}, 80);
+		return () => window.clearTimeout(t);
+	});
 	
 	function setFontScaleFromSlider(e: Event) {
 		formData.fontScale = (e.target as HTMLInputElement).value;
@@ -112,8 +214,17 @@
 
 	let fontScaleNumeric = $derived(parseFloat(clampThemeFontScale(formData.fontScale)));
 
-	onMount(async () => {
-		await loadThemes();
+	onMount(() => {
+		function onWinMsg(e: MessageEvent) {
+			if (e.origin !== window.location.origin) return;
+			if (e.data?.type === THEME_PREVIEW_MSG_READY) {
+				previewIframeReady = true;
+				pushPreviewToIframe();
+			}
+		}
+		window.addEventListener('message', onWinMsg);
+		void loadThemes();
+		return () => window.removeEventListener('message', onWinMsg);
 	});
 
 	async function loadThemes() {
@@ -169,6 +280,7 @@
 		resetForm();
 		editingTheme = null;
 		isCreating = true;
+		editorWorkspaceTab = 'editor';
 	}
 
 	function startEditing(theme: Theme) {
@@ -201,6 +313,7 @@
 		};
 		editingTheme = theme;
 		isCreating = false;
+		editorWorkspaceTab = 'editor';
 	}
 
 	function cancelEdit() {
@@ -480,9 +593,11 @@
 </script>
 
 <div class="themes-settings">
-	<div class="settings-description">
-		<p>Create and manage site themes. Themes control colors, backgrounds, typography, and visual styling across the entire site.</p>
-	</div>
+	{#if !isCreating && !editingTheme}
+		<div class="settings-description">
+			<p>Create and manage site themes. Themes control colors, backgrounds, typography, and visual styling across the entire site.</p>
+		</div>
+	{/if}
 
 	{#if isLoading}
 		<div class="loading-state">
@@ -491,7 +606,10 @@
 		</div>
 	{:else if isCreating || editingTheme}
 		<!-- Theme Editor -->
-		<div class="theme-editor">
+		<div
+			class="theme-editor"
+			class:theme-editor--preview={editorWorkspaceTab === 'preview'}
+		>
 			<div class="editor-header">
 				<h2>{editingTheme ? 'Edit Theme' : 'Create New Theme'}</h2>
 				<button class="close-btn" onclick={cancelEdit}>
@@ -499,7 +617,37 @@
 				</button>
 			</div>
 
-			<div class="editor-content">
+			<div class="editor-workspace-tabs" role="tablist" aria-label="Theme editor workspace">
+				<button
+					type="button"
+					class="workspace-tab"
+					class:active={editorWorkspaceTab === 'editor'}
+					role="tab"
+					aria-selected={editorWorkspaceTab === 'editor'}
+					id="tab-theme-editor"
+					onclick={() => (editorWorkspaceTab = 'editor')}
+				>
+					Editor
+				</button>
+				<button
+					type="button"
+					class="workspace-tab"
+					class:active={editorWorkspaceTab === 'preview'}
+					role="tab"
+					aria-selected={editorWorkspaceTab === 'preview'}
+					id="tab-theme-preview"
+					onclick={() => (editorWorkspaceTab = 'preview')}
+				>
+					Live preview
+				</button>
+			</div>
+
+			<div
+				class="editor-content"
+				role="tabpanel"
+				aria-labelledby={editorWorkspaceTab === 'editor' ? 'tab-theme-editor' : 'tab-theme-preview'}
+			>
+				{#if editorWorkspaceTab === 'editor'}
 				<div class="editor-main">
 					<!-- Basic Info -->
 					<section class="editor-section">
@@ -784,29 +932,66 @@
 						</div>
 					</section>
 				</div>
-
-				<!-- Preview Panel (Full Width Below) -->
+				{:else}
 			<div class="editor-preview">
 				<div class="preview-header">
 					<h3>Live Preview</h3>
-					<div class="preview-toggle">
-						<button 
-							class:active={previewMode === 'site'}
-							onclick={() => previewMode = 'site'}
-						>
-							Site View
-						</button>
-						<button 
-							class:active={previewMode === 'colors'}
-							onclick={() => previewMode = 'colors'}
-						>
-							Colors
-						</button>
+					<div class="preview-header-actions">
+						{#if previewMode === 'site'}
+							<div class="preview-page-picker">
+								<label class="preview-page-label" for="theme-preview-route">Page</label>
+								<select
+									id="theme-preview-route"
+									class="form-input preview-route-select"
+									bind:value={previewPath}
+								>
+									{#each PREVIEW_ROUTES as r}
+										<option value={r.path}>{r.label}</option>
+									{/each}
+								</select>
+							</div>
+						{/if}
+						<div class="preview-toggle">
+							<button
+								type="button"
+								class:active={previewMode === 'site'}
+								onclick={() => (previewMode = 'site')}
+							>
+								Site View
+							</button>
+							<button
+								type="button"
+								class:active={previewMode === 'colors'}
+								onclick={() => (previewMode = 'colors')}
+							>
+								Colors
+							</button>
+						</div>
 					</div>
 				</div>
-				<div 
-					class="preview-container"
-					style="
+				{#if previewMode === 'site'}
+					<p class="form-hint preview-embed-hint">
+						Real site UI in an iframe; theme and custom CSS sync from the form. Use the page control to preview
+						Home, About, and other routes.
+					</p>
+					{#if browser}
+						<div class="preview-iframe-wrap">
+							{#key previewPath}
+								<iframe
+									class="theme-preview-iframe"
+									title="Live site theme preview"
+									bind:this={previewIframeEl}
+									src={previewIframeSrc}
+								></iframe>
+							{/key}
+						</div>
+					{:else}
+						<p class="form-hint">Open this page in the browser to load the live preview.</p>
+					{/if}
+				{:else}
+					<div
+						class="preview-container"
+						style="
 						--preview-bg: {formData.backgroundColor};
 						--preview-surface: {formData.surfaceColor};
 						--preview-border: {formData.borderColor};
@@ -821,56 +1006,21 @@
 						--preview-shell-border-w: 2px;
 						--preview-max-w: 900px;
 					"
-				>
-					{#if formData.backgroundImage}
-						<div 
-							class="preview-bg-image"
-							style="
+					>
+						{#if formData.backgroundImage}
+							<div
+								class="preview-bg-image"
+								style="
 								background-image: url('{getImageUrl(formData.backgroundImage, formData.backgroundImageExternal)}');
 								filter: blur({formData.backgroundBlur}px);
 							"
-						></div>
-						<div 
-							class="preview-overlay"
-							style="background: {formData.backgroundOverlay};"
-						></div>
-					{/if}
-					<div class="preview-content">
-						{#if previewMode === 'site'}
-							<div class="preview-shell">
-							<div class="preview-site">
-								<div class="preview-site-header" style="background: {formData.surfaceColor};">
-									<span class="preview-site-logo" style="font-family: '{formData.headingFontFamily}', sans-serif;">
-										dane.gg
-									</span>
-									<div class="preview-site-nav" style="font-family: '{formData.fontFamily}', sans-serif;">
-										<span>Home</span>
-										<span>About</span>
-										<span>Projects</span>
-										<span>Contact</span>
-									</div>
-								</div>
-								<div class="preview-site-content">
-									<div class="preview-card" style="font-family: '{formData.fontFamily}', sans-serif;">
-										<h4 style="font-family: '{formData.headingFontFamily}', sans-serif;">
-											Welcome to the Site
-										</h4>
-										<p>
-											This preview shows how your theme will look on the live site. The colors, fonts, and styling are applied in real-time as you make changes.
-										</p>
-										<div class="preview-card-footer">
-											<button class="preview-btn">
-												Primary Action
-											</button>
-											<button class="preview-btn-secondary">
-												Secondary
-											</button>
-										</div>
-									</div>
-								</div>
-							</div>
-							</div>
-						{:else}
+							></div>
+							<div
+								class="preview-overlay"
+								style="background: {formData.backgroundOverlay};"
+							></div>
+						{/if}
+						<div class="preview-content">
 							<div class="preview-colors">
 								<div class="preview-color-row">
 									<div class="preview-swatch">
@@ -913,10 +1063,11 @@
 									</div>
 								</div>
 							</div>
-						{/if}
+						</div>
 					</div>
-				</div>
+				{/if}
 			</div>
+				{/if}
 		</div>
 
 		<div class="editor-actions">
@@ -1450,10 +1601,22 @@
 
 	/* Theme Editor */
 	.theme-editor {
+		display: flex;
+		flex-direction: column;
 		background: var(--bg-secondary, #2a2a2a);
 		border: 1px solid var(--border-color, #3a3a3a);
 		border-radius: 8px;
 		overflow: hidden;
+		height: calc(100dvh - 200px);
+		max-height: calc(100dvh - 200px);
+		min-height: 480px;
+	}
+
+	/* Live preview tab */
+	.theme-editor.theme-editor--preview {
+		height: calc(100dvh - 120px);
+		max-height: calc(100dvh - 120px);
+		min-height: min(88dvh, 1100px);
 	}
 
 	.editor-header {
@@ -1462,6 +1625,38 @@
 		justify-content: space-between;
 		padding: 16px 20px;
 		border-bottom: 1px solid var(--border-color, #3a3a3a);
+		flex-shrink: 0;
+	}
+
+	.editor-workspace-tabs {
+		display: flex;
+		gap: 0;
+		padding: 0 12px;
+		background: var(--bg-primary, #1a1a1a);
+		border-bottom: 1px solid var(--border-color, #3a3a3a);
+		flex-shrink: 0;
+	}
+
+	.workspace-tab {
+		position: relative;
+		padding: 12px 18px;
+		border: none;
+		background: transparent;
+		color: var(--text-secondary, #a1a1aa);
+		font-size: 14px;
+		font-weight: 500;
+		cursor: pointer;
+		font-family: inherit;
+		transition: color 0.15s ease;
+	}
+
+	.workspace-tab:hover {
+		color: var(--text-primary, #ffffff);
+	}
+
+	.workspace-tab.active {
+		color: var(--accent-color, #ef4444);
+		box-shadow: inset 0 -2px 0 0 var(--accent-color, #ef4444);
 	}
 
 	.editor-header h2 {
@@ -1492,13 +1687,16 @@
 	.editor-content {
 		display: flex;
 		flex-direction: column;
-		max-height: calc(100vh - 200px);
+		flex: 1;
+		min-height: 0;
+		overflow: hidden;
 	}
 
 	.editor-main {
 		padding: 20px;
 		overflow-y: auto;
 		flex: 1;
+		min-height: 0;
 	}
 
 	.editor-section {
@@ -1745,16 +1943,21 @@
 
 	/* Preview Panel */
 	.editor-preview {
-		padding: 20px;
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		min-height: 0;
+		overflow: hidden;
+		padding: 16px 20px 20px;
 		background: var(--bg-tertiary, #1f1f1f);
-		border-top: 1px solid var(--border-color, #3a3a3a);
 	}
 
 	.preview-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		margin-bottom: 16px;
+		margin-bottom: 12px;
+		flex-shrink: 0;
 	}
 
 	.preview-header h3 {
@@ -1762,6 +1965,60 @@
 		font-size: 14px;
 		font-weight: 600;
 		color: var(--text-primary, #ffffff);
+	}
+
+	.preview-header-actions {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+	}
+
+	.preview-page-picker {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 12px;
+		color: var(--text-secondary, #a1a1aa);
+	}
+
+	.preview-page-label {
+		white-space: nowrap;
+		margin: 0;
+		cursor: pointer;
+	}
+
+	.preview-route-select {
+		min-width: 140px;
+		padding: 6px 10px;
+		font-size: 12px;
+	}
+
+	.preview-embed-hint {
+		margin: 0 0 10px 0;
+		flex-shrink: 0;
+	}
+
+	.preview-iframe-wrap {
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.theme-preview-iframe {
+		display: block;
+		width: 100%;
+		flex: 1;
+		min-height: 320px;
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 8px;
+		background: #0a0a0a;
+	}
+
+	.theme-editor--preview .theme-preview-iframe {
+		min-height: min(72dvh, 920px);
 	}
 
 	.preview-toggle {
@@ -1821,103 +2078,6 @@
 		font-size: calc(14px * var(--preview-font-scale, 1));
 	}
 
-	.preview-shell {
-		width: 100%;
-		max-width: min(440px, var(--preview-max-w, 900px));
-		border: var(--preview-shell-border-w, 2px) solid var(--preview-border);
-		border-radius: var(--preview-shell-radius);
-		box-shadow: var(--preview-shell-shadow);
-		overflow: hidden;
-		background: var(--preview-surface);
-	}
-
-	/* Full Site Preview */
-	.preview-site {
-		width: 100%;
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.preview-site-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 12px 16px;
-		border-bottom: 1px solid var(--preview-border);
-	}
-
-	.preview-site-logo {
-		font-size: 14px;
-		font-weight: 700;
-		color: var(--preview-text);
-	}
-
-	.preview-site-nav {
-		display: flex;
-		gap: 16px;
-	}
-
-	.preview-site-nav span {
-		font-size: 12px;
-		color: var(--preview-text-secondary);
-	}
-
-	.preview-site-content {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 20px;
-	}
-
-	.preview-card {
-		background: var(--preview-surface);
-		border: 1px solid var(--preview-border);
-		border-radius: var(--preview-widget-radius);
-		padding: 20px;
-		width: 100%;
-		max-width: 400px;
-	}
-
-	.preview-card h4 {
-		margin: 0 0 8px 0;
-		color: var(--preview-text);
-		font-size: 16px;
-	}
-
-	.preview-card p {
-		margin: 0 0 16px 0;
-		color: var(--preview-text-secondary);
-		font-size: 13px;
-		line-height: 1.5;
-	}
-
-	.preview-card-footer {
-		display: flex;
-		gap: 8px;
-	}
-
-	.preview-btn {
-		background: var(--preview-accent);
-		color: white;
-		border: none;
-		border-radius: calc(var(--preview-widget-radius) / 2);
-		padding: 8px 16px;
-		font-size: 12px;
-		cursor: pointer;
-	}
-
-	.preview-btn-secondary {
-		background: transparent;
-		color: var(--preview-text-secondary);
-		border: 1px solid var(--preview-border);
-		border-radius: calc(var(--preview-widget-radius) / 2);
-		padding: 8px 16px;
-		font-size: 12px;
-		cursor: pointer;
-	}
-
 	/* Color Swatches Preview */
 	.preview-colors {
 		display: flex;
@@ -1958,6 +2118,7 @@
 		padding: 16px 20px;
 		border-top: 1px solid var(--border-color, #3a3a3a);
 		background: var(--bg-primary, #1a1a1a);
+		flex-shrink: 0;
 	}
 
 	.save-btn {

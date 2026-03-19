@@ -1,6 +1,8 @@
 <script lang="ts">
 	import favicon from '$lib/shared/assets/favicon.svg';
 	import '../../app.css';
+	import { page } from '$app/stores';
+	import { THEME_PREVIEW_SEARCH_PARAM } from '$lib/site/themePreview';
 	import SettingsIcon from '$lib/admin/components/settings/SettingsIcon.svelte';
 	import SettingsPanel from '$lib/admin/components/settings/SettingsPanel.svelte';
 	import Header from '$lib/site/components/layout/Header.svelte';
@@ -10,6 +12,8 @@
 
 	let { children } = $props();
 	let settingsOpen = $state(false);
+
+	const isThemePreviewEmbed = $derived($page.url.searchParams.has(THEME_PREVIEW_SEARCH_PARAM));
 
 	function handleSettingsToggle() {
 		settingsOpen = !settingsOpen;
@@ -31,7 +35,9 @@
 	<ThemeProvider />
 	
 	<!-- Weather Effects -->
-	<WeatherEffects />
+	{#if !isThemePreviewEmbed}
+		<WeatherEffects />
+	{/if}
 	
 	<!-- Scanline Effect - behind content container -->
 	<div class="scanlines"></div>
@@ -49,17 +55,19 @@
 		</div>
 	</div>
 	
-	<!-- Settings Icon -->
-	<SettingsIcon 
-		isOpen={settingsOpen} 
-		on:toggle={handleSettingsToggle}
-	/>
-	
-	<!-- Settings Panel -->
-	<SettingsPanel 
-		isOpen={settingsOpen} 
-		onClose={handleSettingsClose}
-	/>
+	{#if !isThemePreviewEmbed}
+		<!-- Settings Icon -->
+		<SettingsIcon 
+			isOpen={settingsOpen} 
+			on:toggle={handleSettingsToggle}
+		/>
+		
+		<!-- Settings Panel -->
+		<SettingsPanel 
+			isOpen={settingsOpen} 
+			onClose={handleSettingsClose}
+		/>
+	{/if}
 </div>
 
 <style>
