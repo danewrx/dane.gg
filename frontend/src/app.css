@@ -24,6 +24,12 @@
   --theme-text-muted: #71717a;
   --theme-border-radius: 8px;
   --theme-widget-border-radius: 8px;
+  --theme-shell-border-width: 2px;
+  --theme-widget-border-width: 2px;
+  --theme-shell-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --theme-content-max-width: 900px;
+  --theme-scanlines-opacity: 1;
+  --theme-body-line-height: 1.65;
   --theme-font-scale: 1;
   
   /* Legacy variables mapped to theme */
@@ -122,6 +128,7 @@ body {
   height: 100%;
   /* Base = 14px × theme scale; use calc(N * 1em / 14) or inherit for body text */
   font-size: calc(14px * var(--theme-font-scale, 1));
+  line-height: var(--theme-body-line-height, 1.65);
 }
 
 /* Flow text inherits scaled base (markdown HTML, :global slots); widgets with explicit font-size still win */

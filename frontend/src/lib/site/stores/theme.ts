@@ -168,57 +168,81 @@ export async function loadSiteTheme(): Promise<void> {
 	}
 }
 
+function clearInlineThemeVars(): void {
+	if (!browser) return;
+	const root = document.documentElement;
+	const toRemove: string[] = [];
+	for (let i = 0; i < root.style.length; i++) {
+		const p = root.style.item(i);
+		if (p.startsWith('--theme-')) toRemove.push(p);
+	}
+	for (const p of toRemove) root.style.removeProperty(p);
+}
+
+function quoteCssString(s: string): string {
+	return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+/**
+ * Theme fields as a stylesheet so {@link applyCustomCss} can override any variable
+ */
+function buildThemeVarsStylesheet(theme: SiteTheme): string {
+	const widgetR =
+		theme.widgetBorderRadius?.trim() || theme.borderRadius?.trim() || '0px';
+	const bodyFam = theme.fontFamily ? quoteCssString(theme.fontFamily) : '';
+	const headingFam = theme.headingFontFamily
+		? quoteCssString(theme.headingFontFamily)
+		: bodyFam;
+	const bodyFont = bodyFam ? `'${bodyFam}', sans-serif` : 'sans-serif';
+	const headingFont = headingFam ? `'${headingFam}', sans-serif` : bodyFont;
+
+	let bgImageCss = 'none';
+	if (theme.backgroundImage) {
+		const url = quoteCssString(theme.backgroundImage);
+		bgImageCss = `url('${url}')`;
+	}
+
+	const scale = clampThemeFontScale(theme.fontScale);
+	const br = theme.borderRadius?.trim() || '0px';
+
+	return `:root {
+  --theme-primary: ${theme.primaryColor};
+  --theme-secondary: ${theme.secondaryColor};
+  --theme-accent: ${theme.accentColor};
+  --theme-background: ${theme.backgroundColor};
+  --theme-surface: ${theme.surfaceColor};
+  --theme-border: ${theme.borderColor};
+  --theme-text-primary: ${theme.textPrimary};
+  --theme-text-secondary: ${theme.textSecondary};
+  --theme-text-muted: ${theme.textMuted};
+  --theme-bg-overlay: ${theme.backgroundOverlay};
+  --theme-bg-blur: ${theme.backgroundBlur}px;
+  --theme-bg-position: ${theme.backgroundPosition};
+  --theme-bg-size: ${theme.backgroundSize};
+  --theme-bg-attachment: ${theme.backgroundAttachment};
+  --theme-font-scale: ${scale};
+  --theme-border-radius: ${br};
+  --theme-widget-border-radius: ${widgetR};
+  --theme-font-family: ${bodyFont};
+  --theme-heading-font: ${headingFont};
+  --theme-bg-image: ${bgImageCss};
+}`;
+}
+
 export function applyThemeStyles(theme: SiteTheme): void {
 	if (!browser) return;
 
-	// Inject @font-face for custom fonts
 	injectCustomFontFaces(theme);
+	clearInlineThemeVars();
 
-	const root = document.documentElement;
-
-	// Colors
-	root.style.setProperty('--theme-primary', theme.primaryColor);
-	root.style.setProperty('--theme-secondary', theme.secondaryColor);
-	root.style.setProperty('--theme-accent', theme.accentColor);
-	root.style.setProperty('--theme-background', theme.backgroundColor);
-	root.style.setProperty('--theme-surface', theme.surfaceColor);
-	root.style.setProperty('--theme-border', theme.borderColor);
-	root.style.setProperty('--theme-text-primary', theme.textPrimary);
-	root.style.setProperty('--theme-text-secondary', theme.textSecondary);
-	root.style.setProperty('--theme-text-muted', theme.textMuted);
-
-	// Background
-	root.style.setProperty('--theme-bg-overlay', theme.backgroundOverlay);
-	root.style.setProperty('--theme-bg-blur', `${theme.backgroundBlur}px`);
-	root.style.setProperty('--theme-bg-position', theme.backgroundPosition);
-	root.style.setProperty('--theme-bg-size', theme.backgroundSize);
-	root.style.setProperty('--theme-bg-attachment', theme.backgroundAttachment);
-
-	// Typography
-	root.style.setProperty(
-		'--theme-font-scale',
-		clampThemeFontScale(theme.fontScale)
-	);
-	root.style.setProperty(
-		'--theme-border-radius',
-		theme.borderRadius?.trim() || '0px'
-	);
-	const widgetR =
-		theme.widgetBorderRadius?.trim() || theme.borderRadius?.trim() || '0px';
-	root.style.setProperty('--theme-widget-border-radius', widgetR);
-	
-	// Font families (with fallbacks)
-	const bodyFont = theme.fontFamily ? `'${theme.fontFamily}', sans-serif` : 'sans-serif';
-	const headingFont = theme.headingFontFamily ? `'${theme.headingFontFamily}', sans-serif` : bodyFont;
-	root.style.setProperty('--theme-font-family', bodyFont);
-	root.style.setProperty('--theme-heading-font', headingFont);
-
-	if (theme.backgroundImage) {
-		const url = theme.backgroundImage.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-		root.style.setProperty('--theme-bg-image', `url('${url}')`);
-	} else {
-		root.style.setProperty('--theme-bg-image', 'none');
+	const css = buildThemeVarsStylesheet(theme);
+	let el = document.querySelector('style[data-theme-vars]') as HTMLStyleElement | null;
+	if (!el) {
+		el = document.createElement('style');
+		el.setAttribute('data-theme-vars', 'true');
+		document.head.appendChild(el);
 	}
+	el.textContent = css;
 }
 
 /**

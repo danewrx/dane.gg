@@ -155,6 +155,20 @@
       "when": 1773801508260,
       "tag": "0021_deep_hobgoblin",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1773802000000,
+      "tag": "0022_theme_layout_effects",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1773961203370,
+      "tag": "0023_slim_eternity",
+      "breakpoints": true
     }
   ]
 }

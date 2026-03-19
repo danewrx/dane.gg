@@ -606,6 +606,12 @@ Stay tuned for the full article!`,
         borderRadius: '0px',
         widgetBorderRadius: '0px',
         customCss: `
+:root {
+  --theme-shell-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  --theme-content-max-width: 1000px;
+  --theme-scanlines-opacity: 0.85;
+}
+
 /* Cyberpunk glow effects */
 .nav-link:hover, .btn:hover {
   text-shadow: 0 0 10px #00d4ff, 0 0 20px #00d4ff;
@@ -652,6 +658,12 @@ Stay tuned for the full article!`,
         borderRadius: '0px',
         widgetBorderRadius: '0px',
         customCss: `
+:root {
+  --theme-scanlines-opacity: 0;
+  --theme-shell-shadow: 0 2px 14px rgba(0, 0, 0, 0.14);
+  --theme-body-line-height: 1.7;
+}
+
 /* Kawaii soft shadows and effects */
 .card, .surface {
   box-shadow: 0 4px 20px rgba(240, 98, 146, 0.15);

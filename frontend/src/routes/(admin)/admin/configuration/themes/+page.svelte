@@ -24,7 +24,6 @@
 		THEME_FONT_SCALE_STEP,
 		clampThemeFontScale
 	} from '$lib/site/constants/themeFontScale';
-
 	interface Theme {
 		id: string;
 		name: string;
@@ -755,15 +754,32 @@
 						</div>
 					</section>
 
-					<!-- Custom CSS -->
 					<section class="editor-section">
-						<h3>Custom CSS (Advanced)</h3>
+						<h3>Custom CSS</h3>
+						<p class="form-hint custom-css-intro">
+							Overrides come <strong>after</strong> palette / fonts / radius, so you can set layout tokens on
+							<code>:root</code> (defaults live in <code>app.css</code>).
+						</p>
+						<details class="theme-var-hint">
+							<summary>Common variables</summary>
+							<pre class="var-list">{`:root {
+  --theme-shell-border-width: 2px;
+  --theme-widget-border-width: 2px;
+  --theme-shell-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --theme-content-max-width: 900px;
+  --theme-scanlines-opacity: 1; /* 0 to hide */
+  --theme-body-line-height: 1.65;
+}`}</pre>
+						</details>
 						<div class="form-group">
+							<label for="theme-custom-css">Stylesheet snippet</label>
 							<textarea
+								id="theme-custom-css"
 								class="form-input code-input"
 								bind:value={formData.customCss}
-								placeholder="/* Add custom CSS overrides here */"
-								rows="6"
+								placeholder={':root {\n  --theme-scanlines-opacity: 0;\n}'}
+								rows="14"
+								spellcheck="false"
 							></textarea>
 						</div>
 					</section>
@@ -801,6 +817,9 @@
 						--preview-shell-radius: {formData.borderRadius};
 						--preview-widget-radius: {formData.widgetBorderRadius};
 						--preview-font-scale: {clampThemeFontScale(formData.fontScale)};
+						--preview-shell-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+						--preview-shell-border-w: 2px;
+						--preview-max-w: 900px;
 					"
 				>
 					{#if formData.backgroundImage}
@@ -1648,6 +1667,41 @@
 		color: var(--text-muted, #71717a);
 	}
 
+	.custom-css-intro {
+		margin-bottom: 12px;
+		line-height: 1.5;
+	}
+
+	.custom-css-intro code {
+		font-size: 11px;
+		padding: 2px 6px;
+		border-radius: 4px;
+		background: rgba(0, 0, 0, 0.25);
+	}
+
+	.theme-var-hint {
+		margin-bottom: 12px;
+		font-size: 12px;
+		color: var(--text-secondary, #a1a1aa);
+	}
+
+	.theme-var-hint summary {
+		cursor: pointer;
+		user-select: none;
+	}
+
+	.var-list {
+		margin-top: 8px;
+		padding: 10px 12px;
+		overflow-x: auto;
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 11px;
+		line-height: 1.45;
+		background: rgba(0, 0, 0, 0.35);
+		border-radius: 6px;
+		border: 1px solid var(--border-color, #3a3a3a);
+	}
+
 	.code-input {
 		font-family: 'JetBrains Mono', monospace;
 		font-size: 13px;
@@ -1769,9 +1823,10 @@
 
 	.preview-shell {
 		width: 100%;
-		max-width: 440px;
-		border: 2px solid var(--preview-border);
+		max-width: min(440px, var(--preview-max-w, 900px));
+		border: var(--preview-shell-border-w, 2px) solid var(--preview-border);
 		border-radius: var(--preview-shell-radius);
+		box-shadow: var(--preview-shell-shadow);
 		overflow: hidden;
 		background: var(--preview-surface);
 	}

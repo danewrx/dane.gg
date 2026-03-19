@@ -76,6 +76,12 @@
 		--theme-text-muted: #71717a;
 		--theme-border-radius: 8px;
 		--theme-widget-border-radius: 8px;
+		--theme-shell-border-width: 2px;
+		--theme-widget-border-width: 2px;
+		--theme-shell-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+		--theme-content-max-width: 900px;
+		--theme-scanlines-opacity: 1;
+		--theme-body-line-height: 1.65;
 		--theme-font-scale: 1;
 		
 		--bg-primary: var(--theme-surface);
@@ -116,13 +122,13 @@
 
 	.content-window {
 		background: var(--theme-surface, var(--content-bg));
-		border: 2px solid var(--theme-border, var(--border-color));
+		border: var(--theme-shell-border-width, 2px) solid var(--theme-border, var(--border-color));
 		border-radius: var(--theme-border-radius, 0);
 		width: 90%;
-		max-width: 900px;
+		max-width: var(--theme-content-max-width, 900px);
 		height: 90vh;
 		max-height: 1100px;
-		box-shadow: 0 4px 20px var(--shadow);
+		box-shadow: var(--theme-shell-shadow, 0 4px 20px var(--shadow));
 		backdrop-filter: blur(10px);
 		transition: all 0.3s ease;
 		position: relative;
@@ -137,6 +143,7 @@
 		overflow-y: auto;
 		transition: all 0.3s ease;
 		position: relative;
+		line-height: var(--theme-body-line-height, 1.65);
 	}
 
 	/* Scanline effect */
@@ -148,6 +155,7 @@
 		height: 100vh;
 		pointer-events: none;
 		z-index: 0;
+		opacity: var(--theme-scanlines-opacity, 1);
 		background-image: repeating-linear-gradient(
 			0deg,
 			transparent,

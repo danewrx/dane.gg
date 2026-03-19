@@ -88,7 +88,7 @@
 	.bordered-box {
 		width: 100%;
 		background: var(--box-background-color, var(--theme-surface, #1a1a1a));
-		border: 2px solid var(--box-border-color, var(--theme-border, #ffffff));
+		border: var(--theme-widget-border-width, 2px) solid var(--box-border-color, var(--theme-border, #ffffff));
 		border-radius: var(--theme-widget-border-radius, var(--theme-border-radius, 0px));
 		padding: 0 12px;
 		transition: all 0.3s ease;
