@@ -20,6 +20,7 @@
 	} from 'lucide-svelte';
 	import FileUpload, { type UploadedFile } from '$lib/admin/components/ui/FileUpload.svelte';
 	import FontPicker from '$lib/admin/components/ui/FontPicker.svelte';
+	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
 	import {
 		THEME_FONT_SCALE_MIN,
 		THEME_FONT_SCALE_MAX,
@@ -670,18 +671,6 @@
 							rows="2"
 						></textarea>
 					</div>
-					<div class="form-group">
-						<label class="checkbox-label">
-							<input
-								type="checkbox"
-								bind:checked={formData.isVisible}
-							/>
-							<span>Visible in theme selector</span>
-						</label>
-						<div class="field-hint">
-							When unchecked, this theme will not be available for selection on the frontend
-						</div>
-					</div>
 				</section>
 
 					<!-- Colors -->
@@ -929,6 +918,19 @@
 								rows="14"
 								spellcheck="false"
 							></textarea>
+						</div>
+					</section>
+
+					<section class="editor-section theme-visibility-section">
+						<h3>Visibility</h3>
+						<div class="theme-visibility-panel">
+							<div class="theme-visibility-row">
+								<Toggle bind:checked={formData.isVisible} label="Visible in theme selector" />
+							</div>
+							<p class="theme-visibility-hint">
+								When off, visitors cannot pick this theme from the site settings panel (admins can still
+								edit it here).
+							</p>
 						</div>
 					</section>
 				</div>
@@ -1697,6 +1699,9 @@
 		overflow-y: auto;
 		flex: 1;
 		min-height: 0;
+		/* Avoid scroll jumps when focus/scroll-into-view fights nested admin layouts */
+		overflow-anchor: none;
+		overscroll-behavior: contain;
 	}
 
 	.editor-section {
@@ -1705,6 +1710,55 @@
 
 	.editor-section:last-child {
 		margin-bottom: 0;
+	}
+
+	.theme-visibility-section {
+		margin-top: 8px;
+	}
+
+	.theme-visibility-panel {
+		--accent-color: #ef4444;
+		background: var(--bg-primary, #1a1a1a);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 8px;
+		padding: 16px 18px;
+	}
+
+	.theme-visibility-row :global(.toggle-wrapper) {
+		width: 100%;
+		align-items: flex-start;
+	}
+
+	.theme-visibility-row :global(.toggle-label-text) {
+		color: var(--text-primary, #ffffff);
+		font-weight: 500;
+		font-size: 14px;
+		line-height: 24px;
+	}
+
+	.theme-visibility-row :global(.toggle-slider) {
+		background: var(--bg-tertiary, #2a2a2a);
+		border: 1px solid var(--border-color, #3a3a3a);
+		box-sizing: border-box;
+	}
+
+	.theme-visibility-row :global(.toggle-input:checked + .toggle-body .toggle-slider) {
+		background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+		border-color: transparent;
+	}
+
+	.theme-visibility-row :global(.toggle-input:checked + .toggle-body .toggle-slider::after) {
+		background: #ffffff;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+	}
+
+	.theme-visibility-hint {
+		margin: 12px 0 0 0;
+		padding-top: 12px;
+		border-top: 1px solid var(--border-color, #3a3a3a);
+		font-size: 12px;
+		line-height: 1.5;
+		color: var(--text-muted, #71717a);
 	}
 
 	.editor-section h3 {
