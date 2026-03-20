@@ -254,7 +254,12 @@ router.post('/', requireAuth, async (req, res) => {
       fontScale,
       borderRadius,
       widgetBorderRadius,
-      customCss
+      customCss,
+      scanlinesOpacity,
+      overlayVignetteOpacity,
+      overlayGridOpacity,
+      overlayGrainOpacity,
+      overlayGlareOpacity
     } = req.body;
 
     if (!name) {
@@ -294,6 +299,11 @@ router.post('/', requireAuth, async (req, res) => {
       borderRadius: borderRadius || '8px',
       widgetBorderRadius: widgetBorderRadius || borderRadius || '8px',
       customCss: customCss || null,
+      scanlinesOpacity: scanlinesOpacity ?? '1',
+      overlayVignetteOpacity: overlayVignetteOpacity ?? '0',
+      overlayGridOpacity: overlayGridOpacity ?? '0',
+      overlayGrainOpacity: overlayGrainOpacity ?? '0',
+      overlayGlareOpacity: overlayGlareOpacity ?? '0',
       displayOrder: maxOrder + 1
     }).returning();
 
@@ -413,7 +423,12 @@ router.put('/:id', requireAuth, async (req, res) => {
       borderRadius,
       widgetBorderRadius,
       customCss,
-      displayOrder
+      displayOrder,
+      scanlinesOpacity,
+      overlayVignetteOpacity,
+      overlayGridOpacity,
+      overlayGrainOpacity,
+      overlayGlareOpacity
     } = req.body;
 
     const updateData: Record<string, any> = {
@@ -446,6 +461,11 @@ router.put('/:id', requireAuth, async (req, res) => {
     if (widgetBorderRadius !== undefined) updateData.widgetBorderRadius = widgetBorderRadius;
     if (customCss !== undefined) updateData.customCss = customCss;
     if (displayOrder !== undefined) updateData.displayOrder = displayOrder;
+    if (scanlinesOpacity !== undefined) updateData.scanlinesOpacity = scanlinesOpacity;
+    if (overlayVignetteOpacity !== undefined) updateData.overlayVignetteOpacity = overlayVignetteOpacity;
+    if (overlayGridOpacity !== undefined) updateData.overlayGridOpacity = overlayGridOpacity;
+    if (overlayGrainOpacity !== undefined) updateData.overlayGrainOpacity = overlayGrainOpacity;
+    if (overlayGlareOpacity !== undefined) updateData.overlayGlareOpacity = overlayGlareOpacity;
 
     const [updatedTheme] = await db.update(themes)
       .set(updateData)
@@ -519,6 +539,11 @@ router.post('/:id/duplicate', requireAuth, async (req, res) => {
       borderRadius: originalTheme.borderRadius,
       widgetBorderRadius: originalTheme.widgetBorderRadius ?? originalTheme.borderRadius,
       customCss: originalTheme.customCss,
+      scanlinesOpacity: originalTheme.scanlinesOpacity,
+      overlayVignetteOpacity: originalTheme.overlayVignetteOpacity,
+      overlayGridOpacity: originalTheme.overlayGridOpacity,
+      overlayGrainOpacity: originalTheme.overlayGrainOpacity,
+      overlayGlareOpacity: originalTheme.overlayGlareOpacity,
       displayOrder: maxOrder + 1
     }).returning();
 

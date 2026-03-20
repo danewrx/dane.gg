@@ -37,6 +37,11 @@ export async function seedThemes() {
       borderRadius: '0px',
       widgetBorderRadius: '0px',
       customCss: null,
+      scanlinesOpacity: '1',
+      overlayVignetteOpacity: '0',
+      overlayGridOpacity: '0',
+      overlayGrainOpacity: '0',
+      overlayGlareOpacity: '0',
       displayOrder: 0
     },
     {
@@ -71,11 +76,15 @@ export async function seedThemes() {
 
       borderRadius: '0px',
       widgetBorderRadius: '0px',
+      scanlinesOpacity: '0.85',
+      overlayVignetteOpacity: '0',
+      overlayGridOpacity: '0',
+      overlayGrainOpacity: '0',
+      overlayGlareOpacity: '0',
       customCss: `
 :root {
   --theme-shell-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   --theme-content-max-width: 1000px;
-  --theme-scanlines-opacity: 0.85;
 }
 
 /* Cyberpunk glow effects */
@@ -119,9 +128,13 @@ export async function seedThemes() {
 
       borderRadius: '0px',
       widgetBorderRadius: '0px',
+      scanlinesOpacity: '0',
+      overlayVignetteOpacity: '0',
+      overlayGridOpacity: '0',
+      overlayGrainOpacity: '0',
+      overlayGlareOpacity: '0',
       customCss: `
 :root {
-  --theme-scanlines-opacity: 0;
   --theme-shell-shadow: 0 2px 14px rgba(0, 0, 0, 0.14);
   --theme-body-line-height: 1.7;
 }

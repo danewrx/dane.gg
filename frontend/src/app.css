@@ -29,6 +29,10 @@
   --theme-shell-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   --theme-content-max-width: 900px;
   --theme-scanlines-opacity: 1;
+  --theme-overlay-vignette-opacity: 0;
+  --theme-overlay-grid-opacity: 0;
+  --theme-overlay-grain-opacity: 0;
+  --theme-overlay-glare-opacity: 0;
   --theme-body-line-height: 1.65;
   --theme-font-scale: 1;
   

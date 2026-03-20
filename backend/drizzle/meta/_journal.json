@@ -169,6 +169,20 @@
       "when": 1773961203370,
       "tag": "0023_slim_eternity",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1774100000000,
+      "tag": "0024_theme_screen_overlays",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1773971779727,
+      "tag": "0025_dazzling_fantastic_four",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,7 @@
 import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 import { clampThemeFontScale } from '$lib/site/constants/themeFontScale';
+import { clampThemeUnitOpacity } from '$lib/site/constants/themeOverlayOpacity';
 
 export type ThemeEnforcementState = {
 	enforced: boolean;
@@ -52,6 +53,11 @@ export interface SiteTheme {
 	borderRadius: string;
 	widgetBorderRadius?: string;
 	customCss: string | null;
+	scanlinesOpacity?: string;
+	overlayVignetteOpacity?: string;
+	overlayGridOpacity?: string;
+	overlayGrainOpacity?: string;
+	overlayGlareOpacity?: string;
 }
 
 // Default theme (fallback)
@@ -90,7 +96,12 @@ export const DEFAULT_THEME: SiteTheme = {
 	// Other
 	borderRadius: '0px',
 	widgetBorderRadius: '0px',
-	customCss: null
+	customCss: null,
+	scanlinesOpacity: '1',
+	overlayVignetteOpacity: '0',
+	overlayGridOpacity: '0',
+	overlayGrainOpacity: '0',
+	overlayGlareOpacity: '0'
 };
 
 // Theme store
@@ -282,6 +293,11 @@ function buildThemeVarsStylesheet(theme: SiteTheme): string {
   --theme-font-family: ${bodyFont};
   --theme-heading-font: ${headingFont};
   --theme-bg-image: ${bgImageCss};
+  --theme-scanlines-opacity: ${clampThemeUnitOpacity(theme.scanlinesOpacity, '1')};
+  --theme-overlay-vignette-opacity: ${clampThemeUnitOpacity(theme.overlayVignetteOpacity, '0')};
+  --theme-overlay-grid-opacity: ${clampThemeUnitOpacity(theme.overlayGridOpacity, '0')};
+  --theme-overlay-grain-opacity: ${clampThemeUnitOpacity(theme.overlayGrainOpacity, '0')};
+  --theme-overlay-glare-opacity: ${clampThemeUnitOpacity(theme.overlayGlareOpacity, '0')};
 }`;
 }
 

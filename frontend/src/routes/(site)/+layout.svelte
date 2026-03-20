@@ -39,8 +39,11 @@
 		<WeatherEffects />
 	{/if}
 	
-	<!-- Scanline Effect - behind content container -->
 	<div class="scanlines"></div>
+	<div class="bg-overlay bg-overlay--grid" aria-hidden="true"></div>
+	<div class="bg-overlay bg-overlay--grain" aria-hidden="true"></div>
+	<div class="bg-overlay bg-overlay--vignette" aria-hidden="true"></div>
+	<div class="bg-overlay bg-overlay--glare" aria-hidden="true"></div>
 	
 	<div class="content-window">
 		<div class="content-area">
@@ -89,6 +92,10 @@
 		--theme-shell-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 		--theme-content-max-width: 900px;
 		--theme-scanlines-opacity: 1;
+		--theme-overlay-vignette-opacity: 0;
+		--theme-overlay-grid-opacity: 0;
+		--theme-overlay-grain-opacity: 0;
+		--theme-overlay-glare-opacity: 0;
 		--theme-body-line-height: 1.65;
 		--theme-font-scale: 1;
 		
@@ -179,7 +186,72 @@
 		100% { transform: translateY(4px); }
 	}
 
+	.bg-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100vw;
+		height: 100vh;
+		pointer-events: none;
+		z-index: 0;
+	}
 
+	.bg-overlay--grid {
+		opacity: var(--theme-overlay-grid-opacity, 0);
+		background-image:
+			linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+			linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+		background-size: 56px 56px;
+		mask-image: radial-gradient(ellipse 75% 65% at 50% 42%, black 15%, transparent 75%);
+		-webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 42%, black 15%, transparent 75%);
+	}
+
+	.bg-overlay--grain {
+		opacity: var(--theme-overlay-grain-opacity, 0);
+		mix-blend-mode: overlay;
+		background-image: radial-gradient(rgba(255, 255, 255, 0.09) 0.6px, transparent 0.7px);
+		background-size: 3px 3px;
+		animation: grain-shift 0.5s steps(2) infinite;
+	}
+
+	@keyframes grain-shift {
+		0% {
+			transform: translate(0, 0);
+		}
+		50% {
+			transform: translate(-1px, 1px);
+		}
+		100% {
+			transform: translate(1px, -1px);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.bg-overlay--grain {
+			animation: none;
+		}
+	}
+
+	.bg-overlay--vignette {
+		opacity: var(--theme-overlay-vignette-opacity, 0);
+		background: radial-gradient(
+			ellipse 85% 75% at 50% 48%,
+			transparent 22%,
+			rgba(0, 0, 0, 0.88) 100%
+		);
+		mix-blend-mode: multiply;
+	}
+
+	.bg-overlay--glare {
+		opacity: var(--theme-overlay-glare-opacity, 0);
+		background: linear-gradient(
+			125deg,
+			rgba(255, 255, 255, 0.14) 0%,
+			rgba(255, 255, 255, 0.04) 22%,
+			transparent 48%
+		);
+		mix-blend-mode: soft-light;
+	}
 
 	.content-window {
 		background: var(--theme-surface, var(--content-bg));

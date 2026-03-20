@@ -347,6 +347,12 @@ export const themes = websiteSchema.table('themes', {
   widgetBorderRadius: varchar('widget_border_radius', { length: 20 }).default('8px'),
   
   customCss: text('custom_css'),
+
+  scanlinesOpacity: varchar('scanlines_opacity', { length: 10 }).default('1').notNull(),
+  overlayVignetteOpacity: varchar('overlay_vignette_opacity', { length: 10 }).default('0').notNull(),
+  overlayGridOpacity: varchar('overlay_grid_opacity', { length: 10 }).default('0').notNull(),
+  overlayGrainOpacity: varchar('overlay_grain_opacity', { length: 10 }).default('0').notNull(),
+  overlayGlareOpacity: varchar('overlay_glare_opacity', { length: 10 }).default('0').notNull(),
   
   displayOrder: integer('display_order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),

@@ -71,6 +71,11 @@
 		borderRadius: string;
 		widgetBorderRadius?: string;
 		customCss: string | null;
+		scanlinesOpacity?: string;
+		overlayVignetteOpacity?: string;
+		overlayGridOpacity?: string;
+		overlayGrainOpacity?: string;
+		overlayGlareOpacity?: string;
 		bodyFontUrl?: string | null;
 		headingFontUrl?: string | null;
 		displayOrder: number;
@@ -144,7 +149,12 @@
 			widgetBorderRadius: formData.widgetBorderRadius,
 			customCss: formData.customCss?.trim() || null,
 			bodyFontUrl: editingTheme?.bodyFontUrl ?? null,
-			headingFontUrl: editingTheme?.headingFontUrl ?? null
+			headingFontUrl: editingTheme?.headingFontUrl ?? null,
+			scanlinesOpacity: formData.scanlinesOpacity,
+			overlayVignetteOpacity: formData.overlayVignetteOpacity,
+			overlayGridOpacity: formData.overlayGridOpacity,
+			overlayGrainOpacity: formData.overlayGrainOpacity,
+			overlayGlareOpacity: formData.overlayGlareOpacity
 		};
 	}
 
@@ -216,7 +226,12 @@
 		fontScale: '1',
 		borderRadius: '8px',
 		widgetBorderRadius: '8px',
-		customCss: ''
+		customCss: '',
+		scanlinesOpacity: '1',
+		overlayVignetteOpacity: '0',
+		overlayGridOpacity: '0',
+		overlayGrainOpacity: '0',
+		overlayGlareOpacity: '0'
 	});
 
 	let fontScaleNumeric = $derived(parseFloat(clampThemeFontScale(formData.fontScale)));
@@ -337,6 +352,11 @@
 			borderRadius: '8px',
 			widgetBorderRadius: '8px',
 			customCss: '',
+			scanlinesOpacity: '1',
+			overlayVignetteOpacity: '0',
+			overlayGridOpacity: '0',
+			overlayGrainOpacity: '0',
+			overlayGlareOpacity: '0',
 			isVisible: false
 		};
 	}
@@ -374,7 +394,12 @@
 			fontScale: clampThemeFontScale(theme.fontScale),
 			borderRadius: theme.borderRadius,
 			widgetBorderRadius: theme.widgetBorderRadius ?? theme.borderRadius,
-			customCss: theme.customCss || ''
+			customCss: theme.customCss || '',
+			scanlinesOpacity: theme.scanlinesOpacity ?? '1',
+			overlayVignetteOpacity: theme.overlayVignetteOpacity ?? '0',
+			overlayGridOpacity: theme.overlayGridOpacity ?? '0',
+			overlayGrainOpacity: theme.overlayGrainOpacity ?? '0',
+			overlayGlareOpacity: theme.overlayGlareOpacity ?? '0'
 		};
 		editingTheme = theme;
 		isCreating = false;
@@ -457,7 +482,12 @@
 				fontScale: clampThemeFontScale(formData.fontScale),
 				borderRadius: formData.borderRadius,
 				widgetBorderRadius: formData.widgetBorderRadius,
-				customCss: formData.customCss.trim() || null
+				customCss: formData.customCss.trim() || null,
+				scanlinesOpacity: formData.scanlinesOpacity,
+				overlayVignetteOpacity: formData.overlayVignetteOpacity,
+				overlayGridOpacity: formData.overlayGridOpacity,
+				overlayGrainOpacity: formData.overlayGrainOpacity,
+				overlayGlareOpacity: formData.overlayGlareOpacity
 			};
 
 			let response;
@@ -999,10 +1029,110 @@
 					</section>
 
 					<section class="editor-section">
+						<h3>Screen overlays</h3>
+						<p class="form-hint">
+							Full-screen effects behind the main window, <strong>for this theme only</strong> (unlike
+							weather, which is global). Values 0–1; finer tuning can still override in Custom CSS below.
+						</p>
+						<div class="overlay-sliders">
+							<div class="form-group">
+								<label for="ov-scanlines"
+									>Scanlines <span class="opacity-num">{formData.scanlinesOpacity}</span></label
+								>
+								<input
+									id="ov-scanlines"
+									type="range"
+									min="0"
+									max="1"
+									step="0.05"
+									class="form-input overlay-slider"
+									value={parseFloat(formData.scanlinesOpacity) || 0}
+									oninput={(e) => {
+										formData.scanlinesOpacity = (e.currentTarget as HTMLInputElement).value;
+									}}
+								/>
+								<span class="form-hint">CRT-style horizontal lines.</span>
+							</div>
+							<div class="form-group">
+								<label for="ov-vignette"
+									>Vignette <span class="opacity-num">{formData.overlayVignetteOpacity}</span></label
+								>
+								<input
+									id="ov-vignette"
+									type="range"
+									min="0"
+									max="1"
+									step="0.05"
+									class="form-input overlay-slider"
+									value={parseFloat(formData.overlayVignetteOpacity) || 0}
+									oninput={(e) => {
+										formData.overlayVignetteOpacity = (e.currentTarget as HTMLInputElement).value;
+									}}
+								/>
+								<span class="form-hint">Darkens edges of the viewport.</span>
+							</div>
+							<div class="form-group">
+								<label for="ov-grid"
+									>Grid <span class="opacity-num">{formData.overlayGridOpacity}</span></label
+								>
+								<input
+									id="ov-grid"
+									type="range"
+									min="0"
+									max="1"
+									step="0.05"
+									class="form-input overlay-slider"
+									value={parseFloat(formData.overlayGridOpacity) || 0}
+									oninput={(e) => {
+										formData.overlayGridOpacity = (e.currentTarget as HTMLInputElement).value;
+									}}
+								/>
+								<span class="form-hint">Retro grid over the background.</span>
+							</div>
+							<div class="form-group">
+								<label for="ov-grain"
+									>Grain <span class="opacity-num">{formData.overlayGrainOpacity}</span></label
+								>
+								<input
+									id="ov-grain"
+									type="range"
+									min="0"
+									max="1"
+									step="0.05"
+									class="form-input overlay-slider"
+									value={parseFloat(formData.overlayGrainOpacity) || 0}
+									oninput={(e) => {
+										formData.overlayGrainOpacity = (e.currentTarget as HTMLInputElement).value;
+									}}
+								/>
+								<span class="form-hint">Subtle film noise.</span>
+							</div>
+							<div class="form-group">
+								<label for="ov-glare"
+									>Glare <span class="opacity-num">{formData.overlayGlareOpacity}</span></label
+								>
+								<input
+									id="ov-glare"
+									type="range"
+									min="0"
+									max="1"
+									step="0.05"
+									class="form-input overlay-slider"
+									value={parseFloat(formData.overlayGlareOpacity) || 0}
+									oninput={(e) => {
+										formData.overlayGlareOpacity = (e.currentTarget as HTMLInputElement).value;
+									}}
+								/>
+								<span class="form-hint">Soft highlight from the upper-left.</span>
+							</div>
+						</div>
+					</section>
+
+					<section class="editor-section">
 						<h3>Custom CSS</h3>
 						<p class="form-hint custom-css-intro">
-							Overrides come <strong>after</strong> palette / fonts / radius, so you can set layout tokens on
-							<code>:root</code> (defaults live in <code>app.css</code>).
+							Overrides come <strong>after</strong> palette, fonts, radius, and screen overlay variables, so you
+							can set layout tokens on <code>:root</code> (defaults live in <code>app.css</code>).
 						</p>
 						<details class="theme-var-hint">
 							<summary>Common variables</summary>
@@ -1011,7 +1141,7 @@
   --theme-widget-border-width: 2px;
   --theme-shell-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   --theme-content-max-width: 900px;
-  --theme-scanlines-opacity: 1; /* 0 to hide */
+  /* Screen overlays are usually set in “Screen overlays” above; you can override e.g. --theme-scanlines-opacity here */
   --theme-body-line-height: 1.65;
 }`}</pre>
 						</details>
@@ -1021,7 +1151,10 @@
 								id="theme-custom-css"
 								class="form-input code-input"
 								bind:value={formData.customCss}
-								placeholder={':root {\n  --theme-scanlines-opacity: 0;\n}'}
+								placeholder={`/* Optional: extra layout tokens */
+:root {
+  --theme-content-max-width: 1000px;
+}`}
 								rows="14"
 								spellcheck="false"
 							></textarea>
@@ -2134,6 +2267,31 @@
 		padding: 2px 6px;
 		border-radius: 4px;
 		background: rgba(0, 0, 0, 0.25);
+	}
+
+	.overlay-sliders {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 14px 18px;
+		max-width: 100%;
+		align-items: start;
+	}
+
+	@media (max-width: 720px) {
+		.overlay-sliders {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.overlay-slider {
+		width: 100%;
+		padding: 6px 0;
+	}
+
+	.opacity-num {
+		color: var(--accent-color, #ef4444);
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
 	}
 
 	.theme-var-hint {
