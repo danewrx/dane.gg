@@ -16,7 +16,8 @@
 		Eye,
 		EyeOff,
 		Palette,
-		Star
+		Star,
+		Lock
 	} from 'lucide-svelte';
 	import FileUpload, { type UploadedFile } from '$lib/admin/components/ui/FileUpload.svelte';
 	import FontPicker from '$lib/admin/components/ui/FontPicker.svelte';
@@ -80,6 +81,11 @@
 	let themes = $state<Theme[]>([]);
 	let isLoading = $state(true);
 	let isSaving = $state(false);
+	let isSavingEnforcement = $state(false);
+
+	/** Admin form: site-wide theme lock (persisted via PUT /api/themes/enforcement) */
+	let enforcementEnforced = $state(false);
+	let enforcementThemeId = $state('');
 	
 	let visibleThemes = $derived(themes.filter(t => t.isVisible));
 	let invisibleThemes = $derived(themes.filter(t => !t.isVisible));
@@ -238,12 +244,70 @@
 			if (response.ok) {
 				const result = await response.json();
 				themes = result.data || [];
+				const enc = result.enforcement as
+					| { enforced?: boolean; themeId?: string | null }
+					| undefined;
+				if (enc) {
+					enforcementEnforced = !!enc.enforced;
+					const fallbackId =
+						themes.find((t) => t.isDefault)?.id ?? themes[0]?.id ?? '';
+					enforcementThemeId =
+						typeof enc.themeId === 'string' && enc.themeId
+							? enc.themeId
+							: fallbackId;
+				} else {
+					enforcementEnforced = false;
+					enforcementThemeId =
+						themes.find((t) => t.isDefault)?.id ?? themes[0]?.id ?? '';
+				}
 			}
 		} catch (error) {
 			console.error('Error loading themes:', error);
 			toast.error('Failed to load themes');
 		} finally {
 			isLoading = false;
+		}
+	}
+
+	async function saveThemeEnforcement() {
+		if (themes.length === 0) {
+			toast.error('Create at least one theme first');
+			return;
+		}
+		if (enforcementEnforced && !enforcementThemeId) {
+			toast.error('Select which theme to enforce');
+			return;
+		}
+		isSavingEnforcement = true;
+		try {
+			const response = await fetch('/api/themes/enforcement', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({
+					enforced: enforcementEnforced,
+					themeId: enforcementEnforced ? enforcementThemeId : null
+				})
+			});
+			const result = await response.json().catch(() => ({}));
+			if (!response.ok) {
+				toast.error((result as { error?: string }).error || 'Failed to save theme lock');
+				return;
+			}
+			if ((result as { data?: { enforced?: boolean; themeId?: string | null } }).data) {
+				const d = (result as { data: { enforced: boolean; themeId: string | null } }).data;
+				enforcementEnforced = d.enforced;
+				if (d.themeId) enforcementThemeId = d.themeId;
+			}
+			toast.success(
+				enforcementEnforced
+					? 'All visitors will see the selected theme. The theme picker is disabled on the site.'
+					: 'Theme lock is off. Visitors can pick a theme again.'
+			);
+		} catch {
+			toast.error('Failed to save theme lock');
+		} finally {
+			isSavingEnforcement = false;
 		}
 	}
 
@@ -598,6 +662,49 @@
 		<div class="settings-description">
 			<p>Create and manage site themes. Themes control colors, backgrounds, typography, and visual styling across the entire site.</p>
 		</div>
+
+		<section class="theme-enforcement-panel" aria-labelledby="theme-enforcement-heading">
+			<div class="theme-enforcement-header">
+				<Lock size={18} class="theme-enforcement-icon" aria-hidden="true" />
+				<h2 id="theme-enforcement-heading" class="theme-enforcement-title">Site-wide theme lock</h2>
+			</div>
+			<p class="theme-enforcement-desc">
+				When enabled, every visitor sees the theme you choose below and cannot change it from the site
+				settings panel. You can still use hidden themes here — they won’t appear in the public theme list
+				unless unlocked.
+			</p>
+			<div class="theme-enforcement-controls">
+				<Toggle bind:checked={enforcementEnforced} label="Enforce a single theme for all visitors" />
+				<div class="form-group enforcement-theme-select">
+					<label for="enforced-theme-select">Theme to apply for everyone</label>
+					<select
+						id="enforced-theme-select"
+						class="enforced-theme-select-input"
+						bind:value={enforcementThemeId}
+						disabled={!enforcementEnforced || themes.length === 0}
+					>
+						{#each themes as t (t.id)}
+							<option value={t.id}>
+								{t.name}{t.isDefault ? ' (default)' : ''}{!t.isVisible ? ' — hidden' : ''}
+							</option>
+						{/each}
+					</select>
+				</div>
+				<button
+					type="button"
+					class="btn-enforcement-save"
+					disabled={isSavingEnforcement || themes.length === 0}
+					onclick={saveThemeEnforcement}
+				>
+					{#if isSavingEnforcement}
+						<Loader2 size={18} class="spin" />
+					{:else}
+						<Save size={18} />
+					{/if}
+					Save lock settings
+				</button>
+			</div>
+		</section>
 	{/if}
 
 	{#if isLoading}
@@ -1350,6 +1457,104 @@
 		margin: 0;
 		font-size: 14px;
 		line-height: 1.5;
+	}
+
+	.theme-enforcement-panel {
+		margin-bottom: 28px;
+		padding: 18px 20px;
+		background: var(--bg-primary, #1a1a1a);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 8px;
+	}
+
+	.theme-enforcement-header {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-bottom: 10px;
+	}
+
+	.theme-enforcement-panel :global(.theme-enforcement-icon) {
+		color: var(--accent-color, #ef4444);
+		flex-shrink: 0;
+	}
+
+	.theme-enforcement-title {
+		margin: 0;
+		font-size: 16px;
+		font-weight: 600;
+		color: var(--text-primary, #ffffff);
+	}
+
+	.theme-enforcement-desc {
+		margin: 0 0 16px 0;
+		font-size: 13px;
+		line-height: 1.55;
+		color: var(--text-secondary, #a1a1aa);
+	}
+
+	.theme-enforcement-controls {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+		align-items: flex-start;
+	}
+
+	.theme-enforcement-controls :global(.toggle-wrapper) {
+		width: 100%;
+		align-items: flex-start;
+	}
+
+	.enforcement-theme-select {
+		width: 100%;
+		max-width: 420px;
+		margin-bottom: 0;
+	}
+
+	.enforcement-theme-select label {
+		display: block;
+		margin-bottom: 6px;
+		font-size: 13px;
+		font-weight: 500;
+		color: var(--text-secondary, #a1a1aa);
+	}
+
+	.enforced-theme-select-input {
+		width: 100%;
+		padding: 10px 12px;
+		border-radius: 6px;
+		border: 1px solid var(--border-color, #3a3a3a);
+		background: var(--bg-secondary, #2a2a2a);
+		color: var(--text-primary, #ffffff);
+		font-size: 14px;
+	}
+
+	.enforced-theme-select-input:disabled {
+		opacity: 0.55;
+		cursor: not-allowed;
+	}
+
+	.btn-enforcement-save {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 18px;
+		border: none;
+		border-radius: 6px;
+		background: var(--accent-color, #ef4444);
+		color: #ffffff;
+		font-size: 14px;
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	.btn-enforcement-save:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.btn-enforcement-save :global(.spin) {
+		animation: spin 0.8s linear infinite;
 	}
 
 	.loading-state {

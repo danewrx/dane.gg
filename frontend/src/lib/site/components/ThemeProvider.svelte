@@ -43,6 +43,14 @@
 			return () => window.removeEventListener('message', onMsg);
 		}
 		void loadSiteTheme();
+
+		function onVisibilityChange() {
+			if (document.visibilityState === 'visible') {
+				void loadSiteTheme();
+			}
+		}
+		document.addEventListener('visibilitychange', onVisibilityChange);
+		return () => document.removeEventListener('visibilitychange', onVisibilityChange);
 	});
 
 	function getBgUrlCss(): string {

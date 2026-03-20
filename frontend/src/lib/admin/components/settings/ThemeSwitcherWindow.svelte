@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { X, Palette } from 'lucide-svelte';
 	import { onMount } from 'svelte';
-	import { siteTheme } from '$lib/site/stores/theme';
+	import { get } from 'svelte/store';
+	import { siteTheme, themeEnforcement } from '$lib/site/stores/theme';
 	
 	interface Theme {
 		id: string;
@@ -55,7 +56,21 @@
 			const result = await response.json();
 			const raw = result.data || [];
 			themes = [...raw].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
-			
+
+			if (result.enforcement) {
+				themeEnforcement.set({
+					enforced: !!result.enforcement.enforced,
+					themeId:
+						typeof result.enforcement.themeId === 'string' ? result.enforcement.themeId : null
+				});
+			}
+
+			if (get(themeEnforcement).enforced) {
+				const tid = get(themeEnforcement).themeId;
+				selectedThemeId = tid && themes.some((t) => t.id === tid) ? tid : themes[0]?.id ?? null;
+				return;
+			}
+
 			const savedThemeId = localStorage.getItem('selectedTheme');
 			if (savedThemeId && themes.some(t => t.id === savedThemeId)) {
 				selectedThemeId = savedThemeId;
@@ -70,6 +85,7 @@
 	}
 	
 	async function selectTheme(themeId: string) {
+		if (get(themeEnforcement).enforced) return;
 		if (applying) return;
 		
 		try {
@@ -158,6 +174,11 @@
 					<div class="empty-state">
 						<p>No themes available</p>
 					</div>
+				{:else if $themeEnforcement.enforced}
+					<div class="empty-state enforcement-msg">
+						<p><strong>Theme locked</strong></p>
+						<p>The administrator has set one theme for everyone. Your choice can’t be changed here.</p>
+					</div>
 				{:else}
 					<div class="themes-grid">
 						{#each themes as theme (theme.id)}
@@ -166,7 +187,7 @@
 								class:active={theme.id === selectedThemeId}
 								class:applying={applying && theme.id === selectedThemeId}
 								onclick={() => selectTheme(theme.id)}
-								disabled={applying}
+								disabled={applying || $themeEnforcement.enforced}
 							>
 								<!-- Theme Preview -->
 								<div 
@@ -211,7 +232,11 @@
 			<!-- Window Footer -->
 			<div class="window-footer">
 				<div class="footer-text">
-					Click a theme to apply it
+					{#if $themeEnforcement.enforced}
+						Theme is locked by the site administrator.
+					{:else}
+						Click a theme to apply it
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -329,6 +354,12 @@
 		background: var(--theme-background, #0a0a0a);
 	}
 	
+	.enforcement-msg strong {
+		color: var(--theme-text-primary, #ffffff);
+		display: block;
+		margin-bottom: 8px;
+	}
+
 	.loading-state,
 	.empty-state {
 		display: flex;

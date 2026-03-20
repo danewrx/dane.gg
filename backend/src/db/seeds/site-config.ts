@@ -33,6 +33,13 @@ export async function seedSiteConfig() {
       value: "Hi, I'm Dane! I'm a software engineer & freelance designer from Manchester, UK.",
       description: 'Site description for SEO',
       dataType: 'string'
+    },
+    {
+      key: 'site_theme_enforcement',
+      value: JSON.stringify({ enforced: false, themeId: null }),
+      description:
+        'When enforced: all visitors use themeId; theme picker is disabled on the public site',
+      dataType: 'json'
     }
   ]);
 }

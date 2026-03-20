@@ -2,6 +2,16 @@ import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 import { clampThemeFontScale } from '$lib/site/constants/themeFontScale';
 
+export type ThemeEnforcementState = {
+	enforced: boolean;
+	themeId: string | null;
+};
+
+export const themeEnforcement = writable<ThemeEnforcementState>({
+	enforced: false,
+	themeId: null
+});
+
 export interface SiteTheme {
 	id: string;
 	name: string;
@@ -116,8 +126,29 @@ export const themeFonts = derived(siteTheme, ($theme) => ({
 	scale: clampThemeFontScale($theme.fontScale)
 }));
 
+function applyActiveThemePayload(payload: {
+	success?: boolean;
+	data?: SiteTheme | null;
+	enforcement?: ThemeEnforcementState;
+}): void {
+	if (payload.enforcement) {
+		themeEnforcement.set({
+			enforced: !!payload.enforcement.enforced,
+			themeId:
+				typeof payload.enforcement.themeId === 'string'
+					? payload.enforcement.themeId
+					: null
+		});
+	}
+	if (payload.success && payload.data) {
+		siteTheme.set(payload.data as SiteTheme);
+	} else {
+		siteTheme.set(DEFAULT_THEME);
+	}
+}
+
 /**
- * Load active theme (or user's preferred theme)
+ * Load active theme (or user's preferred theme). Honors admin theme enforcement from the API.
  */
 export async function loadSiteTheme(): Promise<void> {
 	if (!browser) return;
@@ -126,39 +157,64 @@ export async function loadSiteTheme(): Promise<void> {
 	themeError.set(null);
 
 	try {
+		const activeRes = await fetch('/api/themes/active');
+
+		if (!activeRes.ok) {
+			throw new Error(`Failed to fetch theme: ${activeRes.statusText}`);
+		}
+
+		const activeData = await activeRes.json();
+		const enforcement: ThemeEnforcementState = activeData.enforcement ?? {
+			enforced: false,
+			themeId: null
+		};
+		themeEnforcement.set(enforcement);
+
+		if (enforcement.enforced) {
+			// Keep localStorage `selectedTheme` so when enforcement is turned off we can restore
+			// the visitor's previous choice on the next load (enforced theme still wins while locked).
+			applyActiveThemePayload(activeData);
+			return;
+		}
+
 		const savedThemeId = localStorage.getItem('selectedTheme');
-		
+
 		if (savedThemeId) {
 			const themesResponse = await fetch('/api/themes');
-			
+
 			if (themesResponse.ok) {
 				const themesData = await themesResponse.json();
+
+				if (themesData.enforcement?.enforced) {
+					themeEnforcement.set({
+						enforced: true,
+						themeId:
+							typeof themesData.enforcement.themeId === 'string'
+								? themesData.enforcement.themeId
+								: null
+					});
+					const r2 = await fetch('/api/themes/active');
+					if (r2.ok) {
+						const d2 = await r2.json();
+						applyActiveThemePayload(d2);
+					} else {
+						applyActiveThemePayload(activeData);
+					}
+					return;
+				}
+
 				const savedTheme = themesData.data?.find((t: SiteTheme) => t.id === savedThemeId);
-				
+
 				if (savedTheme) {
 					siteTheme.set(savedTheme);
 					themeLoading.set(false);
 					return;
-				} else {
-					// Saved theme is no longer visible, clear from localStorage
-					localStorage.removeItem('selectedTheme');
 				}
+				localStorage.removeItem('selectedTheme');
 			}
 		}
-		
-		const response = await fetch('/api/themes/active');
-		
-		if (!response.ok) {
-			throw new Error(`Failed to fetch theme: ${response.statusText}`);
-		}
 
-		const data = await response.json();
-		
-		if (data.success && data.data) {
-			siteTheme.set(data.data);
-		} else {
-			siteTheme.set(DEFAULT_THEME);
-		}
+		applyActiveThemePayload(activeData);
 	} catch (error) {
 		console.error('Error loading site theme:', error);
 		themeError.set(error instanceof Error ? error.message : 'Unknown error');

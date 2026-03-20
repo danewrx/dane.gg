@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { Palette } from 'lucide-svelte';
+	import { Palette, Lock } from 'lucide-svelte';
 	import FontSelector from './FontSelector.svelte';
 	import WeatherControls from './WeatherControls.svelte';
 	import ThemeSwitcherWindow from './ThemeSwitcherWindow.svelte';
 	import ChatNotificationControl from '$lib/site/components/settings/ChatNotificationControl.svelte';
+	import { themeEnforcement } from '$lib/site/stores/theme';
 
 	let { isOpen = false, onClose }: { isOpen?: boolean; onClose?: () => void } = $props();
 	let themeWindowOpen = $state(false);
@@ -35,10 +36,28 @@
 	<div class="settings-content">
 		<div class="settings-section">
 			<h3>Theme</h3>
-			<button class="theme-button" onclick={openThemeWindow}>
-				<Palette size={16} />
-				<span>Change Theme</span>
+			<button
+				type="button"
+				class="theme-button"
+				class:theme-button--locked={$themeEnforcement.enforced}
+				disabled={$themeEnforcement.enforced}
+				onclick={openThemeWindow}
+				aria-disabled={$themeEnforcement.enforced}
+				title={$themeEnforcement.enforced
+					? 'The site administrator has locked the theme for all visitors.'
+					: undefined}
+			>
+				{#if $themeEnforcement.enforced}
+					<Lock size={16} aria-hidden="true" />
+					<span>Theme locked</span>
+				{:else}
+					<Palette size={16} aria-hidden="true" />
+					<span>Change Theme</span>
+				{/if}
 			</button>
+			{#if $themeEnforcement.enforced}
+				<p class="theme-button-subtext">The theme picker has been disabled.</p>
+			{/if}
 		</div>
 
 		<div class="settings-section">
@@ -136,7 +155,7 @@
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
 	}
-	
+
 	.theme-button {
 		width: 100%;
 		padding: 12px 16px;
@@ -168,6 +187,32 @@
 	
 	.theme-button:active {
 		transform: translateY(0);
+	}
+
+	.theme-button:disabled,
+	.theme-button.theme-button--locked {
+		opacity: 0.5;
+		cursor: not-allowed;
+		color: var(--theme-text-muted, #71717a);
+		background: var(--theme-surface, #1a1a1a);
+		border-color: rgba(255, 255, 255, 0.2);
+	}
+
+	.theme-button:disabled:hover,
+	.theme-button.theme-button--locked:hover {
+		transform: none;
+		box-shadow: none;
+		background: var(--theme-surface, #1a1a1a);
+		border-color: rgba(255, 255, 255, 0.2);
+		color: var(--theme-text-muted, #71717a);
+	}
+
+	.theme-button-subtext {
+		margin: 8px 0 0 0;
+		font-size: 11px;
+		line-height: 1.4;
+		color: var(--theme-text-muted, #71717a);
+		text-align: left;
 	}
 
 	/* Animations */

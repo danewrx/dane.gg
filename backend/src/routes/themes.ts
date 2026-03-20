@@ -3,8 +3,45 @@ import { db } from '../db';
 import { themes, fonts } from '../db/schema';
 import { eq, asc, and } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
+import { ConfigService } from '../services/config';
 
 const router = Router();
+
+const SITE_THEME_ENFORCEMENT_KEY = 'site_theme_enforcement';
+
+export type SiteThemeEnforcement = {
+  enforced: boolean;
+  themeId: string | null;
+};
+
+export async function getThemeEnforcement(): Promise<SiteThemeEnforcement> {
+  const raw = await ConfigService.get(SITE_THEME_ENFORCEMENT_KEY);
+  if (raw && typeof raw === 'object') {
+    const o = raw as Record<string, unknown>;
+    return {
+      enforced: !!o.enforced,
+      themeId: typeof o.themeId === 'string' ? o.themeId : null
+    };
+  }
+  return { enforced: false, themeId: null };
+}
+
+async function getDefaultPublicThemeRow(): Promise<typeof themes.$inferSelect | null> {
+  const [defaultTheme] = await db.select()
+    .from(themes)
+    .where(and(eq(themes.isDefault, true), eq(themes.isVisible, true)))
+    .limit(1);
+
+  if (defaultTheme) return defaultTheme;
+
+  const [firstVisibleTheme] = await db.select()
+    .from(themes)
+    .where(eq(themes.isVisible, true))
+    .orderBy(asc(themes.displayOrder))
+    .limit(1);
+
+  return firstVisibleTheme ?? null;
+}
 
 async function enrichThemesWithFontUrls(themesData: any[]): Promise<any[]> {
   if (themesData.length === 0) return themesData;
@@ -28,29 +65,26 @@ function enrichThemeWithFontUrls(theme: any): Promise<any> {
 // GET default theme for public site
 router.get('/active', async (req, res) => {
   try {
-    const [defaultTheme] = await db.select()
-      .from(themes)
-      .where(and(eq(themes.isDefault, true), eq(themes.isVisible, true)))
-      .limit(1);
+    const enforcement = await getThemeEnforcement();
+    let row: typeof themes.$inferSelect | null = null;
 
-    if (defaultTheme) {
-      const enriched = await enrichThemeWithFontUrls(defaultTheme);
-      return res.json({
-        success: true,
-        data: enriched
-      });
+    if (enforcement.enforced && enforcement.themeId) {
+      const [forced] = await db.select()
+        .from(themes)
+        .where(eq(themes.id, enforcement.themeId))
+        .limit(1);
+      row = forced ?? null;
     }
 
-    const [firstVisibleTheme] = await db.select()
-      .from(themes)
-      .where(eq(themes.isVisible, true))
-      .orderBy(asc(themes.displayOrder))
-      .limit(1);
+    if (!row) {
+      row = await getDefaultPublicThemeRow();
+    }
 
-    const enriched = firstVisibleTheme ? await enrichThemeWithFontUrls(firstVisibleTheme) : null;
+    const enriched = row ? await enrichThemeWithFontUrls(row) : null;
     res.json({
       success: true,
-      data: enriched
+      data: enriched,
+      enforcement
     });
   } catch (error) {
     console.error('Error fetching active theme:', error);
@@ -64,6 +98,7 @@ router.get('/active', async (req, res) => {
 // GET all themes (public - only visible themes)
 router.get('/', async (req, res) => {
   try {
+    const enforcement = await getThemeEnforcement();
     const visibleThemes = await db.select()
       .from(themes)
       .where(eq(themes.isVisible, true))
@@ -72,7 +107,8 @@ router.get('/', async (req, res) => {
     const enriched = await enrichThemesWithFontUrls(visibleThemes);
     res.json({
       success: true,
-      data: enriched
+      data: enriched,
+      enforcement
     });
   } catch (error) {
     console.error('Error fetching themes:', error);
@@ -86,6 +122,7 @@ router.get('/', async (req, res) => {
 // GET all themes (admin)
 router.get('/all', requireAuth, async (req, res) => {
   try {
+    const enforcement = await getThemeEnforcement();
     const allThemes = await db.select()
       .from(themes)
       .orderBy(asc(themes.displayOrder));
@@ -93,13 +130,67 @@ router.get('/all', requireAuth, async (req, res) => {
     const enriched = await enrichThemesWithFontUrls(allThemes);
     res.json({
       success: true,
-      data: enriched
+      data: enriched,
+      enforcement
     });
   } catch (error) {
     console.error('Error fetching themes:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch themes'
+    });
+  }
+});
+
+// PUT site-wide theme enforcement (admin)
+router.put('/enforcement', requireAuth, async (req, res) => {
+  try {
+    const { enforced, themeId } = req.body as { enforced?: boolean; themeId?: string | null };
+
+    if (typeof enforced !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        error: 'enforced (boolean) is required'
+      });
+    }
+
+    if (enforced) {
+      if (!themeId || typeof themeId !== 'string') {
+        return res.status(400).json({
+          success: false,
+          error: 'themeId is required when enforcement is enabled'
+        });
+      }
+
+      const [existing] = await db.select()
+        .from(themes)
+        .where(eq(themes.id, themeId))
+        .limit(1);
+
+      if (!existing) {
+        return res.status(404).json({
+          success: false,
+          error: 'Theme not found'
+        });
+      }
+    }
+
+    const payload: SiteThemeEnforcement = {
+      enforced,
+      themeId: enforced && themeId ? themeId : null
+    };
+
+    await ConfigService.set(SITE_THEME_ENFORCEMENT_KEY, payload, 'json');
+
+    res.json({
+      success: true,
+      data: payload
+    });
+  } catch (error) {
+    console.error('Error updating theme enforcement:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update theme enforcement'
     });
   }
 });
@@ -465,6 +556,14 @@ router.delete('/:id', requireAuth, async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Cannot delete default themes'
+      });
+    }
+
+    const enc = await getThemeEnforcement();
+    if (enc.enforced && enc.themeId === id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot delete the enforced site theme. Disable theme enforcement in Site Themes first.'
       });
     }
 
