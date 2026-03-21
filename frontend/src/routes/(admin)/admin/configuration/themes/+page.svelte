@@ -22,6 +22,7 @@
 	} from 'lucide-svelte';
 	import FileUpload, { type UploadedFile } from '$lib/admin/components/ui/FileUpload.svelte';
 	import FontPicker from '$lib/admin/components/ui/FontPicker.svelte';
+	import CssCodeEditor from '$lib/admin/components/ui/CssCodeEditor.svelte';
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
 	import {
 		THEME_FONT_SCALE_MIN,
@@ -1333,18 +1334,18 @@
 							<pre class="var-list">{THEME_CSS_VARIABLES_REFERENCE}</pre>
 						</details>
 						<div class="form-group">
-							<label for="theme-custom-css">Stylesheet snippet</label>
-							<textarea
-								id="theme-custom-css"
-								class="form-input code-input"
-								bind:value={formData.customCss}
-								placeholder={`/* Optional: extra layout tokens */
+							<label class="custom-css-field">
+								<span class="custom-css-field-label">Stylesheet snippet</span>
+								<CssCodeEditor
+									class="theme-custom-css-editor"
+									bind:value={formData.customCss}
+									placeholder={`/* Optional: extra layout tokens */
 :root {
   --theme-content-max-width: 1000px;
 }`}
-								rows="14"
-								spellcheck="false"
-							></textarea>
+									minHeight="320px"
+								/>
+							</label>
 						</div>
 						</div>
 							</div>
@@ -2631,10 +2632,18 @@
 		white-space: pre;
 	}
 
-	.code-input {
-		font-family: 'JetBrains Mono', monospace;
+	.custom-css-field {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		width: 100%;
+		cursor: text;
+	}
+
+	.custom-css-field-label {
 		font-size: 13px;
-		resize: vertical;
+		font-weight: 500;
+		color: var(--text-secondary, #a1a1aa);
 	}
 
 	.image-preview-container {
