@@ -17,7 +17,8 @@
 		EyeOff,
 		Palette,
 		Star,
-		Lock
+		Lock,
+		ChevronDown
 	} from 'lucide-svelte';
 	import FileUpload, { type UploadedFile } from '$lib/admin/components/ui/FileUpload.svelte';
 	import FontPicker from '$lib/admin/components/ui/FontPicker.svelte';
@@ -108,6 +109,20 @@
 	let previewPath = $state<string>(PREVIEW_ROUTES[0].path);
 	let previewIframeReady = $state(false);
 	let previewIframeEl = $state<HTMLIFrameElement | null>(null);
+
+	type ThemeEditorAccordionId =
+		| 'colors'
+		| 'background'
+		| 'typography'
+		| 'corners'
+		| 'overlays'
+		| 'customCss';
+
+	let themeEditorOpenSection = $state<ThemeEditorAccordionId | null>('colors');
+
+	function toggleThemeEditorSection(id: ThemeEditorAccordionId): void {
+		themeEditorOpenSection = themeEditorOpenSection === id ? null : id;
+	}
 
 	let previewIframeSrc = $derived.by(() => {
 		if (!browser) return '';
@@ -367,6 +382,7 @@
 		editingTheme = null;
 		isCreating = true;
 		editorWorkspaceTab = 'editor';
+		themeEditorOpenSection = 'colors';
 	}
 
 	function startEditing(theme: Theme) {
@@ -405,6 +421,7 @@
 		editingTheme = theme;
 		isCreating = false;
 		editorWorkspaceTab = 'editor';
+		themeEditorOpenSection = 'colors';
 	}
 
 	function cancelEdit() {
@@ -788,9 +805,14 @@
 			>
 				{#if editorWorkspaceTab === 'editor'}
 				<div class="editor-main">
-					<!-- Basic Info -->
-					<section class="editor-section">
-						<h3>Basic Information</h3>
+					<p class="editor-accordion-hint">
+						Open one category at a time; it slides closed when you pick another.
+					</p>
+
+					<!-- Basic Info (always visible) -->
+					<section class="editor-section-static">
+						<h3 class="editor-section-static-title">Basic Information</h3>
+						<div class="editor-section-static-body">
 						<div class="form-group">
 							<label>Theme Name *</label>
 							<input
@@ -809,11 +831,34 @@
 							rows="2"
 						></textarea>
 					</div>
-				</section>
+						</div>
+					</section>
 
 					<!-- Colors -->
-					<section class="editor-section">
-						<h3>Colors</h3>
+					<section
+						class="editor-accordion"
+						class:editor-accordion--open={themeEditorOpenSection === 'colors'}
+					>
+						<button
+							type="button"
+							class="editor-accordion-trigger"
+							id="accordion-theme-colors"
+							aria-expanded={themeEditorOpenSection === 'colors'}
+							aria-controls="panel-theme-colors"
+							onclick={() => toggleThemeEditorSection('colors')}
+						>
+							<ChevronDown size={18} aria-hidden="true" />
+							<span class="editor-accordion-heading">Colors</span>
+						</button>
+						<div class="editor-accordion-slide" aria-hidden={themeEditorOpenSection !== 'colors'}>
+							<div
+								class="editor-accordion-slide-inner"
+								id="panel-theme-colors"
+								role="region"
+								aria-labelledby="accordion-theme-colors"
+								inert={themeEditorOpenSection !== 'colors'}
+							>
+						<div class="editor-accordion-content">
 						<div class="color-grid">
 							<div class="color-input">
 								<label>Primary</label>
@@ -879,11 +924,36 @@
 								</div>
 							</div>
 						</div>
+						</div>
+							</div>
+						</div>
 					</section>
 
 					<!-- Background -->
-					<section class="editor-section">
-						<h3>Background</h3>
+					<section
+						class="editor-accordion"
+						class:editor-accordion--open={themeEditorOpenSection === 'background'}
+					>
+						<button
+							type="button"
+							class="editor-accordion-trigger"
+							id="accordion-theme-background"
+							aria-expanded={themeEditorOpenSection === 'background'}
+							aria-controls="panel-theme-background"
+							onclick={() => toggleThemeEditorSection('background')}
+						>
+							<ChevronDown size={18} aria-hidden="true" />
+							<span class="editor-accordion-heading">Background</span>
+						</button>
+						<div class="editor-accordion-slide" aria-hidden={themeEditorOpenSection !== 'background'}>
+							<div
+								class="editor-accordion-slide-inner"
+								id="panel-theme-background"
+								role="region"
+								aria-labelledby="accordion-theme-background"
+								inert={themeEditorOpenSection !== 'background'}
+							>
+						<div class="editor-accordion-content">
 						<div class="form-group">
 							<label>Background Image</label>
 							{#if formData.backgroundImage}
@@ -933,11 +1003,36 @@
 								</select>
 							</div>
 						</div>
+						</div>
+							</div>
+						</div>
 					</section>
 
 					<!-- Typography -->
-					<section class="editor-section">
-						<h3>Typography</h3>
+					<section
+						class="editor-accordion"
+						class:editor-accordion--open={themeEditorOpenSection === 'typography'}
+					>
+						<button
+							type="button"
+							class="editor-accordion-trigger"
+							id="accordion-theme-typography"
+							aria-expanded={themeEditorOpenSection === 'typography'}
+							aria-controls="panel-theme-typography"
+							onclick={() => toggleThemeEditorSection('typography')}
+						>
+							<ChevronDown size={18} aria-hidden="true" />
+							<span class="editor-accordion-heading">Typography</span>
+						</button>
+						<div class="editor-accordion-slide" aria-hidden={themeEditorOpenSection !== 'typography'}>
+							<div
+								class="editor-accordion-slide-inner"
+								id="panel-theme-typography"
+								role="region"
+								aria-labelledby="accordion-theme-typography"
+								inert={themeEditorOpenSection !== 'typography'}
+							>
+						<div class="editor-accordion-content">
 						<div class="form-row">
 							<div class="form-group">
 								<FontPicker
@@ -983,6 +1078,38 @@
 								</div>
 								<span class="form-hint">{(fontScaleNumeric * 100).toFixed(1)}% — subtle range {THEME_FONT_SCALE_MIN}–{THEME_FONT_SCALE_MAX}</span>
 							</div>
+						</div>
+						</div>
+							</div>
+						</div>
+					</section>
+
+					<!-- Corners -->
+					<section
+						class="editor-accordion"
+						class:editor-accordion--open={themeEditorOpenSection === 'corners'}
+					>
+						<button
+							type="button"
+							class="editor-accordion-trigger"
+							id="accordion-theme-corners"
+							aria-expanded={themeEditorOpenSection === 'corners'}
+							aria-controls="panel-theme-corners"
+							onclick={() => toggleThemeEditorSection('corners')}
+						>
+							<ChevronDown size={18} aria-hidden="true" />
+							<span class="editor-accordion-heading">Corners</span>
+						</button>
+						<div class="editor-accordion-slide" aria-hidden={themeEditorOpenSection !== 'corners'}>
+							<div
+								class="editor-accordion-slide-inner"
+								id="panel-theme-corners"
+								role="region"
+								aria-labelledby="accordion-theme-corners"
+								inert={themeEditorOpenSection !== 'corners'}
+							>
+						<div class="editor-accordion-content">
+						<div class="form-row">
 							<div class="form-group">
 								<label>Main window radius</label>
 								<select class="form-input" bind:value={formData.borderRadius}>
@@ -1006,10 +1133,35 @@
 								<span class="form-hint">Status, Chat, About, and other bordered panels.</span>
 							</div>
 						</div>
+						</div>
+							</div>
+						</div>
 					</section>
 
-					<section class="editor-section">
-						<h3>Screen overlays</h3>
+					<section
+						class="editor-accordion"
+						class:editor-accordion--open={themeEditorOpenSection === 'overlays'}
+					>
+						<button
+							type="button"
+							class="editor-accordion-trigger"
+							id="accordion-theme-overlays"
+							aria-expanded={themeEditorOpenSection === 'overlays'}
+							aria-controls="panel-theme-overlays"
+							onclick={() => toggleThemeEditorSection('overlays')}
+						>
+							<ChevronDown size={18} aria-hidden="true" />
+							<span class="editor-accordion-heading">Screen overlays</span>
+						</button>
+						<div class="editor-accordion-slide" aria-hidden={themeEditorOpenSection !== 'overlays'}>
+							<div
+								class="editor-accordion-slide-inner"
+								id="panel-theme-overlays"
+								role="region"
+								aria-labelledby="accordion-theme-overlays"
+								inert={themeEditorOpenSection !== 'overlays'}
+							>
+						<div class="editor-accordion-content">
 						<p class="form-hint">
 							Effects behind the main window, <strong>for this theme only</strong> (unlike weather, which is
 							global). Opacity sliders are 0–1; background blur is 0–20px. Finer tuning can override in Custom
@@ -1138,10 +1290,35 @@
 								<span class="form-hint">Soft highlight from the upper-left.</span>
 							</div>
 						</div>
+						</div>
+							</div>
+						</div>
 					</section>
 
-					<section class="editor-section">
-						<h3>Custom CSS</h3>
+					<section
+						class="editor-accordion"
+						class:editor-accordion--open={themeEditorOpenSection === 'customCss'}
+					>
+						<button
+							type="button"
+							class="editor-accordion-trigger"
+							id="accordion-theme-custom-css"
+							aria-expanded={themeEditorOpenSection === 'customCss'}
+							aria-controls="panel-theme-custom-css"
+							onclick={() => toggleThemeEditorSection('customCss')}
+						>
+							<ChevronDown size={18} aria-hidden="true" />
+							<span class="editor-accordion-heading">Custom CSS</span>
+						</button>
+						<div class="editor-accordion-slide" aria-hidden={themeEditorOpenSection !== 'customCss'}>
+							<div
+								class="editor-accordion-slide-inner"
+								id="panel-theme-custom-css"
+								role="region"
+								aria-labelledby="accordion-theme-custom-css"
+								inert={themeEditorOpenSection !== 'customCss'}
+							>
+						<div class="editor-accordion-content">
 						<p class="form-hint custom-css-intro">
 							Overrides come <strong>after</strong> palette, fonts, radius, and screen overlay variables, so you
 							can set layout tokens on <code>:root</code> (defaults live in <code>app.css</code>).
@@ -1171,10 +1348,14 @@
 								spellcheck="false"
 							></textarea>
 						</div>
+						</div>
+							</div>
+						</div>
 					</section>
 
-					<section class="editor-section theme-visibility-section">
-						<h3>Visibility</h3>
+					<!-- Visibility (always visible) -->
+					<section class="editor-section-static editor-section-static--visibility">
+						<h3 class="editor-section-static-title">Visibility</h3>
 						<div class="theme-visibility-panel">
 							<div class="theme-visibility-row">
 								<Toggle bind:checked={formData.isVisible} label="Visible in theme selector" />
@@ -2054,16 +2235,121 @@
 		overscroll-behavior: contain;
 	}
 
-	.editor-section {
-		margin-bottom: 24px;
+	.editor-accordion-hint {
+		margin: 0 0 16px 0;
+		font-size: 13px;
+		line-height: 1.45;
+		color: var(--text-muted, #71717a);
 	}
 
-	.editor-section:last-child {
+	.editor-section-static {
+		margin-bottom: 20px;
+		padding: 16px 18px;
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 8px;
+		background: var(--bg-secondary, #141414);
+	}
+
+	.editor-section-static-title {
+		margin: 0 0 14px 0;
+		font-size: 14px;
+		font-weight: 600;
+		color: var(--text-primary, #ffffff);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.editor-section-static--visibility {
+		margin-top: 8px;
 		margin-bottom: 0;
 	}
 
-	.theme-visibility-section {
-		margin-top: 8px;
+	.editor-accordion {
+		margin-bottom: 10px;
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 8px;
+		background: var(--bg-secondary, #141414);
+		overflow: hidden;
+	}
+
+	.editor-accordion-trigger {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		width: 100%;
+		padding: 14px 16px;
+		margin: 0;
+		cursor: pointer;
+		user-select: none;
+		font-family: inherit;
+		text-align: left;
+		border: none;
+		background: transparent;
+		color: inherit;
+	}
+
+	.editor-accordion-trigger :global(svg) {
+		flex-shrink: 0;
+		transition: transform 0.3s ease;
+		color: var(--text-secondary, #a1a1aa);
+	}
+
+	.editor-accordion--open .editor-accordion-trigger :global(svg) {
+		transform: rotate(180deg);
+	}
+
+	.editor-accordion-trigger:hover :global(svg) {
+		color: var(--text-primary, #ffffff);
+	}
+
+	.editor-accordion-heading {
+		font-size: 14px;
+		font-weight: 600;
+		color: var(--text-primary, #ffffff);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.editor-accordion-trigger:focus {
+		outline: none;
+	}
+
+	.editor-accordion-trigger:focus-visible {
+		box-shadow: inset 0 0 0 2px var(--accent-color, #6366f1);
+	}
+
+	.editor-accordion-slide {
+		display: grid;
+		grid-template-rows: 0fr;
+		transition: grid-template-rows 0.35s ease;
+	}
+
+	.editor-accordion--open .editor-accordion-slide {
+		grid-template-rows: 1fr;
+	}
+
+	.editor-accordion-slide-inner {
+		overflow: hidden;
+		min-height: 0;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.editor-accordion-slide {
+			transition: none;
+		}
+
+		.editor-accordion-trigger :global(svg) {
+			transition: none;
+		}
+	}
+
+	.editor-accordion-content {
+		padding: 0 16px 18px 16px;
+		border-top: 1px solid var(--border-color, #3a3a3a);
+	}
+
+	.editor-accordion-content > :first-child {
+		margin-top: 16px;
 	}
 
 	.theme-visibility-panel {
@@ -2109,15 +2395,6 @@
 		font-size: 12px;
 		line-height: 1.5;
 		color: var(--text-muted, #71717a);
-	}
-
-	.editor-section h3 {
-		margin: 0 0 16px 0;
-		font-size: 14px;
-		font-weight: 600;
-		color: var(--text-primary, #ffffff);
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
 	}
 
 	.form-group {
