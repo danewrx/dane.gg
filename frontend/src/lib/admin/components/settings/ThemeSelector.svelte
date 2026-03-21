@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { siteTheme, applyThemeStyles, loadGoogleFonts, applyCustomCss, type SiteTheme } from '$lib/site/stores/theme';
+	import { themeDarkenToRgba } from '$lib/site/constants/themeOverlayOpacity';
 	import { Check, Palette, Loader2 } from 'lucide-svelte';
 
 	const STORAGE_KEY = 'userSelectedTheme';
@@ -78,8 +79,9 @@
 			const bgUrl = theme.backgroundImageExternal 
 				? theme.backgroundImage 
 				: theme.backgroundImage;
+			const darken = themeDarkenToRgba(theme.overlayDarkenOpacity, '0');
 			bgStyle = `
-				background: linear-gradient(${theme.backgroundOverlay}, ${theme.backgroundOverlay}), 
+				background: linear-gradient(${darken}, ${darken}), 
 				url('${bgUrl}') ${theme.backgroundPosition} / ${theme.backgroundSize};
 			`;
 		}

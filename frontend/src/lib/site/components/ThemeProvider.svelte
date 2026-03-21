@@ -14,6 +14,7 @@
 		THEME_PREVIEW_MSG_READY
 	} from '$lib/site/themePreview';
 	import type { ThemePreviewApplyMessage } from '$lib/site/themePreview';
+	import { themeDarkenToRgba } from '$lib/site/constants/themeOverlayOpacity';
 
 	let theme = $derived($siteTheme ?? DEFAULT_THEME);
 	let loading = $derived($themeLoading);
@@ -66,7 +67,7 @@
 	class:loading
 	style="
 		--bg-url: {getBgUrlCss()};
-		--bg-overlay: {theme?.backgroundOverlay ?? 'rgba(0, 0, 0, 0.7)'};
+		--bg-overlay: {themeDarkenToRgba(theme?.overlayDarkenOpacity, '0.7')};
 		--bg-blur: {theme?.backgroundBlur ?? 0}px;
 		--bg-position: {theme?.backgroundPosition ?? 'center center'};
 		--bg-size: {theme?.backgroundSize ?? 'cover'};

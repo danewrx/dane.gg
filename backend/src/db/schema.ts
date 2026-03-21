@@ -353,6 +353,7 @@ export const themes = websiteSchema.table('themes', {
   overlayGridOpacity: varchar('overlay_grid_opacity', { length: 10 }).default('0').notNull(),
   overlayGrainOpacity: varchar('overlay_grain_opacity', { length: 10 }).default('0').notNull(),
   overlayGlareOpacity: varchar('overlay_glare_opacity', { length: 10 }).default('0').notNull(),
+  overlayDarkenOpacity: varchar('overlay_darken_opacity', { length: 10 }).default('0').notNull(),
   
   displayOrder: integer('display_order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),

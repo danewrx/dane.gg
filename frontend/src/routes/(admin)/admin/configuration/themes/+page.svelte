@@ -28,6 +28,7 @@
 		THEME_FONT_SCALE_STEP,
 		clampThemeFontScale
 	} from '$lib/site/constants/themeFontScale';
+	import { themeDarkenToRgba } from '$lib/site/constants/themeOverlayOpacity';
 	import type { SiteTheme } from '$lib/site/stores/theme';
 	import {
 		THEME_PREVIEW_SEARCH_PARAM,
@@ -60,7 +61,6 @@
 		textMuted: string;
 		backgroundImage: string | null;
 		backgroundImageExternal: boolean;
-		backgroundOverlay: string;
 		backgroundBlur: number;
 		backgroundPosition: string;
 		backgroundSize: string;
@@ -76,6 +76,7 @@
 		overlayGridOpacity?: string;
 		overlayGrainOpacity?: string;
 		overlayGlareOpacity?: string;
+		overlayDarkenOpacity?: string;
 		bodyFontUrl?: string | null;
 		headingFontUrl?: string | null;
 		displayOrder: number;
@@ -88,7 +89,7 @@
 	let isSaving = $state(false);
 	let isSavingEnforcement = $state(false);
 
-	/** Admin form: site-wide theme lock (persisted via PUT /api/themes/enforcement) */
+	/** Admin form: site-wide theme lock */
 	let enforcementEnforced = $state(false);
 	let enforcementThemeId = $state('');
 	
@@ -137,7 +138,6 @@
 			textMuted: formData.textMuted,
 			backgroundImage: formData.backgroundImage?.trim() || null,
 			backgroundImageExternal: formData.backgroundImageExternal,
-			backgroundOverlay: formData.backgroundOverlay,
 			backgroundBlur: formData.backgroundBlur,
 			backgroundPosition: formData.backgroundPosition,
 			backgroundSize: formData.backgroundSize,
@@ -154,7 +154,8 @@
 			overlayVignetteOpacity: formData.overlayVignetteOpacity,
 			overlayGridOpacity: formData.overlayGridOpacity,
 			overlayGrainOpacity: formData.overlayGrainOpacity,
-			overlayGlareOpacity: formData.overlayGlareOpacity
+			overlayGlareOpacity: formData.overlayGlareOpacity,
+			overlayDarkenOpacity: formData.overlayDarkenOpacity
 		};
 	}
 
@@ -216,7 +217,6 @@
 		textMuted: '#71717a',
 		backgroundImage: '',
 		backgroundImageExternal: false,
-		backgroundOverlay: 'rgba(0, 0, 0, 0.7)',
 		backgroundBlur: 0,
 		backgroundPosition: 'center center',
 		backgroundSize: 'cover',
@@ -231,7 +231,8 @@
 		overlayVignetteOpacity: '0',
 		overlayGridOpacity: '0',
 		overlayGrainOpacity: '0',
-		overlayGlareOpacity: '0'
+		overlayGlareOpacity: '0',
+		overlayDarkenOpacity: '0.7'
 	});
 
 	let fontScaleNumeric = $derived(parseFloat(clampThemeFontScale(formData.fontScale)));
@@ -341,7 +342,6 @@
 			textMuted: '#71717a',
 			backgroundImage: '',
 			backgroundImageExternal: false,
-			backgroundOverlay: 'rgba(0, 0, 0, 0.7)',
 			backgroundBlur: 0,
 			backgroundPosition: 'center center',
 			backgroundSize: 'cover',
@@ -357,6 +357,7 @@
 			overlayGridOpacity: '0',
 			overlayGrainOpacity: '0',
 			overlayGlareOpacity: '0',
+			overlayDarkenOpacity: '0.7',
 			isVisible: false
 		};
 	}
@@ -384,7 +385,6 @@
 			textMuted: theme.textMuted,
 			backgroundImage: theme.backgroundImage || '',
 			backgroundImageExternal: theme.backgroundImageExternal,
-			backgroundOverlay: theme.backgroundOverlay,
 			backgroundBlur: theme.backgroundBlur,
 			backgroundPosition: theme.backgroundPosition,
 			backgroundSize: theme.backgroundSize,
@@ -399,7 +399,8 @@
 			overlayVignetteOpacity: theme.overlayVignetteOpacity ?? '0',
 			overlayGridOpacity: theme.overlayGridOpacity ?? '0',
 			overlayGrainOpacity: theme.overlayGrainOpacity ?? '0',
-			overlayGlareOpacity: theme.overlayGlareOpacity ?? '0'
+			overlayGlareOpacity: theme.overlayGlareOpacity ?? '0',
+			overlayDarkenOpacity: theme.overlayDarkenOpacity ?? '0'
 		};
 		editingTheme = theme;
 		isCreating = false;
@@ -472,7 +473,6 @@
 				textMuted: formData.textMuted,
 				backgroundImage: formData.backgroundImage || null,
 				backgroundImageExternal: formData.backgroundImageExternal,
-				backgroundOverlay: formData.backgroundOverlay,
 				backgroundBlur: formData.backgroundBlur,
 				backgroundPosition: formData.backgroundPosition,
 				backgroundSize: formData.backgroundSize,
@@ -487,7 +487,8 @@
 				overlayVignetteOpacity: formData.overlayVignetteOpacity,
 				overlayGridOpacity: formData.overlayGridOpacity,
 				overlayGrainOpacity: formData.overlayGrainOpacity,
-				overlayGlareOpacity: formData.overlayGlareOpacity
+				overlayGlareOpacity: formData.overlayGlareOpacity,
+				overlayDarkenOpacity: formData.overlayDarkenOpacity
 			};
 
 			let response;
@@ -907,27 +908,6 @@
 						</div>
 						<div class="form-row">
 							<div class="form-group">
-								<label>Overlay Color</label>
-								<input
-									type="text"
-									class="form-input"
-									bind:value={formData.backgroundOverlay}
-									placeholder="rgba(0, 0, 0, 0.7)"
-								/>
-							</div>
-							<div class="form-group">
-								<label>Blur ({formData.backgroundBlur}px)</label>
-								<input
-									type="range"
-									min="0"
-									max="20"
-									bind:value={formData.backgroundBlur}
-									class="range-input"
-								/>
-							</div>
-						</div>
-						<div class="form-row">
-							<div class="form-group">
 								<label>Position</label>
 								<select class="form-input" bind:value={formData.backgroundPosition}>
 									<option value="center center">Center</option>
@@ -1031,10 +1011,42 @@
 					<section class="editor-section">
 						<h3>Screen overlays</h3>
 						<p class="form-hint">
-							Full-screen effects behind the main window, <strong>for this theme only</strong> (unlike
-							weather, which is global). Values 0–1; finer tuning can still override in Custom CSS below.
+							Effects behind the main window, <strong>for this theme only</strong> (unlike weather, which is
+							global). Opacity sliders are 0–1; background blur is 0–20px. Finer tuning can override in Custom
+							CSS below.
 						</p>
 						<div class="overlay-sliders">
+							<div class="form-group">
+								<label for="ov-bg-blur">Blur <span class="opacity-num">{formData.backgroundBlur}px</span></label>
+								<input
+									id="ov-bg-blur"
+									type="range"
+									min="0"
+									max="20"
+									step="1"
+									class="form-input overlay-slider"
+									bind:value={formData.backgroundBlur}
+								/>
+								<span class="form-hint">Gaussian blur on the background image only.</span>
+							</div>
+							<div class="form-group">
+								<label for="ov-darken"
+									>Darken <span class="opacity-num">{formData.overlayDarkenOpacity}</span></label
+								>
+								<input
+									id="ov-darken"
+									type="range"
+									min="0"
+									max="1"
+									step="0.05"
+									class="form-input overlay-slider"
+									value={parseFloat(formData.overlayDarkenOpacity) || 0}
+									oninput={(e) => {
+										formData.overlayDarkenOpacity = (e.currentTarget as HTMLInputElement).value;
+									}}
+								/>
+								<span class="form-hint">Black overlay on top of the background image.</span>
+							</div>
 							<div class="form-group">
 								<label for="ov-scanlines"
 									>Scanlines <span class="opacity-num">{formData.scanlinesOpacity}</span></label
@@ -1259,7 +1271,7 @@
 							></div>
 							<div
 								class="preview-overlay"
-								style="background: {formData.backgroundOverlay};"
+								style="background: {themeDarkenToRgba(formData.overlayDarkenOpacity, '0')};"
 							></div>
 						{/if}
 						<div class="preview-content">
@@ -1366,7 +1378,7 @@
 							></div>
 							<div 
 								class="mini-overlay"
-								style="background: {theme.backgroundOverlay};"
+								style="background: {themeDarkenToRgba(theme.overlayDarkenOpacity, '0')};"
 							></div>
 						{/if}
 						<div class="mini-content">
@@ -1484,7 +1496,7 @@
 									></div>
 									<div 
 										class="mini-overlay"
-										style="background: {theme.backgroundOverlay};"
+										style="background: {themeDarkenToRgba(theme.overlayDarkenOpacity, '0')};"
 									></div>
 								{/if}
 								<div class="mini-content">

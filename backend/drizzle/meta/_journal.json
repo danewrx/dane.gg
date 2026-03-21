@@ -183,6 +183,13 @@
       "when": 1773971779727,
       "tag": "0025_dazzling_fantastic_four",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1774200000000,
+      "tag": "0026_theme_overlay_darken",
+      "breakpoints": true
     }
   ]
 }

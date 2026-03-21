@@ -9,6 +9,11 @@ const router = Router();
 
 const SITE_THEME_ENFORCEMENT_KEY = 'site_theme_enforcement';
 
+function overlayDarkenToLegacyRgba(opacity: unknown): string {
+  const n = Math.min(1, Math.max(0, parseFloat(String(opacity ?? '0')) || 0));
+  return `rgba(0, 0, 0, ${n})`;
+}
+
 export type SiteThemeEnforcement = {
   enforced: boolean;
   themeId: string | null;
@@ -244,7 +249,6 @@ router.post('/', requireAuth, async (req, res) => {
       textMuted,
       backgroundImage,
       backgroundImageExternal,
-      backgroundOverlay,
       backgroundBlur,
       backgroundPosition,
       backgroundSize,
@@ -259,7 +263,8 @@ router.post('/', requireAuth, async (req, res) => {
       overlayVignetteOpacity,
       overlayGridOpacity,
       overlayGrainOpacity,
-      overlayGlareOpacity
+      overlayGlareOpacity,
+      overlayDarkenOpacity
     } = req.body;
 
     if (!name) {
@@ -288,7 +293,7 @@ router.post('/', requireAuth, async (req, res) => {
       textMuted: textMuted || '#71717a',
       backgroundImage: backgroundImage || null,
       backgroundImageExternal: backgroundImageExternal || false,
-      backgroundOverlay: backgroundOverlay || 'rgba(0, 0, 0, 0.7)',
+      backgroundOverlay: overlayDarkenToLegacyRgba(overlayDarkenOpacity ?? '0.7'),
       backgroundBlur: backgroundBlur ?? 0,
       backgroundPosition: backgroundPosition || 'center center',
       backgroundSize: backgroundSize || 'cover',
@@ -304,6 +309,7 @@ router.post('/', requireAuth, async (req, res) => {
       overlayGridOpacity: overlayGridOpacity ?? '0',
       overlayGrainOpacity: overlayGrainOpacity ?? '0',
       overlayGlareOpacity: overlayGlareOpacity ?? '0',
+      overlayDarkenOpacity: overlayDarkenOpacity ?? '0.7',
       displayOrder: maxOrder + 1
     }).returning();
 
@@ -412,7 +418,6 @@ router.put('/:id', requireAuth, async (req, res) => {
       textMuted,
       backgroundImage,
       backgroundImageExternal,
-      backgroundOverlay,
       backgroundBlur,
       backgroundPosition,
       backgroundSize,
@@ -428,7 +433,8 @@ router.put('/:id', requireAuth, async (req, res) => {
       overlayVignetteOpacity,
       overlayGridOpacity,
       overlayGrainOpacity,
-      overlayGlareOpacity
+      overlayGlareOpacity,
+      overlayDarkenOpacity
     } = req.body;
 
     const updateData: Record<string, any> = {
@@ -449,7 +455,6 @@ router.put('/:id', requireAuth, async (req, res) => {
     if (textMuted !== undefined) updateData.textMuted = textMuted;
     if (backgroundImage !== undefined) updateData.backgroundImage = backgroundImage;
     if (backgroundImageExternal !== undefined) updateData.backgroundImageExternal = backgroundImageExternal;
-    if (backgroundOverlay !== undefined) updateData.backgroundOverlay = backgroundOverlay;
     if (backgroundBlur !== undefined) updateData.backgroundBlur = backgroundBlur;
     if (backgroundPosition !== undefined) updateData.backgroundPosition = backgroundPosition;
     if (backgroundSize !== undefined) updateData.backgroundSize = backgroundSize;
@@ -466,6 +471,10 @@ router.put('/:id', requireAuth, async (req, res) => {
     if (overlayGridOpacity !== undefined) updateData.overlayGridOpacity = overlayGridOpacity;
     if (overlayGrainOpacity !== undefined) updateData.overlayGrainOpacity = overlayGrainOpacity;
     if (overlayGlareOpacity !== undefined) updateData.overlayGlareOpacity = overlayGlareOpacity;
+    if (overlayDarkenOpacity !== undefined) {
+      updateData.overlayDarkenOpacity = overlayDarkenOpacity;
+      updateData.backgroundOverlay = overlayDarkenToLegacyRgba(overlayDarkenOpacity);
+    }
 
     const [updatedTheme] = await db.update(themes)
       .set(updateData)
@@ -544,6 +553,7 @@ router.post('/:id/duplicate', requireAuth, async (req, res) => {
       overlayGridOpacity: originalTheme.overlayGridOpacity,
       overlayGrainOpacity: originalTheme.overlayGrainOpacity,
       overlayGlareOpacity: originalTheme.overlayGlareOpacity,
+      overlayDarkenOpacity: originalTheme.overlayDarkenOpacity ?? '0',
       displayOrder: maxOrder + 1
     }).returning();
 

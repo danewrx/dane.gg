@@ -4,3 +4,8 @@ export function clampThemeUnitOpacity(v: string | undefined | null, fallback: st
 	if (Number.isNaN(n)) return fallback;
 	return String(Math.min(1, Math.max(0, n)));
 }
+
+export function themeDarkenToRgba(opacity: string | undefined | null, fallback: string): string {
+	const a = clampThemeUnitOpacity(opacity, fallback);
+	return `rgba(0, 0, 0, ${a})`;
+}

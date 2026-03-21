@@ -1,7 +1,7 @@
 import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 import { clampThemeFontScale } from '$lib/site/constants/themeFontScale';
-import { clampThemeUnitOpacity } from '$lib/site/constants/themeOverlayOpacity';
+import { clampThemeUnitOpacity, themeDarkenToRgba } from '$lib/site/constants/themeOverlayOpacity';
 
 export type ThemeEnforcementState = {
 	enforced: boolean;
@@ -34,7 +34,6 @@ export interface SiteTheme {
 	// Background
 	backgroundImage: string | null;
 	backgroundImageExternal: boolean;
-	backgroundOverlay: string;
 	backgroundBlur: number;
 	backgroundPosition: string;
 	backgroundSize: string;
@@ -58,6 +57,7 @@ export interface SiteTheme {
 	overlayGridOpacity?: string;
 	overlayGrainOpacity?: string;
 	overlayGlareOpacity?: string;
+	overlayDarkenOpacity?: string;
 }
 
 // Default theme (fallback)
@@ -82,7 +82,6 @@ export const DEFAULT_THEME: SiteTheme = {
 	// Background
 	backgroundImage: '/assets/img/backgrounds/1.png',
 	backgroundImageExternal: false,
-	backgroundOverlay: 'rgba(0, 0, 0, 0.7)',
 	backgroundBlur: 0,
 	backgroundPosition: 'center center',
 	backgroundSize: 'cover',
@@ -101,7 +100,8 @@ export const DEFAULT_THEME: SiteTheme = {
 	overlayVignetteOpacity: '0',
 	overlayGridOpacity: '0',
 	overlayGrainOpacity: '0',
-	overlayGlareOpacity: '0'
+	overlayGlareOpacity: '0',
+	overlayDarkenOpacity: '0.7'
 };
 
 // Theme store
@@ -124,7 +124,7 @@ export const themeColors = derived(siteTheme, ($theme) => ({
 export const themeBackground = derived(siteTheme, ($theme) => ({
 	image: $theme.backgroundImage,
 	isExternal: $theme.backgroundImageExternal,
-	overlay: $theme.backgroundOverlay,
+	overlay: themeDarkenToRgba($theme.overlayDarkenOpacity, '0'),
 	blur: $theme.backgroundBlur,
 	position: $theme.backgroundPosition,
 	size: $theme.backgroundSize,
@@ -282,7 +282,7 @@ function buildThemeVarsStylesheet(theme: SiteTheme): string {
   --theme-text-primary: ${theme.textPrimary};
   --theme-text-secondary: ${theme.textSecondary};
   --theme-text-muted: ${theme.textMuted};
-  --theme-bg-overlay: ${theme.backgroundOverlay};
+  --theme-bg-overlay: ${themeDarkenToRgba(theme.overlayDarkenOpacity, '0')};
   --theme-bg-blur: ${theme.backgroundBlur}px;
   --theme-bg-position: ${theme.backgroundPosition};
   --theme-bg-size: ${theme.backgroundSize};

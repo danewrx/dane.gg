@@ -20,7 +20,7 @@
 		textPrimary: string;
 		textSecondary: string;
 		textMuted: string;
-		backgroundOverlay: string;
+		overlayDarkenOpacity?: string;
 		backgroundBlur: number;
 		backgroundPosition: string;
 		backgroundSize: string;

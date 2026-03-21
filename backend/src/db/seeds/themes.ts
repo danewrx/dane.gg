@@ -25,6 +25,7 @@ export async function seedThemes() {
       backgroundImage: '/assets/img/backgrounds/1.png',
       backgroundImageExternal: false,
       backgroundOverlay: 'rgba(0, 0, 0, 0.7)',
+      overlayDarkenOpacity: '0.7',
       backgroundBlur: 0,
       backgroundPosition: 'center center',
       backgroundSize: 'cover',
@@ -64,7 +65,8 @@ export async function seedThemes() {
 
       backgroundImage: '/assets/img/backgrounds/3.jpg',
       backgroundImageExternal: false,
-      backgroundOverlay: 'rgba(10, 10, 18, 0.6)',
+      backgroundOverlay: 'rgba(0, 0, 0, 0.6)',
+      overlayDarkenOpacity: '0.6',
       backgroundBlur: 0,
       backgroundPosition: 'center center',
       backgroundSize: 'cover',
@@ -116,7 +118,8 @@ export async function seedThemes() {
 
       backgroundImage: '/assets/img/backgrounds/2.jpg',
       backgroundImageExternal: false,
-      backgroundOverlay: 'rgba(252, 228, 236, 0.3)',
+      backgroundOverlay: 'rgba(0, 0, 0, 0.3)',
+      overlayDarkenOpacity: '0.3',
       backgroundBlur: 0,
       backgroundPosition: 'right bottom',
       backgroundSize: 'contain',
