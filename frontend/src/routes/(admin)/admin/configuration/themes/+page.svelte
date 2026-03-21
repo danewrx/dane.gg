@@ -36,6 +36,7 @@
 		THEME_PREVIEW_MSG_APPLY,
 		THEME_PREVIEW_MSG_READY
 	} from '$lib/site/themePreview';
+	import { THEME_CSS_VARIABLES_REFERENCE } from '$lib/site/constants/themeCssVariablesReference';
 
 	const PREVIEW_ROUTES = [
 		{ label: 'Home', path: '/' },
@@ -1324,15 +1325,12 @@
 							can set layout tokens on <code>:root</code> (defaults live in <code>app.css</code>).
 						</p>
 						<details class="theme-var-hint">
-							<summary>Common variables</summary>
-							<pre class="var-list">{`:root {
-  --theme-shell-border-width: 2px;
-  --theme-widget-border-width: 2px;
-  --theme-shell-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  --theme-content-max-width: 900px;
-  /* Screen overlays are usually set in “Screen overlays” above; you can override e.g. --theme-scanlines-opacity here */
-  --theme-body-line-height: 1.65;
-}`}</pre>
+							<summary>Built-in CSS variables (reference)</summary>
+							<p class="theme-var-hint-lead">
+								Theme fields and <code>app.css</code> define these tokens; custom CSS loads after and can
+								override any of them. Example values are defaults—copy and edit as needed.
+							</p>
+							<pre class="var-list">{THEME_CSS_VARIABLES_REFERENCE}</pre>
 						</details>
 						<div class="form-group">
 							<label for="theme-custom-css">Stylesheet snippet</label>
@@ -2605,16 +2603,32 @@
 		user-select: none;
 	}
 
+	.theme-var-hint-lead {
+		margin: 8px 0 0 0;
+		font-size: 11px;
+		line-height: 1.45;
+		color: var(--text-muted, #71717a);
+	}
+
+	.theme-var-hint-lead code {
+		font-size: 10px;
+		padding: 1px 4px;
+		border-radius: 3px;
+		background: rgba(0, 0, 0, 0.25);
+	}
+
 	.var-list {
 		margin-top: 8px;
 		padding: 10px 12px;
-		overflow-x: auto;
+		max-height: min(420px, 55vh);
+		overflow: auto;
 		font-family: 'JetBrains Mono', monospace;
 		font-size: 11px;
 		line-height: 1.45;
 		background: rgba(0, 0, 0, 0.35);
 		border-radius: 6px;
 		border: 1px solid var(--border-color, #3a3a3a);
+		white-space: pre;
 	}
 
 	.code-input {
