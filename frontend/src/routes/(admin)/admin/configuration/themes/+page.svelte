@@ -2188,8 +2188,19 @@
 	}
 
 	.workspace-tab.active {
-		color: var(--accent-color, #ef4444);
-		box-shadow: inset 0 -2px 0 0 var(--accent-color, #ef4444);
+		color: var(--text-primary, #ffffff);
+		font-weight: 600;
+		box-shadow: inset 0 -2px 0 0 var(--text-primary, #ffffff);
+	}
+
+	.workspace-tab:focus {
+		outline: none;
+	}
+
+	.workspace-tab:focus-visible {
+		outline: 2px solid rgba(255, 255, 255, 0.28);
+		outline-offset: 2px;
+		border-radius: 4px;
 	}
 
 	.editor-header h2 {
