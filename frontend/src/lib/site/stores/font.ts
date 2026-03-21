@@ -1,37 +1,39 @@
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 
-export type FontMode = 'w95' | 'system';
+export type FontMode = 'theme' | 'system';
 
-// Default font mode
-const defaultFontMode: FontMode = 'w95';
+// Default font mode: use the theme's font
+const defaultFontMode: FontMode = 'theme';
 
 // Create the font store
 export const fontMode = writable<FontMode>(defaultFontMode);
 
 // Font configurations
 export const fontConfigs = {
-	w95: {
-		name: 'Windows 95',
-		fontFamily: "'W95FA', 'JetBrains Mono', 'Courier New', monospace",
-		description: 'Retro Windows 95 style'
+	theme: {
+		name: 'Theme font',
+		description: 'Use the font from your selected theme',
+		fontFamily: 'var(--theme-font-family)'
 	},
 	system: {
-		name: 'System',
-		fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif",
-		description: 'Your system default font'
+		name: 'System font',
+		description: 'Your system default font for better readability',
+		fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif"
 	}
 };
 
 // Initialize font mode from localStorage
 if (browser) {
-	const savedFontMode = localStorage.getItem('fontMode') as FontMode;
-	if (savedFontMode && (savedFontMode === 'w95' || savedFontMode === 'system')) {
-		fontMode.set(savedFontMode);
+	const saved = localStorage.getItem('fontMode');
+	if (saved === 'theme' || saved === 'system') {
+		fontMode.set(saved);
+	} else if (saved === 'w95') {
+		fontMode.set('theme');
 	}
 }
 
-// Subscribe to font mode changes and update localStorage
+// Subscribe to font mode changes and update localStorage + global font
 if (browser) {
 	fontMode.subscribe((mode) => {
 		localStorage.setItem('fontMode', mode);
@@ -39,17 +41,10 @@ if (browser) {
 	});
 }
 
-// Function to update the global font
 function updateGlobalFont(mode: FontMode) {
 	if (!browser) return;
-	
 	const config = fontConfigs[mode];
 	document.documentElement.style.setProperty('--global-font-family', config.fontFamily);
-}
-
-// Toggle between font modes
-export function toggleFontMode() {
-	fontMode.update(current => current === 'w95' ? 'system' : 'w95');
 }
 
 // Set specific font mode
@@ -59,7 +54,7 @@ export function setFontMode(mode: FontMode) {
 
 // Initialize font on load
 if (browser) {
-	// Set initial font
-	const currentMode = localStorage.getItem('fontMode') as FontMode || defaultFontMode;
-	updateGlobalFont(currentMode);
+	const saved = localStorage.getItem('fontMode');
+	const mode = (saved === 'theme' || saved === 'system' ? saved : saved === 'w95' ? 'theme' : defaultFontMode) as FontMode;
+	updateGlobalFont(mode);
 }

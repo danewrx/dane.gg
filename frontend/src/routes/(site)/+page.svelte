@@ -30,21 +30,6 @@
 	let aboutMeContent = $state('');
 	let loadingAboutMe = $state(true);
 	
-	function getStatusColor(status: string): string {
-		switch (status) {
-			case 'OK':
-				return '#90EE90';
-			case 'DOWN':
-				return '#FFB6C1';
-			case 'MAINTENANCE':
-				return '#FFD700';
-			case 'PENDING':
-				return '#D3D3D3';
-			default:
-				return '#D3D3D3';
-		}
-	}
-
 	interface BlogPost {
 		id: string;
 		title: string;
@@ -196,7 +181,7 @@
 					showHeader={true} 
 					headerText="Systems status:" 
 					subheading={overallStatus}
-					subheadingColor={getStatusColor(overallStatus)}
+					subheadingSemanticStatus={true}
 					dynamicHeight={true} 
 					contentPadding={true}
 				>
@@ -323,9 +308,20 @@
 	}
 
 	:global(.status-icon.playing) {
-		color: #22c55e;
+		color: var(--theme-accent, #22c55e);
 		width: 16px;
 		height: 16px;
+		filter: drop-shadow(0 0 8px var(--theme-accent, #22c55e)) drop-shadow(0 0 16px var(--theme-accent, #22c55e));
+		animation: pulse-glow 2s ease-in-out infinite;
+	}
+
+	@keyframes pulse-glow {
+		0%, 100% {
+			filter: drop-shadow(0 0 8px var(--theme-accent, #22c55e)) drop-shadow(0 0 16px var(--theme-accent, #22c55e));
+		}
+		50% {
+			filter: drop-shadow(0 0 12px var(--theme-accent, #22c55e)) drop-shadow(0 0 24px var(--theme-accent, #22c55e));
+		}
 	}
 
 	:global(.status-icon.offline) {
@@ -348,7 +344,7 @@
 	:global(.intro-section h2) {
 		color: var(--text-primary);
 		margin-bottom: 1rem;
-		font-size: 1.8rem;
+		font-size: calc(1.8 * 16 * 1em / 14);
 	}
 
 	:global(.intro-section p) {
@@ -364,7 +360,7 @@
 
 	.about-me-content {
 		color: var(--text-primary);
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		line-height: 1.6;
 	}
 
@@ -372,7 +368,7 @@
 		color: var(--text-primary);
 		margin-bottom: 12px;
 		line-height: 1.6;
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 	}
 
 	.about-me-content :global(ul) {
@@ -385,7 +381,7 @@
 		color: var(--text-primary);
 		margin-bottom: 4px;
 		line-height: 1.3;
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 	}
 
 	.about-me-content :global(a) {
@@ -405,7 +401,7 @@
 	.about-me-loading,
 	.about-me-empty {
 		color: var(--text-secondary, #a1a1aa);
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		text-align: center;
 		padding: 2rem 0;
 	}
@@ -418,7 +414,7 @@
 		color: var(--text-primary);
 		margin-bottom: 12px;
 		line-height: 1.6;
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 	}
 
 	:global(.about-section ul) {
@@ -431,7 +427,7 @@
 		color: var(--text-primary);
 		margin-bottom: 4px;
 		line-height: 1.3;
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 	}
 
 	:global(.about-section a) {
@@ -457,7 +453,7 @@
 		border: none;
 		padding: 0;
 		color: var(--text-primary, #ffffff);
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		text-align: left;
 		cursor: pointer;
 		transition: color 0.2s ease;
@@ -475,7 +471,7 @@
 
 	.recent-posts-empty {
 		color: var(--text-secondary, #9ca3af);
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		margin: 0;
 		text-align: left;
 		padding-top: 12px;
@@ -662,12 +658,12 @@
 	:global(.feature-card h3) {
 		color: var(--accent-color);
 		margin-bottom: 0.5rem;
-		font-size: 1.2rem;
+		font-size: calc(1.2 * 16 * 1em / 14);
 	}
 
 	:global(.feature-card p) {
 		color: var(--text-secondary);
-		font-size: 0.9rem;
+		font-size: calc(0.9 * 16 * 1em / 14);
 		line-height: 1.5;
 	}
 
@@ -703,13 +699,13 @@
 
 		:global(.about-section p),
 		.about-me-content :global(p) {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 			margin-bottom: 10px;
 		}
 
 		:global(.about-section li),
 		.about-me-content :global(li) {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 			margin-bottom: 3px;
 			line-height: 1.3;
 		}

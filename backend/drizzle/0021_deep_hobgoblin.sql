@@ -1,0 +1,1 @@
+ALTER TABLE "website"."themes" ADD COLUMN "widget_border_radius" varchar(20) DEFAULT '8px';

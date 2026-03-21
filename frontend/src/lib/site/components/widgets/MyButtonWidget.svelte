@@ -137,8 +137,8 @@
 	}
 
 	.code-block {
-		background: #1a1a1a;
-		border: 1px solid #333;
+		background: var(--theme-background, #1a1a1a);
+		border: 1px solid var(--theme-border, #333);
 		border-radius: 4px 0 0 4px;
 		padding: 4px 8px;
 		flex: 1;
@@ -152,8 +152,8 @@
 	.code-block pre {
 		margin: 0;
 		font-family: 'Courier New', monospace;
-		font-size: 13px;
-		color: #e5e5e5;
+		font-size: calc(13 * 1em / 14);
+		color: var(--theme-text-primary, #e5e5e5);
 		white-space: pre-wrap;
 		word-break: break-all;
 		overflow-y: auto;
@@ -165,14 +165,14 @@
 	}
 
 	.copy-button {
-		background: #333;
-		color: #e5e5e5;
-		border: 1px solid #333;
+		background: var(--theme-border, #333);
+		color: var(--theme-text-primary, #e5e5e5);
+		border: 1px solid var(--theme-border, #333);
 		border-left: none;
 		border-radius: 0 4px 4px 0;
 		padding: 2px 4px;
 		cursor: pointer;
-		font-size: 8px;
+		font-size: calc(8 * 1em / 14);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -183,7 +183,7 @@
 	}
 
 	.copy-button:hover {
-		background: #444;
+		background: var(--theme-surface, #444);
 		transform: translateY(-1px);
 	}
 
@@ -204,7 +204,7 @@
 		border: none;
 		color: var(--text-primary);
 		cursor: pointer;
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		display: flex;
 		align-items: center;
 		gap: 8px;
@@ -232,7 +232,7 @@
 
 	.hotlink-explanation p {
 		margin: 0;
-		font-size: 13px;
+		font-size: calc(13 * 1em / 14);
 		line-height: 1.5;
 		color: var(--text-primary);
 	}
@@ -269,7 +269,7 @@
 		}
 
 		.code-block pre {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 			white-space: pre-wrap;
 			word-break: break-all;
 			height: 100%;
@@ -277,7 +277,7 @@
 		}
 
 		.copy-button {
-			font-size: 7px;
+			font-size: calc(7 * 1em / 14);
 			padding: 2px 4px;
 			height: 31px;
 			width: 20px;
@@ -285,11 +285,11 @@
 		}
 
 		.hotlink-toggle {
-			font-size: 13px;
+			font-size: calc(13 * 1em / 14);
 		}
 
 		.hotlink-explanation p {
-			font-size: 12px;
+			font-size: calc(12 * 1em / 14);
 		}
 	}
 
@@ -307,12 +307,12 @@
 		}
 
 		.code-block pre {
-			font-size: 11px;
+			font-size: calc(11 * 1em / 14);
 			word-break: break-all;
 		}
 
 		.copy-button {
-			font-size: 6px;
+			font-size: calc(6 * 1em / 14);
 			padding: 2px 3px;
 			height: 31px;
 			width: 18px;

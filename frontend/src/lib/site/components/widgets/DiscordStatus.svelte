@@ -121,9 +121,9 @@
 	}
 
 	.status-prefix {
-		font-size: 20px;
+		font-size: calc(20 * 1em / 14);
 		font-weight: normal;
-		color: #cccccc;
+		color: var(--theme-text-primary, #1f2937);
 		display: inline-block;
 		margin-right: 4px;
 		line-height: 1;
@@ -138,59 +138,41 @@
 	}
 
 	.status-state {
-		font-size: 28px;
+		font-size: calc(28 * 1em / 14);
 		font-weight: bold;
-		background: linear-gradient(to bottom, #440000, #ff0000, #ff4444);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-		transition: all 0.3s ease;
+		color: var(--status-down, #ffb6c1);
 		line-height: 1;
 		display: inline-block;
 		vertical-align: baseline;
 	}
 
 	.status-state.online {
-		background: linear-gradient(to bottom, #004400, #00ff00, #44ff44);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
+		color: var(--status-ok, #90ee90);
 	}
 
 	.status-state.loading {
-		color: #ffff00;
-		background: none;
-		-webkit-text-fill-color: #ffff00;
+		color: var(--status-loading, #fcd34d);
 		animation: pulse 1s infinite;
 	}
 
 	.status-state.error {
-		color: #ff0000;
-		background: none;
-		-webkit-text-fill-color: #ff0000;
+		color: var(--status-down, #ffb6c1);
 		animation: shake 0.5s ease-in-out;
 	}
 
 	.status-exclaim {
-		font-size: 28px;
+		font-size: calc(28 * 1em / 14);
 		font-weight: bold;
-		background: linear-gradient(to bottom, #440000, #ff0000, #ff4444);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
+		color: var(--status-down, #ffb6c1);
 		margin-left: 2px;
 		transform: skew(-15deg);
 		display: inline-block;
-		transition: all 0.3s ease;
 		line-height: 1;
 		vertical-align: baseline;
 	}
 
 	.status-exclaim.online {
-		background: linear-gradient(to bottom, #004400, #00ff00, #44ff44);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
+		color: var(--status-ok, #90ee90);
 	}
 
 	/* Animations */
@@ -222,11 +204,11 @@
 		}
 		
 		.status-prefix {
-			font-size: 20px;
+			font-size: calc(20 * 1em / 14);
 		}
 		
 		.status-state, .status-exclaim {
-			font-size: 26px;
+			font-size: calc(26 * 1em / 14);
 		}
 		
 	}
@@ -237,45 +219,13 @@
 		}
 		
 		.status-prefix {
-			font-size: 18px;
+			font-size: calc(18 * 1em / 14);
 		}
 		
 		.status-state, .status-exclaim {
-			font-size: 24px;
+			font-size: calc(24 * 1em / 14);
 		}
 		
 	}
 
-	/* Dark mode support for text colors */
-	:global(html:not(.dark)) .status-prefix {
-		color: #666666;
-	}
-
-	:global(html:not(.dark)) .status-exclaim {
-		background: linear-gradient(to bottom, #330000, #cc0000, #ff4444);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-	}
-
-	:global(html:not(.dark)) .status-exclaim.online {
-		background: linear-gradient(to bottom, #003300, #00aa00, #44cc44);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-	}
-
-	:global(html:not(.dark)) .status-state {
-		background: linear-gradient(to bottom, #330000, #cc0000, #ff4444);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-	}
-
-	:global(html:not(.dark)) .status-state.online {
-		background: linear-gradient(to bottom, #003300, #00aa00, #44cc44);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-	}
 </style>

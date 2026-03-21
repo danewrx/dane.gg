@@ -23,9 +23,11 @@
 			               newPage.url.pathname.startsWith('/login') || 
 			               newPage.url.pathname.startsWith('/logout');
 			
-			if (!isAdmin) {
+			if (!isAdmin && !newPage.url.searchParams.has('themePreview')) {
 				console.log('Layout: Calling trackPageView for:', newPage.url.pathname);
 				trackingService.trackPageView(newPage.url.pathname);
+			} else if (!isAdmin) {
+				console.log('Layout: Skipping tracking (theme preview iframe)');
 			} else {
 				console.log('Layout: Skipping tracking for admin path:', newPage.url.pathname);
 			}

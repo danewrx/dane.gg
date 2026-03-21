@@ -308,6 +308,70 @@ export const contactPageSettings = websiteSchema.table('contact_page_settings', 
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
 });
 
+// Site themes table
+export const themes = websiteSchema.table('themes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  isActive: boolean('is_active').default(false),
+  isDefault: boolean('is_default').default(false),
+  isVisible: boolean('is_visible').default(true),
+  
+  // Colors
+  primaryColor: varchar('primary_color', { length: 50 }).default('#ffffff'),
+  secondaryColor: varchar('secondary_color', { length: 50 }).default('#a1a1aa'),
+  accentColor: varchar('accent_color', { length: 50 }).default('#6366f1'),
+  backgroundColor: varchar('background_color', { length: 50 }).default('#0a0a0a'),
+  surfaceColor: varchar('surface_color', { length: 50 }).default('#1a1a1a'),
+  borderColor: varchar('border_color', { length: 50 }).default('#2a2a2a'),
+  textPrimary: varchar('text_primary', { length: 50 }).default('#ffffff'),
+  textSecondary: varchar('text_secondary', { length: 50 }).default('#a1a1aa'),
+  textMuted: varchar('text_muted', { length: 50 }).default('#71717a'),
+  
+  // Background
+  backgroundImage: varchar('background_image', { length: 500 }),
+  backgroundImageExternal: boolean('background_image_external').default(false),
+  backgroundOverlay: varchar('background_overlay', { length: 50 }).default('rgba(0, 0, 0, 0.7)'),
+  backgroundBlur: integer('background_blur').default(0),
+  backgroundPosition: varchar('background_position', { length: 50 }).default('center center'),
+  backgroundSize: varchar('background_size', { length: 50 }).default('cover'),
+  backgroundAttachment: varchar('background_attachment', { length: 20 }).default('fixed'),
+  
+  // Typography
+  fontFamily: varchar('font_family', { length: 255 }).default('Inter'),
+  headingFontFamily: varchar('heading_font_family', { length: 255 }).default('Inter'),
+  fontScale: varchar('font_scale', { length: 10 }).default('1'),
+  
+  // Additional styling
+  borderRadius: varchar('border_radius', { length: 20 }).default('8px'),
+  widgetBorderRadius: varchar('widget_border_radius', { length: 20 }).default('8px'),
+  
+  customCss: text('custom_css'),
+
+  scanlinesOpacity: varchar('scanlines_opacity', { length: 10 }).default('1').notNull(),
+  overlayVignetteOpacity: varchar('overlay_vignette_opacity', { length: 10 }).default('0').notNull(),
+  overlayGridOpacity: varchar('overlay_grid_opacity', { length: 10 }).default('0').notNull(),
+  overlayGrainOpacity: varchar('overlay_grain_opacity', { length: 10 }).default('0').notNull(),
+  overlayGlareOpacity: varchar('overlay_glare_opacity', { length: 10 }).default('0').notNull(),
+  overlayDarkenOpacity: varchar('overlay_darken_opacity', { length: 10 }).default('0').notNull(),
+  
+  displayOrder: integer('display_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
+});
+
+// Fonts table
+export const fonts = websiteSchema.table('fonts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 255 }).notNull(),
+  type: varchar('type', { length: 20 }).notNull(), // 'google' | 'custom'
+  googleFontFamily: varchar('google_font_family', { length: 255 }), // Google: family name for API
+  filePath: varchar('file_path', { length: 500 }), // Custom: /uploads/fonts/name.woff2
+  displayOrder: integer('display_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
+});
+
 // Relations
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   category: one(projectCategories, {
@@ -433,3 +497,5 @@ export type ContactEmail = typeof contactEmails.$inferSelect;
 export type NewContactEmail = typeof contactEmails.$inferInsert;
 export type ContactPageSetting = typeof contactPageSettings.$inferSelect;
 export type NewContactPageSetting = typeof contactPageSettings.$inferInsert;
+export type Theme = typeof themes.$inferSelect;
+export type NewTheme = typeof themes.$inferInsert;

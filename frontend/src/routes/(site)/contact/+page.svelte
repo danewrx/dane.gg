@@ -231,14 +231,14 @@
 
 	.intro-message p {
 		color: var(--text-primary);
-		font-size: 1rem;
+		font-size: calc(1 * 16 * 1em / 14);
 		line-height: 1.6;
 		margin: 0;
 	}
 
 	.tagline-content {
 		color: var(--text-primary);
-		font-size: 1rem;
+		font-size: calc(1 * 16 * 1em / 14);
 		line-height: 1.6;
 	}
 
@@ -264,7 +264,7 @@
 	.email-section h2,
 	.social-section h2 {
 		color: var(--text-primary);
-		font-size: 1.5rem;
+		font-size: calc(1.5 * 16 * 1em / 14);
 		font-weight: 700;
 		margin-bottom: 1rem;
 	}
@@ -275,7 +275,7 @@
 
 	.email-description {
 		color: var(--text-secondary);
-		font-size: 0.95rem;
+		font-size: calc(0.95 * 16 * 1em / 14);
 		margin-bottom: 0.5rem;
 		line-height: 1.5;
 	}
@@ -293,7 +293,7 @@
 		gap: 0.5rem;
 		color: var(--text-primary);
 		text-decoration: none;
-		font-size: 1rem;
+		font-size: calc(1 * 16 * 1em / 14);
 		transition: color 0.2s ease;
 	}
 
@@ -303,7 +303,7 @@
 
 	.social-description {
 		color: var(--text-secondary);
-		font-size: 0.95rem;
+		font-size: calc(0.95 * 16 * 1em / 14);
 		margin-bottom: 1rem;
 		line-height: 1.5;
 	}
@@ -321,7 +321,7 @@
 		gap: 0.75rem;
 		color: var(--text-primary);
 		text-decoration: none;
-		font-size: 1rem;
+		font-size: calc(1 * 16 * 1em / 14);
 		transition: color 0.2s ease;
 	}
 
@@ -330,7 +330,7 @@
 	}
 
 	.text-icon {
-		font-size: 18px;
+		font-size: calc(18 * 1em / 14);
 		line-height: 1;
 	}
 
@@ -365,7 +365,7 @@
 
 	.closing-message p {
 		color: var(--text-primary);
-		font-size: 1rem;
+		font-size: calc(1 * 16 * 1em / 14);
 		margin: 0;
 	}
 

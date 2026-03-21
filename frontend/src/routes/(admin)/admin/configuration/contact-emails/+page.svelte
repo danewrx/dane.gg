@@ -76,17 +76,17 @@
 			if (currentEditingEmail) {
 				// Update existing email
 				response = await fetch(`/api/contact/emails/${currentEditingEmail.id}`, {
-					method: 'PUT',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					credentials: 'include',
-					body: JSON.stringify({
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				credentials: 'include',
+				body: JSON.stringify({
 						description: formData.description,
 						email: formData.email,
 						isActive: formData.isActive
-					})
-				});
+				})
+			});
 			} else {
 				// Create new email
 				response = await fetch('/api/contact/emails', {
@@ -487,7 +487,7 @@
 						</button>
 							<button type="button" class="cancel-btn" onclick={resetForm}>
 								Cancel
-							</button>
+						</button>
 					</div>
 				</form>
 			</div>

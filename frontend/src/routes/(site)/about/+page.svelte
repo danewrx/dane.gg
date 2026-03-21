@@ -327,7 +327,7 @@
 	}
 
 	.section-title {
-		font-size: 1.5rem;
+		font-size: calc(1.5 * 16 * 1em / 14);
 		font-weight: 600;
 		color: var(--text-primary, #ffffff);
 		margin-bottom: 1rem;
@@ -335,7 +335,7 @@
 
 	.section-subtitle {
 		color: var(--text-secondary, #a1a1aa);
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		margin-bottom: 1.5rem;
 	}
 
@@ -346,7 +346,7 @@
 
 	.bio-content {
 		color: var(--text-secondary, #a1a1aa);
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		line-height: 1.7;
 	}
 
@@ -386,7 +386,7 @@
 	}
 
 	.skill-category {
-		font-size: 1rem;
+		font-size: calc(1 * 16 * 1em / 14);
 		font-weight: 600;
 		color: var(--text-primary, #ffffff);
 		margin-bottom: 1rem;
@@ -407,7 +407,7 @@
 	.skill-name {
 		width: 120px;
 		flex-shrink: 0;
-		font-size: 13px;
+		font-size: calc(13 * 1em / 14);
 		color: var(--text-secondary, #a1a1aa);
 	}
 
@@ -529,14 +529,14 @@
 	}
 
 	.cert-name {
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		font-weight: 600;
 		color: var(--text-primary, #ffffff);
 		max-width: 200px;
 	}
 
 	.cert-meta {
-		font-size: 12px;
+		font-size: calc(12 * 1em / 14);
 		color: var(--text-secondary, #a1a1aa);
 	}
 

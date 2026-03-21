@@ -15,12 +15,25 @@
 		Zap,
 		Award,
 		User,
-		Mail
+		Mail,
+		Palette
 	} from 'lucide-svelte';
 
 	let { children } = $props();
 
 	const settingsCategories: ConfigurationCategory[] = [
+		{
+			id: 'themes',
+			title: 'Site Themes',
+			description: 'Manage site themes, colors, and backgrounds',
+			icon: Palette,
+			color: 'from-violet-500 to-purple-500',
+			bgColor: 'rgba(139, 92, 246, 0.1)',
+			borderColor: 'rgba(139, 92, 246, 0.2)',
+			iconBgColor: '#8b5cf6', // Violet
+			path: '/admin/configuration/themes',
+			section: 'general'
+		},
 		{
 			id: 'weather',
 			title: 'Weather Effects',
@@ -223,7 +236,9 @@
 		{#if selectedCategory}
 			<div class="settings-page-content">
 				<h1 class="page-title">
-					{#if selectedCategory.icon === CloudRain}
+					{#if selectedCategory.icon === Palette}
+						<Palette size={18} />
+					{:else if selectedCategory.icon === CloudRain}
 						<CloudRain size={18} />
 					{:else if selectedCategory.icon === Link}
 						<Link size={18} />

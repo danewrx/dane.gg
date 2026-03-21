@@ -19,6 +19,33 @@
 		if (disabled) return;
 		onchange?.(checked);
 	}
+
+	function snapshotScrollChain(from: HTMLElement) {
+		const chain: { el: HTMLElement; top: number; left: number }[] = [];
+		let p: HTMLElement | null = from;
+		while (p) {
+			chain.push({ el: p, top: p.scrollTop, left: p.scrollLeft });
+			p = p.parentElement;
+		}
+		return { chain, winX: window.scrollX, winY: window.scrollY };
+	}
+
+	function restoreScrollChain(snap: ReturnType<typeof snapshotScrollChain>) {
+		for (const { el, top, left } of snap.chain) {
+			el.scrollTop = top;
+			el.scrollLeft = left;
+		}
+		window.scrollTo(snap.winX, snap.winY);
+	}
+
+	function preserveScrollOnInteraction(e: MouseEvent) {
+		if (disabled || e.button !== 0) return;
+		const snap = snapshotScrollChain(e.currentTarget as HTMLElement);
+		requestAnimationFrame(() => {
+			restoreScrollChain(snap);
+			requestAnimationFrame(() => restoreScrollChain(snap));
+		});
+	}
 </script>
 
 <label class="toggle-wrapper {size}" class:disabled>
@@ -29,19 +56,26 @@
 		{disabled}
 		class="toggle-input"
 	/>
-	<span class="toggle-slider"></span>
-	{#if label}
-		<span class="toggle-label-text">{label}</span>
-	{/if}
+	<span class="toggle-body" role="none" onmousedown={preserveScrollOnInteraction}>
+		<span class="toggle-slider"></span>
+		{#if label}
+			<span class="toggle-label-text">{label}</span>
+		{/if}
+	</span>
 </label>
 
 <style>
 	.toggle-wrapper {
+		position: relative;
+		display: inline-flex;
+		cursor: pointer;
+		user-select: none;
+	}
+
+	.toggle-body {
 		display: inline-flex;
 		align-items: center;
 		gap: 12px;
-		cursor: pointer;
-		user-select: none;
 	}
 
 	.toggle-wrapper.disabled {
@@ -51,6 +85,14 @@
 
 	.toggle-input {
 		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
 		opacity: 0;
 		pointer-events: none;
 	}
@@ -78,11 +120,11 @@
 		transition: transform 0.2s ease;
 	}
 
-	.toggle-input:checked + .toggle-slider {
+	.toggle-input:checked + .toggle-body .toggle-slider {
 		background: var(--accent-color, #6366f1);
 	}
 
-	.toggle-input:checked + .toggle-slider::after {
+	.toggle-input:checked + .toggle-body .toggle-slider::after {
 		transform: translateX(20px);
 	}
 
@@ -98,7 +140,7 @@
 		height: 16px;
 	}
 
-	.toggle-wrapper.small .toggle-input:checked + .toggle-slider::after {
+	.toggle-wrapper.small .toggle-input:checked + .toggle-body .toggle-slider::after {
 		transform: translateX(16px);
 	}
 
@@ -114,7 +156,7 @@
 		height: 24px;
 	}
 
-	.toggle-wrapper.large .toggle-input:checked + .toggle-slider::after {
+	.toggle-wrapper.large .toggle-input:checked + .toggle-body .toggle-slider::after {
 		transform: translateX(24px);
 	}
 

@@ -583,18 +583,18 @@
 													bind:value={editingSkillName}
 													placeholder="Skill name"
 												/>
-											<div class="level-input-group">
-												<input
-													type="range"
-													class="level-range"
-													bind:value={editingSkillLevel}
-													min="0"
-													max="100"
+												<div class="level-input-group">
+													<input
+														type="range"
+														class="level-range"
+														bind:value={editingSkillLevel}
+														min="0"
+														max="100"
 													ondragstart={(e) => e.stopPropagation()}
 													onmousedown={(e) => e.stopPropagation()}
-												/>
-												<span class="level-value">{editingSkillLevel}%</span>
-											</div>
+													/>
+													<span class="level-value">{editingSkillLevel}%</span>
+												</div>
 												<button class="icon-btn save" onclick={() => updateSkill(skill.id)} disabled={isSaving}>
 													<Save size={16} />
 												</button>

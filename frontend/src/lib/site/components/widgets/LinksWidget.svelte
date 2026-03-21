@@ -133,8 +133,8 @@ interface SocialLink {
 	.loading-spinner {
 		width: 24px;
 		height: 24px;
-		border: 2px solid #374151;
-		border-top: 2px solid #6366f1;
+		border: 2px solid var(--theme-border, #374151);
+		border-top: 2px solid var(--theme-accent, #6366f1);
 		border-radius: 50%;
 		animation: spin 1s linear infinite;
 	}
@@ -154,7 +154,7 @@ interface SocialLink {
 
 	.no-links-message p {
 		color: var(--text-secondary, #9ca3af);
-		font-size: 14px;
+		font-size: calc(14 * 1em / 14);
 		font-weight: 400;
 		margin: 0;
 		opacity: 0.8;
@@ -184,7 +184,7 @@ interface SocialLink {
 		cursor: pointer;
 		padding: 0;
 		margin: 0;
-		font-size: 8px;
+		font-size: calc(8 * 1em / 14);
 		font-weight: 500;
 		box-shadow: none !important;
 		outline: none !important;
@@ -229,7 +229,7 @@ interface SocialLink {
 	}
 
 	.text-icon {
-		font-size: 11px;
+		font-size: calc(11 * 1em / 14);
 		font-weight: 600;
 		text-align: center;
 		line-height: 1;
@@ -237,7 +237,7 @@ interface SocialLink {
 
 	.text-icon.custom-text {
 		font-weight: 600;
-		font-size: 0.7rem;
+		font-size: calc(0.7 * 16 * 1em / 14);
 		background: transparent;
 		color: var(--text-primary, #ffffff);
 		border: 1px solid var(--text-primary, #ffffff);
@@ -285,11 +285,11 @@ interface SocialLink {
 		
 		.link-item {
 			height: 24px;
-			font-size: 9px;
+			font-size: calc(9 * 1em / 14);
 		}
 		
 		.text-icon {
-			font-size: 8px;
+			font-size: calc(8 * 1em / 14);
 		}
 		
 		.svg-icon, :global(.link-item svg) {
@@ -309,11 +309,11 @@ interface SocialLink {
 		
 		.link-item {
 			height: 24px;
-			font-size: 9px;
+			font-size: calc(9 * 1em / 14);
 		}
 		
 		.text-icon {
-			font-size: 8px;
+			font-size: calc(8 * 1em / 14);
 		}
 		
 		.svg-icon, :global(.link-item svg) {

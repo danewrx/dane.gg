@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { 
+		Palette,
 		CloudRain,
 		Link,
 		MessageSquare,
@@ -70,7 +71,9 @@
 							class:active={selectedCategoryId === category.id}
 							style="color: {selectedCategoryId === category.id ? 'var(--accent-color, #6366f1)' : category.iconBgColor};"
 						>
-							{#if category.icon === CloudRain}
+							{#if category.icon === Palette}
+								<Palette size={20} stroke-width={1.5} />
+							{:else if category.icon === CloudRain}
 								<CloudRain size={20} stroke-width={1.5} />
 							{:else if category.icon === Link}
 								<Link size={20} stroke-width={1.5} />

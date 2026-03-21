@@ -12,26 +12,68 @@
 }
 
 :root {
-  --bg-primary: #000000;
-  --bg-secondary: #0a0a0a;
+  /* Theme variables (populated by ThemeProvider) */
+  --theme-primary: #ffffff;
+  --theme-secondary: #a1a1aa;
+  --theme-accent: #6366f1;
+  --theme-background: #0a0a0a;
+  --theme-surface: #1a1a1a;
+  --theme-border: #ffffff;
+  --theme-text-primary: #ffffff;
+  --theme-text-secondary: #a1a1aa;
+  --theme-text-muted: #71717a;
+  --theme-border-radius: 8px;
+  --theme-widget-border-radius: 8px;
+  --theme-shell-border-width: 2px;
+  --theme-widget-border-width: 2px;
+  --theme-shell-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --theme-content-max-width: 900px;
+  --theme-scanlines-opacity: 1;
+  --theme-overlay-vignette-opacity: 0;
+  --theme-overlay-grid-opacity: 0;
+  --theme-overlay-grain-opacity: 0;
+  --theme-overlay-glare-opacity: 0;
+  --theme-body-line-height: 1.65;
+  --theme-font-scale: 1;
+
+  /*
+   * Pastel status colors
+   */
+  --theme-surface-tone: dark;
+  --status-ok: #90ee90;
+  --status-down: #ffb6c1;
+  --status-warn: #fde68a;
+  --status-pending: #e5e7eb;
+  --status-neutral: #d1d5db;
+  --status-loading: #fcd34d;
+  
+  /* Legacy variables mapped to theme */
+  --bg-primary: var(--theme-surface, #000000);
+  --bg-secondary: var(--theme-background, #0a0a0a);
   --bg-container: rgba(20, 20, 20, 0.9);
-  --text-primary: #ffffff;
-  --text-secondary: #00ff00;
-  --text-muted: #888888;
-  --border-primary: #333333;
-  --border-accent: #00ff00;
-  --scanline-color: rgba(0, 255, 0, 0.1);
-  --glow-color: rgba(0, 255, 0, 0.3);
+  --text-primary: var(--theme-text-primary, #ffffff);
+  --text-secondary: var(--theme-text-secondary, #a1a1aa);
+  --text-muted: var(--theme-text-muted, #888888);
+  --border-primary: var(--theme-border, #333333);
+  --border-accent: var(--theme-accent, #6366f1);
+  --scanline-color: rgba(255, 255, 255, 0.03);
+  --glow-color: rgba(99, 102, 241, 0.3);
   
   /* Font variables */
   --global-font-family: 'W95FA', 'JetBrains Mono', 'Courier New', monospace;
   --ascii-font-family: 'JetBrains Mono', 'Courier New', monospace;
+  --theme-font-family: var(--global-font-family);
+  --theme-heading-font: var(--global-font-family);
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
 }
 
 html, body {
@@ -52,20 +94,14 @@ html, body {
   font-family: var(--ascii-font-family) !important;
 }
 
-/* Background with starry dots pattern */
+/* Background - handled by ThemeProvider for site pages */
 html {
-  background: #1a1a1a !important;
+  background: var(--theme-background, #1a1a1a);
 }
 
 body {
   position: relative;
-  background: #1a1a1a !important;
-  background-image: 
-    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.8) 1px, transparent 0) !important;
-  background-size: 2px 2px !important;
-  background-position: 0 0 !important;
-  background-repeat: repeat !important;
-  background-attachment: fixed !important;
+  background: transparent;
 }
 
 /* Main content container */
@@ -77,14 +113,14 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1rem;
+  padding: 32px 16px;
 }
 
 /* Content window - clean terminal style */
 .content-window {
-  background: #000000;
-  border: 1px solid #ffffff;
-  border-radius: 0px;
+  background: var(--theme-surface, #000000);
+  border: 1px solid var(--theme-border, #ffffff);
+  border-radius: var(--theme-border-radius, 0px);
   width: 100%;
   max-width: 1000px;
   height: 90vh;
@@ -97,13 +133,22 @@ body {
 }
 
 
-/* Content area */
+/* Content area — theme font scale applies to typography only (layout padding stays in px) */
 .content-area {
-  padding: 2rem;
+  padding: 24px;
   flex: 1;
   overflow-y: auto;
-  background: #000000;
+  background: var(--theme-background, #000000);
+  color: var(--theme-text-primary, #ffffff);
   height: 100%;
+  /* Base = 14px × theme scale; use calc(N * 1em / 14) or inherit for body text */
+  font-size: calc(14px * var(--theme-font-scale, 1));
+  line-height: var(--theme-body-line-height, 1.65);
+}
+
+/* Flow text inherits scaled base (markdown HTML, :global slots); widgets with explicit font-size still win */
+.content-area :not(.ascii-box) :is(p, li, dd, dt, blockquote, figcaption) {
+  font-size: inherit;
 }
 
 /* Scrollbar styling */
@@ -135,7 +180,7 @@ body {
 
 @media (max-width: 768px) {
   .main-container {
-    padding: 1rem 0.5rem;
+    padding: 16px 8px;
   }
   
   .content-window {
@@ -145,13 +190,13 @@ body {
   }
   
   .content-area {
-    padding: 1rem;
+    padding: 16px;
   }
 }
 
 @media (max-width: 480px) {
   .main-container {
-    padding: 0.5rem;
+    padding: 8px;
   }
   
   .content-window {
@@ -160,7 +205,7 @@ body {
   }
   
   .content-area {
-    padding: 0.75rem;
+    padding: 12px;
   }
 }
 

@@ -88,6 +88,8 @@ import emojisRoutes from './routes/emojis';
 import skillsRoutes from './routes/skills';
 import certificationsRoutes from './routes/certifications';
 import contactRoutes from './routes/contact';
+import themesRoutes from './routes/themes';
+import fontsRoutes from './routes/fonts';
 
 // Routes
 app.get('/api', (req, res) => {
@@ -184,6 +186,12 @@ app.use('/api/certifications', certificationsRoutes);
 
 // Contact page routes
 app.use('/api/contact', contactRoutes);
+
+// Themes routes
+app.use('/api/themes', themesRoutes);
+
+// Fonts routes
+app.use('/api/fonts', fontsRoutes);
 
 // 404 handler for API routes
 app.use('/api', (req, res) => {

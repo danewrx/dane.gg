@@ -1,19 +1,25 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	import { Palette, Lock } from 'lucide-svelte';
 	import FontSelector from './FontSelector.svelte';
 	import WeatherControls from './WeatherControls.svelte';
+	import ThemeSwitcherWindow from './ThemeSwitcherWindow.svelte';
 	import ChatNotificationControl from '$lib/site/components/settings/ChatNotificationControl.svelte';
+	import { themeEnforcement } from '$lib/site/stores/theme';
 
-	export let isOpen: boolean = false;
-
-	const dispatch = createEventDispatcher<{
-		close: void;
-	}>();
+	let { isOpen = false, onClose }: { isOpen?: boolean; onClose?: () => void } = $props();
+	let themeWindowOpen = $state(false);
 
 	function handleClose() {
-		dispatch('close');
+		onClose?.();
+	}
+	
+	function openThemeWindow() {
+		themeWindowOpen = true;
 	}
 </script>
+
+<!-- Theme Switcher Window -->
+<ThemeSwitcherWindow bind:isOpen={themeWindowOpen} />
 
 <!-- Settings Panel -->
 {#if isOpen}
@@ -29,7 +35,33 @@
 <div class="settings-panel" class:open={isOpen}>
 	<div class="settings-content">
 		<div class="settings-section">
-			<h3>Appearance</h3>
+			<h3>Theme</h3>
+			<button
+				type="button"
+				class="theme-button"
+				class:theme-button--locked={$themeEnforcement.enforced}
+				disabled={$themeEnforcement.enforced}
+				onclick={openThemeWindow}
+				aria-disabled={$themeEnforcement.enforced}
+				title={$themeEnforcement.enforced
+					? 'The site administrator has locked the theme for all visitors.'
+					: undefined}
+			>
+				{#if $themeEnforcement.enforced}
+					<Lock size={16} aria-hidden="true" />
+					<span>Theme locked</span>
+				{:else}
+					<Palette size={16} aria-hidden="true" />
+					<span>Change Theme</span>
+				{/if}
+			</button>
+			{#if $themeEnforcement.enforced}
+				<p class="theme-button-subtext">The theme picker has been disabled.</p>
+			{/if}
+		</div>
+
+		<div class="settings-section">
+			<h3>Font</h3>
 			<FontSelector />
 		</div>
 
@@ -62,12 +94,14 @@
 		bottom: 20px;
 		right: 0;
 		width: 280px;
-		height: auto;
-		background: #1a1a1a;
-		border: 1px solid #444444;
+		max-height: calc(100vh - 100px);
+		background: var(--theme-surface, #1a1a1a);
+		border: 2px solid var(--theme-border, #ffffff);
 		border-right: none;
-		border-radius: 6px 0 0 6px;
-		box-shadow: -4px 0 12px rgba(0, 0, 0, 0.5);
+		border-radius: 0;
+		box-shadow: 
+			-4px 0 12px rgba(0, 0, 0, 0.5),
+			0 0 30px var(--theme-accent, #90ee90);
 		z-index: 1001;
 		transform: translateX(100%);
 		transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -82,7 +116,27 @@
 
 	.settings-content {
 		padding: 16px;
-		background: #1a1a1a;
+		background: var(--theme-surface, #1a1a1a);
+		overflow-y: auto;
+		flex: 1;
+	}
+	
+	/* Scrollbar styling */
+	.settings-content::-webkit-scrollbar {
+		width: 8px;
+	}
+	
+	.settings-content::-webkit-scrollbar-track {
+		background: var(--theme-background, #0a0a0a);
+	}
+	
+	.settings-content::-webkit-scrollbar-thumb {
+		background: var(--theme-border, #ffffff);
+		border: 1px solid var(--theme-background, #0a0a0a);
+	}
+	
+	.settings-content::-webkit-scrollbar-thumb:hover {
+		background: var(--theme-accent, #90ee90);
 	}
 
 	.settings-section {
@@ -95,11 +149,70 @@
 
 	.settings-section h3 {
 		margin: 0 0 12px 0;
-		color: #ffffff;
+		color: var(--theme-text-primary, #ffffff);
 		font-size: 12px;
 		font-weight: bold;
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
+	}
+
+	.theme-button {
+		width: 100%;
+		padding: 12px 16px;
+		background: var(--theme-background, #0a0a0a);
+		border: 2px solid var(--theme-border, #ffffff);
+		color: var(--theme-text-primary, #ffffff);
+		font-size: 13px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		transition: all 0.2s ease;
+		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
+	}
+	
+	.theme-button:hover {
+		background: var(--theme-accent, #90ee90);
+		border-color: var(--theme-accent, #90ee90);
+		color: var(--theme-background, #0a0a0a);
+		box-shadow: 
+			0 0 15px var(--theme-accent, #90ee90),
+			0 0 30px var(--theme-accent, #90ee90);
+		transform: translateY(-2px);
+	}
+	
+	.theme-button:active {
+		transform: translateY(0);
+	}
+
+	.theme-button:disabled,
+	.theme-button.theme-button--locked {
+		opacity: 0.5;
+		cursor: not-allowed;
+		color: var(--theme-text-muted, #71717a);
+		background: var(--theme-surface, #1a1a1a);
+		border-color: rgba(255, 255, 255, 0.2);
+	}
+
+	.theme-button:disabled:hover,
+	.theme-button.theme-button--locked:hover {
+		transform: none;
+		box-shadow: none;
+		background: var(--theme-surface, #1a1a1a);
+		border-color: rgba(255, 255, 255, 0.2);
+		color: var(--theme-text-muted, #71717a);
+	}
+
+	.theme-button-subtext {
+		margin: 8px 0 0 0;
+		font-size: 11px;
+		line-height: 1.4;
+		color: var(--theme-text-muted, #71717a);
+		text-align: left;
 	}
 
 	/* Animations */

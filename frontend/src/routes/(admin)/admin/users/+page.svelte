@@ -338,7 +338,7 @@
 						<UserIcon size={24} />
 					</div>
 					<div>
-						<h2>Add New User</h2>
+				<h2>Add New User</h2>
 						<p class="modal-subtitle">Create a new user account</p>
 					</div>
 				</div>
@@ -348,33 +348,33 @@
 			</div>
 			<form class="modal-form" onsubmit={(e) => { e.preventDefault(); handleAddUser(); }}>
 				<div class="form-content">
-					<div class="form-group">
+				<div class="form-group">
 						<label for="add-username">Username</label>
-						<input
-							id="add-username"
-							type="text"
-							bind:value={addForm.username}
-							placeholder="Enter username"
-							required
-							disabled={isSubmitting}
-						/>
-					</div>
-					<div class="form-group">
+					<input
+						id="add-username"
+						type="text"
+						bind:value={addForm.username}
+						placeholder="Enter username"
+						required
+						disabled={isSubmitting}
+					/>
+				</div>
+				<div class="form-group">
 						<label for="add-password">Password</label>
 						<div class="password-input-group">
-							<input
-								id="add-password"
+					<input
+						id="add-password"
 								type={showPassword ? 'text' : 'password'}
-								bind:value={addForm.password}
+						bind:value={addForm.password}
 								placeholder="Enter password (min 6 characters)"
-								required
-								disabled={isSubmitting}
-							/>
+						required
+						disabled={isSubmitting}
+					/>
 							<button
 								type="button"
 								class="password-toggle"
 								onclick={() => showPassword = !showPassword}
-								disabled={isSubmitting}
+							disabled={isSubmitting}
 							>
 								{#if showPassword}
 									<EyeOff size={16} />
