@@ -2,6 +2,7 @@ import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 import { clampThemeFontScale } from '$lib/site/constants/themeFontScale';
 import { clampThemeUnitOpacity, themeDarkenToRgba } from '$lib/site/constants/themeOverlayOpacity';
+import { buildStatusCssVariables, inferSurfaceTone } from '$lib/site/constants/statusSemantics';
 
 export type ThemeEnforcementState = {
 	enforced: boolean;
@@ -298,6 +299,7 @@ function buildThemeVarsStylesheet(theme: SiteTheme): string {
   --theme-overlay-grid-opacity: ${clampThemeUnitOpacity(theme.overlayGridOpacity, '0')};
   --theme-overlay-grain-opacity: ${clampThemeUnitOpacity(theme.overlayGrainOpacity, '0')};
   --theme-overlay-glare-opacity: ${clampThemeUnitOpacity(theme.overlayGlareOpacity, '0')};
+${buildStatusCssVariables(theme.surfaceColor)}
 }`;
 }
 
@@ -315,6 +317,12 @@ export function applyThemeStyles(theme: SiteTheme): void {
 		document.head.appendChild(el);
 	}
 	el.textContent = css;
+
+	try {
+		document.documentElement.dataset.themeSurfaceTone = inferSurfaceTone(theme.surfaceColor);
+	} catch {
+		/* ignore */
+	}
 }
 
 /**

@@ -98,6 +98,14 @@
 		--theme-overlay-glare-opacity: 0;
 		--theme-body-line-height: 1.65;
 		--theme-font-scale: 1;
+
+		--theme-surface-tone: dark;
+		--status-ok: #90ee90;
+		--status-down: #ffb6c1;
+		--status-warn: #fde68a;
+		--status-pending: #e5e7eb;
+		--status-neutral: #d1d5db;
+		--status-loading: #fcd34d;
 		
 		--bg-primary: var(--theme-surface);
 		--bg-secondary: var(--theme-background);

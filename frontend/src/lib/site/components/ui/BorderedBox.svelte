@@ -11,6 +11,7 @@
 	export let headerText: string = '';
 	export let subheading: string = '';
 	export let subheadingColor: string = '';
+	export let subheadingSemanticStatus: boolean = false;
 	export let contentPadding: boolean = false;
 	export let contentBottomPadding: boolean = false;
 	export let dynamicHeight: boolean = false;
@@ -37,7 +38,12 @@
 					<slot name="header-icon" />
 					{headerText}
 					{#if subheading}
-						<span class="header-subheading" style:color={subheadingColor || undefined}>
+						<span
+							class="header-subheading"
+							class:semantic-status={subheadingSemanticStatus}
+							data-semantic-status={subheadingSemanticStatus ? subheading : undefined}
+							style:color={subheadingSemanticStatus ? undefined : subheadingColor || undefined}
+						>
 							{subheading}
 						</span>
 					{/if}
@@ -162,6 +168,26 @@
 	.header-subheading {
 		font-weight: bold;
 		margin-left: 0;
+	}
+
+	.header-subheading.semantic-status[data-semantic-status='OK'] {
+		color: var(--status-ok, #90ee90);
+	}
+
+	.header-subheading.semantic-status[data-semantic-status='DOWN'] {
+		color: var(--status-down, #ffb6c1);
+	}
+
+	.header-subheading.semantic-status[data-semantic-status='MAINTENANCE'] {
+		color: var(--status-warn, #fde68a);
+	}
+
+	.header-subheading.semantic-status[data-semantic-status='PENDING'] {
+		color: var(--status-pending, #e5e7eb);
+	}
+
+	.header-subheading.semantic-status[data-semantic-status='UNKNOWN'] {
+		color: var(--status-neutral, #d1d5db);
 	}
 
 	.header-divider {

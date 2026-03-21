@@ -30,21 +30,6 @@
 	let aboutMeContent = $state('');
 	let loadingAboutMe = $state(true);
 	
-	function getStatusColor(status: string): string {
-		switch (status) {
-			case 'OK':
-				return '#90EE90';
-			case 'DOWN':
-				return '#FFB6C1';
-			case 'MAINTENANCE':
-				return '#FFD700';
-			case 'PENDING':
-				return '#D3D3D3';
-			default:
-				return '#D3D3D3';
-		}
-	}
-
 	interface BlogPost {
 		id: string;
 		title: string;
@@ -196,7 +181,7 @@
 					showHeader={true} 
 					headerText="Systems status:" 
 					subheading={overallStatus}
-					subheadingColor={getStatusColor(overallStatus)}
+					subheadingSemanticStatus={true}
 					dynamicHeight={true} 
 					contentPadding={true}
 				>

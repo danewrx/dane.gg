@@ -2,6 +2,21 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { RefreshCw } from 'lucide-svelte';
 
+	function monitorStatusClass(status: string): string {
+		switch (status) {
+			case 'up':
+				return 'status-monitor-up';
+			case 'down':
+				return 'status-monitor-down';
+			case 'maintenance':
+				return 'status-monitor-maintenance';
+			case 'pending':
+				return 'status-monitor-pending';
+			default:
+				return 'status-monitor-unknown';
+		}
+	}
+
 	interface Monitor {
 		id: number;
 		name: string;
@@ -99,19 +114,6 @@
 		}
 	}
 
-	function getStatusColor(status: string): string {
-		switch (status) {
-			case 'up':
-				return '#90EE90';
-			case 'down':
-				return '#FFB6C1';
-			case 'maintenance':
-				return '#FFD700';
-			default:
-				return '#D3D3D3';
-		}
-	}
-
 	onMount(() => {
 		loadStatus();
 		
@@ -147,7 +149,7 @@
 				{#each allMonitors as monitor (monitor.id)}
 					<div class="status-item">
 						<span class="status-name">{monitor.customName || monitor.name}</span>
-						<span class="status-indicator" style="--status-color: {getStatusColor(monitor.status)}">
+						<span class="status-indicator {monitorStatusClass(monitor.status)}">
 							[ {getStatusText(monitor.status)} ]
 						</span>
 					</div>
@@ -183,7 +185,7 @@
 	}
 
 	.error-state {
-		color: var(--theme-accent, #ff0000);
+		color: var(--status-down, #ffb6c1);
 	}
 
 	.status-container {
@@ -223,10 +225,29 @@
 
 	.status-indicator {
 		font-size: calc(14 * 1em / 14);
-		color: var(--status-color, #00ff00);
-		font-weight: normal;
+		font-weight: 600;
 		white-space: nowrap;
 		flex-shrink: 0;
+	}
+
+	.status-monitor-up {
+		color: var(--status-ok, #90ee90);
+	}
+
+	.status-monitor-down {
+		color: var(--status-down, #ffb6c1);
+	}
+
+	.status-monitor-maintenance {
+		color: var(--status-warn, #fde68a);
+	}
+
+	.status-monitor-pending {
+		color: var(--status-pending, #e5e7eb);
+	}
+
+	.status-monitor-unknown {
+		color: var(--status-neutral, #d1d5db);
 	}
 
 	.updating-indicator {
