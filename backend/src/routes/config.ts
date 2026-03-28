@@ -3,10 +3,16 @@ import { ConfigService } from '../services/config';
 import { requireSession } from '../middleware/auth';
 import { chatService } from '../services/chatService';
 
-const WEATHER_LIVE_KEYS = new Set([
+const LIVE_BROADCAST_KEYS = new Set([
   'default_weather_type',
   'default_weather_speed',
-  'enforce_weather_effects'
+  'enforce_weather_effects',
+  'banner_text',
+  'banner_enabled',
+  'banner_bg_color',
+  'banner_text_color',
+  'banner_speed',
+  'banner_transparent_bg'
 ]);
 
 const router = Router();
@@ -73,7 +79,7 @@ router.put('/:key', requireSession, async (req, res) => {
 
     const result = await ConfigService.set(key, value, dataType);
 
-    if (WEATHER_LIVE_KEYS.has(key)) {
+    if (LIVE_BROADCAST_KEYS.has(key)) {
       chatService.broadcastSiteConfigUpdate();
     }
 

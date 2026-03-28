@@ -4,6 +4,7 @@
 	import { CloudRain } from 'lucide-svelte';
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
 	import { toast } from 'svelte-sonner';
+	import { notifySiteConfigConsumers } from '$lib/shared/utils/siteConfigLiveSync';
 
 	let localSettings = $state({
 		defaultWeatherType: 'none',
@@ -55,6 +56,7 @@
 
 			// Reload site config
 			await loadSiteConfig();
+			notifySiteConfigConsumers();
 			toast.success('Weather settings saved successfully');
 		} catch (error: any) {
 			console.error('Failed to save weather settings:', error);

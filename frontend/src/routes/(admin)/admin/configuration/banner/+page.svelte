@@ -10,6 +10,7 @@
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
 	import MarkdownEditor from '$lib/admin/components/MarkdownEditor.svelte';
 	import { toast } from 'svelte-sonner';
+	import { notifySiteConfigConsumers } from '$lib/shared/utils/siteConfigLiveSync';
 
 	let config = $state<BannerConfig>({
 		text: '',
@@ -53,6 +54,7 @@
 
 			const data = await saveBannerConfig(config);
 			config = data;
+			notifySiteConfigConsumers();
 			toast.success('Banner configuration saved successfully');
 		} catch (err) {
 			console.error('Error saving banner config:', err);

@@ -6,6 +6,7 @@ import {
 	SITE_CONFIG_UPDATED_EVENT,
 	type SiteConfig
 } from './siteConfig';
+import { subscribeSiteConfigBroadcast } from '$lib/shared/utils/siteConfigLiveSync';
 
 export type WeatherType = 'none' | 'rain' | 'snow';
 
@@ -242,4 +243,10 @@ export function scheduleReloadSiteConfigAndApplyWeather(): void {
 		siteConfigReloadDebounce = null;
 		void reloadSiteConfigAndApplyWeather();
 	}, 350);
+}
+
+if (browser) {
+	subscribeSiteConfigBroadcast(() => {
+		scheduleReloadSiteConfigAndApplyWeather();
+	});
 }
