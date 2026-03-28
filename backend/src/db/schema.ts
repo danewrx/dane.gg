@@ -252,6 +252,16 @@ export const emojis = websiteSchema.table('emojis', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
 });
 
+// Custom chat notification sounds
+export const chatNotificationSounds = websiteSchema.table('chat_notification_sounds', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 80 }).notNull().unique(),
+  displayName: varchar('display_name', { length: 120 }).notNull(),
+  soundUrl: varchar('sound_url', { length: 500 }).notNull(),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
+});
+
 // Skill categories table
 export const skillCategories = websiteSchema.table('skill_categories', {
   id: uuid('id').primaryKey().defaultRandom(),

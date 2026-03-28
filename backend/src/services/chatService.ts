@@ -1012,6 +1012,21 @@ export class ChatService {
     });
   }
 
+  /** Notify all chat clients to refresh notification sounds */
+  broadcastNotificationSoundsUpdate(): void {
+    const message = JSON.stringify({ type: 'notificationSoundsUpdate' });
+
+    this.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        try {
+          client.send(message);
+        } catch (error) {
+          console.error('Error broadcasting notification sounds update:', error);
+        }
+      }
+    });
+  }
+
   /**
    * Send message to specific client
    */

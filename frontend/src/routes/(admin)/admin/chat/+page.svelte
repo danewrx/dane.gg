@@ -1,10 +1,33 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
-	import { MessageSquare, Users, RefreshCw, Pencil, Check, X, Loader2, Upload, Image as ImageIcon, Trash } from 'lucide-svelte';
+	import { MessageSquare, Users, RefreshCw, Pencil, Check, X, Loader2, Upload, Image as ImageIcon, Trash, Play, Square } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import AdminChat from '$lib/admin/components/AdminChat.svelte';
 	import { getAllDefaultEmojis } from '$lib/shared/utils/emojiData';
+	import {
+		DEFAULT_CHAT_NOTIFICATION_SOUND_ID,
+		DEFAULT_CHAT_NOTIFICATION_SOUND_NAME,
+		DEFAULT_CHAT_NOTIFICATION_SOUND_URL,
+		labelForNotificationSoundOption
+	} from '$lib/shared/utils/chatNotificationSounds';
+
+	function isBuiltinNotificationSound(s: { id: string; name: string }): boolean {
+		return s.id === DEFAULT_CHAT_NOTIFICATION_SOUND_ID || s.name === DEFAULT_CHAT_NOTIFICATION_SOUND_NAME;
+	}
+
+	function mergeAdminNotificationSounds(
+		rows: Array<{ id: string; name: string; displayName?: string | null; soundUrl: string }>
+	): Array<{ id: string; name: string; displayName?: string | null; soundUrl: string }> {
+		const builtIn: { id: string; name: string; displayName: string; soundUrl: string } = {
+			id: DEFAULT_CHAT_NOTIFICATION_SOUND_ID,
+			name: DEFAULT_CHAT_NOTIFICATION_SOUND_NAME,
+			displayName: 'Default',
+			soundUrl: DEFAULT_CHAT_NOTIFICATION_SOUND_URL
+		};
+		const customOnly = rows.filter((r) => !isBuiltinNotificationSound(r));
+		return [builtIn, ...customOnly];
+	}
 
 	let adminChatComponent: AdminChat | null = null;
 	
@@ -29,6 +52,18 @@
 	let isUploadingEmoji = $state(false);
 	let customEmojis = $state<Array<{ id: string; name: string; imageUrl: string }>>([]);
 	let isLoadingEmojis = $state(false);
+
+	// Chat notification sounds
+	let showSoundUpload = $state(false);
+	let soundFile: File | null = $state(null);
+	let soundDisplayName = $state('');
+	let isUploadingSound = $state(false);
+	let notificationSounds = $state<
+		Array<{ id: string; name: string; displayName?: string | null; soundUrl: string }>
+	>([]);
+	let isLoadingSounds = $state(true);
+	let previewPlayingId = $state<string | null>(null);
+	let previewAudio: HTMLAudioElement | null = null;
 
 	function handleColorChange(e: Event) {
 		const target = e.target as HTMLInputElement;
@@ -228,9 +263,161 @@
 		loadCustomEmojis();
 	}
 
+	async function loadNotificationSounds() {
+		if (!browser) {
+			isLoadingSounds = false;
+			return;
+		}
+		try {
+			isLoadingSounds = true;
+			const response = await fetch('/api/chat-notification-sounds', { credentials: 'include' });
+			if (response.ok) {
+				const data = await response.json();
+				const rows = (data.data || []) as Array<{
+					id: string;
+					name: string;
+					displayName?: string | null;
+					soundUrl: string;
+				}>;
+				notificationSounds = mergeAdminNotificationSounds(rows);
+			} else {
+				notificationSounds = mergeAdminNotificationSounds([]);
+			}
+		} catch (error) {
+			console.error('Failed to load notification sounds:', error);
+			notificationSounds = mergeAdminNotificationSounds([]);
+		} finally {
+			isLoadingSounds = false;
+		}
+	}
+
+	function handleSoundFileSelect(event: Event) {
+		const input = event.target as HTMLInputElement;
+		if (input.files && input.files[0]) {
+			const file = input.files[0];
+			const allowed = ['.mp3', '.wav', '.ogg', '.webm', '.m4a'];
+			const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+			if (!allowed.includes(ext)) {
+				toast.error('Invalid file type', {
+					description: 'Use MP3, WAV, OGG, WebM, or M4A (max 512KB)'
+				});
+				return;
+			}
+			if (file.size > 512 * 1024) {
+				toast.error('File too large', { description: 'Sounds must be 512KB or less' });
+				return;
+			}
+			soundFile = file;
+		}
+	}
+
+	async function uploadNotificationSound() {
+		const label = soundDisplayName.trim();
+		if (!soundFile || !label) {
+			toast.error('Missing information', {
+				description: 'Select an audio file and enter a display name'
+			});
+			return;
+		}
+		if (label.length > 120) {
+			toast.error('Name too long', { description: 'Use 120 characters or fewer' });
+			return;
+		}
+		try {
+			isUploadingSound = true;
+			const formData = new FormData();
+			formData.append('file', soundFile);
+			formData.append('displayName', label);
+			const response = await fetch('/api/chat-notification-sounds', {
+				method: 'POST',
+				credentials: 'include',
+				body: formData
+			});
+			if (!response.ok) {
+				const err = await response.json().catch(() => ({}));
+				throw new Error(err.error || 'Upload failed');
+			}
+			toast.success('Sound uploaded', {
+				description: `Visitors can pick “${label}” in site settings`
+			});
+			soundFile = null;
+			soundDisplayName = '';
+			showSoundUpload = false;
+			await loadNotificationSounds();
+		} catch (error) {
+			console.error(error);
+			toast.error('Upload failed', {
+				description: error instanceof Error ? error.message : 'Try again'
+			});
+		} finally {
+			isUploadingSound = false;
+		}
+	}
+
+	async function deleteNotificationSound(
+		id: string,
+		s: Pick<{ name: string; displayName?: string | null }, 'name' | 'displayName'>
+	) {
+		if (!confirm(`Delete notification sound “${labelForNotificationSoundOption(s)}”?`)) return;
+		try {
+			const response = await fetch(`/api/chat-notification-sounds/${id}`, {
+				method: 'DELETE',
+				credentials: 'include'
+			});
+			if (!response.ok) throw new Error('Delete failed');
+			toast.success('Sound removed');
+			await loadNotificationSounds();
+		} catch (error) {
+			console.error(error);
+			toast.error('Failed to delete sound');
+		}
+	}
+
+	function stopSoundPreview() {
+		if (previewAudio) {
+			previewAudio.pause();
+			previewAudio.currentTime = 0;
+			previewAudio = null;
+		}
+		previewPlayingId = null;
+	}
+
+	function toggleSoundPreview(url: string, id: string) {
+		if (!browser) return;
+		if (previewPlayingId === id && previewAudio && !previewAudio.paused) {
+			stopSoundPreview();
+			return;
+		}
+
+		stopSoundPreview();
+
+		const a = new Audio(url);
+		previewAudio = a;
+		a.volume = 0.5;
+
+		const onFinish = () => {
+			if (previewAudio === a) stopSoundPreview();
+		};
+		a.addEventListener('ended', onFinish);
+		a.addEventListener('error', onFinish);
+
+		void a
+			.play()
+			.then(() => {
+				if (previewAudio === a && !a.paused) previewPlayingId = id;
+			})
+			.catch(() => {
+				if (previewAudio === a) stopSoundPreview();
+			});
+	}
+
+	onDestroy(() => {
+		if (browser) stopSoundPreview();
+	});
+
 	onMount(async () => {
 		if (browser) {
-			await loadCustomEmojis();
+			await Promise.all([loadCustomEmojis(), loadNotificationSounds()]);
 		}
 	});
 </script>
@@ -286,6 +473,9 @@
 			bind:adminNickname
 			bind:adminColor
 			onEmojiUpdate={handleEmojiUpdate}
+			onNotificationSoundsUpdate={() => {
+				void loadNotificationSounds();
+			}}
 		/>
 
 		<!-- Right Column - Stats -->
@@ -444,6 +634,124 @@
 									>
 										<Trash size={12} />
 									</button>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			</div>
+
+			<!-- Chat notification sounds (public site) -->
+			<div class="emojis-section sounds-section">
+				<div class="emojis-header">
+					<h3>Chat notification sounds</h3>
+					<button
+						type="button"
+						class="add-emoji-btn"
+						onclick={() => (showSoundUpload = !showSoundUpload)}
+						title="Upload sound"
+					>
+						<Upload size={16} />
+					</button>
+				</div>
+				<div class="emojis-content">
+					<p class="sounds-intro">
+						Short clips (512KB max) for the public chat widget. Visitors choose a sound in the site settings
+						panel.
+					</p>
+					{#if showSoundUpload}
+						<div class="emoji-upload-form">
+							<div class="upload-form-group">
+								<label for="sound-file">Audio (MP3, WAV, OGG, WebM, M4A)</label>
+								<input
+									id="sound-file"
+									type="file"
+									accept=".mp3,.wav,.ogg,.webm,.m4a,audio/*"
+									onchange={handleSoundFileSelect}
+									disabled={isUploadingSound}
+								/>
+								{#if soundFile}
+									<span class="file-name">{soundFile.name}</span>
+								{/if}
+							</div>
+							<div class="upload-form-group">
+								<label for="sound-display-name">Display name</label>
+								<input
+									id="sound-display-name"
+									type="text"
+									bind:value={soundDisplayName}
+									placeholder="e.g. Soft ding ★"
+									maxlength="120"
+									disabled={isUploadingSound}
+								/>
+								<span class="form-hint"
+									>Shown in the visitor dropdown. The file is stored under a unique name on the server.</span
+								>
+							</div>
+							<div class="upload-form-actions">
+								<button
+									type="button"
+									class="upload-btn"
+									onclick={uploadNotificationSound}
+									disabled={!soundFile || !soundDisplayName.trim() || isUploadingSound}
+								>
+									{#if isUploadingSound}
+										<Loader2 size={14} class="spin" />
+										Uploading…
+									{:else}
+										<Upload size={14} />
+										Upload
+									{/if}
+								</button>
+								<button
+									type="button"
+									class="cancel-btn"
+									onclick={() => {
+										showSoundUpload = false;
+										soundFile = null;
+										soundDisplayName = '';
+									}}
+									disabled={isUploadingSound}
+								>
+									Cancel
+								</button>
+							</div>
+						</div>
+					{/if}
+
+					{#if isLoadingSounds}
+						<div class="emojis-loading">
+							<Loader2 size={16} class="spin" />
+							<span>Loading sounds…</span>
+						</div>
+					{:else}
+						<div class="sounds-grid">
+							{#each notificationSounds as s (s.id)}
+								<div class="sound-tile">
+									{#if !isBuiltinNotificationSound(s)}
+										<button
+											type="button"
+											class="sound-tile-delete"
+											onclick={() => deleteNotificationSound(s.id, s)}
+											title="Delete"
+										>
+											<Trash size={12} />
+										</button>
+									{/if}
+									<button
+										type="button"
+										class="sound-play-btn"
+										onclick={() => toggleSoundPreview(s.soundUrl, s.id)}
+										aria-label={previewPlayingId === s.id ? 'Stop preview' : 'Play preview'}
+										title={previewPlayingId === s.id ? 'Stop' : 'Play'}
+									>
+										{#if previewPlayingId === s.id}
+											<Square size={14} strokeWidth={2} aria-hidden="true" />
+										{:else}
+											<Play size={18} strokeWidth={2} aria-hidden="true" />
+										{/if}
+									</button>
+									<span class="sound-tile-name">{labelForNotificationSoundOption(s)}</span>
 								</div>
 							{/each}
 						</div>
@@ -1158,6 +1466,137 @@
 	.emoji-delete-btn:hover {
 		background: rgba(239, 68, 68, 0.3);
 		border-color: rgba(239, 68, 68, 0.6);
+	}
+
+	.sounds-intro {
+		margin: 0 0 12px 0;
+		font-size: 12px;
+		line-height: 1.45;
+		color: #a1a1aa;
+	}
+
+	:global(html:not(.dark)) .sounds-intro {
+		color: #6b7280;
+	}
+
+	.sounds-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+		gap: 12px;
+	}
+
+	.sound-tile {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 10px;
+		padding: 14px 10px 12px;
+		min-height: 96px;
+		box-sizing: border-box;
+		background: #1a1a1a;
+		border: 1px solid #404040;
+		border-radius: 8px;
+	}
+
+	:global(html:not(.dark)) .sound-tile {
+		background: #f9fafb;
+		border-color: #e5e7eb;
+	}
+
+	.sound-tile-delete {
+		position: absolute;
+		top: 6px;
+		right: 6px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 26px;
+		height: 26px;
+		padding: 0;
+		background: rgba(42, 42, 42, 0.95);
+		border: 1px solid #555;
+		border-radius: 4px;
+		color: #ef4444;
+		cursor: pointer;
+		opacity: 0;
+		transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+	}
+
+	.sound-tile:hover .sound-tile-delete,
+	.sound-tile-delete:focus-visible {
+		opacity: 1;
+	}
+
+	.sound-tile-delete:hover {
+		background: rgba(239, 68, 68, 0.2);
+		border-color: rgba(239, 68, 68, 0.55);
+	}
+
+	:global(html:not(.dark)) .sound-tile-delete {
+		background: rgba(255, 255, 255, 0.95);
+		border-color: #e5e7eb;
+	}
+
+	:global(html:not(.dark)) .sound-tile-delete:hover {
+		background: rgba(239, 68, 68, 0.12);
+		border-color: rgba(239, 68, 68, 0.45);
+	}
+
+	.sound-play-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		margin-top: 2px;
+		padding: 0;
+		background: #2a2a2a;
+		border: 1px solid #555;
+		border-radius: 6px;
+		color: #e4e4e7;
+		cursor: pointer;
+		transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+	}
+
+	.sound-play-btn:hover {
+		border-color: #6366f1;
+		color: #fff;
+		background: #333;
+	}
+
+	.sound-play-btn :global(svg) {
+		display: block;
+		flex-shrink: 0;
+	}
+
+	:global(html:not(.dark)) .sound-play-btn {
+		background: #f3f4f6;
+		border-color: #d1d5db;
+		color: #374151;
+	}
+
+	:global(html:not(.dark)) .sound-play-btn:hover {
+		border-color: #6366f1;
+		color: #1f2937;
+		background: #e5e7eb;
+	}
+
+	.sound-tile-name {
+		font-size: 12px;
+		font-weight: 600;
+		line-height: 1.25;
+		text-align: center;
+		color: #fff;
+		font-family: 'Courier New', monospace;
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	:global(html:not(.dark)) .sound-tile-name {
+		color: #1f2937;
 	}
 
 	.stats-section {

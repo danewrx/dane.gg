@@ -20,6 +20,7 @@ app.use(cookieParser());
 
 app.use('/uploads', express.static(path.join(process.cwd(), 'static', 'uploads')));
 app.use('/emojis', express.static(path.join(process.cwd(), 'static', 'emojis')));
+app.use('/chat-sounds', express.static(path.join(process.cwd(), 'static', 'chat-sounds')));
 
 // Session configuration
 app.use(session({
@@ -85,6 +86,7 @@ import apiKeysRoutes from './routes/apiKeys';
 import { generalLimiter } from './middleware/rateLimiting';
 import { chatService } from './services/chatService';
 import emojisRoutes from './routes/emojis';
+import chatNotificationSoundsRoutes from './routes/chatNotificationSounds';
 import skillsRoutes from './routes/skills';
 import certificationsRoutes from './routes/certifications';
 import contactRoutes from './routes/contact';
@@ -177,6 +179,7 @@ app.use('/api/api-keys', apiKeysRoutes);
 app.use('/webhooks', webhooksRoutes);
 
 app.use('/api/emojis', emojisRoutes);
+app.use('/api/chat-notification-sounds', chatNotificationSoundsRoutes);
 
 // Skills routes
 app.use('/api/skills', skillsRoutes);
@@ -209,6 +212,13 @@ const isStandalone = process.env.NODE_ENV !== 'production';
 
 // Initialize default admin user on startup
 async function initializeApp() {
+  try {
+    const { ensureChatNotificationSoundsDisplayName } = await import('./db/ensureChatNotificationSoundsDisplayName');
+    await ensureChatNotificationSoundsDisplayName();
+  } catch (error) {
+    console.error('❌ Notification sounds schema check failed:', error);
+  }
+
   try {
     await createDefaultAdmin();
     

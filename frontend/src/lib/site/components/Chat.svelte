@@ -6,6 +6,15 @@
 	import { Smile } from 'lucide-svelte';
 	import { getAllDefaultEmojis, getEmojiFromName, getNameFromEmoji, type EmojiData } from '$lib/shared/utils/emojiData';
 	import { trackEmojiUsage, getRecentEmojis } from '$lib/shared/utils/recentEmojis';
+	import {
+		DEFAULT_CHAT_NOTIFICATION_SOUND_ID,
+		DEFAULT_CHAT_NOTIFICATION_SOUND_URL,
+		CHAT_NOTIFICATION_SOUND_ID_KEY,
+		CHAT_NOTIFICATION_SOUNDS_UPDATED_EVENT,
+		fetchChatNotificationSoundOptions,
+		readStoredChatNotificationSoundId,
+		resolveChatNotificationSoundUrl
+	} from '$lib/shared/utils/chatNotificationSounds';
 
 	let globalWsInstance: WebSocket | null = null;
 	
@@ -55,7 +64,16 @@
 	}
 
 	interface WebSocketMessage {
-		type: 'message' | 'system' | 'error' | 'history' | 'userCount' | 'delete' | 'adminConfig' | 'emojiUpdate';
+		type:
+			| 'message'
+			| 'system'
+			| 'error'
+			| 'history'
+			| 'userCount'
+			| 'delete'
+			| 'adminConfig'
+			| 'emojiUpdate'
+			| 'notificationSoundsUpdate';
 		data?: ChatMessage | ChatMessage[] | AdminConfigData;
 		message?: string;
 		count?: number;
@@ -289,6 +307,35 @@
 		notificationsEnabled = event.detail.enabled;
 	}
 
+	function setNotificationAudioUrl(url: string): void {
+		if (!browser) return;
+		audioUnlocked = false;
+		try {
+			notificationAudio?.pause();
+		} catch {}
+		notificationAudio = new Audio(url);
+		notificationAudio.volume = 0.5;
+	}
+
+	function handleNotificationSoundChange(event: Event): void {
+		const e = event as CustomEvent<{ id?: string; url?: string }>;
+		if (!e.detail?.url) return;
+		setNotificationAudioUrl(e.detail.url);
+	}
+
+	async function initNotificationAudio(): Promise<void> {
+		const opts = await fetchChatNotificationSoundOptions();
+		let sid = readStoredChatNotificationSoundId();
+		if (!opts.some((o) => o.id === sid)) {
+			sid = DEFAULT_CHAT_NOTIFICATION_SOUND_ID;
+			try {
+				localStorage.setItem(CHAT_NOTIFICATION_SOUND_ID_KEY, sid);
+			} catch {}
+		}
+		const url = resolveChatNotificationSoundUrl(opts, sid);
+		setNotificationAudioUrl(url);
+	}
+
 	// Check if a message was recently sent
 	function wasMessageSentByMe(messageText: string): boolean {
 		const now = Date.now();
@@ -456,6 +503,11 @@
 						// Reload emojis when update is broadcast
 						loadAllEmojis();
 						emojiPickerReloadTrigger++;
+					} else if (data.type === 'notificationSoundsUpdate') {
+						if (browser) {
+							window.dispatchEvent(new CustomEvent(CHAT_NOTIFICATION_SOUNDS_UPDATED_EVENT));
+						}
+						void initNotificationAudio();
 					}
 					// adminConfig messages are received but we don't need to track them
 					// since the color is now stored with each message
@@ -1188,33 +1240,42 @@
 	onMount(() => {
 		if (browser) {
 			loadAllEmojis();
-			try {
-				// Initialize notification audio
-				notificationAudio = new Audio('/assets/sounds/notification.mp3');
-				notificationAudio.volume = 0.5;
-				
-				// Add listeners to unlock audio on first user interaction
-				document.addEventListener('click', unlockAudio);
-				document.addEventListener('keydown', unlockAudio);
-				document.addEventListener('touchstart', unlockAudio);
-				
-				loadNotificationSetting();
-				currentNickname = getSavedNickname();
-				
-				// Listen for notification setting changes
-				window.addEventListener('chatNotificationSettingChanged', handleNotificationSettingChange as EventListener);
-				
-			// Connect to WebSocket (admin config will be received on connect)
-			setTimeout(() => {
-				connect();
-				setTimeout(() => {
-						scrollToBottom();
-					}, 100);
-				}, 50);
-			} catch (error) {
-				console.error('Error initializing chat:', error);
-				connectionStatus = 'disconnected';
-			}
+			void (async () => {
+				try {
+					await initNotificationAudio();
+
+					document.addEventListener('click', unlockAudio);
+					document.addEventListener('keydown', unlockAudio);
+					document.addEventListener('touchstart', unlockAudio);
+
+					loadNotificationSetting();
+					currentNickname = getSavedNickname();
+
+					window.addEventListener(
+						'chatNotificationSettingChanged',
+						handleNotificationSettingChange as EventListener
+					);
+					window.addEventListener(
+						'chatNotificationSoundChanged',
+						handleNotificationSoundChange as EventListener
+					);
+
+					setTimeout(() => {
+						connect();
+						setTimeout(() => {
+							scrollToBottom();
+						}, 100);
+					}, 50);
+				} catch (error) {
+					console.error('Error initializing chat:', error);
+					connectionStatus = 'disconnected';
+					try {
+						setNotificationAudioUrl(DEFAULT_CHAT_NOTIFICATION_SOUND_URL);
+						loadNotificationSetting();
+						setTimeout(() => connect(), 50);
+					} catch {}
+				}
+			})();
 		}
 	});
 
@@ -1242,6 +1303,7 @@
 		// Clean up notification event listeners
 		if (browser) {
 			window.removeEventListener('chatNotificationSettingChanged', handleNotificationSettingChange as EventListener);
+			window.removeEventListener('chatNotificationSoundChanged', handleNotificationSoundChange as EventListener);
 			document.removeEventListener('click', unlockAudio);
 			document.removeEventListener('keydown', unlockAudio);
 			document.removeEventListener('touchstart', unlockAudio);

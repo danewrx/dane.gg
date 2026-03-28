@@ -1,0 +1,3 @@
+export const DEFAULT_CHAT_NOTIFICATION_SOUND_ID = 'a0000000-0000-4000-8000-000000000001';
+export const DEFAULT_CHAT_NOTIFICATION_SOUND_NAME = 'default';
+export const DEFAULT_CHAT_NOTIFICATION_SOUND_URL = '/chat-sounds/default-notification.mp3';

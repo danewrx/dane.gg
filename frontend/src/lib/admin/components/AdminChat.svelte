@@ -25,7 +25,16 @@
 	}
 
 	interface WebSocketMessage {
-		type: 'message' | 'system' | 'error' | 'history' | 'userCount' | 'delete' | 'adminConfig' | 'emojiUpdate';
+		type:
+			| 'message'
+			| 'system'
+			| 'error'
+			| 'history'
+			| 'userCount'
+			| 'delete'
+			| 'adminConfig'
+			| 'emojiUpdate'
+			| 'notificationSoundsUpdate';
 		data?: ChatMessage | ChatMessage[] | { nickname?: string; color?: string };
 		message?: string;
 		count?: number;
@@ -44,6 +53,7 @@
 		allEmojis = $bindable<Emoji[]>([]),
 		emojiPickerReloadTrigger = $bindable(0),
 		onEmojiUpdate = $bindable<(() => void) | null>(null),
+		onNotificationSoundsUpdate = $bindable<(() => void) | null>(null),
 		userCount = $bindable(0),
 		messageCount = $bindable(0),
 		isConnected = $bindable(false),
@@ -54,6 +64,7 @@
 		allEmojis?: Emoji[];
 		emojiPickerReloadTrigger?: number;
 		onEmojiUpdate?: (() => void) | null;
+		onNotificationSoundsUpdate?: (() => void) | null;
 		userCount?: number;
 		messageCount?: number;
 		isConnected?: boolean;
@@ -415,6 +426,8 @@
 							onEmojiUpdate();
 						}
 						emojiPickerReloadTrigger++;
+					} else if (data.type === 'notificationSoundsUpdate') {
+						onNotificationSoundsUpdate?.();
 					}
 				} catch (error) {
 					console.error('Error parsing WebSocket message:', error);
