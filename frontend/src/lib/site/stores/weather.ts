@@ -1,6 +1,11 @@
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
-import { siteConfig, loadSiteConfig } from './siteConfig';
+import {
+	siteConfig,
+	loadSiteConfig,
+	SITE_CONFIG_UPDATED_EVENT,
+	type SiteConfig
+} from './siteConfig';
 
 export type WeatherType = 'none' | 'rain' | 'snow';
 
@@ -181,4 +186,60 @@ export function restoreUserPreferences() {
 
 	// Reset initialization flag so it can be restored again if needed
 	weatherInitialized = false;
+}
+
+export function applyWeatherFromServerConfig(config: SiteConfig): void {
+	if (!browser) return;
+
+	userChangedSettings = false;
+
+	if (config.enforce_weather_effects) {
+		weatherSettings.set({
+			type: config.default_weather_type,
+			speed: config.default_weather_speed
+		});
+		return;
+	}
+
+	const savedWeather = localStorage.getItem('weatherType') as WeatherType;
+	const savedSpeed = localStorage.getItem('weatherSpeed');
+
+	let weatherType = config.default_weather_type;
+	let weatherSpeed = config.default_weather_speed;
+
+	if (savedWeather && (savedWeather === 'none' || savedWeather === 'rain' || savedWeather === 'snow')) {
+		weatherType = savedWeather;
+	}
+
+	if (savedSpeed) {
+		const speed = parseFloat(savedSpeed);
+		if (speed >= 0.5 && speed <= 3.0) {
+			weatherSpeed = speed;
+		}
+	}
+
+	weatherSettings.set({
+		type: weatherType,
+		speed: weatherSpeed
+	});
+}
+
+export async function reloadSiteConfigAndApplyWeather(): Promise<void> {
+	if (!browser) return;
+
+	await loadSiteConfig();
+	applyWeatherFromServerConfig(get(siteConfig));
+
+	window.dispatchEvent(new CustomEvent(SITE_CONFIG_UPDATED_EVENT));
+}
+
+let siteConfigReloadDebounce: ReturnType<typeof setTimeout> | null = null;
+
+export function scheduleReloadSiteConfigAndApplyWeather(): void {
+	if (!browser) return;
+	if (siteConfigReloadDebounce) clearTimeout(siteConfigReloadDebounce);
+	siteConfigReloadDebounce = setTimeout(() => {
+		siteConfigReloadDebounce = null;
+		void reloadSiteConfigAndApplyWeather();
+	}, 350);
 }

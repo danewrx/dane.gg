@@ -34,7 +34,8 @@
 			| 'delete'
 			| 'adminConfig'
 			| 'emojiUpdate'
-			| 'notificationSoundsUpdate';
+			| 'notificationSoundsUpdate'
+			| 'siteConfigUpdate';
 		data?: ChatMessage | ChatMessage[] | { nickname?: string; color?: string };
 		message?: string;
 		count?: number;

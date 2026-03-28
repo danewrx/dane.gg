@@ -1,6 +1,13 @@
 import { Router } from 'express';
 import { ConfigService } from '../services/config';
 import { requireSession } from '../middleware/auth';
+import { chatService } from '../services/chatService';
+
+const WEATHER_LIVE_KEYS = new Set([
+  'default_weather_type',
+  'default_weather_speed',
+  'enforce_weather_effects'
+]);
 
 const router = Router();
 
@@ -65,6 +72,10 @@ router.put('/:key', requireSession, async (req, res) => {
     }
 
     const result = await ConfigService.set(key, value, dataType);
+
+    if (WEATHER_LIVE_KEYS.has(key)) {
+      chatService.broadcastSiteConfigUpdate();
+    }
 
     res.json({
       success: true,

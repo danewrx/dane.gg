@@ -1027,6 +1027,21 @@ export class ChatService {
     });
   }
 
+  /** Notify clients to refetch site config */
+  broadcastSiteConfigUpdate(): void {
+    const message = JSON.stringify({ type: 'siteConfigUpdate' });
+
+    this.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        try {
+          client.send(message);
+        } catch (error) {
+          console.error('Error broadcasting site config update:', error);
+        }
+      }
+    });
+  }
+
   /**
    * Send message to specific client
    */

@@ -1,6 +1,8 @@
 import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 
+export const SITE_CONFIG_UPDATED_EVENT = 'siteConfigUpdated';
+
 export interface SiteConfig {
 	default_weather_type: 'none' | 'rain' | 'snow';
 	default_weather_speed: number;

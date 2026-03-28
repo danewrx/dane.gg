@@ -15,6 +15,7 @@
 		readStoredChatNotificationSoundId,
 		resolveChatNotificationSoundUrl
 	} from '$lib/shared/utils/chatNotificationSounds';
+	import { scheduleReloadSiteConfigAndApplyWeather } from '$lib/site/stores/weather';
 
 	let globalWsInstance: WebSocket | null = null;
 	
@@ -73,7 +74,8 @@
 			| 'delete'
 			| 'adminConfig'
 			| 'emojiUpdate'
-			| 'notificationSoundsUpdate';
+			| 'notificationSoundsUpdate'
+			| 'siteConfigUpdate';
 		data?: ChatMessage | ChatMessage[] | AdminConfigData;
 		message?: string;
 		count?: number;
@@ -508,6 +510,8 @@
 							window.dispatchEvent(new CustomEvent(CHAT_NOTIFICATION_SOUNDS_UPDATED_EVENT));
 						}
 						void initNotificationAudio();
+					} else if (data.type === 'siteConfigUpdate') {
+						scheduleReloadSiteConfigAndApplyWeather();
 					}
 					// adminConfig messages are received but we don't need to track them
 					// since the color is now stored with each message
