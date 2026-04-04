@@ -3,6 +3,7 @@
 	import { toast } from 'svelte-sonner';
 	import { Loader2, Plus, Trash2, Edit2, Save, X, Image as ImageIcon, GripVertical } from 'lucide-svelte';
 	import FileUpload, { type UploadedFile } from '$lib/admin/components/ui/FileUpload.svelte';
+	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
 	interface Certification {
 		id: string;
@@ -48,6 +49,9 @@
 	let editingCertImageUrl = $state('');
 	let editingCertImageIsExternal = $state(false);
 	let editingCertImageFilename = $state<string | null>(null);
+
+	let showDeleteCertDialog = $state(false);
+	let pendingDeleteCertId = $state<string | null>(null);
 
 	onMount(async () => {
 		await loadCertifications();
@@ -323,10 +327,19 @@
 		}
 	}
 
-	async function deleteCertification(certId: string) {
-		if (!confirm('Are you sure you want to delete this certification?')) {
-			return;
-		}
+	function requestDeleteCertification(certId: string) {
+		pendingDeleteCertId = certId;
+		showDeleteCertDialog = true;
+	}
+
+	function cancelDeleteCertification() {
+		showDeleteCertDialog = false;
+		pendingDeleteCertId = null;
+	}
+
+	async function confirmDeleteCertification() {
+		if (!pendingDeleteCertId) return;
+		const certId = pendingDeleteCertId;
 
 		const cert = certifications.find(c => c.id === certId);
 		if (cert && !cert.isExternal && cert.imageUrl && cert.imageUrl.startsWith('/uploads/')) {
@@ -355,6 +368,8 @@
 			await loadCertifications();
 		} catch (error) {
 			toast.error('Failed to delete certification');
+		} finally {
+			cancelDeleteCertification();
 		}
 	}
 
@@ -481,6 +496,18 @@
 		dragOverIndex = null;
 	}
 </script>
+
+<ConfirmDialog
+	bind:open={showDeleteCertDialog}
+	title="Delete certification"
+	message="Remove this certification from the About page?"
+	detail="This cannot be undone."
+	variant="danger"
+	confirmLabel="Delete certification"
+	cancelLabel="Cancel"
+	onConfirm={confirmDeleteCertification}
+	onCancel={cancelDeleteCertification}
+/>
 
 <div class="certifications-settings">
 	<div class="settings-description">
@@ -635,7 +662,7 @@
 							<button class="icon-btn edit" onclick={() => startEditingCert(cert)}>
 								<Edit2 size={16} />
 							</button>
-							<button class="icon-btn delete" onclick={() => deleteCertification(cert.id)}>
+							<button class="icon-btn delete" onclick={() => requestDeleteCertification(cert.id)}>
 								<Trash2 size={16} />
 							</button>
 						</div>

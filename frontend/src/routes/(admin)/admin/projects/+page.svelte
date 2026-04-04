@@ -7,10 +7,12 @@
 	import ProjectEditor from '$lib/admin/components/ProjectEditor.svelte';
 	import ProjectCategoryManager from '$lib/admin/components/ProjectCategoryManager.svelte';
 	import ProjectTagManager from '$lib/admin/components/ProjectTagManager.svelte';
+	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
 	let projects = $state<Project[]>([]);
 	let loading = $state(true);
-	let deleteConfirmId = $state<string | null>(null);
+	let showDeleteProjectDialog = $state(false);
+	let projectIdPendingDelete = $state<string | null>(null);
 	let isPanelOpen = $state(false);
 	let editingProjectId = $state<string | null>(null);
 	let showCategoryManager = $state(false);
@@ -97,19 +99,22 @@
 		await loadProjects();
 	}
 
-	function confirmDelete(id: string) {
-		deleteConfirmId = id;
+	function requestDeleteProject(id: string) {
+		projectIdPendingDelete = id;
+		showDeleteProjectDialog = true;
 	}
 
-	function cancelDelete() {
-		deleteConfirmId = null;
+	function cancelDeleteProject() {
+		showDeleteProjectDialog = false;
+		projectIdPendingDelete = null;
 	}
 
-	async function handleDelete(id: string) {
+	async function confirmDeleteProject() {
+		if (!projectIdPendingDelete) return;
+		const id = projectIdPendingDelete;
 		try {
 			const projectToDelete = projects.find(p => p.id === id);
 			await deleteProject(id);
-			deleteConfirmId = null;
 			await loadProjects();
 			toast.success('Project deleted', {
 				description: projectToDelete ? `"${projectToDelete.title}" has been deleted` : 'The project has been deleted'
@@ -119,8 +124,14 @@
 			toast.error('Failed to delete project', {
 				description: 'Please try again'
 			});
+		} finally {
+			cancelDeleteProject();
 		}
 	}
+
+	let projectPendingDeleteTitle = $derived(
+		projectIdPendingDelete ? projects.find((p) => p.id === projectIdPendingDelete)?.title ?? '' : ''
+	);
 
 	function formatDateTime(dateString: string): string {
 		const date = new Date(dateString);
@@ -228,6 +239,18 @@
 		isDragging = false;
 	}
 </script>
+
+<ConfirmDialog
+	bind:open={showDeleteProjectDialog}
+	title="Delete project"
+	message={projectPendingDeleteTitle ? `Delete “${projectPendingDeleteTitle}”?` : ''}
+	detail="This cannot be undone."
+	variant="danger"
+	confirmLabel="Delete project"
+	cancelLabel="Cancel"
+	onConfirm={confirmDeleteProject}
+	onCancel={cancelDeleteProject}
+/>
 
 <div class="projects-list">
 	<div class="header">
@@ -338,25 +361,11 @@
 											<button class="action-icon edit" onclick={() => editProject(project.id)} title="Edit project">
 												<Edit size={18} />
 											</button>
-											<button class="action-icon delete" onclick={() => confirmDelete(project.id)} title="Delete project">
+											<button class="action-icon delete" onclick={() => requestDeleteProject(project.id)} title="Delete project">
 												<Trash2 size={18} />
 											</button>
 										</td>
 									</tr>
-
-									{#if deleteConfirmId === project.id}
-										<tr class="delete-confirm-row">
-											<td colspan="5">
-												<div class="delete-confirm">
-													<p>Delete this project?</p>
-													<div class="confirm-actions">
-														<button class="confirm-button" onclick={() => handleDelete(project.id)}>Delete</button>
-														<button class="cancel-button" onclick={cancelDelete}>Cancel</button>
-													</div>
-												</div>
-											</td>
-										</tr>
-									{/if}
 								{/each}
 							</tbody>
 						</table>
@@ -759,66 +768,6 @@
 
 	.action-icon.delete:hover {
 		color: #ef4444;
-	}
-
-	.delete-confirm-row {
-		background: var(--bg-tertiary, #3a3a3a);
-	}
-
-	.delete-confirm-row td {
-		padding: 0 !important;
-	}
-
-	.delete-confirm {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 16px;
-		padding: 16px 20px;
-		background: rgba(239, 68, 68, 0.1);
-		border-left: 3px solid #ef4444;
-	}
-
-	.delete-confirm p {
-		color: var(--text-primary, #ffffff);
-		font-size: 14px;
-		margin: 0;
-		flex: 1;
-	}
-
-	.confirm-actions {
-		display: flex;
-		gap: 12px;
-	}
-
-	.confirm-button,
-	.cancel-button {
-		padding: 8px 20px;
-		border-radius: 6px;
-		font-size: 14px;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.2s ease;
-	}
-
-	.confirm-button {
-		background: #ef4444;
-		color: white;
-		border: none;
-	}
-
-	.confirm-button:hover {
-		background: #dc2626;
-	}
-
-	.cancel-button {
-		background: transparent;
-		color: var(--text-primary, #ffffff);
-		border: 1px solid var(--border-color, #3a3a3a);
-	}
-
-	.cancel-button:hover {
-		background: var(--bg-secondary, #2d2d2d);
 	}
 
 	@media (max-width: 768px) {

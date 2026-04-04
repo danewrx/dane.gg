@@ -24,6 +24,7 @@
 	import FontPicker from '$lib/admin/components/ui/FontPicker.svelte';
 	import CssCodeEditor from '$lib/admin/components/ui/CssCodeEditor.svelte';
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
+	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 	import {
 		THEME_FONT_SCALE_MIN,
 		THEME_FONT_SCALE_MAX,
@@ -111,6 +112,9 @@
 	let previewPath = $state<string>(PREVIEW_ROUTES[0].path);
 	let previewIframeReady = $state(false);
 	let previewIframeEl = $state<HTMLIFrameElement | null>(null);
+
+	let showDeleteThemeDialog = $state(false);
+	let themePendingDelete = $state<Theme | null>(null);
 
 	type ThemeEditorAccordionId =
 		| 'colors'
@@ -611,16 +615,23 @@
 		}
 	}
 
-	async function deleteTheme(theme: Theme) {
+	function requestDeleteTheme(theme: Theme) {
 		if (theme.isDefault) {
 			toast.error('Cannot delete default themes');
 			return;
 		}
+		themePendingDelete = theme;
+		showDeleteThemeDialog = true;
+	}
 
-		if (!confirm(`Are you sure you want to delete "${theme.name}"?`)) {
-			return;
-		}
+	function cancelDeleteTheme() {
+		showDeleteThemeDialog = false;
+		themePendingDelete = null;
+	}
 
+	async function confirmDeleteTheme() {
+		if (!themePendingDelete) return;
+		const theme = themePendingDelete;
 		try {
 			const response = await fetch(`/api/themes/${theme.id}`, {
 				method: 'DELETE',
@@ -636,10 +647,11 @@
 			await loadThemes();
 		} catch (error: any) {
 			toast.error(error.message);
+		} finally {
+			cancelDeleteTheme();
 		}
 	}
 
-	// Drag and drop handlers
 	function handleDragStart(event: DragEvent, index: number) {
 		if (editingTheme || isCreating) return;
 		draggedIndex = index;
@@ -706,6 +718,18 @@
 		dragOverIndex = null;
 	}
 </script>
+
+<ConfirmDialog
+	bind:open={showDeleteThemeDialog}
+	title="Delete theme"
+	message={themePendingDelete ? `Delete “${themePendingDelete.name}”?` : ''}
+	detail="This cannot be undone."
+	variant="danger"
+	confirmLabel="Delete theme"
+	cancelLabel="Cancel"
+	onConfirm={confirmDeleteTheme}
+	onCancel={cancelDeleteTheme}
+/>
 
 <div class="themes-settings">
 	{#if !isCreating && !editingTheme}
@@ -1627,7 +1651,7 @@
 					{#if !theme.isDefault}
 						<button 
 							class="action-btn delete" 
-							onclick={() => deleteTheme(theme)}
+							onclick={() => requestDeleteTheme(theme)}
 							title="Delete theme"
 						>
 							<Trash2 size={16} />
@@ -1745,7 +1769,7 @@
 								{#if !theme.isDefault}
 									<button 
 										class="action-btn delete" 
-										onclick={() => deleteTheme(theme)}
+										onclick={() => requestDeleteTheme(theme)}
 										title="Delete theme"
 									>
 										<Trash2 size={16} />

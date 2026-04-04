@@ -438,6 +438,36 @@ router.get('/admin/tags/all', requireSession, async (req, res) => {
 });
 
 /**
+ * List blog posts that use a tag (admin)
+ */
+router.get('/admin/tags/:id/posts', requireSession, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const rows = await db
+      .select({
+        id: posts.id,
+        title: posts.title
+      })
+      .from(postTags)
+      .innerJoin(posts, eq(postTags.postId, posts.id))
+      .where(eq(postTags.tagId, id))
+      .orderBy(asc(posts.title));
+
+    res.json({
+      success: true,
+      data: rows
+    });
+  } catch (error) {
+    console.error('Error fetching posts for blog tag:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch posts using this tag'
+    });
+  }
+});
+
+/**
  * Create a new blog tag (authenticated users only)
  */
 router.post('/admin/tags', requireSession, async (req, res) => {

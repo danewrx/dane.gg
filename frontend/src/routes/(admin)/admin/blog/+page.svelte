@@ -5,10 +5,12 @@
 	import { getAllBlogPosts, deleteBlogPost, type BlogPost } from '$lib/admin/services/blogService';
 	import SlideInPanel from '$lib/admin/components/ui/SlideInPanel.svelte';
 	import BlogPostEditor from '$lib/admin/components/BlogPostEditor.svelte';
+	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
 	let posts = $state<BlogPost[]>([]);
 	let loading = $state(true);
-	let deleteConfirmId = $state<string | null>(null);
+	let showDeletePostDialog = $state(false);
+	let postIdPendingDelete = $state<string | null>(null);
 	let isPanelOpen = $state(false);
 	let editingPostId = $state<string | null>(null);
 	let sortBy = $state<'created' | 'updated'>('updated');
@@ -59,19 +61,22 @@
 		await loadPosts();
 	}
 
-	function confirmDelete(id: string) {
-		deleteConfirmId = id;
+	function requestDeletePost(id: string) {
+		postIdPendingDelete = id;
+		showDeletePostDialog = true;
 	}
 
-	function cancelDelete() {
-		deleteConfirmId = null;
+	function cancelDeletePost() {
+		showDeletePostDialog = false;
+		postIdPendingDelete = null;
 	}
 
-	async function handleDelete(id: string) {
+	async function confirmDeletePost() {
+		if (!postIdPendingDelete) return;
+		const id = postIdPendingDelete;
 		try {
 			const postToDelete = posts.find(p => p.id === id);
 			await deleteBlogPost(id);
-			deleteConfirmId = null;
 			await loadPosts();
 			toast.success('Post deleted', {
 				description: postToDelete ? `"${postToDelete.title}" has been deleted` : 'The blog post has been deleted'
@@ -81,8 +86,14 @@
 			toast.error('Failed to delete post', {
 				description: 'Please try again'
 			});
+		} finally {
+			cancelDeletePost();
 		}
 	}
+
+	let postPendingDeleteTitle = $derived(
+		postIdPendingDelete ? posts.find((p) => p.id === postIdPendingDelete)?.title ?? '' : ''
+	);
 
 	function toggleSort() {
 		sortBy = sortBy === 'created' ? 'updated' : 'created';
@@ -114,6 +125,18 @@
 		return content.substring(0, maxLength) + '...';
 	}
 </script>
+
+<ConfirmDialog
+	bind:open={showDeletePostDialog}
+	title="Delete blog post"
+	message={postPendingDeleteTitle ? `Delete “${postPendingDeleteTitle}”?` : ''}
+	detail="This cannot be undone."
+	variant="danger"
+	confirmLabel="Delete post"
+	cancelLabel="Cancel"
+	onConfirm={confirmDeletePost}
+	onCancel={cancelDeletePost}
+/>
 
 <div class="blog-list">
 	<div class="header">
@@ -183,25 +206,11 @@
 								<button class="action-icon edit" onclick={() => editPost(post.id)} title="Edit post">
 									<Edit size={18} />
 								</button>
-								<button class="action-icon delete" onclick={() => confirmDelete(post.id)} title="Delete post">
+								<button class="action-icon delete" onclick={() => requestDeletePost(post.id)} title="Delete post">
 									<Trash2 size={18} />
 								</button>
 							</td>
 						</tr>
-
-						{#if deleteConfirmId === post.id}
-							<tr class="delete-confirm-row">
-								<td colspan="5">
-									<div class="delete-confirm">
-										<p>Delete this post?</p>
-										<div class="confirm-actions">
-											<button class="confirm-button" onclick={() => handleDelete(post.id)}>Delete</button>
-											<button class="cancel-button" onclick={cancelDelete}>Cancel</button>
-										</div>
-									</div>
-								</td>
-							</tr>
-						{/if}
 					{/each}
 				</tbody>
 			</table>
@@ -434,66 +443,6 @@
 
 	.action-icon.delete:hover {
 		color: #ef4444;
-	}
-
-	.delete-confirm-row {
-		background: var(--bg-tertiary, #3a3a3a);
-	}
-
-	.delete-confirm-row td {
-		padding: 0 !important;
-	}
-
-	.delete-confirm {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 16px;
-		padding: 16px 20px;
-		background: rgba(239, 68, 68, 0.1);
-		border-left: 3px solid #ef4444;
-	}
-
-	.delete-confirm p {
-		color: var(--text-primary, #ffffff);
-		font-size: 14px;
-		margin: 0;
-		flex: 1;
-	}
-
-	.confirm-actions {
-		display: flex;
-		gap: 12px;
-	}
-
-	.confirm-button,
-	.cancel-button {
-		padding: 8px 20px;
-		border-radius: 6px;
-		font-size: 14px;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.2s ease;
-	}
-
-	.confirm-button {
-		background: #ef4444;
-		color: white;
-		border: none;
-	}
-
-	.confirm-button:hover {
-		background: #dc2626;
-	}
-
-	.cancel-button {
-		background: transparent;
-		color: var(--text-primary, #ffffff);
-		border: 1px solid var(--border-color, #3a3a3a);
-	}
-
-	.cancel-button:hover {
-		background: var(--bg-secondary, #2d2d2d);
 	}
 
 	@media (max-width: 768px) {

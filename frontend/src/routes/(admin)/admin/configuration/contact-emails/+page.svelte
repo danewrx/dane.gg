@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { Mail, Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Edit2, Check, X } from 'lucide-svelte';
+	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
 	interface ContactEmail {
 		id: string;
@@ -35,6 +36,9 @@
 
 	let draggedIndex = $state<number | null>(null);
 	let dragOverIndex = $state<number | null>(null);
+
+	let showDeleteEmailDialog = $state(false);
+	let pendingDeleteEmailId = $state<string | null>(null);
 
 	onMount(() => {
 		Promise.all([loadContactEmails(), loadEmailsHeader()]);
@@ -142,11 +146,19 @@
 		showAddForm = false;
 	}
 
-	async function deleteEmail(id: string) {
-		if (!confirm('Are you sure you want to delete this contact email?')) {
-			return;
-		}
+	function requestDeleteEmail(id: string) {
+		pendingDeleteEmailId = id;
+		showDeleteEmailDialog = true;
+	}
 
+	function cancelDeleteEmail() {
+		showDeleteEmailDialog = false;
+		pendingDeleteEmailId = null;
+	}
+
+	async function confirmDeleteEmail() {
+		if (!pendingDeleteEmailId) return;
+		const id = pendingDeleteEmailId;
 		try {
 			const response = await fetch(`/api/contact/emails/${id}`, {
 				method: 'DELETE',
@@ -164,6 +176,8 @@
 		} catch (error) {
 			console.error('Error deleting contact email:', error);
 			toast.error('Failed to delete contact email');
+		} finally {
+			cancelDeleteEmail();
 		}
 	}
 
@@ -320,6 +334,18 @@
 	<title>Contact Emails - Site Settings - dane.gg Admin</title>
 </svelte:head>
 
+<ConfirmDialog
+	bind:open={showDeleteEmailDialog}
+	title="Delete contact email"
+	message="Remove this address from the contact page?"
+	detail="This cannot be undone."
+	variant="danger"
+	confirmLabel="Delete email"
+	cancelLabel="Cancel"
+	onConfirm={confirmDeleteEmail}
+	onCancel={cancelDeleteEmail}
+/>
+
 <div class="contact-emails-page">
 	<div class="settings-description">
 		<p>Manage email addresses displayed on the contact page and customize the header text for the email addresses section.</p>
@@ -433,7 +459,7 @@
 						</button>
 						<button 
 							class="action-button danger" 
-							onclick={() => deleteEmail(email.id)}
+							onclick={() => requestDeleteEmail(email.id)}
 							title="Delete email"
 						>
 							<Trash2 size={16} />

@@ -173,6 +173,27 @@ export async function getAllBlogTags(): Promise<BlogTag[]> {
 }
 
 /**
+ * Get blog posts that use a specific tag (admin)
+ */
+export async function getPostsUsingBlogTag(tagId: string): Promise<{ id: string; title: string }[]> {
+	try {
+		const response = await fetch(`${API_BASE}/admin/tags/${tagId}/posts`, {
+			credentials: 'include'
+		});
+
+		if (!response.ok) {
+			throw new Error('Failed to fetch posts using tag');
+		}
+
+		const result = await response.json();
+		return result.data || [];
+	} catch (error) {
+		console.error('Error fetching posts using blog tag:', error);
+		throw error;
+	}
+}
+
+/**
  * Generate a URL-friendly slug from a title
  */
 export function generateSlug(title: string): string {

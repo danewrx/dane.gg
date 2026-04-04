@@ -13,6 +13,7 @@
 		type ProjectTag,
 		type ProjectCategory
 	} from '$lib/admin/services/projectsService';
+	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
 	const dispatch = createEventDispatcher<{
 		close: void;
@@ -434,44 +435,35 @@
 		</div>
 	{/if}
 
-	{#if showDeleteConfirm && tagToDelete}
-		<div class="modal-overlay" onclick={closeDeleteConfirm}>
-			<div class="modal delete-confirm-modal" onclick={(e) => e.stopPropagation()}>
-				<div class="modal-header">
-					<h3>Delete Tag</h3>
-					<button class="close-button" onclick={closeDeleteConfirm} type="button">
-						<X size={20} />
-					</button>
-				</div>
-				<div class="modal-content">
-					<p class="delete-warning">
-						Deleting this tag will remove it from the following project{projectsUsingTag.length > 1 ? 's' : ''}:
-					</p>
-					<ul class="affected-projects-list">
-						{#each projectsUsingTag as project}
-							<li>{project.title}</li>
-						{/each}
-					</ul>
-					<p class="delete-confirm-text">
-						Are you sure you want to delete <strong>"{tagToDelete.title}"</strong>?
-					</p>
-				</div>
-				<div class="modal-actions">
-					<button class="cancel-button" onclick={closeDeleteConfirm} type="button">
-						Cancel
-					</button>
-					<button 
-						class="delete-confirm-button" 
-						onclick={() => confirmDelete(tagToDelete!.id)} 
-						type="button"
-					>
-						Delete Tag
-					</button>
-				</div>
-			</div>
-		</div>
-	{/if}
+	<ConfirmDialog
+		bind:open={showDeleteConfirm}
+		title="Delete tag"
+		variant="danger"
+		confirmLabel="Delete tag"
+		cancelLabel="Cancel"
+		body={tagDeleteBody}
+		onConfirm={async () => {
+			if (tagToDelete) await confirmDelete(tagToDelete.id);
+		}}
+		onCancel={closeDeleteConfirm}
+	/>
 </div>
+
+{#snippet tagDeleteBody()}
+	{#if tagToDelete}
+		<p class="delete-warning">
+			Deleting this tag will remove it from the following project{projectsUsingTag.length > 1 ? 's' : ''}:
+		</p>
+		<ul class="affected-projects-list">
+			{#each projectsUsingTag as project}
+				<li>{project.title}</li>
+			{/each}
+		</ul>
+		<p class="delete-confirm-text">
+			Are you sure you want to delete <strong>"{tagToDelete.title}"</strong>?
+		</p>
+	{/if}
+{/snippet}
 
 <style>
 	.tag-manager {
@@ -808,10 +800,6 @@
 		transform: none;
 	}
 
-	.delete-confirm-modal {
-		max-width: 500px;
-	}
-
 	.delete-warning {
 		margin: 0 0 16px 0;
 		color: var(--text-primary, #ffffff);
@@ -848,23 +836,6 @@
 	.delete-confirm-text strong {
 		color: var(--text-primary, #ffffff);
 		font-weight: 600;
-	}
-
-	.delete-confirm-button {
-		padding: 10px 20px;
-		border: none;
-		border-radius: 6px;
-		font-size: 14px;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		background: #ef4444;
-		color: #ffffff;
-	}
-
-	.delete-confirm-button:hover {
-		background: #dc2626;
-		transform: translateY(-1px);
 	}
 
 	.delete-button:disabled {

@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { Loader2, Plus, Trash2, GripVertical, ChevronDown, ChevronUp, Edit2, Save, X } from 'lucide-svelte';
+	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
 	interface Skill {
 		id: string;
@@ -52,6 +53,9 @@
 
 	// Expanded categories
 	let expandedCategories = $state<Set<string>>(new Set());
+
+	let showSkillsDeleteDialog = $state(false);
+	let skillsDeleteTarget = $state<{ type: 'category' | 'skill'; id: string } | null>(null);
 
 	onMount(async () => {
 		await loadSkills();
@@ -157,25 +161,44 @@
 		}
 	}
 
-	async function deleteCategory(categoryId: string) {
-		if (!confirm('Are you sure you want to delete this category and all its skills?')) {
-			return;
-		}
+	function requestDeleteCategory(categoryId: string) {
+		skillsDeleteTarget = { type: 'category', id: categoryId };
+		showSkillsDeleteDialog = true;
+	}
 
+	function requestDeleteSkill(skillId: string) {
+		skillsDeleteTarget = { type: 'skill', id: skillId };
+		showSkillsDeleteDialog = true;
+	}
+
+	function cancelSkillsDelete() {
+		showSkillsDeleteDialog = false;
+		skillsDeleteTarget = null;
+	}
+
+	async function confirmSkillsDelete() {
+		if (!skillsDeleteTarget) return;
+		const { type, id } = skillsDeleteTarget;
 		try {
-			const response = await fetch(`/api/skills/categories/${categoryId}`, {
+			const url =
+				type === 'category'
+					? `/api/skills/categories/${id}`
+					: `/api/skills/skills/${id}`;
+			const response = await fetch(url, {
 				method: 'DELETE',
 				credentials: 'include'
 			});
 
 			if (!response.ok) {
-				throw new Error('Failed to delete category');
+				throw new Error(type === 'category' ? 'Failed to delete category' : 'Failed to delete skill');
 			}
 
-			toast.success('Category deleted');
+			toast.success(type === 'category' ? 'Category deleted' : 'Skill deleted');
 			await loadSkills();
 		} catch (error) {
-			toast.error('Failed to delete category');
+			toast.error(type === 'category' ? 'Failed to delete category' : 'Failed to delete skill');
+		} finally {
+			cancelSkillsDelete();
 		}
 	}
 
@@ -271,28 +294,6 @@
 			toast.error('Failed to update skill');
 		} finally {
 			isSaving = false;
-		}
-	}
-
-	async function deleteSkill(skillId: string) {
-		if (!confirm('Are you sure you want to delete this skill?')) {
-			return;
-		}
-
-		try {
-			const response = await fetch(`/api/skills/skills/${skillId}`, {
-				method: 'DELETE',
-				credentials: 'include'
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to delete skill');
-			}
-
-			toast.success('Skill deleted');
-			await loadSkills();
-		} catch (error) {
-			toast.error('Failed to delete skill');
 		}
 	}
 
@@ -467,6 +468,22 @@
 	}
 </script>
 
+<ConfirmDialog
+	bind:open={showSkillsDeleteDialog}
+	title={skillsDeleteTarget?.type === 'category' ? 'Delete category' : 'Delete skill'}
+	message={skillsDeleteTarget?.type === 'category'
+		? 'Delete this category and all of its skills?'
+		: skillsDeleteTarget
+			? 'Delete this skill?'
+			: ''}
+	detail="This cannot be undone."
+	variant="danger"
+	confirmLabel={skillsDeleteTarget?.type === 'category' ? 'Delete category' : 'Delete skill'}
+	cancelLabel="Cancel"
+	onConfirm={confirmSkillsDelete}
+	onCancel={cancelSkillsDelete}
+/>
+
 <div class="skills-settings">
 	<div class="settings-description">
 		<p>Manage skill categories and individual skills that appear on your About page. Each skill has a proficiency level from 0-100%.</p>
@@ -545,7 +562,7 @@
 								<button class="icon-btn edit" onclick={() => startEditingCategory(category)}>
 									<Edit2 size={16} />
 								</button>
-								<button class="icon-btn delete" onclick={() => deleteCategory(category.id)}>
+								<button class="icon-btn delete" onclick={() => requestDeleteCategory(category.id)}>
 									<Trash2 size={16} />
 								</button>
 							</div>
@@ -617,7 +634,7 @@
 												<button class="icon-btn edit" onclick={() => startEditingSkill(skill)}>
 													<Edit2 size={14} />
 												</button>
-												<button class="icon-btn delete" onclick={() => deleteSkill(skill.id)}>
+												<button class="icon-btn delete" onclick={() => requestDeleteSkill(skill.id)}>
 													<Trash2 size={14} />
 												</button>
 											</div>

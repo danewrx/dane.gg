@@ -4,6 +4,7 @@
 	import { MessageSquare, Send, Trash2, Smile, Loader2 } from 'lucide-svelte';
 	import AdminEmojiPicker from '$lib/admin/components/AdminEmojiPicker.svelte';
 	import AdminEmojiTooltip from '$lib/admin/components/AdminEmojiTooltip.svelte';
+	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 	import { getEmojiFromName, getNameFromEmoji } from '$lib/shared/utils/emojiData';
 	import { trackEmojiUsage, getRecentEmojis } from '$lib/shared/utils/recentEmojis';
 
@@ -77,6 +78,8 @@
 	// State
 	let messages = $state<(ChatMessage | SystemMessage)[]>([]);
 	let inputValue = $state('');
+	let showDeleteMessageDialog = $state(false);
+	let pendingDeleteMessageId = $state<string | null>(null);
 	let ws: WebSocket | null = null;
 	let messagesContainer = $state<HTMLDivElement | null>(null);
 	let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -1011,10 +1014,22 @@
 		}
 	}
 
-	// Delete message
-	function deleteMessage(messageId: string | undefined) {
-		if (!ws || !isConnected || !messageId) return;
-		ws.send(`/delete ${messageId}`);
+	function requestDeleteMessage(messageId: string | undefined) {
+		if (!messageId) return;
+		pendingDeleteMessageId = messageId;
+		showDeleteMessageDialog = true;
+	}
+
+	function cancelDeleteMessage() {
+		showDeleteMessageDialog = false;
+		pendingDeleteMessageId = null;
+	}
+
+	function confirmDeleteMessage() {
+		if (!ws || !isConnected || !pendingDeleteMessageId) return;
+		ws.send(`/delete ${pendingDeleteMessageId}`);
+		showDeleteMessageDialog = false;
+		pendingDeleteMessageId = null;
 	}
 
 	// Expose methods for parent to set admin nickname/color
@@ -1064,6 +1079,18 @@
 </script>
 
 <AdminEmojiTooltip bind:container={messagesContainer} />
+
+<ConfirmDialog
+	bind:open={showDeleteMessageDialog}
+	title="Delete message"
+	message="Remove this chat message? Visitors will no longer see it."
+	detail="This cannot be undone."
+	variant="danger"
+	confirmLabel="Delete message"
+	cancelLabel="Cancel"
+	onConfirm={confirmDeleteMessage}
+	onCancel={cancelDeleteMessage}
+/>
 
 <section class="chat-section">
 	<div class="chat-container">
@@ -1115,7 +1142,7 @@
 							{#if chatMsg.id}
 								<button 
 									class="delete-btn" 
-									onclick={() => deleteMessage(chatMsg.id)}
+									onclick={() => requestDeleteMessage(chatMsg.id)}
 									title="Delete message"
 								>
 									<Trash2 size={14} />

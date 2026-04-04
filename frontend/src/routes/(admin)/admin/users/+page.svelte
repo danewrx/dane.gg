@@ -5,6 +5,7 @@
 	import { userManagementService, type User, type CreateUserData, type UpdateUserData } from '$lib/admin/services/userManagement';
 	import { user } from '$lib/admin/stores/auth';
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
+	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
 	let users = $state<User[]>([]);
 	let loading = $state(true);
@@ -569,31 +570,18 @@
 	</div>
 {/if}
 
-<!-- Delete Confirmation Modal -->
-{#if showDeleteConfirm && selectedUser}
-	<div class="modal-overlay" onclick={cancelDelete}>
-		<div class="modal modal-small" onclick={(e) => e.stopPropagation()}>
-			<div class="modal-header">
-				<h2>Delete User</h2>
-				<button class="close-button" onclick={cancelDelete}>
-					<X size={20} />
-				</button>
-			</div>
-			<div class="modal-content">
-				<p>Are you sure you want to delete user <strong>"{selectedUser.username}"</strong>?</p>
-				<p class="warning-text">This action cannot be undone.</p>
-			</div>
-			<div class="modal-actions">
-				<button type="button" class="cancel-button" onclick={cancelDelete} disabled={isSubmitting}>
-					Cancel
-				</button>
-				<button type="button" class="delete-button" onclick={handleDelete} disabled={isSubmitting}>
-					{isSubmitting ? 'Deleting...' : 'Delete User'}
-				</button>
-			</div>
-		</div>
-	</div>
-{/if}
+<ConfirmDialog
+	bind:open={showDeleteConfirm}
+	title="Delete user"
+	message={selectedUser ? `Delete user “${selectedUser.username}”?` : ''}
+	detail="This action cannot be undone."
+	variant="danger"
+	confirmLabel="Delete user"
+	cancelLabel="Cancel"
+	loading={isSubmitting}
+	onConfirm={handleDelete}
+	onCancel={cancelDelete}
+/>
 
 
 <style>

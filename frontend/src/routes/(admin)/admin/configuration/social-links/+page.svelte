@@ -4,6 +4,7 @@
 	import { Link, Plus, Edit, Trash2, Eye, EyeOff, GripVertical } from 'lucide-svelte';
 	import Icon from '@iconify/svelte';
 	import UnifiedIconPicker from '$lib/admin/components/ui/UnifiedIconPicker.svelte';
+	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 	import { getIconCategories, getCustomOptions, type IconOption } from '$lib/admin/services/iconLibraryService';
 	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
 	import type { ComponentType } from 'svelte';
@@ -47,6 +48,9 @@
 	let iconPickerOpen = $state(false);
 	let customSvgUrl = $state('');
 	let customText = $state('');
+
+	let showDeleteLinkDialog = $state(false);
+	let pendingDeleteLinkId = $state<string | null>(null);
 
 	onMount(async () => {
 		await loadIconCategories();
@@ -152,9 +156,19 @@
 		}
 	}
 
-	async function deleteLink(id: string) {
-		if (!confirm('Are you sure you want to delete this link?')) return;
+	function requestDeleteLink(id: string) {
+		pendingDeleteLinkId = id;
+		showDeleteLinkDialog = true;
+	}
 
+	function cancelDeleteLink() {
+		showDeleteLinkDialog = false;
+		pendingDeleteLinkId = null;
+	}
+
+	async function confirmDeleteLink() {
+		if (!pendingDeleteLinkId) return;
+		const id = pendingDeleteLinkId;
 		try {
 			const response = await fetch(`/api/social-links/${id}`, {
 				method: 'DELETE'
@@ -175,6 +189,8 @@
 			toast.error('Error deleting link', {
 				description: 'An unexpected error occurred. Please try again.'
 			});
+		} finally {
+			cancelDeleteLink();
 		}
 	}
 
@@ -354,6 +370,18 @@
 	<title>Social Links - Site Settings - dane.gg Admin</title>
 </svelte:head>
 
+<ConfirmDialog
+	bind:open={showDeleteLinkDialog}
+	title="Delete link"
+	message="Remove this social link from the site?"
+	detail="This cannot be undone."
+	variant="danger"
+	confirmLabel="Delete link"
+	cancelLabel="Cancel"
+	onConfirm={confirmDeleteLink}
+	onCancel={cancelDeleteLink}
+/>
+
 <div class="social-links-page">
 	<div class="settings-description">
 				<p>Manage your social media and external links displayed on the website</p>
@@ -531,7 +559,7 @@
 						</button>
 						<button 
 							class="action-button danger" 
-							onclick={() => deleteLink(link.id)}
+							onclick={() => requestDeleteLink(link.id)}
 							title="Delete link"
 						>
 							<Trash2 size={16} />

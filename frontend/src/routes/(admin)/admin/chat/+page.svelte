@@ -4,6 +4,7 @@
 	import { MessageSquare, Users, RefreshCw, Pencil, Check, X, Loader2, Upload, Image as ImageIcon, Trash, Play, Square } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import AdminChat from '$lib/admin/components/AdminChat.svelte';
+	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 	import { getAllDefaultEmojis } from '$lib/shared/utils/emojiData';
 	import {
 		DEFAULT_CHAT_NOTIFICATION_SOUND_ID,
@@ -64,6 +65,11 @@
 	let isLoadingSounds = $state(true);
 	let previewPlayingId = $state<string | null>(null);
 	let previewAudio: HTMLAudioElement | null = null;
+
+	let showDeleteEmojiDialog = $state(false);
+	let pendingEmojiDelete = $state<{ id: string; name: string } | null>(null);
+	let showDeleteSoundDialog = $state(false);
+	let pendingSoundDelete = $state<{ id: string; label: string } | null>(null);
 
 	function handleColorChange(e: Event) {
 		const target = e.target as HTMLInputElement;
@@ -231,12 +237,19 @@
 		}
 	}
 
-	// Delete emoji
-	async function deleteEmoji(emojiId: string, emojiName: string) {
-		if (!confirm(`Delete emoji :${emojiName}:?`)) {
-			return;
-		}
+	function requestDeleteEmoji(emojiId: string, emojiName: string) {
+		pendingEmojiDelete = { id: emojiId, name: emojiName };
+		showDeleteEmojiDialog = true;
+	}
 
+	function cancelDeleteEmoji() {
+		showDeleteEmojiDialog = false;
+		pendingEmojiDelete = null;
+	}
+
+	async function confirmDeleteEmoji() {
+		if (!pendingEmojiDelete) return;
+		const { id: emojiId, name: emojiName } = pendingEmojiDelete;
 		try {
 			const response = await fetch(`/api/emojis/${emojiId}`, {
 				method: 'DELETE',
@@ -255,6 +268,8 @@
 		} catch (error) {
 			console.error('Error deleting emoji:', error);
 			toast.error('Failed to delete emoji');
+		} finally {
+			cancelDeleteEmoji();
 		}
 	}
 
@@ -354,11 +369,22 @@
 		}
 	}
 
-	async function deleteNotificationSound(
+	function requestDeleteNotificationSound(
 		id: string,
 		s: Pick<{ name: string; displayName?: string | null }, 'name' | 'displayName'>
 	) {
-		if (!confirm(`Delete notification sound “${labelForNotificationSoundOption(s)}”?`)) return;
+		pendingSoundDelete = { id, label: labelForNotificationSoundOption(s) };
+		showDeleteSoundDialog = true;
+	}
+
+	function cancelDeleteSound() {
+		showDeleteSoundDialog = false;
+		pendingSoundDelete = null;
+	}
+
+	async function confirmDeleteNotificationSound() {
+		if (!pendingSoundDelete) return;
+		const { id } = pendingSoundDelete;
 		try {
 			const response = await fetch(`/api/chat-notification-sounds/${id}`, {
 				method: 'DELETE',
@@ -370,6 +396,8 @@
 		} catch (error) {
 			console.error(error);
 			toast.error('Failed to delete sound');
+		} finally {
+			cancelDeleteSound();
 		}
 	}
 
@@ -425,6 +453,30 @@
 <svelte:head>
 	<title>Chat - Admin Dashboard - dane.gg</title>
 </svelte:head>
+
+<ConfirmDialog
+	bind:open={showDeleteEmojiDialog}
+	title="Delete emoji"
+	message={pendingEmojiDelete ? `Remove :${pendingEmojiDelete.name}: from the picker?` : ''}
+	detail="This cannot be undone."
+	variant="danger"
+	confirmLabel="Delete emoji"
+	cancelLabel="Cancel"
+	onConfirm={confirmDeleteEmoji}
+	onCancel={cancelDeleteEmoji}
+/>
+
+<ConfirmDialog
+	bind:open={showDeleteSoundDialog}
+	title="Delete notification sound"
+	message={pendingSoundDelete ? `Remove “${pendingSoundDelete.label}”?` : ''}
+	detail="Visitors who chose this sound will fall back to the default."
+	variant="danger"
+	confirmLabel="Delete sound"
+	cancelLabel="Cancel"
+	onConfirm={confirmDeleteNotificationSound}
+	onCancel={cancelDeleteSound}
+/>
 
 <div class="chat-page">
 	<section class="header-section">
@@ -629,7 +681,7 @@
 									</div>
 									<button
 										class="emoji-delete-btn"
-										onclick={() => deleteEmoji(emoji.id, emoji.name)}
+										onclick={() => requestDeleteEmoji(emoji.id, emoji.name)}
 										title="Delete emoji"
 									>
 										<Trash size={12} />
@@ -732,7 +784,7 @@
 										<button
 											type="button"
 											class="sound-tile-delete"
-											onclick={() => deleteNotificationSound(s.id, s)}
+											onclick={() => requestDeleteNotificationSound(s.id, s)}
 											title="Delete"
 										>
 											<Trash size={12} />

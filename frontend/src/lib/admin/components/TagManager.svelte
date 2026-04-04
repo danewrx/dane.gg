@@ -2,8 +2,9 @@
 	import { onMount } from 'svelte';
 	import { X, Plus, Edit2, Trash2 } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
-	import { getAllBlogTags, type BlogTag } from '$lib/admin/services/blogService';
+	import { getAllBlogTags, getPostsUsingBlogTag, type BlogTag } from '$lib/admin/services/blogService';
 	import { createEventDispatcher } from 'svelte';
+	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
 	const dispatch = createEventDispatcher<{
 		close: void;
@@ -15,7 +16,10 @@
 	let newTagName = $state('');
 	let editingTag = $state<BlogTag | null>(null);
 	let editingTagName = $state('');
-	let deleteConfirmId = $state<string | null>(null);
+	let showDeleteConfirm = $state(false);
+	let tagToDelete = $state<BlogTag | null>(null);
+	let postsUsingTag = $state<{ id: string; title: string }[]>([]);
+	let loadingPosts = $state(false);
 
 	onMount(async () => {
 		await loadTags();
@@ -110,17 +114,42 @@
 		}
 	}
 
-	function confirmDelete(id: string) {
-		deleteConfirmId = id;
-	}
+	async function handleDeleteClick(id: string) {
+		const tag = tags.find((t) => t.id === id);
+		if (!tag) return;
 
-	function cancelDelete() {
-		deleteConfirmId = null;
-	}
-
-	async function handleDeleteTag(id: string) {
 		try {
-			const tagToDelete = tags.find(t => t.id === id);
+			loadingPosts = true;
+			const posts = await getPostsUsingBlogTag(id);
+
+			if (posts.length > 0) {
+				tagToDelete = tag;
+				postsUsingTag = posts;
+				showDeleteConfirm = true;
+			} else {
+				await executeDeleteTag(id);
+			}
+		} catch (err: any) {
+			console.error('Error checking posts using tag:', err);
+			toast.error('Failed to check tag usage', {
+				description: err.message || 'Please try again'
+			});
+		} finally {
+			loadingPosts = false;
+		}
+	}
+
+	function closeDeleteConfirm() {
+		showDeleteConfirm = false;
+		tagToDelete = null;
+		postsUsingTag = [];
+	}
+
+	async function executeDeleteTag(id: string) {
+		const tag = tags.find((t) => t.id === id);
+		if (!tag) return;
+
+		try {
 			const response = await fetch(`/api/blog/admin/tags/${id}`, {
 				method: 'DELETE',
 				credentials: 'include'
@@ -131,12 +160,16 @@
 				throw new Error(result.error || 'Failed to delete tag');
 			}
 
-			deleteConfirmId = null;
 			await loadTags();
 			dispatch('tagsUpdated');
+			const n = postsUsingTag.length;
 			toast.success('Tag deleted', {
-				description: tagToDelete ? `"${tagToDelete.name}" has been deleted` : 'The tag has been deleted'
+				description:
+					n > 0
+						? `"${tag.name}" has been removed from ${n} post${n > 1 ? 's' : ''}`
+						: `"${tag.name}" has been deleted`
 			});
+			closeDeleteConfirm();
 		} catch (err: any) {
 			console.error('Error deleting tag:', err);
 			toast.error('Failed to delete tag', {
@@ -167,7 +200,14 @@
 </script>
 
 <div class="dialog-overlay" onclick={close} onkeydown={(e) => e.key === 'Enter' && close()} role="button" tabindex="0" aria-label="Close dialog">
-	<div class="dialog" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="dialog" aria-modal="true" tabindex="0">
+	<div
+		class="dialog"
+		onclick={(e) => e.stopPropagation()}
+		onkeydown={(e) => e.stopPropagation()}
+		role="dialog"
+		aria-modal="true"
+		tabindex="0"
+	>
 		<div class="dialog-header">
 			<h2>Manage Tags</h2>
 			<button class="close-button" onclick={close} aria-label="Close dialog">
@@ -220,24 +260,18 @@
 										Cancel
 									</button>
 								</div>
-							{:else if deleteConfirmId === tag.id}
-								<span class="tag-name">{tag.name}</span>
-								<div class="tag-actions">
-									<span class="confirm-text">Delete?</span>
-									<button onclick={() => handleDeleteTag(tag.id)} class="action-button confirm-delete" title="Confirm delete">
-										Yes
-									</button>
-									<button onclick={cancelDelete} class="action-button cancel" title="Cancel">
-										No
-									</button>
-								</div>
 							{:else}
 								<span class="tag-name">{tag.name}</span>
 								<div class="tag-actions">
 									<button onclick={() => startEdit(tag)} class="action-button edit" title="Edit tag">
 										<Edit2 size={16} />
 									</button>
-									<button onclick={() => confirmDelete(tag.id)} class="action-button delete" title="Delete tag">
+									<button
+										onclick={() => handleDeleteClick(tag.id)}
+										class="action-button delete"
+										title="Delete tag"
+										disabled={loadingPosts}
+									>
 										<Trash2 size={16} />
 									</button>
 								</div>
@@ -248,7 +282,37 @@
 			{/if}
 		</div>
 	</div>
+
+	<ConfirmDialog
+		bind:open={showDeleteConfirm}
+		title="Delete tag"
+		overlayZIndex={2100}
+		variant="danger"
+		confirmLabel="Delete tag"
+		cancelLabel="Cancel"
+		body={blogTagDeleteBody}
+		onConfirm={async () => {
+			if (tagToDelete) await executeDeleteTag(tagToDelete.id);
+		}}
+		onCancel={closeDeleteConfirm}
+	/>
 </div>
+
+{#snippet blogTagDeleteBody()}
+	{#if tagToDelete}
+		<p class="delete-warning">
+			Deleting this tag will remove it from the following post{postsUsingTag.length > 1 ? 's' : ''}:
+		</p>
+		<ul class="affected-posts-list">
+			{#each postsUsingTag as post}
+				<li>{post.title}</li>
+			{/each}
+		</ul>
+		<p class="delete-confirm-text">
+			Are you sure you want to delete <strong>"{tagToDelete.name}"</strong>?
+		</p>
+	{/if}
+{/snippet}
 
 <style>
 	.dialog-overlay {
@@ -457,10 +521,41 @@
 		gap: 8px;
 	}
 
-	.confirm-text {
+	.delete-warning {
+		margin: 0 0 16px 0;
+		color: var(--text-primary, #ffffff);
+		font-size: 14px;
+	}
+
+	.affected-posts-list {
+		margin: 0 0 20px 0;
+		padding: 12px 16px 12px 32px;
+		max-height: 200px;
+		overflow-y: auto;
+		background: var(--bg-secondary, #2d2d2d);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		color: var(--text-primary, #ffffff);
+	}
+
+	.affected-posts-list li {
+		margin-bottom: 8px;
+		font-size: 14px;
+	}
+
+	.affected-posts-list li:last-child {
+		margin-bottom: 0;
+	}
+
+	.delete-confirm-text {
+		margin: 0;
 		color: var(--text-secondary, #a1a1aa);
-		font-size: 13px;
-		margin-right: 4px;
+		font-size: 14px;
+	}
+
+	.delete-confirm-text strong {
+		color: var(--text-primary, #ffffff);
+		font-weight: 600;
 	}
 
 	.action-button {
@@ -486,9 +581,14 @@
 		color: var(--accent-color, #6366f1);
 	}
 
-	.action-button.delete:hover {
+	.action-button.delete:hover:not(:disabled) {
 		border-color: #ef4444;
 		color: #ef4444;
+	}
+
+	.action-button:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
 	}
 
 	.action-button.save {
@@ -499,16 +599,6 @@
 
 	.action-button.save:hover {
 		background: var(--accent-hover, #5558e3);
-	}
-
-	.action-button.confirm-delete {
-		background: #ef4444;
-		color: white;
-		border-color: #ef4444;
-	}
-
-	.action-button.confirm-delete:hover {
-		background: #dc2626;
 	}
 
 	.action-button.cancel {

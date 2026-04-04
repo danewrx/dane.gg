@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { X, Upload, Trash2, Loader2, Type } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
+	import ConfirmDialog from './ConfirmDialog.svelte';
 
 	export interface Font {
 		id: string;
@@ -24,6 +25,8 @@
 	let uploading = $state(false);
 	let deletingId = $state<string | null>(null);
 	let fileInput: HTMLInputElement | undefined = $state(undefined);
+	let showRemoveFontDialog = $state(false);
+	let fontPendingRemove = $state<Font | null>(null);
 
 	async function loadFonts() {
 		try {
@@ -86,9 +89,20 @@
 		}
 	}
 
-	async function deleteFont(font: Font) {
+	function requestRemoveFont(font: Font) {
 		if (font.type !== 'custom') return;
-		if (!confirm(`Remove "${font.name}"? This cannot be undone.`)) return;
+		fontPendingRemove = font;
+		showRemoveFontDialog = true;
+	}
+
+	function cancelRemoveFont() {
+		showRemoveFontDialog = false;
+		fontPendingRemove = null;
+	}
+
+	async function confirmRemoveFont() {
+		if (!fontPendingRemove || fontPendingRemove.type !== 'custom') return;
+		const font = fontPendingRemove;
 		try {
 			deletingId = font.id;
 			const res = await fetch(`/api/fonts/${font.id}`, {
@@ -103,6 +117,7 @@
 			toast.error(err.message || 'Failed to remove font');
 		} finally {
 			deletingId = null;
+			cancelRemoveFont();
 		}
 	}
 
@@ -119,6 +134,18 @@
 		}
 	}
 </script>
+
+<ConfirmDialog
+	bind:open={showRemoveFontDialog}
+	title="Remove font"
+	message={fontPendingRemove ? `Remove “${fontPendingRemove.name}” from your library?` : ''}
+	detail="This cannot be undone."
+	variant="danger"
+	confirmLabel="Remove font"
+	cancelLabel="Cancel"
+	onConfirm={confirmRemoveFont}
+	onCancel={cancelRemoveFont}
+/>
 
 <svelte:window onkeydown={handleKeydown} />
 
@@ -197,7 +224,7 @@
 										class="font-list-delete"
 										aria-label="Remove {font.name}"
 										disabled={deletingId === font.id}
-										onclick={() => deleteFont(font)}
+										onclick={() => requestRemoveFont(font)}
 									>
 										{#if deletingId === font.id}
 											<Loader2 size={14} class="spin" />

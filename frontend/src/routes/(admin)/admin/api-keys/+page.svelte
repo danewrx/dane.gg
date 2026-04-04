@@ -3,6 +3,7 @@
 	import { Plus, Trash2, Key, X, Copy, Check, RefreshCw, Eye, EyeOff, AlertTriangle } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import Tabs from '$lib/admin/components/ui/Tabs.svelte';
+	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
 	interface ApiKey {
 		id: string;
@@ -25,6 +26,9 @@
 	let newlyCreatedKey = $state<string | null>(null);
 	let showNewKeyModal = $state(false);
 	let copiedKey = $state(false);
+	let showDiscardKeyDialog = $state(false);
+	let showRegenerateKeyDialog = $state(false);
+	let keyPendingRegenerate = $state<ApiKey | null>(null);
 
 	let addForm = $state({
 		name: '',
@@ -148,9 +152,19 @@
 
 	function closeNewKeyModal() {
 		if (!copiedKey) {
-			const confirmed = confirm('Are you sure? You haven\'t copied the key yet and won\'t be able to see it again.');
-			if (!confirmed) return;
+			showDiscardKeyDialog = true;
+			return;
 		}
+		showNewKeyModal = false;
+		newlyCreatedKey = null;
+	}
+
+	function cancelDiscardKey() {
+		showDiscardKeyDialog = false;
+	}
+
+	function confirmDiscardNewKey() {
+		showDiscardKeyDialog = false;
 		showNewKeyModal = false;
 		newlyCreatedKey = null;
 	}
@@ -176,10 +190,19 @@
 		}
 	}
 
-	async function regenerateKey(key: ApiKey) {
-		const confirmed = confirm(`Regenerate API key "${key.name}"? The old key will stop working immediately.`);
-		if (!confirmed) return;
+	function requestRegenerateKey(key: ApiKey) {
+		keyPendingRegenerate = key;
+		showRegenerateKeyDialog = true;
+	}
 
+	function cancelRegenerateKey() {
+		showRegenerateKeyDialog = false;
+		keyPendingRegenerate = null;
+	}
+
+	async function confirmRegenerateKey() {
+		if (!keyPendingRegenerate) return;
+		const key = keyPendingRegenerate;
 		try {
 			isSubmitting = true;
 			const response = await fetch(`${API_BASE}/api/api-keys/${key.id}/regenerate`, {
@@ -192,11 +215,11 @@
 			}
 
 			const data = await response.json();
-			
+
 			newlyCreatedKey = data.key;
 			showNewKeyModal = true;
 			copiedKey = false;
-			
+
 			await loadApiKeys();
 			toast.success('API key regenerated');
 		} catch (err) {
@@ -204,6 +227,7 @@
 			toast.error('Failed to regenerate API key');
 		} finally {
 			isSubmitting = false;
+			cancelRegenerateKey();
 		}
 	}
 
@@ -275,6 +299,44 @@
 	<title>API Keys - Admin Panel</title>
 	<meta name="description" content="Manage API keys for external integrations" />
 </svelte:head>
+
+<ConfirmDialog
+	bind:open={showDiscardKeyDialog}
+	title="Close without copying?"
+	message="You have not copied this API key yet. You will not be able to see it again after closing."
+	variant="default"
+	confirmLabel="Discard key"
+	cancelLabel="Go back"
+	onConfirm={confirmDiscardNewKey}
+	onCancel={cancelDiscardKey}
+/>
+
+<ConfirmDialog
+	bind:open={showRegenerateKeyDialog}
+	title="Regenerate API key"
+	message={keyPendingRegenerate
+		? `Regenerate “${keyPendingRegenerate.name}”? The old key will stop working immediately.`
+		: ''}
+	variant="danger"
+	confirmLabel="Regenerate"
+	cancelLabel="Cancel"
+	loading={isSubmitting}
+	onConfirm={confirmRegenerateKey}
+	onCancel={cancelRegenerateKey}
+/>
+
+<ConfirmDialog
+	bind:open={showDeleteConfirm}
+	title="Delete API key"
+	message={selectedKey ? `Delete “${selectedKey.name}”?` : ''}
+	detail="Any applications using this key will immediately lose access."
+	variant="danger"
+	confirmLabel="Delete key"
+	cancelLabel="Cancel"
+	loading={isSubmitting}
+	onConfirm={handleDelete}
+	onCancel={cancelDelete}
+/>
 
 <div class="api-keys-page">
 	<div class="header">
@@ -378,7 +440,7 @@
 									</button>
 									<button
 										class="action-button regenerate"
-										onclick={() => regenerateKey(key)}
+										onclick={() => requestRegenerateKey(key)}
 										title="Regenerate key"
 									>
 										<RefreshCw size={16} />
@@ -511,32 +573,6 @@
 					class:confirm-copy={!copiedKey}
 				>
 					{copiedKey ? 'Done' : 'I\'ve saved the key'}
-				</button>
-			</div>
-		</div>
-	</div>
-{/if}
-
-<!-- Delete Confirmation Modal -->
-{#if showDeleteConfirm && selectedKey}
-	<div class="modal-overlay" onclick={cancelDelete}>
-		<div class="modal modal-small" onclick={(e) => e.stopPropagation()}>
-			<div class="modal-header">
-				<h2>Delete API Key</h2>
-				<button class="close-button" onclick={cancelDelete}>
-					<X size={20} />
-				</button>
-			</div>
-			<div class="modal-content">
-				<p>Are you sure you want to delete <strong>"{selectedKey.name}"</strong>?</p>
-				<p class="warning-text">Any applications using this key will immediately lose access.</p>
-			</div>
-			<div class="modal-actions">
-				<button type="button" class="cancel-button" onclick={cancelDelete} disabled={isSubmitting}>
-					Cancel
-				</button>
-				<button type="button" class="delete-button" onclick={handleDelete} disabled={isSubmitting}>
-					{isSubmitting ? 'Deleting...' : 'Delete Key'}
 				</button>
 			</div>
 		</div>
