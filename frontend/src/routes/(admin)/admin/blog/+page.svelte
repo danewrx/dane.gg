@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Plus, Edit, Trash2, Eye, EyeOff, FileText, Calendar, Clock } from 'lucide-svelte';
+	import { Plus, Edit, Trash2, Eye, EyeOff, FileText, Calendar, Clock, Tag } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import { getAllBlogPosts, deleteBlogPost, type BlogPost } from '$lib/admin/services/blogService';
 	import SlideInPanel from '$lib/admin/components/ui/SlideInPanel.svelte';
 	import BlogPostEditor from '$lib/admin/components/BlogPostEditor.svelte';
+	import TagManager from '$lib/admin/components/TagManager.svelte';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
 	let posts = $state<BlogPost[]>([]);
@@ -14,6 +15,7 @@
 	let isPanelOpen = $state(false);
 	let editingPostId = $state<string | null>(null);
 	let sortBy = $state<'created' | 'updated'>('updated');
+	let showTagManager = $state(false);
 
 	let sortedPosts = $derived.by(() => {
 		const postsCopy = [...posts];
@@ -154,6 +156,11 @@
 					Updated
 				{/if}
 			</button>
+			<button class="tag-button" onclick={() => (showTagManager = true)} title="Manage Tags">
+				<Tag size={18} />
+				Manage Tags
+			</button>
+			<div class="divider"></div>
 			<button class="create-button" onclick={createPost}>
 				<Plus size={20} />
 				New Post
@@ -228,6 +235,13 @@
 	<BlogPostEditor postId={editingPostId} on:save={handlePostSave} on:close={closePanel} />
 </SlideInPanel>
 
+{#if showTagManager}
+	<TagManager
+		on:close={() => (showTagManager = false)}
+		on:tagsUpdated={loadPosts}
+	/>
+{/if}
+
 <style>
 	.blog-list {
 		padding: 24px;
@@ -258,6 +272,33 @@
 		display: flex;
 		align-items: center;
 		gap: 12px;
+	}
+
+	.divider {
+		width: 1px;
+		height: 24px;
+		background: var(--border-color, #3a3a3a);
+		flex-shrink: 0;
+	}
+
+	.tag-button {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 20px;
+		background: var(--bg-secondary, #2d2d2d);
+		color: var(--text-primary, #ffffff);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 8px;
+		font-size: 14px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.tag-button:hover {
+		background: var(--bg-tertiary, #3a3a3a);
+		border-color: var(--accent-color, #6366f1);
 	}
 
 	.sort-toggle {
