@@ -6,6 +6,22 @@
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
+		<script src="%sveltekit.assets%/web-neko-init.js"></script>
+		<script src="%sveltekit.assets%/web-neko-restart.js"></script>
+		<script>
+			(function () {
+				if (typeof location !== 'undefined' && location.search.indexOf('themePreview') !== -1) return;
+				if (typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches)
+					return;
+				window.addEventListener('load', function () {
+					setTimeout(function () {
+						try {
+							if (window.aNekos && window.aNekos[0]) window.aNekos[0].active = true;
+						} catch (e) {}
+					}, 0);
+				});
+			})();
+		</script>
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
 </html>

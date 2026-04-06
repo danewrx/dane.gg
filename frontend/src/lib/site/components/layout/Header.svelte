@@ -56,7 +56,7 @@
 	
 	<nav class="nav">
 		<div class="nav-container">
-			<ul class="nav-list">
+			<ul id="dane-neko-nav-home" class="nav-list">
 				{#each navigation as item}
 					<li class="nav-item">
 						<button 

@@ -4,6 +4,7 @@
 	import WeatherControls from './WeatherControls.svelte';
 	import ThemeSwitcherWindow from './ThemeSwitcherWindow.svelte';
 	import ChatNotificationControl from '$lib/site/components/settings/ChatNotificationControl.svelte';
+	import OnekoPicker from '$lib/site/components/settings/OnekoPicker.svelte';
 	import { themeEnforcement } from '$lib/site/stores/theme';
 
 	let { isOpen = false, onClose }: { isOpen?: boolean; onClose?: () => void } = $props();
@@ -68,6 +69,11 @@
 		<div class="settings-section">
 			<h3>Weather Effects</h3>
 			<WeatherControls />
+		</div>
+
+		<div class="settings-section">
+			<h3>Neko</h3>
+			<OnekoPicker />
 		</div>
 
 		<div class="settings-section">
