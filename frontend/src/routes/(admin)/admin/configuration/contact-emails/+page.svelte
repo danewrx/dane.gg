@@ -535,6 +535,8 @@
 	.contact-emails-page {
 		width: 100%;
 		max-width: 800px;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 
 	.settings-description {
@@ -591,6 +593,8 @@
 		border-radius: 8px;
 		transition: all 0.2s ease;
 		cursor: move;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 
 	.email-item:hover {
@@ -615,6 +619,7 @@
 		cursor: grab;
 		display: flex;
 		align-items: center;
+		flex-shrink: 0;
 	}
 
 	.drag-handle:active {
@@ -623,6 +628,11 @@
 
 	.email-info {
 		flex: 1;
+		min-width: 0;
+	}
+
+	.email-details {
+		min-width: 0;
 	}
 
 	.email-details .email-address {
@@ -630,12 +640,15 @@
 		margin: 0 0 4px 0;
 		font-size: 16px;
 		font-weight: 500;
+		overflow-wrap: anywhere;
+		word-break: break-word;
 	}
 
 	.email-details .email-description {
 		color: var(--text-secondary, #a1a1aa);
 		margin: 0 0 8px 0;
 		font-size: 14px;
+		overflow-wrap: anywhere;
 	}
 
 	.email-meta {
@@ -648,6 +661,24 @@
 	.email-actions {
 		display: flex;
 		gap: 8px;
+		flex-shrink: 0;
+		margin-left: auto;
+	}
+
+	@media (max-width: 560px) {
+		.email-item {
+			flex-direction: column;
+			align-items: stretch;
+			padding: 16px;
+			gap: 12px;
+		}
+
+		.email-actions {
+			width: 100%;
+			margin-left: 0;
+			justify-content: flex-end;
+			flex-wrap: wrap;
+		}
 	}
 
 	.action-button {
@@ -774,10 +805,23 @@
 
 	.form-actions {
 		display: flex;
+		flex-wrap: wrap;
 		gap: 12px;
 		margin-top: 0;
 		padding-top: 0;
 		border-top: none;
+	}
+
+	@media (max-width: 520px) {
+		.form-actions {
+			flex-direction: column-reverse;
+		}
+
+		.form-actions .save-btn,
+		.form-actions .cancel-btn {
+			width: 100%;
+			justify-content: center;
+		}
 	}
 
 	.save-btn {
@@ -903,10 +947,15 @@
 		display: flex;
 		align-items: flex-start;
 		gap: 8px;
+		width: 100%;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 
 	.header-input {
 		flex: 1;
+		min-width: 0;
+		width: 100%;
 		padding: 12px;
 		background: var(--bg-primary, #1a1a1a);
 		border: 1px solid var(--border-color, #3a3a3a);

@@ -91,6 +91,8 @@
 		flex-direction: column;
 		gap: 15px;
 		width: 100%;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 
 	.control-group {
@@ -118,6 +120,8 @@
 
 	.weather-select,
 	.weather-slider {
+		width: 100%;
+		max-width: 100%;
 		background: var(--theme-background, #0a0a0a);
 		border: 2px solid var(--theme-border, #ffffff);
 		color: var(--theme-text-primary, #ffffff);
@@ -213,10 +217,35 @@
 			font-size: 10px;
 		}
 
-		.weather-select,
-		.weather-slider {
+		.weather-select {
 			font-size: 11px;
 			height: 26px;
+		}
+
+		.weather-slider {
+			font-size: 11px;
+			height: 22px;
+		}
+
+		.weather-slider::-webkit-slider-thumb {
+			width: 18px;
+			height: 18px;
+		}
+
+		.weather-slider::-moz-range-thumb {
+			width: 18px;
+			height: 18px;
+		}
+	}
+
+	@media (max-width: 360px) {
+		.weather-controls {
+			gap: 12px;
+		}
+
+		.enforced-indicator {
+			display: inline;
+			margin-left: 2px;
 		}
 	}
 </style>

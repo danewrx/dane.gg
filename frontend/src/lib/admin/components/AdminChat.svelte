@@ -1348,6 +1348,7 @@
 		border-radius: 6px;
 		font-size: 14px;
 		line-height: 1.5;
+		min-width: 0;
 	}
 
 	:global(html:not(.dark)) .message {
@@ -1457,7 +1458,10 @@
 
 	.message-content {
 		color: #ffffff;
-		word-break: break-word;
+		flex: 1 1 auto;
+		min-width: 0;
+		word-break: normal;
+		overflow-wrap: break-word;
 	}
 
 	.message-content :global(.custom-emoji-inline) {
@@ -1766,6 +1770,70 @@
 
 		.input-container {
 			padding: 12px;
+		}
+	}
+
+	@media (max-width: 560px) {
+		.messages-container {
+			padding: 10px;
+		}
+
+		.message:not(.system-message) {
+			display: grid;
+			grid-template-columns: auto minmax(0, 1fr) auto;
+			grid-template-rows: auto auto;
+			align-items: center;
+			column-gap: 8px;
+			row-gap: 8px;
+			padding: 10px;
+		}
+
+		.message:not(.system-message) .message-time {
+			grid-column: 1;
+			grid-row: 1;
+		}
+
+		.message:not(.system-message) .message-nickname {
+			grid-column: 2;
+			grid-row: 1;
+			min-width: 0;
+			align-self: center;
+		}
+
+		.message:not(.system-message) .delete-btn {
+			grid-column: 3;
+			grid-row: 1;
+			margin-left: 0;
+			align-self: center;
+		}
+
+		.message:not(.system-message) .message-content {
+			grid-column: 1 / -1;
+			grid-row: 2;
+			width: 100%;
+			min-width: 0;
+		}
+
+		.message.system-message {
+			flex-wrap: wrap;
+			gap: 6px;
+		}
+
+		.input-container {
+			gap: 8px;
+			padding: 10px;
+		}
+
+		.emoji-btn,
+		.send-btn {
+			width: 40px;
+			height: 40px;
+			flex-shrink: 0;
+		}
+
+		.message-input {
+			padding: 10px 12px;
+			font-size: 16px; /* reduces iOS zoom on focus */
 		}
 	}
 </style>

@@ -206,6 +206,8 @@
 		flex-direction: column;
 		gap: 15px;
 		width: 100%;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 
 	.control-group {
@@ -225,7 +227,7 @@
 
 	.checkbox-label {
 		display: flex;
-		align-items: center;
+		align-items: flex-start;
 		gap: 8px;
 		cursor: pointer;
 		font-size: 12px;
@@ -237,6 +239,7 @@
 		width: 16px;
 		height: 16px;
 		margin: 0;
+		margin-top: 2px;
 		cursor: pointer;
 		accent-color: var(--theme-accent, #6366f1);
 		flex-shrink: 0;
@@ -244,14 +247,18 @@
 
 	.checkbox-text {
 		user-select: none;
-		line-height: 1.3;
+		line-height: 1.35;
+		min-width: 0;
+		overflow-wrap: anywhere;
 	}
 
 	.sound-actions {
 		display: flex;
+		flex-wrap: wrap;
 		gap: 8px;
 		align-items: stretch;
 		width: 100%;
+		min-width: 0;
 	}
 
 	.panel-select {
@@ -370,15 +377,41 @@
 			font-size: 10px;
 		}
 
+		.checkbox-label {
+			font-size: 11px;
+		}
+
 		.panel-select {
 			font-size: 11px;
 			height: 26px;
+			flex: 1 1 140px;
 		}
 
 		.preview-btn {
 			width: 26px;
 			min-width: 26px;
 			height: 26px;
+		}
+	}
+
+	@media (max-width: 360px) {
+		.chat-notification-controls {
+			gap: 12px;
+		}
+
+		.sound-actions {
+			gap: 6px;
+		}
+
+		.panel-select {
+			flex: 1 1 100%;
+			min-height: 30px;
+		}
+
+		.preview-btn {
+			width: 100%;
+			min-width: 0;
+			height: 32px;
 		}
 	}
 </style>

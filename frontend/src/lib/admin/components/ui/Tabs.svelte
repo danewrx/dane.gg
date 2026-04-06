@@ -67,9 +67,13 @@
 	.tabs-container {
 		display: inline-flex;
 		width: auto;
+		max-width: 100%;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 
 	.tabs-container.full-width {
+		display: flex;
 		width: 100%;
 	}
 
@@ -86,6 +90,8 @@
 		border: 1px solid rgba(255, 255, 255, 0.1);
 		position: relative;
 		gap: 2px;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 
 	:global(.dark) .tabs {
@@ -134,7 +140,8 @@
 		transition: all 0.2s ease;
 		white-space: nowrap;
 		position: relative;
-		flex: 1;
+		flex: 1 1 0;
+		min-width: 0;
 	}
 
 	
@@ -245,7 +252,29 @@
 	}
 
 	.full-width .tab {
-		flex: 1;
+		flex: 1 1 0;
+		min-width: 0;
+	}
+
+	@media (max-width: 480px) {
+		.size-md .tab {
+			padding: 8px 6px;
+			font-size: 0.8rem;
+		}
+
+		.size-sm .tab {
+			padding: 6px 8px;
+			font-size: 0.75rem;
+		}
+
+		.size-lg .tab {
+			padding: 8px 12px;
+			font-size: 0.85rem;
+		}
+
+		.tabs.variant-pills {
+			flex-wrap: wrap;
+		}
 	}
 
 	/* Focus styles */

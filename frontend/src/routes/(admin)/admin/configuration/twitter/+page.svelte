@@ -701,6 +701,9 @@
 <style>
 	.twitter-config {
 		padding: 0;
+		min-width: 0;
+		box-sizing: border-box;
+		overflow-x: hidden;
 	}
 
 	.loading-state,
@@ -817,14 +820,20 @@
 		border-radius: 8px;
 		background: var(--bg-secondary, #2d2d2d);
 		margin-bottom: 20px;
+		min-width: 0;
+		box-sizing: border-box;
+		overflow-x: hidden;
 	}
 
 	.info-item {
 		display: flex;
 		justify-content: space-between;
-		align-items: center;
+		align-items: flex-start;
+		flex-wrap: wrap;
+		gap: 8px 12px;
 		padding: 12px 0;
 		border-bottom: 1px solid var(--border-color, #3a3a3a);
+		min-width: 0;
 	}
 
 	.info-item:last-child {
@@ -835,12 +844,16 @@
 		font-size: 14px;
 		font-weight: 500;
 		color: var(--text-primary, #ffffff);
+		flex-shrink: 0;
 	}
 
 	.info-value {
 		font-size: 14px;
 		color: var(--text-secondary, #9ca3af);
 		font-family: 'Courier New', monospace;
+		min-width: 0;
+		overflow-wrap: anywhere;
+		word-break: break-word;
 	}
 
 	.username-display {
@@ -848,6 +861,9 @@
 		align-items: center;
 		gap: 8px;
 		flex: 1;
+		min-width: 0;
+		flex-wrap: wrap;
+		justify-content: flex-end;
 	}
 
 	.username-source {
@@ -883,9 +899,11 @@
 	}
 
 	.icon-button.small {
-		width: 20px;
-		height: 20px;
-		padding: 2px;
+		width: 28px;
+		height: 28px;
+		min-width: 28px;
+		padding: 4px;
+		flex-shrink: 0;
 	}
 
 	.icon-button:hover {
@@ -904,10 +922,13 @@
 		align-items: center;
 		gap: 8px;
 		flex: 1;
+		min-width: 0;
+		flex-wrap: wrap;
 	}
 
 	.username-input {
 		flex: 1;
+		min-width: 0;
 		padding: 6px 10px;
 		background: var(--bg-secondary, #2d2d2d);
 		border: 1px solid var(--accent-color);
@@ -960,6 +981,9 @@
 		padding: 10px 12px;
 		border-radius: 6px;
 		font-size: 14px;
+		flex-wrap: wrap;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 
 	.connection-status.connected {
@@ -982,6 +1006,19 @@
 		font-size: 12px;
 		opacity: 0.8;
 		margin-left: auto;
+		min-width: 0;
+		overflow-wrap: anywhere;
+	}
+
+	@media (max-width: 520px) {
+		.connection-status-message {
+			margin-left: 0;
+			flex-basis: 100%;
+		}
+
+		.username-display {
+			justify-content: flex-start;
+		}
 	}
 
 	.connection-status-placeholder {

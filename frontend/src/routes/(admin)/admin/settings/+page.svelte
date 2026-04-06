@@ -458,13 +458,14 @@
 					<p class="setting-description">Choose your preferred color scheme</p>
 				</div>
 				
-				<div class="setting-control">
+				<div class="setting-control setting-control--tabs">
 					<Tabs
 						tabs={themeTabs}
 						activeTab={currentTheme}
 						onTabChange={handleThemeChange}
 						variant="default"
 						size="md"
+						fullWidth={true}
 					/>
 				</div>
 			</div>
@@ -527,17 +528,15 @@
 
 		<!-- API Keys Section -->
 		<div class="settings-section">
-			<div class="section-header">
-				<div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
-					<div>
-						<h2 class="section-title">API Keys</h2>
-						<p class="section-description">Manage API keys for bots and external integrations</p>
-					</div>
-					<button class="create-button" onclick={openAddModal}>
-						<Plus size={18} />
-						Create Key
-					</button>
+			<div class="section-header api-keys-section-head">
+				<div class="api-keys-section-titles">
+					<h2 class="section-title">API Keys</h2>
+					<p class="section-description">Manage API keys for bots and external integrations</p>
 				</div>
+				<button type="button" class="create-button" onclick={openAddModal}>
+					<Plus size={18} />
+					Create Key
+				</button>
 			</div>
 
 			<!-- Usage instructions -->
@@ -893,6 +892,33 @@
 
 	.setting-control {
 		flex-shrink: 0;
+		min-width: 0;
+	}
+
+	.setting-control--tabs {
+		max-width: 100%;
+	}
+
+	.api-keys-section-head {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 12px;
+		width: 100%;
+	}
+
+	.api-keys-section-titles {
+		flex: 1 1 200px;
+		min-width: 0;
+	}
+
+	.api-keys-section-titles .section-title {
+		margin-bottom: 8px;
+	}
+
+	.api-keys-section-head .create-button {
+		flex-shrink: 0;
 	}
 
 	.theme-preview {
@@ -1041,6 +1067,9 @@
 		border: 1px solid var(--border-color, #3a3a3a);
 		border-radius: 12px;
 		margin-bottom: 24px;
+		min-width: 0;
+		max-width: 100%;
+		box-sizing: border-box;
 	}
 
 	.info-icon {
@@ -1053,6 +1082,11 @@
 		color: var(--accent-color, #6366f1);
 		border-radius: 8px;
 		flex-shrink: 0;
+	}
+
+	.info-content {
+		min-width: 0;
+		flex: 1;
 	}
 
 	.info-content h3 {
@@ -1083,6 +1117,11 @@
 		font-family: 'JetBrains Mono', monospace;
 		font-size: 13px;
 		color: var(--text-primary, #ffffff);
+		overflow-x: auto;
+		max-width: 100%;
+		box-sizing: border-box;
+		word-break: break-word;
+		overflow-wrap: anywhere;
 	}
 
 	.info-note {
@@ -1558,32 +1597,69 @@
 		}
 
 		.settings-section {
-			padding: 20px;
+			padding: 16px;
 		}
 
 		.setting-group {
 			flex-direction: column;
 			gap: 16px;
+			align-items: stretch;
 		}
 
 		.setting-info {
 			max-width: none;
 		}
 
+		.setting-control {
+			width: 100%;
+			flex-shrink: 1;
+		}
+
 		.header-content h1 {
 			font-size: 1.5rem;
 		}
 
+		.preview-header {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 10px;
+		}
+
+		.preview-mode {
+			flex-wrap: wrap;
+			font-size: 0.75rem;
+		}
+
 		.preview-elements {
 			flex-direction: column;
+			flex-wrap: wrap;
+			gap: 10px;
+		}
+
+		.api-keys-section-head .create-button {
+			width: 100%;
+			justify-content: center;
+		}
+
+		.info-card {
+			flex-direction: column;
+			padding: 16px;
 		}
 
 		.keys-table-container {
 			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+			max-width: 100%;
 		}
 
 		.keys-table {
 			min-width: 800px;
+		}
+
+		.code-examples code {
+			overflow-x: auto;
+			word-break: break-all;
+			max-width: 100%;
 		}
 	}
 </style>

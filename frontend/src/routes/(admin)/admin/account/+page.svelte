@@ -922,9 +922,13 @@
 	.totp-manager-container {
 		margin-top: 16px;
 		width: 100%;
+		min-width: 0;
 	}
 
-	/* Completely override TotpManager styling to match settings page */
+	:global(.totp-manager-container .totp-setup) {
+		max-width: 100%;
+	}
+
 	:global(.totp-manager-container .totp-manager) {
 		max-width: none;
 		margin: 0;
@@ -934,12 +938,10 @@
 		padding: 0;
 	}
 
-	/* Hide the TotpManager's own header since we have our own */
 	:global(.totp-manager-container .manager-header) {
 		display: none;
 	}
 
-	/* Style the status cards to match settings page */
 	:global(.totp-manager-container .status-card) {
 		background: rgba(255, 255, 255, 0.02);
 		border: 1px solid rgba(255, 255, 255, 0.1);

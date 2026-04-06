@@ -635,6 +635,9 @@
 		border: 1px solid var(--border-color, #3a3a3a);
 		border-radius: 12px;
 		margin-bottom: 24px;
+		min-width: 0;
+		max-width: 100%;
+		box-sizing: border-box;
 	}
 
 	.info-icon {
@@ -647,6 +650,11 @@
 		color: var(--accent-color, #6366f1);
 		border-radius: 8px;
 		flex-shrink: 0;
+	}
+
+	.info-content {
+		min-width: 0;
+		flex: 1;
 	}
 
 	.info-content h3 {
@@ -677,6 +685,11 @@
 		font-family: 'JetBrains Mono', monospace;
 		font-size: 13px;
 		color: var(--text-primary, #ffffff);
+		overflow-x: auto;
+		max-width: 100%;
+		box-sizing: border-box;
+		word-break: break-word;
+		overflow-wrap: anywhere;
 	}
 
 	.info-note {
@@ -740,12 +753,16 @@
 	.keys-table-container {
 		background: var(--bg-secondary, #2d2d2d);
 		border-radius: 12px;
-		overflow: hidden;
+		overflow-x: auto;
+		overflow-y: hidden;
+		-webkit-overflow-scrolling: touch;
+		max-width: 100%;
 		border: 1px solid var(--border-color, #3a3a3a);
 	}
 
 	.keys-table {
 		width: 100%;
+		min-width: 720px;
 		border-collapse: collapse;
 	}
 
@@ -1147,6 +1164,43 @@
 		font-size: 12px;
 		color: var(--text-tertiary, #71717a);
 		line-height: 1.4;
+	}
+
+	@media (max-width: 640px) {
+		.api-keys-page {
+			padding: 16px;
+		}
+
+		.header {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 12px;
+		}
+
+		.create-button {
+			width: 100%;
+			justify-content: center;
+		}
+
+		.info-card {
+			flex-direction: column;
+			padding: 16px;
+		}
+
+		.keys-table-container {
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+			max-width: 100%;
+		}
+
+		.key-display {
+			flex-direction: column;
+		}
+
+		.copy-button {
+			width: 100%;
+			justify-content: center;
+		}
 	}
 </style>
 

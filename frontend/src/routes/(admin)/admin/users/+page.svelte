@@ -689,12 +689,16 @@
 	.users-table-container {
 		background: var(--bg-secondary, #2d2d2d);
 		border-radius: 12px;
-		overflow: hidden;
+		overflow-x: auto;
+		overflow-y: hidden;
+		-webkit-overflow-scrolling: touch;
+		max-width: 100%;
 		border: 1px solid var(--border-color, #3a3a3a);
 	}
 
 	.users-table {
 		width: 100%;
+		min-width: 520px;
 		border-collapse: collapse;
 	}
 
@@ -869,9 +873,12 @@
 		width: 100%;
 		max-width: 500px;
 		max-height: 90vh;
+		min-width: 0;
 		overflow-y: auto;
+		overflow-x: hidden;
 		border: 1px solid var(--border-color, #3a3a3a);
 		box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+		box-sizing: border-box;
 	}
 
 	.modal-small {
@@ -1035,6 +1042,8 @@
 		display: flex;
 		flex-direction: column;
 		gap: 20px;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 
 	.form-group {
@@ -1107,8 +1116,10 @@
 
 	.controls-row {
 		display: flex;
+		flex-direction: row;
 		align-items: stretch;
 		gap: 16px;
+		min-width: 0;
 	}
 
 	.control-item {
@@ -1327,6 +1338,112 @@
 	.delete-button:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	@media (max-width: 640px) {
+		.users-page {
+			padding: 16px;
+		}
+
+		.header {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 12px;
+		}
+
+		.header h1 {
+			font-size: 22px;
+		}
+
+		.create-button {
+			width: 100%;
+			justify-content: center;
+		}
+
+		.users-table th,
+		.users-table td {
+			padding: 12px 10px;
+		}
+
+		.actions-column {
+			width: auto;
+			min-width: 100px;
+		}
+
+		.modal-overlay {
+			padding: 12px;
+		}
+
+		.modal {
+			max-width: 100%;
+			max-height: min(92vh, 100dvh - 24px);
+		}
+
+		.modal-header {
+			padding: 16px 18px;
+		}
+
+		.user-summary {
+			padding: 16px 18px;
+			gap: 12px;
+		}
+
+		.user-meta {
+			flex-wrap: wrap;
+			row-gap: 4px;
+		}
+
+		.form-content {
+			padding: 16px 18px;
+			gap: 16px;
+		}
+
+		.controls-row {
+			flex-direction: column;
+			gap: 12px;
+		}
+
+		.control-item,
+		.change-password-button {
+			flex: none;
+			width: 100%;
+			box-sizing: border-box;
+		}
+
+		.change-password-button {
+			min-height: 48px;
+		}
+
+		.password-reset-fields {
+			padding: 16px;
+		}
+
+		.totp-section {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 12px;
+		}
+
+		.reset-2fa-button {
+			width: 100%;
+			white-space: normal;
+			text-align: center;
+		}
+
+		.modal-actions {
+			flex-direction: column-reverse;
+			padding: 16px 18px;
+			gap: 10px;
+		}
+
+		.modal-actions .cancel-button,
+		.modal-actions .save-button {
+			width: 100%;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			box-sizing: border-box;
+		}
 	}
 </style>
 

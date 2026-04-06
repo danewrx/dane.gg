@@ -697,6 +697,8 @@
 	.social-links-page {
 		width: 100%;
 		max-width: 800px;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 
 	.settings-description {
@@ -754,6 +756,8 @@
 		border-radius: 8px;
 		transition: all 0.2s ease;
 		cursor: move;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 
 	.link-item.not-draggable {
@@ -800,6 +804,7 @@
 		align-items: center;
 		gap: 16px;
 		flex: 1;
+		min-width: 0;
 	}
 
 	.link-icon {
@@ -852,6 +857,8 @@
 	.link-actions {
 		display: flex;
 		gap: 4px;
+		flex-shrink: 0;
+		margin-left: auto;
 	}
 
 	.action-button {
@@ -922,6 +929,8 @@
 		display: flex;
 		align-items: center;
 		gap: 12px;
+		flex-wrap: wrap;
+		min-width: 0;
 	}
 
 	.icon-button {
@@ -952,6 +961,7 @@
 
 	.icon-info {
 		flex: 1;
+		min-width: 0;
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
@@ -997,9 +1007,20 @@
 
 	.checkbox-label {
 		display: flex;
-		align-items: center;
+		align-items: flex-start;
 		gap: 8px;
 		cursor: pointer;
+		min-width: 0;
+	}
+
+	.checkbox-label span {
+		overflow-wrap: anywhere;
+		line-height: 1.35;
+	}
+
+	.checkbox-label input[type='checkbox'] {
+		margin-top: 2px;
+		flex-shrink: 0;
 	}
 
 	.new-link-form .form-actions {
@@ -1087,7 +1108,7 @@
 	/* Responsive Design */
 	@media (max-width: 768px) {
 		.social-links-page {
-			padding: 0 16px;
+			padding: 0;
 		}
 
 		.header-content {
@@ -1127,8 +1148,8 @@
 
 		.link-item {
 			flex-direction: column;
-			align-items: flex-start;
-			gap: 16px;
+			align-items: stretch;
+			gap: 12px;
 		}
 
 		.link-info {
@@ -1137,11 +1158,25 @@
 
 		.link-actions {
 			width: 100%;
+			margin-left: 0;
 			justify-content: flex-end;
+			flex-wrap: wrap;
 		}
 
 		.new-link-form {
 			width: 100%;
+			padding: 16px;
+		}
+
+		.new-link-form .form-actions {
+			flex-direction: column-reverse;
+			align-items: stretch;
+		}
+
+		.new-link-form .form-actions .save-btn,
+		.new-link-form .form-actions .cancel-btn {
+			width: 100%;
+			justify-content: center;
 		}
 	}
 

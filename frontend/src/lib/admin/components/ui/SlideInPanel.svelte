@@ -105,11 +105,12 @@
 		display: flex;
 		flex-direction: column;
 		animation: slideIn 0.3s ease-out;
-		max-height: 100vh;
+		max-height: min(100vh, 100dvh);
 		overflow: hidden;
-		width: 50% !important; /* Force 50% width on desktop */
-		min-width: 0; /* Prevent flex items from overflowing */
-		max-width: 50% !important; /* Ensure it doesn't exceed 50% */
+		width: 50% !important;
+		min-width: 0;
+		max-width: 50% !important;
+		box-sizing: border-box;
 	}
 
 	:global(html:not(.dark)) .slide-panel {
@@ -143,9 +144,12 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 20px 24px;
+		gap: 12px;
+		padding: 20px max(16px, env(safe-area-inset-right, 0px)) 20px
+			max(16px, env(safe-area-inset-left, 0px));
 		border-bottom: 1px solid #2a2a2a;
 		flex-shrink: 0;
+		min-width: 0;
 	}
 
 	:global(html:not(.dark)) .panel-header {
@@ -159,6 +163,18 @@
 		color: #ffffff;
 		font-size: 18px;
 		font-weight: 600;
+		min-width: 0;
+		flex: 1;
+	}
+
+	.panel-title span {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.panel-title :global(svg) {
+		flex-shrink: 0;
 	}
 
 	:global(html:not(.dark)) .panel-title {
@@ -176,6 +192,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		flex-shrink: 0;
 	}
 
 	:global(html:not(.dark)) .close-button {
@@ -200,17 +217,44 @@
 	.panel-content {
 		flex: 1;
 		overflow-y: auto;
-		padding: 24px;
+		overflow-x: hidden;
+		-webkit-overflow-scrolling: touch;
+		padding: 24px max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px))
+			max(24px, env(safe-area-inset-left, 0px));
 		width: 100%;
 		max-width: 100%;
 		box-sizing: border-box;
+		min-width: 0;
 	}
 
-	/* Responsive design */
-	@media (max-width: 768px) {
+	@media (max-width: 1023px) {
 		.slide-panel {
 			width: 100% !important;
 			max-width: 100% !important;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.panel-header {
+			padding: 16px max(14px, env(safe-area-inset-right, 0px)) 16px
+				max(14px, env(safe-area-inset-left, 0px));
+		}
+
+		.panel-title {
+			font-size: 16px;
+			gap: 10px;
+		}
+
+		.panel-content {
+			padding: 16px max(16px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px))
+				max(16px, env(safe-area-inset-left, 0px));
+		}
+	}
+
+	@media (max-width: 360px) {
+		.panel-content {
+			padding: 14px max(12px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px))
+				max(12px, env(safe-area-inset-left, 0px));
 		}
 	}
 </style>

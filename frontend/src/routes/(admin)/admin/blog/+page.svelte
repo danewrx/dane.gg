@@ -271,27 +271,34 @@
 	.header-actions {
 		display: flex;
 		align-items: center;
-		gap: 12px;
+		flex-wrap: wrap;
+		gap: 10px;
 	}
 
 	.divider {
 		width: 1px;
-		height: 24px;
+		height: 2.75rem;
+		align-self: center;
 		background: var(--border-color, #3a3a3a);
 		flex-shrink: 0;
 	}
 
 	.tag-button {
-		display: flex;
+		display: inline-flex;
 		align-items: center;
+		justify-content: center;
 		gap: 8px;
-		padding: 10px 20px;
+		min-height: 2.75rem;
+		padding: 10px 16px;
+		box-sizing: border-box;
 		background: var(--bg-secondary, #2d2d2d);
 		color: var(--text-primary, #ffffff);
 		border: 1px solid var(--border-color, #3a3a3a);
 		border-radius: 8px;
 		font-size: 14px;
 		font-weight: 500;
+		line-height: 1.2;
+		white-space: nowrap;
 		cursor: pointer;
 		transition: all 0.2s ease;
 	}
@@ -302,16 +309,21 @@
 	}
 
 	.sort-toggle {
-		display: flex;
+		display: inline-flex;
 		align-items: center;
+		justify-content: center;
 		gap: 8px;
-		padding: 10px 20px;
+		min-height: 2.75rem;
+		padding: 10px 16px;
+		box-sizing: border-box;
 		background: var(--bg-secondary, #2d2d2d);
 		color: var(--text-primary, #ffffff);
 		border: 1px solid var(--border-color, #3a3a3a);
 		border-radius: 8px;
 		font-size: 14px;
 		font-weight: 500;
+		line-height: 1.2;
+		white-space: nowrap;
 		cursor: pointer;
 		transition: all 0.2s ease;
 	}
@@ -322,16 +334,21 @@
 	}
 
 	.create-button {
-		display: flex;
+		display: inline-flex;
 		align-items: center;
+		justify-content: center;
 		gap: 8px;
-		padding: 12px 24px;
+		min-height: 2.75rem;
+		padding: 10px 20px;
+		box-sizing: border-box;
 		background: var(--accent-color, #6366f1);
 		color: white;
 		border: none;
 		border-radius: 8px;
 		font-size: 14px;
 		font-weight: 500;
+		line-height: 1.2;
+		white-space: nowrap;
 		cursor: pointer;
 		transition: all 0.2s ease;
 	}
@@ -499,17 +516,24 @@
 
 		.header-actions {
 			width: 100%;
-			justify-content: space-between;
+			justify-content: flex-start;
 		}
 
-		.sort-toggle {
-			padding: 8px 16px;
+		.header-actions .divider {
+			display: none;
+		}
+
+		.sort-toggle,
+		.tag-button {
+			padding: 8px 12px;
 			font-size: 13px;
+			min-height: 2.625rem;
 		}
 
 		.create-button {
-			padding: 10px 20px;
+			padding: 8px 16px;
 			font-size: 13px;
+			min-height: 2.625rem;
 		}
 
 		.table-container {
@@ -535,6 +559,23 @@
 		.timestamp-cell {
 			font-size: 12px;
 			min-width: 150px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.header {
+			align-items: stretch;
+		}
+
+		.header-actions {
+			flex-direction: column;
+			align-items: stretch;
+		}
+
+		.header-actions .sort-toggle,
+		.header-actions .tag-button,
+		.header-actions .create-button {
+			width: 100%;
 		}
 	}
 </style>

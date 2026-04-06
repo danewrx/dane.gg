@@ -868,6 +868,10 @@
 		overflow: hidden;
 	}
 
+	.content-columns :global(.chat-section) {
+		min-width: 0;
+	}
+
 	@media (max-width: 768px) {
 		.content-columns {
 			grid-template-columns: 1fr;

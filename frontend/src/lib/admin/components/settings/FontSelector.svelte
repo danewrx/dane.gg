@@ -36,6 +36,8 @@
 		flex-direction: column;
 		gap: 6px;
 		width: 100%;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 
 	.font-label {
@@ -90,6 +92,7 @@
 		font-style: italic;
 		margin: 0;
 		line-height: 1.2;
+		overflow-wrap: anywhere;
 	}
 
 	.font-select option {

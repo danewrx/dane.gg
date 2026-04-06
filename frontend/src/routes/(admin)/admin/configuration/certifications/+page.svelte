@@ -1100,8 +1100,24 @@
 
 	.form-actions {
 		display: flex;
+		flex-wrap: wrap;
 		gap: 12px;
 		margin-top: 8px;
+	}
+
+	@media (max-width: 520px) {
+		.form-actions {
+			flex-direction: column-reverse;
+			align-items: stretch;
+		}
+
+		.form-actions .save-btn,
+		.form-actions .cancel-btn,
+		.form-actions .icon-btn {
+			width: 100%;
+			justify-content: center;
+			box-sizing: border-box;
+		}
 	}
 
 	.new-certification-form {
@@ -1111,10 +1127,12 @@
 		padding: 24px;
 		width: 100%;
 		max-width: 100%;
+		min-width: 0;
 		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
 		gap: 24px;
+		overflow-x: hidden;
 	}
 
 	.new-certification-form h3 {

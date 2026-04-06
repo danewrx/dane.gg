@@ -223,6 +223,9 @@
 <style>
 	.banner-config {
 		padding: 24px;
+		min-width: 0;
+		box-sizing: border-box;
+		overflow-x: hidden;
 	}
 
 	.loading-state {
@@ -269,6 +272,8 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
+		flex-wrap: wrap;
+		min-width: 0;
 	}
 
 	.required {
@@ -279,6 +284,18 @@
 		margin-left: auto;
 		color: var(--accent-color, #6366f1);
 		font-size: 13px;
+		white-space: nowrap;
+	}
+
+	@media (max-width: 440px) {
+		.form-group label[for='speed'] {
+			align-items: flex-start;
+		}
+
+		.speed-value {
+			margin-left: 0;
+			width: 100%;
+		}
 	}
 
 
@@ -315,6 +332,9 @@
 		gap: 8px;
 		color: var(--text-primary, #ffffff);
 		font-size: 14px;
+		flex-wrap: wrap;
+		min-width: 0;
+		line-height: 1.3;
 	}
 
 	/* Color settings */
@@ -345,6 +365,7 @@
 		display: flex;
 		gap: 12px;
 		align-items: center;
+		min-width: 0;
 	}
 
 	.color-swatch {
@@ -393,6 +414,7 @@
 
 	.color-hex-input {
 		flex: 1;
+		min-width: 0;
 		background: var(--bg-tertiary, #2d2d2d);
 		border: 1px solid var(--border-color, #3a3a3a);
 		border-radius: 8px;
@@ -467,6 +489,7 @@
 		display: flex;
 		justify-content: flex-end;
 		padding-top: 8px;
+		min-width: 0;
 	}
 
 	.save-button {
@@ -474,14 +497,18 @@
 		color: white;
 		border: none;
 		border-radius: 8px;
-		padding: 12px 24px;
+		padding: 12px 20px;
 		font-size: 14px;
 		font-weight: 500;
 		cursor: pointer;
-		display: flex;
+		display: inline-flex;
 		align-items: center;
+		justify-content: center;
 		gap: 8px;
 		transition: all 0.2s ease;
+		max-width: 100%;
+		box-sizing: border-box;
+		text-align: center;
 	}
 
 	.save-button:hover:not(:disabled) {
@@ -497,6 +524,16 @@
 	@media (max-width: 768px) {
 		.banner-config {
 			padding: 16px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.form-actions {
+			justify-content: stretch;
+		}
+
+		.save-button {
+			width: 100%;
 		}
 	}
 </style>

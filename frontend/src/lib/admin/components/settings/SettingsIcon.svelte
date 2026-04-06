@@ -28,8 +28,8 @@
 <style>
 	.settings-icon {
 		position: fixed;
-		bottom: 20px;
-		right: 0;
+		bottom: max(20px, env(safe-area-inset-bottom, 0px));
+		right: max(0px, env(safe-area-inset-right, 0px));
 		width: 48px;
 		height: 48px;
 		background: var(--bg-secondary);
@@ -90,15 +90,24 @@
 	/* Responsive adjustments */
 	@media (max-width: 768px) {
 		.settings-icon {
-			bottom: 15px;
-			right: 15px;
+			bottom: max(15px, env(safe-area-inset-bottom, 0px));
+			right: max(12px, env(safe-area-inset-right, 0px));
 			width: 44px;
 			height: 44px;
 		}
-		
+
 		.gear-icon {
 			width: 20px;
 			height: 20px;
+		}
+	}
+
+	@media (max-width: 360px) {
+		.settings-icon {
+			bottom: max(10px, env(safe-area-inset-bottom, 0px));
+			right: max(8px, env(safe-area-inset-right, 0px));
+			width: 42px;
+			height: 42px;
 		}
 	}
 </style>

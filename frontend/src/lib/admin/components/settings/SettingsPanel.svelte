@@ -91,10 +91,12 @@
 
 	.settings-panel {
 		position: fixed;
-		bottom: 20px;
+		bottom: max(12px, env(safe-area-inset-bottom, 0px));
 		right: 0;
-		width: 280px;
-		max-height: calc(100vh - 100px);
+		width: min(280px, calc(100vw - 12px - env(safe-area-inset-right, 0px)));
+		max-height: min(calc(100vh - 80px), calc(100dvh - 80px));
+		min-width: 0;
+		box-sizing: border-box;
 		background: var(--theme-surface, #1a1a1a);
 		border: 2px solid var(--theme-border, #ffffff);
 		border-right: none;
@@ -118,7 +120,10 @@
 		padding: 16px;
 		background: var(--theme-surface, #1a1a1a);
 		overflow-y: auto;
+		overflow-x: hidden;
 		flex: 1;
+		min-width: 0;
+		-webkit-overflow-scrolling: touch;
 	}
 	
 	/* Scrollbar styling */
@@ -224,11 +229,32 @@
 	/* Responsive design */
 	@media (max-width: 480px) {
 		.settings-panel {
-			width: 280px;
+			bottom: max(8px, env(safe-area-inset-bottom, 0px));
+			width: min(280px, calc(100vw - 10px - env(safe-area-inset-right, 0px)));
+			max-height: min(calc(100vh - 56px), calc(100dvh - 56px));
 		}
-		
+
 		.settings-content {
 			padding: 12px;
+		}
+
+		.settings-section h3 {
+			font-size: 11px;
+		}
+
+		.theme-button {
+			padding: 10px 12px;
+			font-size: 12px;
+		}
+	}
+
+	@media (max-width: 360px) {
+		.settings-content {
+			padding: 10px;
+		}
+
+		.settings-section {
+			margin-bottom: 16px;
 		}
 	}
 </style>

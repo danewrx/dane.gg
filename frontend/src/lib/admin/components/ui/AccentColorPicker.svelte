@@ -142,6 +142,9 @@
 
 <style>
 	.accent-color-picker {
+		width: 100%;
+		max-width: 100%;
+		box-sizing: border-box;
 		color: #ffffff;
 		transition: all 0.2s ease;
 	}
@@ -202,14 +205,18 @@
 
 	.color-grid {
 		display: grid;
-		grid-template-columns: repeat(6, 1fr);
+		grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
 		gap: 8px;
 		margin-bottom: 20px;
+		width: 100%;
 	}
 
 	.preset-color {
-		width: 36px;
-		height: 36px;
+		width: 100%;
+		aspect-ratio: 1;
+		max-width: 44px;
+		height: auto;
+		justify-self: center;
 		border: 2px solid transparent;
 		border-radius: 6px;
 		cursor: pointer;
@@ -256,10 +263,18 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		flex-wrap: wrap;
+		gap: 8px;
 		margin-bottom: 12px;
 	}
 
+	.custom-header h4 {
+		min-width: 0;
+		flex: 1 1 auto;
+	}
+
 	.toggle-custom {
+		flex-shrink: 0;
 		padding: 6px 12px;
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		border-radius: 6px;
@@ -298,8 +313,11 @@
 
 	.color-input-group {
 		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
 		gap: 8px;
 		margin-bottom: 12px;
+		min-width: 0;
 	}
 
 	.color-input {
@@ -316,7 +334,8 @@
 	}
 
 	.hex-input {
-		flex: 1;
+		flex: 1 1 140px;
+		min-width: 0;
 		padding: 6px 8px;
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		border-radius: 4px;

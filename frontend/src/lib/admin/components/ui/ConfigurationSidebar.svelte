@@ -242,7 +242,7 @@
 
 	.sidebar-nav {
 		flex: 1;
-		padding: 12px;
+		padding: 12px max(12px, env(safe-area-inset-right, 0px)) 12px max(12px, env(safe-area-inset-left, 0px));
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
@@ -295,6 +295,9 @@
 		color: var(--text-secondary, #a1a1aa);
 		position: relative;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+		min-width: 0;
+		width: 100%;
+		box-sizing: border-box;
 	}
 
 	.sidebar-item:last-child {
@@ -353,7 +356,9 @@
 		line-height: 1.4;
 		color: inherit;
 		flex: 1;
+		min-width: 0;
 		text-align: left;
+		overflow-wrap: anywhere;
 	}
 
 	.sidebar-item.active .sidebar-title {
@@ -371,6 +376,21 @@
 	@media (max-width: 1023px) {
 		.sidebar-chevron {
 			display: block;
+		}
+	}
+
+	@media (max-width: 360px) {
+		.sidebar-nav {
+			padding: 10px max(10px, env(safe-area-inset-right, 0px)) 10px max(10px, env(safe-area-inset-left, 0px));
+		}
+
+		.sidebar-item {
+			padding: 10px 12px;
+			gap: 10px;
+		}
+
+		.sidebar-title {
+			font-size: 14px;
 		}
 	}
 </style>

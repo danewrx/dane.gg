@@ -260,14 +260,18 @@
 
 	.toggle-wrapper {
 		display: flex;
-		align-items: center;
+		align-items: flex-start;
 		gap: 12px;
+		flex-wrap: wrap;
 	}
 
 	.toggle-label {
 		font-size: 14px;
 		color: var(--text-primary, #ffffff);
 		line-height: 1.4;
+		min-width: 0;
+		flex: 1 1 10rem;
+		overflow-wrap: anywhere;
 	}
 
 	.toggle-label-subtext {
@@ -310,5 +314,17 @@
 	.save-button:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
+	}
+
+	@media (max-width: 480px) {
+		.save-button {
+			align-self: stretch;
+			width: 100%;
+			text-align: center;
+		}
+
+		.settings-description p {
+			font-size: 13px;
+		}
 	}
 </style>

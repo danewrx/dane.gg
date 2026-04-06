@@ -464,6 +464,8 @@
 	.contact-social-links-settings {
 		width: 100%;
 		max-width: 1000px;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 
 	.settings-description {
@@ -545,10 +547,15 @@
 		display: flex;
 		align-items: flex-start;
 		gap: 8px;
+		width: 100%;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 
 	.header-input {
 		flex: 1;
+		min-width: 0;
+		width: 100%;
 		padding: 12px;
 		background: var(--bg-primary, #1a1a1a);
 		border: 1px solid var(--border-color, #3a3a3a);
@@ -658,6 +665,8 @@
 		align-items: center;
 		gap: 12px;
 		cursor: move;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 
 	.link-item:hover {
@@ -702,6 +711,7 @@
 		margin: 0;
 		gap: 12px;
 		flex: 1;
+		min-width: 0;
 		min-height: 56px;
 		box-sizing: border-box;
 	}
@@ -723,6 +733,7 @@
 		align-items: center;
 		gap: 12px;
 		flex: 1;
+		min-width: 0;
 		min-height: 32px;
 	}
 
@@ -769,6 +780,7 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		word-break: break-all;
 	}
 
 	.inactive-badge {
@@ -809,6 +821,38 @@
 	.save-button:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
+	}
+
+	@media (max-width: 560px) {
+		.link-item {
+			flex-wrap: wrap;
+			align-items: flex-start;
+		}
+
+		.link-checkbox {
+			flex-wrap: wrap !important;
+			align-items: flex-start !important;
+			padding: 12px;
+		}
+
+		.link-checkbox .checkbox-input,
+		.link-checkbox input[type='checkbox'] {
+			margin-top: 2px;
+		}
+
+		.link-url {
+			white-space: normal;
+			display: -webkit-box;
+			-webkit-line-clamp: 3;
+			line-clamp: 3;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+		}
+
+		.save-button {
+			width: 100%;
+			justify-content: center;
+		}
 	}
 
 	:global(.spin) {

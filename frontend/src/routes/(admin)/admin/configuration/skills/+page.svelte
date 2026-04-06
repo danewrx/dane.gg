@@ -725,6 +725,8 @@
 	.skills-settings {
 		width: 100%;
 		max-width: 800px;
+		min-width: 0;
+		box-sizing: border-box;
 	}
 
 	.settings-description {
@@ -885,6 +887,7 @@
 		border-radius: 6px;
 		background: var(--bg-primary, #1a1a1a);
 		cursor: pointer;
+		flex-shrink: 0;
 	}
 
 	.icon-btn {
@@ -995,7 +998,7 @@
 	}
 
 	.skill-name {
-		min-width: 140px;
+		min-width: min(140px, 100%);
 		color: var(--text-primary, #ffffff);
 		font-size: 14px;
 	}
@@ -1119,6 +1122,9 @@
 		border: 1px solid var(--border-color, #3a3a3a);
 		border-radius: 8px;
 		padding: 20px;
+		min-width: 0;
+		box-sizing: border-box;
+		overflow-x: hidden;
 	}
 
 	.new-category-form h3 {
@@ -1130,13 +1136,35 @@
 
 	.form-row {
 		display: flex;
+		flex-wrap: wrap;
 		gap: 12px;
 		margin-bottom: 16px;
+		align-items: center;
+	}
+
+	.form-row .edit-input {
+		flex: 1 1 12rem;
+		min-width: 0;
 	}
 
 	.form-actions {
 		display: flex;
+		flex-wrap: wrap;
 		gap: 12px;
+	}
+
+	@media (max-width: 520px) {
+		.form-actions {
+			flex-direction: column-reverse;
+			align-items: stretch;
+		}
+
+		.form-actions .save-btn,
+		.form-actions .cancel-btn {
+			width: 100%;
+			justify-content: center;
+			text-align: center;
+		}
 	}
 
 	.save-btn {
@@ -1209,5 +1237,16 @@
 	@keyframes spin {
 		from { transform: rotate(0deg); }
 		to { transform: rotate(360deg); }
+	}
+
+	@media (max-width: 560px) {
+		.skill-name {
+			min-width: 0;
+		}
+
+		.skill-name-input {
+			min-width: 0;
+			max-width: none;
+		}
 	}
 </style>

@@ -378,11 +378,14 @@
 <style>
 	.totp-setup {
 		max-width: 600px;
+		width: 100%;
 		margin: 0 auto;
 		padding: 2rem;
+		box-sizing: border-box;
 		background: var(--bg-secondary);
 		border-radius: 16px;
 		border: 1px solid var(--border-color);
+		min-width: 0;
 	}
 
 	.setup-header {
@@ -505,6 +508,7 @@
 
 	.step-content {
 		margin-bottom: 2rem;
+		min-width: 0;
 	}
 
 	.step-section h3 {
@@ -525,6 +529,10 @@
 		color: var(--text-secondary);
 		margin-bottom: 1.5rem;
 		line-height: 1.5;
+	}
+
+	.step-section {
+		min-width: 0;
 	}
 
 	.app-list {
@@ -569,6 +577,7 @@
 		grid-template-columns: auto 1fr;
 		gap: 2rem;
 		align-items: start;
+		min-width: 0;
 	}
 
 	.qr-code {
@@ -577,12 +586,25 @@
 		border-radius: 12px;
 		display: flex;
 		justify-content: center;
+		align-items: center;
+		width: fit-content;
+		max-width: 100%;
+		box-sizing: border-box;
 	}
 
 	.qr-code img {
+		display: block;
 		width: 200px;
-		height: 200px;
+		max-width: 100%;
+		height: auto;
+		aspect-ratio: 1;
+		object-fit: contain;
 		border-radius: 8px;
+	}
+
+	.manual-entry {
+		min-width: 0;
+		max-width: 100%;
 	}
 
 	.manual-entry h4 {
@@ -594,24 +616,32 @@
 
 	.secret-display {
 		margin-top: 0.5rem;
+		min-width: 0;
+		max-width: 100%;
 	}
 
 	.secret-input {
 		display: flex;
+		align-items: stretch;
 		background: var(--bg-primary);
 		border: 2px solid var(--border-color);
 		border-radius: 10px;
 		overflow: hidden;
+		min-width: 0;
+		max-width: 100%;
+		box-sizing: border-box;
 	}
 
 	.secret-input input {
-		flex: 1;
-		padding: 0.875rem 1rem;
+		flex: 1 1 auto;
+		min-width: 0;
+		padding: 0.875rem 0.75rem;
 		border: none;
 		background: transparent;
 		color: var(--text-primary);
 		font-family: 'Courier New', monospace;
 		font-size: 0.875rem;
+		overflow-x: auto;
 	}
 
 	.secret-input input:focus {
@@ -624,6 +654,7 @@
 	}
 
 	.toggle-visibility, .copy-button {
+		flex-shrink: 0;
 		padding: 0.875rem;
 		border: none;
 		background: transparent;
@@ -721,19 +752,29 @@
 
 	.verification-form {
 		max-width: 300px;
+		width: 100%;
+		box-sizing: border-box;
+		min-width: 0;
 	}
 
 	.token-input-group {
 		margin-bottom: 1.5rem;
+		width: 100%;
+		min-width: 0;
 	}
 
 	.token-input {
+		display: block;
 		width: 100%;
-		padding: 1rem;
+		max-width: 100%;
+		min-width: 0;
+		box-sizing: border-box;
+		padding: 1rem 0.75rem;
 		font-size: 1.5rem;
 		font-weight: 600;
+		font-variant-numeric: tabular-nums;
 		text-align: center;
-		letter-spacing: 0.5em;
+		letter-spacing: 0.28em;
 		border: 2px solid var(--border-color);
 		border-radius: 10px;
 		background: var(--bg-primary);
@@ -840,6 +881,7 @@
 	@media (max-width: 768px) {
 		.totp-setup {
 			padding: 1rem;
+			max-width: 100%;
 		}
 
 		.qr-section {
@@ -849,6 +891,13 @@
 
 		.qr-code {
 			justify-self: center;
+			width: 100%;
+			max-width: 240px;
+		}
+
+		.qr-code img {
+			width: 100%;
+			max-width: 220px;
 		}
 
 		.codes-grid {
@@ -859,14 +908,69 @@
 			flex-direction: column;
 		}
 
-		.setup-navigation {
-			flex-direction: column;
-			gap: 1rem;
-		}
-
-		.nav-left, .nav-right {
+		.backup-action-btn {
 			width: 100%;
 			justify-content: center;
+		}
+
+		.verification-form {
+			max-width: none;
+			width: 100%;
+		}
+
+		.token-input {
+			font-size: 1.35rem;
+			letter-spacing: 0.2em;
+			padding: 0.875rem 0.5rem;
+		}
+
+		.setup-navigation {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 0.75rem;
+		}
+
+		.nav-left {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 0.75rem;
+			width: 100%;
+			justify-content: stretch;
+		}
+
+		.nav-right {
+			width: 100%;
+			display: flex;
+			justify-content: stretch;
+		}
+
+		.nav-button {
+			width: 100%;
+			justify-content: center;
+			box-sizing: border-box;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.totp-setup {
+			padding: 1rem 0.75rem;
+			border-radius: 12px;
+		}
+
+		.setup-header {
+			flex-direction: column;
+			align-items: flex-start;
+			text-align: left;
+		}
+
+		.nav-left {
+			grid-template-columns: 1fr;
+		}
+
+		.token-input {
+			font-size: 1.15rem;
+			letter-spacing: 0.12em;
+			padding: 0.75rem 0.35rem;
 		}
 	}
 
