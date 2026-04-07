@@ -1,7 +1,41 @@
 import { redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
+import { normalizeDefaultWebNekoTypeForServer } from '$lib/site/oneko/variants';
 
 const API_BASE_URL = process.env.VITE_API_URL || '/api';
+
+const DANE_DEFAULT_WEB_NEKO_PLACEHOLDER = '%DANE_DEFAULT_WEB_NEKO_TYPE%';
+const DANE_ENFORCE_WEB_NEKO_PLACEHOLDER = '%DANE_ENFORCE_WEB_NEKO%';
+
+type WebNekoPageVars = { type: string; enforce: boolean };
+
+let webNekoPageVarsCache: { vars: WebNekoPageVars; expires: number } | null = null;
+const WEB_NEKO_PAGE_VARS_CACHE_MS = 60_000;
+
+async function resolveWebNekoPageVars(event: { fetch: typeof fetch; url: URL }): Promise<WebNekoPageVars> {
+	const now = Date.now();
+	if (webNekoPageVarsCache && now < webNekoPageVarsCache.expires) {
+		return webNekoPageVarsCache.vars;
+	}
+	let type = 'white';
+	let enforce = false;
+	try {
+		const configUrl = new URL('/api/config', event.url.origin).toString();
+		const r = await event.fetch(configUrl);
+		if (r.ok) {
+			const j = await r.json();
+			if (j.success && j.data) {
+				type = normalizeDefaultWebNekoTypeForServer(j.data.default_web_neko_type);
+				enforce = Boolean(j.data.enforce_web_neko);
+			}
+		}
+	} catch {
+		/* defaults */
+	}
+	const vars = { type, enforce };
+	webNekoPageVarsCache = { vars, expires: now + WEB_NEKO_PAGE_VARS_CACHE_MS };
+	return vars;
+}
 
 interface User {
   id: string;
@@ -81,6 +115,20 @@ export const handle: Handle = async ({ event, resolve }) => {
     return resolve(event);
   }
 
+  if (pathname.startsWith('/api')) {
+    return resolve(event);
+  }
+
+  const injectWebNekoDefault = async () => {
+    const { type, enforce } = await resolveWebNekoPageVars(event);
+    return resolve(event, {
+      transformPageChunk: ({ html }) =>
+        html
+          .split(DANE_DEFAULT_WEB_NEKO_PLACEHOLDER).join(JSON.stringify(type))
+          .split(DANE_ENFORCE_WEB_NEKO_PLACEHOLDER).join(String(enforce))
+    });
+  };
+
   // Check if admin route (/admin, /login, /logout)
   const isAdminRoute = pathname.startsWith('/admin') || 
                       pathname.startsWith('/login') || 
@@ -93,7 +141,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     if (!user) {
       // Don't redirect if already on login page
       if (pathname === '/login') {
-        return resolve(event);
+        return injectWebNekoDefault();
       }
       // Redirect to login page
       throw redirect(302, '/login?redirect=' + encodeURIComponent(pathname));
@@ -104,5 +152,5 @@ export const handle: Handle = async ({ event, resolve }) => {
     event.locals.isAuthenticated = true;
   }
 
-  return resolve(event);
+  return injectWebNekoDefault();
 };

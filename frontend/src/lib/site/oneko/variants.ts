@@ -1,4 +1,7 @@
 import { browser } from '$app/environment';
+import { get } from 'svelte/store';
+import { loadSiteConfig, siteConfig } from '$lib/site/stores/siteConfig';
+import { subscribeSiteConfigBroadcast } from '$lib/shared/utils/siteConfigLiveSync';
 
 /** Selected Web Neko skin (folder name on webneko.net, e.g. `white`, `black`). */
 export const WEB_NEKO_TYPE_STORAGE_KEY = 'dane-neko-web-type';
@@ -66,6 +69,16 @@ export const WEB_NEKO_VARIANTS: WebNekoVariant[] = [
 
 const ALLOWED_SKIN_IDS = new Set(WEB_NEKO_VARIANTS.map((v) => v.id));
 
+export function normalizeDefaultWebNekoTypeForServer(value: unknown): string {
+	if (value === WEB_NEKO_DISABLED) return WEB_NEKO_DISABLED;
+	if (typeof value === 'string') {
+		const s = value.toLowerCase();
+		if (s === WEB_NEKO_DISABLED) return WEB_NEKO_DISABLED;
+		if (ALLOWED_SKIN_IDS.has(s)) return s;
+	}
+	return 'white';
+}
+
 export type WebNekoGridOption =
 	| WebNekoVariant
 	| { id: typeof WEB_NEKO_DISABLED; label: string };
@@ -114,12 +127,19 @@ function migrateLegacyOnekoVariantKey(): void {
 }
 
 export function getDefaultWebNekoType(): string {
-	return 'white';
+	if (!browser) return 'white';
+	return normalizeDefaultWebNekoTypeForServer(get(siteConfig).default_web_neko_type);
 }
 
 export function getStoredWebNekoType(): string {
 	if (!browser) return getDefaultWebNekoType();
 	migrateLegacyOnekoVariantKey();
+	const cfg = get(siteConfig);
+	if (cfg.enforce_web_neko) {
+		return normalizeDefaultWebNekoTypeForServer(
+			cfg.enforced_web_neko_type ?? cfg.default_web_neko_type
+		);
+	}
 	try {
 		const raw = localStorage.getItem(WEB_NEKO_TYPE_STORAGE_KEY);
 		if (raw === WEB_NEKO_DISABLED) return WEB_NEKO_DISABLED;
@@ -134,9 +154,23 @@ export function resolveWebNekoVariantId(id: string | null | undefined): string {
 	return getDefaultWebNekoType();
 }
 
+export function syncWebNekoInjectedGlobalsFromSiteConfig(): void {
+	if (!browser) return;
+	const c = get(siteConfig);
+	const def = normalizeDefaultWebNekoTypeForServer(c.default_web_neko_type);
+	const enf = normalizeDefaultWebNekoTypeForServer(
+		c.enforced_web_neko_type ?? c.default_web_neko_type
+	);
+	(window as unknown as { __DANE_DEFAULT_WEB_NEKO_TYPE__?: string }).__DANE_DEFAULT_WEB_NEKO_TYPE__ = def;
+	(window as unknown as { __DANE_ENFORCED_WEB_NEKO_TYPE__?: string }).__DANE_ENFORCED_WEB_NEKO_TYPE__ = enf;
+	(window as unknown as { __DANE_ENFORCE_WEB_NEKO__?: boolean }).__DANE_ENFORCE_WEB_NEKO__ =
+		Boolean(c.enforce_web_neko);
+}
+
 /** Persist skin; restarts Web Neko in-page when available, else full reload. */
 export function setStoredWebNekoType(id: string): void {
 	if (!browser) return;
+	if (get(siteConfig).enforce_web_neko) return;
 	const next = resolveWebNekoVariantId(id);
 	try {
 		localStorage.setItem(WEB_NEKO_TYPE_STORAGE_KEY, next);
@@ -147,4 +181,14 @@ export function setStoredWebNekoType(id: string): void {
 		return;
 	}
 	window.location.reload();
+}
+
+if (browser) {
+	subscribeSiteConfigBroadcast(() => {
+		void loadSiteConfig().then(() => {
+			syncWebNekoInjectedGlobalsFromSiteConfig();
+			const w = window as Window & { daneRestartWebNeko?: () => void };
+			if (typeof w.daneRestartWebNeko === 'function') w.daneRestartWebNeko();
+		});
+	});
 }

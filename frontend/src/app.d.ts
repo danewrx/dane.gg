@@ -8,6 +8,9 @@ declare global {
 		startNekoY?: number | string;
 		aNekos?: { active: boolean }[];
 		daneRestartWebNeko?: () => void;
+		__DANE_DEFAULT_WEB_NEKO_TYPE__?: string;
+		__DANE_ENFORCED_WEB_NEKO_TYPE__?: string;
+		__DANE_ENFORCE_WEB_NEKO__?: boolean;
 	}
 
 	namespace App {

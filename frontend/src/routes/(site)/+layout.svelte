@@ -9,6 +9,7 @@
 	import WeatherEffects from '$lib/site/components/effects/WeatherEffects.svelte';
 	import ScrollingBanner from '$lib/site/components/ScrollingBanner.svelte';
 	import ThemeProvider from '$lib/site/components/ThemeProvider.svelte';
+	import '$lib/site/oneko/variants';
 
 	let { children } = $props();
 	let settingsOpen = $state(false);

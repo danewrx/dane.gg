@@ -44,23 +44,49 @@
 		}
 	} catch (e) {}
 
+	var enforce = window.__DANE_ENFORCE_WEB_NEKO__ === true;
+
 	var stored = null;
 	try {
 		stored = localStorage.getItem(STORAGE);
 	} catch (eRead) {}
-	if (stored === DISABLED) return;
+
+	var serverDefault = null;
+	try {
+		if (typeof window.__DANE_DEFAULT_WEB_NEKO_TYPE__ === 'string') {
+			serverDefault = String(window.__DANE_DEFAULT_WEB_NEKO_TYPE__).toLowerCase();
+		}
+	} catch (eSrv) {}
+
+	var serverEnforced = null;
+	try {
+		if (typeof window.__DANE_ENFORCED_WEB_NEKO_TYPE__ === 'string') {
+			serverEnforced = String(window.__DANE_ENFORCED_WEB_NEKO_TYPE__).toLowerCase();
+		}
+	} catch (eEnf) {}
+
+	function validSkin(s) {
+		return s && /^[a-z][a-z0-9_-]*$/i.test(s);
+	}
 
 	var v = 'white';
 	try {
-		if (stored && /^[a-z][a-z0-9_-]*$/i.test(stored)) v = String(stored).toLowerCase();
+		if (enforce) {
+			var eff = validSkin(serverEnforced) ? serverEnforced : serverDefault;
+			if (eff === DISABLED) return;
+			v = validSkin(eff) ? eff : 'white';
+		} else {
+			if (stored === DISABLED) return;
+			if (validSkin(stored)) v = String(stored).toLowerCase();
+			else {
+				if (serverDefault === DISABLED) return;
+				v = validSkin(serverDefault) ? serverDefault : 'white';
+			}
+		}
 	} catch (e2) {}
 
 	window.NekoType = v;
 
-	// Web Neko's startANeko(): if these are non-numeric strings, Neko() stores them as homeXfn/homeYfn,
-	// eval()s them on load and on resize, and TargetHome() uses that spot when inactive (click to stop).
-	// Anchor: last `.nav-item` inside #dane-neko-nav-home (the ul is full-width; its rect.right was the whole row).
-	// Fallback x when no public nav (e.g. admin): small left margin — not viewport right.
 	(function navHomeStrings() {
 		var nekoHomeX =
 			"(function(){var list=document.getElementById('dane-neko-nav-home');var el=list&&list.querySelector('.nav-item:last-child');var w=typeof innerWidth==='number'?innerWidth:document.documentElement.clientWidth;var sx=window.pageXOffset||document.documentElement.scrollLeft||0;var x,t=w-36;if(el&&typeof el.getBoundingClientRect==='function'){var r=el.getBoundingClientRect();x=Math.floor(r.right+sx)+2;}else{x=16;}if(x<0)x=0;if(x>t)x=t;return x;})()";

@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { Lock } from 'lucide-svelte';
+	import { get } from 'svelte/store';
+	import { siteConfig } from '$lib/site/stores/siteConfig';
 	import {
 		WEB_NEKO_DISABLED,
 		WEB_NEKO_GRID_OPTIONS,
@@ -11,6 +14,7 @@
 	} from '$lib/site/oneko/variants';
 
 	let selectedId = $state<string>('white');
+	let nekoEnforced = $state(false);
 	let expanded = $state(false);
 	let collapsedVisible = $state(10);
 
@@ -51,12 +55,21 @@
 		if (!browser) return;
 		updateCollapsedVisible();
 		selectedId = getStoredWebNekoType();
+		nekoEnforced = Boolean(get(siteConfig).enforce_web_neko);
+		const unsub = siteConfig.subscribe((c) => {
+			nekoEnforced = Boolean(c.enforce_web_neko);
+			selectedId = getStoredWebNekoType();
+		});
 
 		window.addEventListener('resize', updateCollapsedVisible);
-		return () => window.removeEventListener('resize', updateCollapsedVisible);
+		return () => {
+			unsub();
+			window.removeEventListener('resize', updateCollapsedVisible);
+		};
 	});
 
 	function selectVariant(v: WebNekoGridOption) {
+		if (nekoEnforced) return;
 		if (v.id === selectedId) return;
 		selectedId = v.id;
 		setStoredWebNekoType(v.id);
@@ -64,54 +77,145 @@
 </script>
 
 <div class="oneko-picker">
-	<div class="oneko-grid" role="group" aria-label="Web Neko variants">
-		{#each visibleGridOptions as v (v.id)}
-			<button
-				type="button"
-				class="oneko-option"
-				class:oneko-option--active={selectedId === v.id}
-				onclick={() => selectVariant(v)}
-				aria-pressed={selectedId === v.id}
-				aria-label={v.id === WEB_NEKO_DISABLED
-					? 'Turn off Web Neko'
-					: `Use ${v.label} Web Neko`}
-			>
-				<span
-					class="thumb-wrap"
-					class:thumb-wrap--none={v.id === WEB_NEKO_DISABLED}
+	<div class="oneko-stack">
+		<div class="oneko-body" class:oneko-body--locked={nekoEnforced}>
+			<div class="oneko-grid" role="group" aria-label="Web Neko variants">
+				{#each visibleGridOptions as v (v.id)}
+					<button
+						type="button"
+						class="oneko-option"
+						class:oneko-option--active={selectedId === v.id}
+						disabled={nekoEnforced}
+						onclick={() => selectVariant(v)}
+						aria-pressed={selectedId === v.id}
+						aria-label={v.id === WEB_NEKO_DISABLED
+							? 'Turn off Web Neko'
+							: `Use ${v.label} Web Neko`}
+					>
+						<span
+							class="thumb-wrap"
+							class:thumb-wrap--none={v.id === WEB_NEKO_DISABLED}
+						>
+							{#if v.id === WEB_NEKO_DISABLED}
+								<span class="thumb-none" aria-hidden="true">×</span>
+							{:else}
+								<img
+									src={webNekoStillUrl(v.id)}
+									alt=""
+									class="thumb"
+									draggable="false"
+									loading="lazy"
+								/>
+							{/if}
+						</span>
+						<span class="label">{v.label}</span>
+					</button>
+				{/each}
+			</div>
+			{#if showExpandToggle}
+				<button
+					type="button"
+					class="oneko-expand"
+					aria-expanded={expanded}
+					disabled={nekoEnforced}
+					onclick={() => (expanded = !expanded)}
 				>
-					{#if v.id === WEB_NEKO_DISABLED}
-						<span class="thumb-none" aria-hidden="true">×</span>
-					{:else}
-						<img
-							src={webNekoStillUrl(v.id)}
-							alt=""
-							class="thumb"
-							draggable="false"
-							loading="lazy"
-						/>
-					{/if}
-				</span>
-				<span class="label">{v.label}</span>
-			</button>
-		{/each}
+					{expanded ? 'Show less' : 'Show more'}
+				</button>
+			{/if}
+		</div>
+		{#if nekoEnforced}
+			<div class="oneko-locked-overlay" role="status" aria-live="polite">
+				<div class="oneko-locked-plate">
+					<Lock size={16} aria-hidden="true" />
+					<span>Neko locked</span>
+				</div>
+				<p class="oneko-locked-subtext">The Neko picker has been disabled.</p>
+			</div>
+		{/if}
 	</div>
-	{#if showExpandToggle}
-		<button
-			type="button"
-			class="oneko-expand"
-			aria-expanded={expanded}
-			onclick={() => (expanded = !expanded)}
-		>
-			{expanded ? 'Show less' : 'Show more'}
-		</button>
-	{/if}
 </div>
 
 <style>
 	.oneko-picker {
 		width: 100%;
 		min-width: 0;
+	}
+
+	.oneko-stack {
+		position: relative;
+		width: 100%;
+		min-width: 0;
+	}
+
+	.oneko-locked-overlay {
+		position: absolute;
+		inset: 0;
+		z-index: 2;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		padding: 10px 12px;
+		pointer-events: none;
+		box-sizing: border-box;
+	}
+
+	.oneko-locked-plate {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		margin: 0;
+		padding: 0;
+		border: none;
+		background: none;
+		color: var(--theme-text-secondary, #a1a1aa);
+		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
+		font-size: 13px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		text-shadow:
+			0 0 12px var(--theme-background, #0a0a0a),
+			0 1px 2px var(--theme-background, #0a0a0a);
+		cursor: default;
+	}
+
+	.oneko-locked-plate :global(svg) {
+		flex-shrink: 0;
+		color: inherit;
+		opacity: 0.95;
+	}
+
+	.oneko-locked-plate span {
+		line-height: 1.2;
+	}
+
+	.oneko-locked-subtext {
+		margin: 0;
+		max-width: 22rem;
+		font-size: 11px;
+		line-height: 1.4;
+		color: var(--theme-text-muted, #71717a);
+		text-align: center;
+		text-shadow:
+			0 0 10px var(--theme-background, #0a0a0a),
+			0 1px 2px var(--theme-background, #0a0a0a);
+	}
+
+	.oneko-body {
+		width: 100%;
+		min-width: 0;
+		transition: filter 0.2s ease, opacity 0.2s ease;
+	}
+
+	.oneko-body--locked {
+		filter: blur(5px);
+		opacity: 0.72;
+		pointer-events: none;
+		user-select: none;
 	}
 
 	.oneko-grid {
@@ -157,6 +261,16 @@
 		border-color: var(--theme-accent, #90ee90);
 		color: var(--theme-accent, #90ee90);
 		box-shadow: 0 0 5px color-mix(in srgb, var(--theme-accent, #90ee90) 28%, transparent);
+	}
+
+	.oneko-option:disabled {
+		opacity: 0.55;
+		cursor: not-allowed;
+	}
+
+	.oneko-expand:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
 	}
 
 	.thumb-wrap {
@@ -207,6 +321,12 @@
 	@media (max-width: 520px) {
 		.oneko-grid {
 			grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
+	}
+
+	@media (max-width: 480px) {
+		.oneko-locked-plate {
+			font-size: 12px;
 		}
 	}
 

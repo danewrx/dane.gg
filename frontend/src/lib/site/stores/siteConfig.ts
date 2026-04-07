@@ -7,6 +7,11 @@ export interface SiteConfig {
 	default_weather_type: 'none' | 'rain' | 'snow';
 	default_weather_speed: number;
 	enforce_weather_effects: boolean;
+	default_web_neko_type: string;
+	/** Skin for everyone when `enforce_web_neko` is true. */
+	enforced_web_neko_type: string;
+	/** When true, ignore localStorage and use `enforced_web_neko_type`. */
+	enforce_web_neko: boolean;
 	site_title: string;
 	site_description: string;
 }
@@ -16,6 +21,9 @@ const DEFAULT_CONFIG: SiteConfig = {
 	default_weather_type: 'none',
 	default_weather_speed: 1.0,
 	enforce_weather_effects: false,
+	default_web_neko_type: 'white',
+	enforced_web_neko_type: 'white',
+	enforce_web_neko: false,
 	site_title: 'dane.gg - Software Engineer & Designer',
 	site_description: 'Hi, I\'m Dane! I\'m a software engineer & freelance designer from Manchester, UK.'
 };
@@ -51,7 +59,7 @@ export async function loadSiteConfig(): Promise<void> {
 		const data = await response.json();
 		
 		if (data.success) {
-			siteConfig.set(data.data);
+			siteConfig.set({ ...DEFAULT_CONFIG, ...data.data });
 		} else {
 			throw new Error(data.error || 'Failed to load site configuration');
 		}

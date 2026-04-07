@@ -23,6 +23,24 @@ export async function seedSiteConfig() {
       dataType: 'boolean'
     },
     {
+      key: 'default_web_neko_type',
+      value: 'white',
+      description: 'Default Web Neko skin for new visitors (folder name on webneko.net, or none)',
+      dataType: 'string'
+    },
+    {
+      key: 'enforced_web_neko_type',
+      value: 'white',
+      description: 'Web Neko skin when enforce_web_neko is true (separate from default_web_neko_type)',
+      dataType: 'string'
+    },
+    {
+      key: 'enforce_web_neko',
+      value: 'false',
+      description: 'When true, all visitors use enforced_web_neko_type; local choices are ignored until disabled',
+      dataType: 'boolean'
+    },
+    {
       key: 'site_title',
       value: 'dane.gg - Software Engineer & Designer',
       description: 'Site title for SEO and display',

@@ -13,6 +13,9 @@ export interface SiteConfig {
   default_weather_type: 'none' | 'rain' | 'snow';
   default_weather_speed: number;
   enforce_weather_effects: boolean;
+  default_web_neko_type: string;
+  enforced_web_neko_type: string;
+  enforce_web_neko: boolean;
   site_title: string;
   site_description: string;
 }
@@ -22,6 +25,10 @@ const ENV_FALLBACKS: Partial<SiteConfig> = {
   default_weather_type: (process.env.DEFAULT_WEATHER_TYPE as 'none' | 'rain' | 'snow') || 'none',
   default_weather_speed: parseFloat(process.env.DEFAULT_WEATHER_SPEED || '1.0'),
   enforce_weather_effects: process.env.ENFORCE_WEATHER_EFFECTS === 'true',
+  default_web_neko_type: process.env.DEFAULT_WEB_NEKO_TYPE || 'white',
+  enforced_web_neko_type:
+    process.env.ENFORCED_WEB_NEKO_TYPE || process.env.DEFAULT_WEB_NEKO_TYPE || 'white',
+  enforce_web_neko: process.env.ENFORCE_WEB_NEKO === 'true',
   site_title: process.env.SITE_TITLE || 'dane.gg - Software Engineer & Designer',
   site_description: process.env.SITE_DESCRIPTION || 'Hi, I\'m Dane! I\'m a software engineer & freelance designer from Manchester, UK.'
 };

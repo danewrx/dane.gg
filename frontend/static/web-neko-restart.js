@@ -10,15 +10,33 @@
 
 	var DISABLED = 'none';
 
+	function validSkin(s) {
+		return s && /^[a-z][a-z0-9_-]*$/i.test(s);
+	}
+
 	window.daneRestartWebNeko = function () {
 		try {
 			var STORAGE = 'dane-neko-web-type';
+			var enforce = window.__DANE_ENFORCE_WEB_NEKO__ === true;
 			var raw = '';
 			try {
 				raw = localStorage.getItem(STORAGE) || '';
 				if (raw) raw = String(raw).toLowerCase();
 			} catch (e0) {}
-			var disabled = raw === DISABLED;
+
+			var serverDefault = null;
+			try {
+				if (typeof window.__DANE_DEFAULT_WEB_NEKO_TYPE__ === 'string') {
+					serverDefault = String(window.__DANE_DEFAULT_WEB_NEKO_TYPE__).toLowerCase();
+				}
+			} catch (eSrv) {}
+
+			var serverEnforced = null;
+			try {
+				if (typeof window.__DANE_ENFORCED_WEB_NEKO_TYPE__ === 'string') {
+					serverEnforced = String(window.__DANE_ENFORCED_WEB_NEKO_TYPE__).toLowerCase();
+				}
+			} catch (eEnf) {}
 
 			var i, j, n;
 			if (typeof window.aNekos !== 'undefined' && window.aNekos.length) {
@@ -37,7 +55,21 @@
 				}
 			}
 
-			if (disabled) {
+			var chosen;
+			var turnOff;
+			if (enforce) {
+				var eff = validSkin(serverEnforced) ? serverEnforced : serverDefault;
+				turnOff = eff === DISABLED;
+				chosen = turnOff ? null : validSkin(eff) ? eff : 'white';
+			} else {
+				turnOff = raw === DISABLED;
+				if (turnOff) chosen = null;
+				else if (validSkin(raw)) chosen = raw;
+				else if (serverDefault === DISABLED) turnOff = true;
+				else chosen = validSkin(serverDefault) ? serverDefault : 'white';
+			}
+
+			if (turnOff || chosen === null) {
 				try {
 					delete window.NekoType;
 				} catch (eDel) {}
@@ -49,7 +81,7 @@
 				return;
 			}
 
-			window.NekoType = raw && /^[a-z][a-z0-9_-]*$/i.test(raw) ? raw : 'white';
+			window.NekoType = chosen;
 
 			var e = 0,
 				t = 0;

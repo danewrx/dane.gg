@@ -5,6 +5,7 @@
 	import ConfigurationSidebar, { type ConfigurationCategory } from '$lib/admin/components/ui/ConfigurationSidebar.svelte';
 	import { 
 		CloudRain,
+		Cat,
 		Settings as SettingsIcon,
 		ChevronRight,
 		Link,
@@ -44,6 +45,18 @@
 			borderColor: 'rgba(59, 130, 246, 0.2)',
 			iconBgColor: '#3b82f6', // Blue
 			path: '/admin/configuration/weather',
+			section: 'general'
+		},
+		{
+			id: 'neko',
+			title: 'Neko',
+			description: 'Default Web Neko skin for new visitors',
+			icon: Cat,
+			color: 'from-pink-500 to-rose-500',
+			bgColor: 'rgba(244, 114, 182, 0.1)',
+			borderColor: 'rgba(244, 114, 182, 0.2)',
+			iconBgColor: '#ec4899',
+			path: '/admin/configuration/neko',
 			section: 'general'
 		},
 		{
