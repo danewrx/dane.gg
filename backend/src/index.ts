@@ -10,6 +10,9 @@ import { createDefaultAdmin } from './utils/createDefaultAdmin';
 config({ path: '../.env' });
 
 const app = express();
+
+app.set('trust proxy', 1);
+
 const server = createServer(app);
 const PORT = process.env.BACKEND_PORT || process.env.PORT || 3001;
 

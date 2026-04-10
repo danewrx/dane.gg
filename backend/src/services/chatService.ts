@@ -335,6 +335,9 @@ export class ChatService {
 	 * Get client IP from WebSocket request
 	 */
 	private getClientIp(req: IncomingMessage): string {
+		const cf = req.headers['cf-connecting-ip'];
+		if (cf && typeof cf === 'string') return cf.trim();
+
 		const forwarded = req.headers['x-forwarded-for'];
 		if (forwarded && typeof forwarded === 'string') {
 			return forwarded.split(',')[0].trim();

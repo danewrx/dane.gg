@@ -5,6 +5,7 @@
 	import BrowserList from '$lib/admin/components/BrowserList.svelte';
 	import OperatingSystemList from '$lib/admin/components/OperatingSystemList.svelte';
 	import VisitorTrendsChart from '$lib/admin/components/VisitorTrendsChart.svelte';
+	import RequestLogsTable from '$lib/admin/components/RequestLogsTable.svelte';
 
 	// Time range
 	const timeRanges = [
@@ -180,6 +181,10 @@
 				</aside>
 			</div>
 		{/if}
+	</section>
+
+	<section class="stats-section">
+		<RequestLogsTable timeRange={selectedTimeRange} />
 	</section>
 </div>
 

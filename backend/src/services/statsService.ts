@@ -34,7 +34,11 @@ export class StatsService {
 	 * Extract visitor data from request
 	 */
 	static async extractVisitorData(req: Request): Promise<VisitorData> {
-		const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
+		const ipAddress =
+			(req.headers['cf-connecting-ip'] as string | undefined)?.trim() ||
+			req.ip ||
+			req.connection.remoteAddress ||
+			'unknown';
 		const userAgent = req.get('User-Agent') || 'unknown';
 
 		// Get country and VPN status in parallel
@@ -380,25 +384,32 @@ export class StatsService {
 	}
 
 	/**
-	 * Get request logs
+	 * Get request logs with pagination
 	 */
-	static async getRequestLogs(timeRange: string, limit: number = 100): Promise<any[]> {
+	static async getRequestLogs(
+		timeRange: string,
+		limit: number = 50,
+		offset: number = 0
+	): Promise<{ rows: any[]; total: number }> {
 		const timeAgo = this.getTimeAgo(timeRange);
+		const conditions = timeAgo !== null ? [gte(visitorStats.timestamp, timeAgo)] : [];
+		const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-		const conditions = [];
+		const [rows, countResult] = await Promise.all([
+			db
+				.select()
+				.from(visitorStats)
+				.where(whereClause)
+				.orderBy(desc(visitorStats.timestamp))
+				.limit(limit)
+				.offset(offset),
+			db
+				.select({ total: sql<number>`count(*)` })
+				.from(visitorStats)
+				.where(whereClause)
+		]);
 
-		if (timeAgo !== null) {
-			conditions.push(gte(visitorStats.timestamp, timeAgo));
-		}
-
-		const result = await db
-			.select()
-			.from(visitorStats)
-			.where(conditions.length > 0 ? and(...conditions) : undefined)
-			.orderBy(desc(visitorStats.timestamp))
-			.limit(limit);
-
-		return result;
+		return { rows, total: Number(countResult[0]?.total ?? 0) };
 	}
 
 	static async getTotalPagesIndexed(timeRange: string): Promise<number> {

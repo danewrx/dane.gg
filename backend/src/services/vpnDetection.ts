@@ -62,10 +62,36 @@ export class VPNDetectionService {
 	}
 
 	/**
-	 * Check if IP is whitelisted (known good IPs)
+	 * Cloudflare egress IP ranges (https://www.cloudflare.com/ips/).
+	 * These are the IPs Cloudflare uses when proxying traffic to the origin.
+	 * After fix #2 (CF-Connecting-IP extraction) these should never appear as
+	 * visitor IPs, but whitelisting prevents false positives if origin is hit
+	 * directly or the extraction path falls back to req.ip.
+	 */
+	private static readonly CLOUDFLARE_RANGES = [
+		'103.21.244.0/22',
+		'103.22.200.0/22',
+		'103.31.4.0/22',
+		'104.16.0.0/13',
+		'104.24.0.0/14',
+		'108.162.192.0/18',
+		'131.0.72.0/22',
+		'141.101.64.0/18',
+		'162.158.0.0/15',
+		'172.64.0.0/13',
+		'173.245.48.0/20',
+		'188.114.96.0/20',
+		'190.93.240.0/20',
+		'197.234.240.0/22',
+		'198.41.128.0/17'
+	];
+
+	/**
+	 * Check if IP is whitelisted (known good IPs — exact addresses or CIDR ranges)
 	 */
 	private static isWhitelisted(ip: string): boolean {
-		const whitelist = [
+		// Exact-match whitelist (public DNS resolvers)
+		const exactWhitelist = [
 			'8.8.8.8', // Google DNS
 			'8.8.4.4', // Google DNS
 			'1.1.1.1', // Cloudflare DNS
@@ -75,7 +101,14 @@ export class VPNDetectionService {
 			'208.67.220.220' // OpenDNS
 		];
 
-		return whitelist.includes(ip);
+		if (exactWhitelist.includes(ip)) return true;
+
+		// CIDR whitelist — Cloudflare egress ranges
+		for (const cidr of this.CLOUDFLARE_RANGES) {
+			if (this.isIPInCIDR(ip, cidr)) return true;
+		}
+
+		return false;
 	}
 
 	/**

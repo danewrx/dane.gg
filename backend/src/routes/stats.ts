@@ -195,20 +195,22 @@ router.get('/visitors/devices', requireSession, async (req: Request, res: Respon
 
 /**
  * GET /api/stats/request-logs
- * Get raw request logs
  */
 router.get('/request-logs', requireSession, async (req: Request, res: Response) => {
 	try {
 		const timeRange = (req.query.timeRange as string) || '24h';
-		const limit = parseInt((req.query.limit as string) || '100');
+		const limit = Math.min(parseInt((req.query.limit as string) || '50'), 200);
+		const offset = Math.max(parseInt((req.query.offset as string) || '0'), 0);
 
-		const logs = await StatsService.getRequestLogs(timeRange, limit);
+		const { rows, total } = await StatsService.getRequestLogs(timeRange, limit, offset);
 
 		res.json({
 			success: true,
-			data: logs,
-			timeRange,
-			limit
+			data: rows,
+			total,
+			limit,
+			offset,
+			timeRange
 		});
 	} catch (error) {
 		console.error('Error fetching request logs:', error);
