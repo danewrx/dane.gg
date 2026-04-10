@@ -6,8 +6,10 @@ const API_BASE_URL = process.env.VITE_API_URL || '/api';
 
 const DANE_DEFAULT_WEB_NEKO_PLACEHOLDER = '%DANE_DEFAULT_WEB_NEKO_TYPE%';
 const DANE_ENFORCE_WEB_NEKO_PLACEHOLDER = '%DANE_ENFORCE_WEB_NEKO%';
+const DANE_ENFORCED_WEB_NEKO_TYPE_PLACEHOLDER = '%DANE_ENFORCED_WEB_NEKO_TYPE%';
+const DANE_APP_REALM_PLACEHOLDER = '%DANE_APP_REALM%';
 
-type WebNekoPageVars = { type: string; enforce: boolean };
+type WebNekoPageVars = { type: string; enforce: boolean; enforcedType: string };
 
 let webNekoPageVarsCache: { vars: WebNekoPageVars; expires: number } | null = null;
 const WEB_NEKO_PAGE_VARS_CACHE_MS = 60_000;
@@ -22,6 +24,7 @@ async function resolveWebNekoPageVars(event: {
 	}
 	let type = 'white';
 	let enforce = false;
+	let enforcedType = type;
 	try {
 		const configUrl = new URL('/api/config', event.url.origin).toString();
 		const r = await event.fetch(configUrl);
@@ -30,12 +33,17 @@ async function resolveWebNekoPageVars(event: {
 			if (j.success && j.data) {
 				type = normalizeDefaultWebNekoTypeForServer(j.data.default_web_neko_type);
 				enforce = Boolean(j.data.enforce_web_neko);
+				if (typeof j.data.enforced_web_neko_type === 'string' && j.data.enforced_web_neko_type.trim()) {
+					enforcedType = normalizeDefaultWebNekoTypeForServer(j.data.enforced_web_neko_type);
+				} else {
+					enforcedType = type;
+				}
 			}
 		}
 	} catch {
 		/* defaults */
 	}
-	const vars = { type, enforce };
+	const vars = { type, enforce, enforcedType };
 	webNekoPageVarsCache = { vars, expires: now + WEB_NEKO_PAGE_VARS_CACHE_MS };
 	return vars;
 }
@@ -101,6 +109,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const { url, cookies } = event;
 	const pathname = url.pathname;
 
+	const isAdminRoute =
+		pathname.startsWith('/admin') ||
+		pathname.startsWith('/login') ||
+		pathname.startsWith('/logout');
+	const daneAppRealm = isAdminRoute ? 'admin' : 'public';
+
 	// Skip auth check for system routes (assets, API, etc.)
 	const systemRoutes = [
 		'/api/health',
@@ -122,8 +136,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return resolve(event);
 	}
 
-	const injectWebNekoDefault = async () => {
-		const { type, enforce } = await resolveWebNekoPageVars(event);
+	const injectPagePlaceholders = async () => {
+		const { type, enforce, enforcedType } = await resolveWebNekoPageVars(event);
 		return resolve(event, {
 			transformPageChunk: ({ html }) =>
 				html
@@ -131,14 +145,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 					.join(JSON.stringify(type))
 					.split(DANE_ENFORCE_WEB_NEKO_PLACEHOLDER)
 					.join(String(enforce))
+					.split(DANE_ENFORCED_WEB_NEKO_TYPE_PLACEHOLDER)
+					.join(JSON.stringify(enforcedType))
+					.split(DANE_APP_REALM_PLACEHOLDER)
+					.join(daneAppRealm)
 		});
 	};
-
-	// Check if admin route (/admin, /login, /logout)
-	const isAdminRoute =
-		pathname.startsWith('/admin') ||
-		pathname.startsWith('/login') ||
-		pathname.startsWith('/logout');
 
 	if (isAdminRoute) {
 		// Verify authentication for admin routes
@@ -147,7 +159,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		if (!user) {
 			// Don't redirect if already on login page
 			if (pathname === '/login') {
-				return injectWebNekoDefault();
+				return injectPagePlaceholders();
 			}
 			// Redirect to login page
 			throw redirect(302, '/login?redirect=' + encodeURIComponent(pathname));
@@ -158,5 +170,5 @@ export const handle: Handle = async ({ event, resolve }) => {
 		event.locals.isAuthenticated = true;
 	}
 
-	return injectWebNekoDefault();
+	return injectPagePlaceholders();
 };

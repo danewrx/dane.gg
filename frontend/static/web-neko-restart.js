@@ -8,14 +8,48 @@
 
 	function noopThink() {}
 
+	function isAdminPath() {
+		if (typeof location === 'undefined') return false;
+		var p = location.pathname || '';
+		return p.indexOf('/admin') === 0 || p.indexOf('/login') === 0 || p.indexOf('/logout') === 0;
+	}
+
 	var DISABLED = 'none';
 
 	function validSkin(s) {
 		return s && /^[a-z][a-z0-9_-]*$/i.test(s);
 	}
 
+	window.daneTeardownWebNeko = function () {
+		try {
+			var i, j, n;
+			if (typeof window.aNekos !== 'undefined' && window.aNekos.length) {
+				for (i = 0; i < aNekos.length; i++) {
+					n = aNekos[i];
+					if (n && typeof n.Think === 'function') n.Think = noopThink;
+					if (n && n.layer && n.layer.parentNode) n.layer.parentNode.removeChild(n.layer);
+					aNekos[i] = { Think: noopThink };
+				}
+			}
+			if (typeof checkerboard !== 'undefined' && checkerboard && checkerboard.length) {
+				for (i = 0; i < checkerboard.length; i++) {
+					if (!checkerboard[i]) continue;
+					for (j = 0; j < checkerboard[i].length; j++) checkerboard[i][j] = 0;
+				}
+			}
+			try {
+				delete window.NekoType;
+			} catch (eDel) {}
+		} catch (e0) {}
+	};
+
 	window.daneRestartWebNeko = function () {
 		try {
+			if (isAdminPath()) {
+				window.daneTeardownWebNeko();
+				return;
+			}
+
 			var STORAGE = 'dane-neko-web-type';
 			var enforce = window.__DANE_ENFORCE_WEB_NEKO__ === true;
 			var raw = '';

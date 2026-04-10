@@ -267,7 +267,7 @@ function buildThemeVarsStylesheet(theme: SiteTheme): string {
 	const scale = clampThemeFontScale(theme.fontScale);
 	const br = theme.borderRadius?.trim() || '0px';
 
-	return `:root {
+	return `html[data-dane-app="public"] {
   --theme-primary: ${theme.primaryColor};
   --theme-secondary: ${theme.secondaryColor};
   --theme-accent: ${theme.accentColor};
@@ -295,6 +295,39 @@ function buildThemeVarsStylesheet(theme: SiteTheme): string {
   --theme-overlay-glare-opacity: ${clampThemeUnitOpacity(theme.overlayGlareOpacity, '0')};
 ${buildStatusCssVariables(theme.surfaceColor)}
 }`;
+}
+
+/** Remove public-site theme presentation (vars, custom CSS, Google Fonts link) — for admin /login /logout. */
+export function clearSiteThemePresentation(): void {
+	if (!browser) return;
+	clearInlineThemeVars();
+	document.querySelector('style[data-theme-vars]')?.remove();
+	document.querySelector('style[data-theme-custom-fonts]')?.remove();
+	document.querySelector('style[data-theme-custom]')?.remove();
+	document.querySelector('link[data-google-fonts]')?.remove();
+	try {
+		delete document.documentElement.dataset.themeSurfaceTone;
+	} catch {
+		/* ignore */
+	}
+}
+
+/** Apply active site theme to the document (only when `data-dane-app="public"`). */
+export function applyBrowserSiteThemeToDom(theme: SiteTheme): void {
+	if (!browser) return;
+	if (document.documentElement.getAttribute('data-dane-app') !== 'public') return;
+	applyThemeStyles(theme);
+	const fontsToLoad: string[] = [];
+	if (!theme.bodyFontUrl && theme.fontFamily) fontsToLoad.push(theme.fontFamily);
+	if (
+		!theme.headingFontUrl &&
+		theme.headingFontFamily &&
+		theme.headingFontFamily !== theme.fontFamily
+	) {
+		fontsToLoad.push(theme.headingFontFamily);
+	}
+	loadGoogleFonts(fontsToLoad);
+	applyCustomCss(theme.customCss);
 }
 
 export function applyThemeStyles(theme: SiteTheme): void {
@@ -425,20 +458,9 @@ export function applyThemePreviewPayload(theme: SiteTheme): void {
 	themeError.set(null);
 }
 
-// Subscribe to theme changes and apply styles
+// Subscribe to theme changes and apply styles (public site only)
 if (browser) {
 	siteTheme.subscribe((theme) => {
-		applyThemeStyles(theme);
-		const fontsToLoad: string[] = [];
-		if (!theme.bodyFontUrl && theme.fontFamily) fontsToLoad.push(theme.fontFamily);
-		if (
-			!theme.headingFontUrl &&
-			theme.headingFontFamily &&
-			theme.headingFontFamily !== theme.fontFamily
-		) {
-			fontsToLoad.push(theme.headingFontFamily);
-		}
-		loadGoogleFonts(fontsToLoad);
-		applyCustomCss(theme.customCss);
+		applyBrowserSiteThemeToDom(theme);
 	});
 }

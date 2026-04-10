@@ -8,6 +8,17 @@
 	if (typeof window === 'undefined' || typeof document === 'undefined') return;
 	if (typeof location !== 'undefined' && location.search.indexOf('themePreview') !== -1) return;
 	if (typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+	// Public site only — keep admin /login /logout free of the cursor pet (matches `hooks.client.ts` isAdminRoute)
+	if (typeof location !== 'undefined') {
+		var path = location.pathname || '';
+		if (
+			path.indexOf('/admin') === 0 ||
+			path.indexOf('/login') === 0 ||
+			path.indexOf('/logout') === 0
+		) {
+			return;
+		}
+	}
 
 	var STORAGE = 'dane-neko-web-type';
 	var DISABLED = 'none';

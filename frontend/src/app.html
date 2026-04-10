@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-dane-app="%DANE_APP_REALM%">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -20,6 +20,13 @@
 				if (
 					typeof matchMedia !== 'undefined' &&
 					matchMedia('(prefers-reduced-motion: reduce)').matches
+				)
+					return;
+				var p = typeof location !== 'undefined' ? location.pathname || '' : '';
+				if (
+					p.indexOf('/admin') === 0 ||
+					p.indexOf('/login') === 0 ||
+					p.indexOf('/logout') === 0
 				)
 					return;
 				window.addEventListener('load', function () {

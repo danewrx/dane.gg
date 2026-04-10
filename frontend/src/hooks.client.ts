@@ -4,6 +4,13 @@ import { accentColorService } from '$lib/admin/services/accentColor';
 import { goto } from '$app/navigation';
 import { browser } from '$app/environment';
 import { page } from '$app/stores';
+import { get } from 'svelte/store';
+import {
+	applyBrowserSiteThemeToDom,
+	clearSiteThemePresentation,
+	siteTheme
+} from '$lib/site/stores/theme';
+import { reapplyFontForCurrentRealm } from '$lib/site/stores/font';
 
 // Helper function to check if current route is admin
 // Admin routes: /admin, /login, /logout
@@ -84,6 +91,8 @@ if (browser) {
 		}
 	});
 
+	let prevAdminRoute = isAdminRoute(window.location.pathname);
+
 	// Listen for route changes to initialize auth when navigating to admin routes
 	page.subscribe((pageData) => {
 		// Check if url exists before accessing it
@@ -92,8 +101,30 @@ if (browser) {
 		}
 
 		const currentPath = pageData.url.pathname;
+		const adminNow = isAdminRoute(currentPath);
 
-		if (isAdminRoute(currentPath)) {
+		document.documentElement.setAttribute('data-dane-app', adminNow ? 'admin' : 'public');
+
+		if (adminNow && !prevAdminRoute) {
+			clearSiteThemePresentation();
+			reapplyFontForCurrentRealm();
+		} else if (!adminNow && prevAdminRoute) {
+			applyBrowserSiteThemeToDom(get(siteTheme));
+			reapplyFontForCurrentRealm();
+		}
+
+		const w = window as Window & {
+			daneTeardownWebNeko?: () => void;
+			daneRestartWebNeko?: () => void;
+		};
+		if (adminNow && !prevAdminRoute) {
+			if (typeof w.daneTeardownWebNeko === 'function') w.daneTeardownWebNeko();
+		} else if (!adminNow && prevAdminRoute) {
+			if (typeof w.daneRestartWebNeko === 'function') w.daneRestartWebNeko();
+		}
+		prevAdminRoute = adminNow;
+
+		if (adminNow) {
 			// Initialize auth when navigating to admin routes
 			authService.init().catch(() => {
 				// Auth initialization failed - this is normal for unauthenticated users

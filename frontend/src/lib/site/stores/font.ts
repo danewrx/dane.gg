@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
 
 export type FontMode = 'theme' | 'system';
@@ -34,11 +34,24 @@ if (browser) {
 	}
 }
 
+const ADMIN_UI_FONT_STACK =
+	"-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif";
+
+/** Public site follows font mode; admin/login/logout always use a neutral system stack. */
+export function reapplyFontForCurrentRealm(): void {
+	if (!browser) return;
+	if (document.documentElement.getAttribute('data-dane-app') !== 'public') {
+		document.documentElement.style.setProperty('--global-font-family', ADMIN_UI_FONT_STACK);
+		return;
+	}
+	updateGlobalFont(get(fontMode));
+}
+
 // Subscribe to font mode changes and update localStorage + global font
 if (browser) {
 	fontMode.subscribe((mode) => {
 		localStorage.setItem('fontMode', mode);
-		updateGlobalFont(mode);
+		reapplyFontForCurrentRealm();
 	});
 }
 
@@ -51,13 +64,4 @@ function updateGlobalFont(mode: FontMode) {
 // Set specific font mode
 export function setFontMode(mode: FontMode) {
 	fontMode.set(mode);
-}
-
-// Initialize font on load
-if (browser) {
-	const saved = localStorage.getItem('fontMode');
-	const mode = (
-		saved === 'theme' || saved === 'system' ? saved : saved === 'w95' ? 'theme' : defaultFontMode
-	) as FontMode;
-	updateGlobalFont(mode);
 }
