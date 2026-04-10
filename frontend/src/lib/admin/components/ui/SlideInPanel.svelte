@@ -221,6 +221,12 @@
 		min-width: 0;
 	}
 
+	@media (max-width: 768px) {
+		.panel-content {
+			padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+		}
+	}
+
 	@media (max-width: 1023px) {
 		.slide-panel {
 			width: 100% !important;
@@ -241,14 +247,14 @@
 
 		.panel-content {
 			padding: 16px max(16px, env(safe-area-inset-right, 0px))
-				max(20px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+				calc(100px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
 		}
 	}
 
 	@media (max-width: 360px) {
 		.panel-content {
 			padding: 14px max(12px, env(safe-area-inset-right, 0px))
-				max(16px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+				calc(100px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
 		}
 	}
 </style>

@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
+	import { browser } from '$app/environment';
 	import { Twitter } from 'lucide-svelte';
 
 	interface TweetData {
@@ -19,6 +20,102 @@
 	let hasReceivedApiResponse = $state(!!tweetData);
 	let lastTweetId: string | null = $state(tweetData?.tweetId || null);
 	let isPageVisible = $state(true);
+
+	let timeWrapEl: HTMLSpanElement | null = $state(null);
+	let timeBtnEl: HTMLButtonElement | null = $state(null);
+	let timeTooltipVisible = $state(false);
+	let timeTipStyle = $state('');
+	let hideTooltipTimer: number | null = null;
+
+	function cancelHideTimeTooltip() {
+		if (hideTooltipTimer !== null) {
+			clearTimeout(hideTooltipTimer);
+			hideTooltipTimer = null;
+		}
+	}
+
+	function scheduleHideTimeTooltip() {
+		if (!browser) return;
+		cancelHideTimeTooltip();
+		hideTooltipTimer = window.setTimeout(() => {
+			timeTooltipVisible = false;
+			hideTooltipTimer = null;
+		}, 280);
+	}
+
+	function hasReliableHover(): boolean {
+		return browser && window.matchMedia('(hover: hover)').matches;
+	}
+
+	function portalToBody(node: HTMLElement) {
+		document.body.appendChild(node);
+		return {
+			destroy() {
+				node.parentNode?.removeChild(node);
+			}
+		};
+	}
+
+	function formatTweetTimestamp(iso: string): string {
+		const d = new Date(iso);
+		if (Number.isNaN(d.getTime())) return iso;
+		return d.toLocaleString(undefined, {
+			dateStyle: 'medium',
+			timeStyle: 'short'
+		});
+	}
+
+	function positionTimeTooltip(): void {
+		if (!timeBtnEl || !timeTooltipVisible) {
+			timeTipStyle = '';
+			return;
+		}
+		const rect = timeBtnEl.getBoundingClientRect();
+		const left = rect.left + rect.width / 2;
+		const top = rect.bottom + 6;
+		timeTipStyle = `left:${left}px;top:${top}px;transform:translateX(-50%);`;
+	}
+
+	$effect(() => {
+		if (!timeTooltipVisible || !browser) return;
+		void tick().then(() => positionTimeTooltip());
+		const onMove = () => positionTimeTooltip();
+		window.addEventListener('scroll', onMove, true);
+		window.addEventListener('resize', onMove);
+		return () => {
+			window.removeEventListener('scroll', onMove, true);
+			window.removeEventListener('resize', onMove);
+		};
+	});
+
+	$effect(() => {
+		if (!timeTooltipVisible || !browser) return;
+		const close = (e: MouseEvent) => {
+			const el = e.target as HTMLElement | null;
+			if (!el) return;
+			if (timeWrapEl?.contains(el)) return;
+			if (el.closest('[data-tweet-time-tip]')) return;
+			cancelHideTimeTooltip();
+			timeTooltipVisible = false;
+		};
+		const id = window.setTimeout(() => document.addEventListener('click', close, true), 0);
+		return () => {
+			window.clearTimeout(id);
+			document.removeEventListener('click', close, true);
+		};
+	});
+
+	$effect(() => {
+		if (!timeTooltipVisible || !browser) return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') {
+				cancelHideTimeTooltip();
+				timeTooltipVisible = false;
+			}
+		};
+		window.addEventListener('keydown', onKey);
+		return () => window.removeEventListener('keydown', onKey);
+	});
 
 	onMount(() => {
 		// Set initial lastTweetId from props
@@ -191,11 +288,51 @@
 								@<span class="username-text">{tweetData.authorUsername}</span>
 							</span>
 							<span class="time-separator">•</span>
-							<span class="tweet-time">
-								{#if tweetData.createdAt}
-									{formatTimeAgo(new Date(tweetData.createdAt))}
+							{#if tweetData.createdAt}
+								<span
+									class="tweet-time-wrap"
+									role="group"
+									aria-label="Tweet time"
+									bind:this={timeWrapEl}
+									onmouseenter={() => {
+										cancelHideTimeTooltip();
+										if (hasReliableHover()) timeTooltipVisible = true;
+									}}
+									onmouseleave={() => {
+										if (hasReliableHover()) scheduleHideTimeTooltip();
+									}}
+								>
+									<button
+										type="button"
+										bind:this={timeBtnEl}
+										class="tweet-time tweet-time-btn"
+										aria-label="Posted {formatTweetTimestamp(tweetData.createdAt)}"
+										aria-expanded={timeTooltipVisible}
+										onclick={(e) => {
+											e.stopPropagation();
+											cancelHideTimeTooltip();
+											timeTooltipVisible = !timeTooltipVisible;
+										}}
+									>
+										{formatTimeAgo(new Date(tweetData.createdAt))}
+									</button>
+								</span>
+								{#if timeTooltipVisible}
+									<span
+										use:portalToBody
+										role="tooltip"
+										data-tweet-time-tip
+										class="tweet-time-tooltip tweet-time-tooltip-portal"
+										style={timeTipStyle}
+										onmouseenter={cancelHideTimeTooltip}
+										onmouseleave={() => {
+											if (hasReliableHover()) scheduleHideTimeTooltip();
+										}}
+									>
+										{formatTweetTimestamp(tweetData.createdAt)}
+									</span>
 								{/if}
-							</span>
+							{/if}
 						</div>
 						<div class="tweet-content">
 							{#if tweetData.tweetUrl}
@@ -404,11 +541,68 @@
 		margin: 0 2px;
 	}
 
-	.tweet-time {
+	.tweet-time-wrap {
+		display: inline-flex;
+		align-items: baseline;
+		flex-shrink: 0;
+		vertical-align: baseline;
+	}
+
+	.tweet-time,
+	.tweet-time-btn {
 		font-size: calc(12 * 1em / 14);
 		color: var(--text-primary, #ffffff);
 		white-space: nowrap;
 		flex-shrink: 0;
+	}
+
+	.tweet-time-btn {
+		background: transparent;
+		border: none;
+		padding: 0;
+		margin: 0;
+		cursor: help;
+		color: inherit;
+		text-align: inherit;
+		line-height: inherit;
+	}
+
+	.tweet-time-btn:hover {
+		color: var(--accent-color, #4a9eff);
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+
+	.tweet-time-btn:focus-visible {
+		outline: 2px solid var(--theme-accent, var(--accent-color, #4a9eff)) !important;
+		outline-offset: 2px !important;
+		border-radius: 2px;
+	}
+
+	.tweet-time-tooltip {
+		position: fixed;
+		max-width: min(92vw, 320px);
+		padding: 8px 12px;
+		font-size: calc(12 * 1em / 14);
+		line-height: 1.35;
+		font-weight: 500;
+		color: var(--theme-text-primary, var(--text-primary, #ffffff));
+		background: var(--theme-surface, #1a1a1a);
+		border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.2));
+		border-radius: var(--theme-border-radius, 6px);
+		box-shadow: var(--theme-shell-shadow, 0 4px 16px rgba(0, 0, 0, 0.45));
+		text-align: center;
+		word-wrap: break-word;
+		overflow-wrap: break-word;
+		white-space: normal;
+		hyphens: auto;
+		pointer-events: auto;
+		opacity: 1;
+		visibility: visible;
+	}
+
+	.tweet-time-tooltip-portal {
+		z-index: 99999;
 	}
 
 	.tweet-content {

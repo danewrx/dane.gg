@@ -10,6 +10,7 @@ export interface TweetData {
 	authorProfileImage?: string;
 	authorProfileUrl?: string;
 	tweetUrl?: string;
+	postedAt?: Date;
 }
 
 export class TweetService {
@@ -48,7 +49,8 @@ export class TweetService {
 				authorProfileImage: tweetData.authorProfileImage || null,
 				authorProfileUrl: tweetData.authorProfileUrl || null,
 				tweetUrl: tweetData.tweetUrl || null,
-				updatedAt: new Date()
+				updatedAt: new Date(),
+				...(tweetData.postedAt ? { createdAt: tweetData.postedAt } : {})
 			};
 
 			if (existingTweet.length > 0) {
@@ -75,6 +77,19 @@ export class TweetService {
 	/**
 	 * Delete a tweet by tweetId
 	 */
+	static async setTweetPostedAt(tweetId: string, postedAt: Date): Promise<boolean> {
+		try {
+			await db
+				.update(tweets)
+				.set({ createdAt: postedAt, updatedAt: new Date() })
+				.where(eq(tweets.tweetId, tweetId));
+			return true;
+		} catch (error) {
+			console.error('Error setting tweet posted time:', error);
+			return false;
+		}
+	}
+
 	static async deleteTweet(tweetId: string): Promise<boolean> {
 		try {
 			await db.delete(tweets).where(eq(tweets.tweetId, tweetId));

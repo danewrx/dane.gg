@@ -3,6 +3,14 @@ import { TweetService, type TweetData } from './tweetService';
 import { NotificationService } from './notificationService';
 import { ConfigService } from './config';
 
+function parseTweetPostedAtFromLegacy(legacy: Record<string, unknown> | null | undefined): Date | undefined {
+	if (!legacy) return undefined;
+	const raw = legacy.created_at ?? legacy.createdAt;
+	if (typeof raw !== 'string') return undefined;
+	const d = new Date(raw);
+	return Number.isNaN(d.getTime()) ? undefined : d;
+}
+
 export class TwitterApiService {
 	private static api: TwitterOpenApi | null = null;
 	private static client: any = null;
@@ -210,7 +218,8 @@ export class TwitterApiService {
 							authorUsername: authorUsername,
 							authorProfileImage: profileImage,
 							authorProfileUrl: profileUrl,
-							tweetUrl: tweetUrl
+							tweetUrl: tweetUrl,
+							postedAt: parseTweetPostedAtFromLegacy(altLegacy as Record<string, unknown>)
 						};
 					}
 				}
@@ -269,7 +278,8 @@ export class TwitterApiService {
 				authorUsername: authorUsername,
 				authorProfileImage: profileImage,
 				authorProfileUrl: profileUrl,
-				tweetUrl: tweetUrl
+				tweetUrl: tweetUrl,
+				postedAt: parseTweetPostedAtFromLegacy(tweetLegacy as Record<string, unknown>)
 			};
 
 			return result;
@@ -322,8 +332,10 @@ export class TwitterApiService {
 			// Check if this is a new tweet by comparing with the latest in DB
 			const existingTweet = await TweetService.getLatestTweet();
 
-			// Only update if it's a new tweet
 			if (existingTweet && existingTweet.tweetId === tweetData.tweetId) {
+				if (tweetData.postedAt) {
+					await TweetService.setTweetPostedAt(tweetData.tweetId, tweetData.postedAt);
+				}
 				console.log('[Twitter API] Tweet is already up to date:', tweetData.tweetId);
 				this.consecutiveErrors = 0;
 				return true;
