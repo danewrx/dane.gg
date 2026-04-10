@@ -2,6 +2,7 @@
 	import {
 		Palette,
 		CloudRain,
+		Cat,
 		Link,
 		MessageSquare,
 		Server,
@@ -77,6 +78,8 @@
 								<Palette size={20} stroke-width={1.5} />
 							{:else if category.icon === CloudRain}
 								<CloudRain size={20} stroke-width={1.5} />
+							{:else if category.icon === Cat}
+								<Cat size={20} stroke-width={1.5} />
 							{:else if category.icon === Link}
 								<Link size={20} stroke-width={1.5} />
 							{:else if category.icon === MessageSquare}
