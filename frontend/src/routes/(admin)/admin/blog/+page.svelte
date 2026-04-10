@@ -103,16 +103,6 @@
 		sortBy = sortBy === 'created' ? 'updated' : 'created';
 	}
 
-	function formatDate(dateString: string | null): string {
-		if (!dateString) return 'Not published';
-		const date = new Date(dateString);
-		return date.toLocaleDateString('en-US', {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric'
-		});
-	}
-
 	function formatDateTime(dateString: string): string {
 		const date = new Date(dateString);
 		return date.toLocaleString('en-US', {
@@ -122,11 +112,6 @@
 			hour: '2-digit',
 			minute: '2-digit'
 		});
-	}
-
-	function truncateContent(content: string, maxLength: number = 100): string {
-		if (content.length <= maxLength) return content;
-		return content.substring(0, maxLength) + '...';
 	}
 </script>
 

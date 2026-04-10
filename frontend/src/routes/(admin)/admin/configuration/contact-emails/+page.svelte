@@ -1,18 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import {
-		Mail,
-		Plus,
-		Edit,
-		Trash2,
-		Eye,
-		EyeOff,
-		GripVertical,
-		Edit2,
-		Check,
-		X
-	} from 'lucide-svelte';
+	import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Edit2, Check, X } from 'lucide-svelte';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
 	interface ContactEmail {

@@ -26,12 +26,6 @@ interface AuthResponse {
 	requiresTOTP?: boolean;
 }
 
-interface ApiError {
-	error: string;
-	message: string;
-	retryAfter?: string;
-}
-
 class AuthService {
 	private initialized: boolean = false;
 
@@ -266,12 +260,12 @@ class AuthService {
 			// First try to get from session
 			await this.getCurrentUser();
 			return true;
-		} catch (error) {
+		} catch {
 			// If session fails, try token verification
 			try {
 				await this.verifyToken();
 				return true;
-			} catch (tokenError) {
+			} catch {
 				// User not authenticated - this is normal for login page
 				return false;
 			}
@@ -288,7 +282,7 @@ class AuthService {
 		// Try to verify authentication silently
 		try {
 			await this.checkAuth();
-		} catch (error) {
+		} catch {
 			// Auth check failed - this is normal for unauthenticated users
 		}
 	}

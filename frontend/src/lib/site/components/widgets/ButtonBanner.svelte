@@ -197,7 +197,7 @@
 		role="banner"
 		aria-label="Clickable button links"
 	>
-		{#each topRowItems as item, index}
+		{#each topRowItems as item}
 			<a
 				href={item.url}
 				target="_blank"
@@ -224,7 +224,7 @@
 		role="banner"
 		aria-label="Scrolling button images"
 	>
-		{#each bottomRowItems as item, index}
+		{#each bottomRowItems as item}
 			<div class="button-image">
 				<img src={item.imageUrl} alt={item.alt} width="88" height="31" loading="lazy" />
 			</div>

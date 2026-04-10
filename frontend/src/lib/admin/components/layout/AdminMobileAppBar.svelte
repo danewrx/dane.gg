@@ -47,10 +47,6 @@
 		goto(path);
 	}
 
-	function openMoreTray() {
-		showMoreTray = true;
-	}
-
 	function closeMoreTray() {
 		showMoreTray = false;
 	}

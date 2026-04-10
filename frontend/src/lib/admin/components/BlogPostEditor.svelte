@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
-	import { Save, Upload, X, Settings, ChevronDown } from 'lucide-svelte';
+	import { Save, X, Settings, ChevronDown } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	import Toggle from './ui/Toggle.svelte';
@@ -157,9 +157,6 @@
 
 			if (!valuesChanged) return;
 		}
-
-		// For new posts, use a temporary key. For existing posts, use the post ID
-		const saveId = draftPostId || postId || 'new';
 
 		hasUnsavedChanges = true;
 
@@ -372,7 +369,7 @@
 
 			try {
 				localStorage.removeItem(`blog_autosave_${postId}`);
-			} catch (e) {
+			} catch {
 				// Ignore localStorage errors
 			}
 
@@ -625,7 +622,7 @@
 						localStorage.setItem(`blog_autosave_${savedPost.id}`, newAutosave);
 						localStorage.removeItem('blog_autosave_new');
 					}
-				} catch (e) {
+				} catch {
 					// Ignore localStorage errors
 				}
 
@@ -659,7 +656,7 @@
 			try {
 				localStorage.removeItem(`blog_autosave_${autosaveKey}`);
 				lastLocalSaveAt = null;
-			} catch (e) {
+			} catch {
 				// Ignore localStorage errors
 			}
 

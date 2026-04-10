@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { Palette } from 'lucide-svelte';
 
 	// Props
 	export let currentColor = '#3b82f6';

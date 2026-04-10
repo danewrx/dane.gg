@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Settings2, Loader2 } from 'lucide-svelte';
+	import { Settings2 } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import FontManageDialog from './FontManageDialog.svelte';
 

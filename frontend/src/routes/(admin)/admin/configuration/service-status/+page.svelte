@@ -231,19 +231,6 @@
 		}
 	}
 
-	function getStatusIcon(status: string) {
-		switch (status) {
-			case 'up':
-				return CheckCircle2;
-			case 'down':
-				return XCircle;
-			case 'maintenance':
-				return Wrench;
-			default:
-				return AlertCircle;
-		}
-	}
-
 	function getStatusColor(status: string) {
 		switch (status) {
 			case 'up':

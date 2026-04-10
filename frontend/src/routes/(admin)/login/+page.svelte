@@ -14,8 +14,6 @@
 	let password = '';
 	let rememberMe = false;
 	let isSubmitting = false;
-	let showPassword = false;
-
 	// 2FA state
 	let showTotpForm = false;
 	let totpCode = '';

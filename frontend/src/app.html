@@ -23,11 +23,7 @@
 				)
 					return;
 				var p = typeof location !== 'undefined' ? location.pathname || '' : '';
-				if (
-					p.indexOf('/admin') === 0 ||
-					p.indexOf('/login') === 0 ||
-					p.indexOf('/logout') === 0
-				)
+				if (p.indexOf('/admin') === 0 || p.indexOf('/login') === 0 || p.indexOf('/logout') === 0)
 					return;
 				window.addEventListener('load', function () {
 					setTimeout(function () {

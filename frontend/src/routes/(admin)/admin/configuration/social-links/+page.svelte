@@ -1,17 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { Link, Plus, Edit, Trash2, Eye, EyeOff, GripVertical } from 'lucide-svelte';
+	import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical } from 'lucide-svelte';
 	import Icon from '@iconify/svelte';
 	import UnifiedIconPicker from '$lib/admin/components/ui/UnifiedIconPicker.svelte';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
-	import {
-		getIconCategories,
-		getCustomOptions,
-		type IconOption
-	} from '$lib/admin/services/iconLibraryService';
+	import { getIconCategories, type IconOption } from '$lib/admin/services/iconLibraryService';
 	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
-	import type { ComponentType } from 'svelte';
 
 	interface SocialLink {
 		id: string;
@@ -50,8 +45,6 @@
 
 	let selectedIcon: IconOption | null = $state(null);
 	let iconPickerOpen = $state(false);
-	let customSvgUrl = $state('');
-	let customText = $state('');
 
 	let showDeleteLinkDialog = $state(false);
 	let pendingDeleteLinkId = $state<string | null>(null);

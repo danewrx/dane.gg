@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { Smile } from 'lucide-svelte';
 	import { browser } from '$app/environment';
 	import { onDestroy } from 'svelte';
-	import { getEmojiCategories, type EmojiData } from '$lib/shared/utils/emojiData';
+	import { getEmojiCategories } from '$lib/shared/utils/emojiData';
 	import { trackEmojiUsage, getRecentEmojis } from '$lib/shared/utils/recentEmojis';
 
 	const dispatch = createEventDispatcher<{
@@ -24,7 +23,6 @@
 	let pickerElement: HTMLDivElement | null = $state(null);
 	let overlayElement: HTMLDivElement | null = $state(null);
 	let originalParent: Node | null = $state(null);
-	let originalNextSibling: Node | null = $state(null);
 
 	function generateEmojiCategories(): Array<{
 		name: string;
@@ -254,7 +252,6 @@
 					pickerElement.parentNode !== document.body
 				) {
 					originalParent = pickerElement.parentNode;
-					originalNextSibling = pickerElement.nextSibling;
 				}
 
 				// Move both overlay and picker to body
@@ -278,7 +275,6 @@
 						document.body.removeChild(overlayElement);
 					}
 					originalParent = null;
-					originalNextSibling = null;
 				}
 			}, 0);
 		}

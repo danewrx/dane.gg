@@ -1,19 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import {
-		Settings,
-		Home,
-		Users,
-		BarChart3,
-		FileText,
-		Mail,
-		HelpCircle,
-		Heart,
-		Star,
-		Info,
-		X
-	} from 'lucide-svelte';
+	import { X } from 'lucide-svelte';
 
 	let { isOpen = false, onClose, items = [] } = $props();
 
@@ -73,7 +61,7 @@
 		// Don't prevent default to avoid passive event warning
 	}
 
-	function handleTouchEnd(event: TouchEvent) {
+	function handleTouchEnd(_event: TouchEvent) {
 		if (!isDragging) return;
 
 		isDragging = false;
@@ -110,7 +98,7 @@
 		event.preventDefault();
 	}
 
-	function handleMouseUp(event: MouseEvent) {
+	function handleMouseUp(_event: MouseEvent) {
 		if (!isDragging) return;
 
 		isDragging = false;

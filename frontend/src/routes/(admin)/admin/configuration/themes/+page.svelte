@@ -11,11 +11,9 @@
 		Save,
 		X,
 		Copy,
-		Image as ImageIcon,
 		GripVertical,
 		Eye,
 		EyeOff,
-		Palette,
 		Star,
 		Lock,
 		ChevronDown
@@ -555,7 +553,7 @@
 
 			toast.success('Default theme updated');
 			await loadThemes();
-		} catch (error) {
+		} catch {
 			toast.error('Failed to set default theme');
 		}
 	}
@@ -588,7 +586,7 @@
 
 			toast.success(newVisibility ? 'Theme is now visible' : 'Theme is now hidden');
 			await loadThemes();
-		} catch (error) {
+		} catch {
 			toast.error('Failed to update theme visibility');
 		}
 	}
@@ -606,7 +604,7 @@
 
 			toast.success('Theme duplicated');
 			await loadThemes();
-		} catch (error) {
+		} catch {
 			toast.error('Failed to duplicate theme');
 		}
 	}
@@ -700,7 +698,7 @@
 
 			toast.success('Theme order updated');
 			await loadThemes();
-		} catch (error) {
+		} catch {
 			toast.error('Failed to update theme order');
 			await loadThemes();
 		} finally {

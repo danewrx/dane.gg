@@ -9,7 +9,6 @@
 		CloudRain,
 		Cat,
 		Settings as SettingsIcon,
-		ChevronRight,
 		Link,
 		MessageSquare,
 		Server,

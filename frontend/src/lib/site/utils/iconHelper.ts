@@ -1,5 +1,4 @@
 import * as ComponentIcons from 'lucide-svelte';
-import Icon from '@iconify/svelte';
 import type { ComponentType } from 'svelte';
 
 export interface IconRenderInfo {

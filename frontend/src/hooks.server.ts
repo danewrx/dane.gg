@@ -33,7 +33,10 @@ async function resolveWebNekoPageVars(event: {
 			if (j.success && j.data) {
 				type = normalizeDefaultWebNekoTypeForServer(j.data.default_web_neko_type);
 				enforce = Boolean(j.data.enforce_web_neko);
-				if (typeof j.data.enforced_web_neko_type === 'string' && j.data.enforced_web_neko_type.trim()) {
+				if (
+					typeof j.data.enforced_web_neko_type === 'string' &&
+					j.data.enforced_web_neko_type.trim()
+				) {
 					enforcedType = normalizeDefaultWebNekoTypeForServer(j.data.enforced_web_neko_type);
 				} else {
 					enforcedType = type;

@@ -6,7 +6,6 @@
 		type IconOption
 	} from '$lib/admin/services/iconLibraryService';
 	import { Search, X } from 'lucide-svelte';
-	import * as LucideIcons from 'lucide-svelte';
 	import type { ComponentType } from 'svelte';
 
 	interface Props {
@@ -186,11 +185,6 @@
 		customInputType = null;
 		customSvgUrl = '';
 		customText = '';
-	}
-
-	function clearSelection() {
-		selectedIcon = null;
-		onIconSelect(null);
 	}
 
 	function toggleDropdown(event?: Event) {
@@ -790,6 +784,7 @@
 		text-overflow: ellipsis;
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
+		line-clamp: 2;
 		-webkit-box-orient: vertical;
 		margin-bottom: 2px;
 	}

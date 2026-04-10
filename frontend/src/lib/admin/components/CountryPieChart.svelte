@@ -46,7 +46,7 @@
 							: '#6B7280';
 				return { primary, secondary };
 			}
-		} catch (e) {}
+		} catch {}
 		return { primary: '#6B7280', secondary: '#9CA3AF' };
 	}
 

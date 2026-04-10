@@ -118,20 +118,6 @@
 		});
 	}
 
-	function truncateContent(content: string, maxLength: number = 200): string {
-		const plainText = content
-			.replace(/#{1,6}\s/g, '')
-			.replace(/\*\*(.+?)\*\*/g, '$1')
-			.replace(/\*(.+?)\*/g, '$1')
-			.replace(/\[(.+?)\]\(.+?\)/g, '$1')
-			.replace(/`(.+?)`/g, '$1')
-			.replace(/\n/g, ' ')
-			.trim();
-
-		if (plainText.length <= maxLength) return plainText;
-		return plainText.substring(0, maxLength) + '...';
-	}
-
 	function getThumbnailUrl(path: string | null): string {
 		if (!path) return '';
 		// If it's external URL, just return it

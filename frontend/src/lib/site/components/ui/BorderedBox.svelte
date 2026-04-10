@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-
 	// Define props
 	export let padding: string = '16px';
 	export let borderColor: string = '';
@@ -16,8 +14,6 @@
 	export let contentBottomPadding: boolean = false;
 	export let dynamicHeight: boolean = false;
 	export let noContentPaddingOnMobile: boolean = false;
-
-	const dispatch = createEventDispatcher();
 </script>
 
 <div

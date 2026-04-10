@@ -8,7 +8,6 @@
 
 	let animatedTotalVisits = $state(0);
 	let animatedUniqueVisitors = $state(0);
-	let animationComplete = $state(false);
 
 	onMount(async () => {
 		await loadStats();
@@ -43,7 +42,6 @@
 	function animateValues() {
 		if (totalVisits === null || uniqueVisitors === null) return;
 
-		animationComplete = false;
 		const duration = 2000;
 		const startTime = Date.now();
 
@@ -61,7 +59,6 @@
 			} else {
 				animatedTotalVisits = totalVisits!;
 				animatedUniqueVisitors = uniqueVisitors!;
-				animationComplete = true;
 			}
 		};
 

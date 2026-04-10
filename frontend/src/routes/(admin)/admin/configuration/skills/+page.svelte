@@ -204,7 +204,7 @@
 
 			toast.success(type === 'category' ? 'Category deleted' : 'Skill deleted');
 			await loadSkills();
-		} catch (error) {
+		} catch {
 			toast.error(type === 'category' ? 'Failed to delete category' : 'Failed to delete skill');
 		} finally {
 			cancelSkillsDelete();
@@ -299,7 +299,7 @@
 			toast.success('Skill updated');
 			editingSkillId = null;
 			await loadSkills();
-		} catch (error) {
+		} catch {
 			toast.error('Failed to update skill');
 		} finally {
 			isSaving = false;

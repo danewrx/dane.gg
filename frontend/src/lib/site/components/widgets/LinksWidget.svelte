@@ -51,7 +51,7 @@
 {:else if socialLinks.length > 0}
 	<div class="links-container">
 		<div class="links-grid">
-			{#each socialLinks as link, index}
+			{#each socialLinks as link}
 				<button
 					class="link-item"
 					onclick={() => handleLinkClick(link.url)}

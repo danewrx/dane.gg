@@ -29,8 +29,6 @@
 	let notificationsEnabled = $state(true);
 	let notificationAudio: HTMLAudioElement | null = null;
 	let audioUnlocked = false;
-	let currentNickname = $state<string | null>(null);
-
 	// Track recently sent messages to avoid playing notification for own messages
 	let recentlySentMessages: { message: string; timestamp: number }[] = [];
 
@@ -110,14 +108,12 @@
 	let emojiPickerReloadTrigger = $state(0);
 	let isLoadingEmojis = $state(false);
 	let isOpeningEmojiPicker = $state(false);
-	let chatInput: HTMLInputElement | null = null;
 	let chatInputDiv: HTMLDivElement | null = null;
 	let emojiAutocompleteOpen = $state(false);
 	let emojiAutocompleteMatches = $state<
 		Array<{ name: string; emoji: string; isCustom: boolean; imageUrl?: string }>
 	>([]);
 	let emojiAutocompleteIndex = $state(0);
-	let emojiAutocompleteQuery = $state('');
 	let allEmojis = $state<EmojiData[]>([]);
 
 	let { userCount = $bindable(0) }: { userCount?: number } = $props();
@@ -189,49 +185,6 @@
 		return position;
 	}
 
-	function setCaretPosition(position: number) {
-		if (!chatInputDiv) return;
-
-		const selection = window.getSelection();
-		if (!selection) return;
-
-		const range = document.createRange();
-		let currentPos = 0;
-
-		const walker = document.createTreeWalker(
-			chatInputDiv,
-			NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
-			null
-		);
-
-		let node;
-		while ((node = walker.nextNode())) {
-			if (node.nodeType === Node.TEXT_NODE) {
-				const text = node.textContent || '';
-				if (currentPos + text.length >= position) {
-					range.setStart(node, position - currentPos);
-					range.setEnd(node, position - currentPos);
-					break;
-				}
-				currentPos += text.length;
-			} else if (node.nodeType === Node.ELEMENT_NODE) {
-				const el = node as HTMLElement;
-				if (el.tagName === 'IMG' && el.classList.contains('emoji-inline')) {
-					const alt = el.getAttribute('alt') || '';
-					if (currentPos + alt.length >= position) {
-						range.setStartAfter(el);
-						range.setEndAfter(el);
-						break;
-					}
-					currentPos += alt.length;
-				}
-			}
-		}
-
-		selection.removeAllRanges();
-		selection.addRange(range);
-	}
-
 	// Format timestamp in IRC style using browser's local timezone
 	function formatTimestamp(timestamp: string): string {
 		if (!browser) return '';
@@ -284,9 +237,8 @@
 	function saveNickname(nickname: string): void {
 		if (!browser) return;
 		try {
-			localStorage.setItem('chatNickname', nickname);
-			currentNickname = nickname;
-		} catch (error) {
+		localStorage.setItem('chatNickname', nickname);
+	} catch (error) {
 			console.error('Error saving nickname to localStorage:', error);
 		}
 	}
@@ -372,10 +324,9 @@
 		if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
 		const savedNickname = getSavedNickname();
-		if (savedNickname && savedNickname.trim()) {
-			currentNickname = savedNickname.trim();
-			ws.send(`/nick_restore ${savedNickname.trim()}`);
-		}
+	if (savedNickname && savedNickname.trim()) {
+		ws.send(`/nick_restore ${savedNickname.trim()}`);
+	}
 	}
 
 	// Get WebSocket URL
@@ -831,10 +782,9 @@
 			chatInputDiv.classList.remove('show-placeholder');
 		}
 
-		const beforeCursor = text.substring(0, cursorPos);
-		const afterCursor = text.substring(cursorPos);
+	const beforeCursor = text.substring(0, cursorPos);
 
-		const incompleteMatch = beforeCursor.match(/:([a-zA-Z0-9_-]*)$/);
+	const incompleteMatch = beforeCursor.match(/:([a-zA-Z0-9_-]*)$/);
 
 		const completeMatch = beforeCursor.match(/:([a-zA-Z0-9_-]+):$/);
 
@@ -947,13 +897,12 @@
 				return;
 			}
 
-			if (completeMatch && completeMatch[1].length > 0) {
-				const query = completeMatch[1].toLowerCase();
-				emojiAutocompleteQuery = query;
+		if (completeMatch && completeMatch[1].length > 0) {
+			const query = completeMatch[1].toLowerCase();
 
-				const exactMatches: typeof allEmojis = [];
-				const startsWithMatches: typeof allEmojis = [];
-				const containsMatches: typeof allEmojis = [];
+			const exactMatches: typeof allEmojis = [];
+			const startsWithMatches: typeof allEmojis = [];
+			const containsMatches: typeof allEmojis = [];
 
 				for (const emoji of allEmojis) {
 					const name = emoji.name.toLowerCase();
@@ -1029,11 +978,9 @@
 				return;
 			}
 
-			emojiAutocompleteQuery = query;
-
-			const exactMatches: typeof allEmojis = [];
-			const startsWithMatches: typeof allEmojis = [];
-			const containsMatches: typeof allEmojis = [];
+		const exactMatches: typeof allEmojis = [];
+		const startsWithMatches: typeof allEmojis = [];
+		const containsMatches: typeof allEmojis = [];
 
 			for (const emoji of allEmojis) {
 				const name = emoji.name.toLowerCase();
@@ -1080,9 +1027,8 @@
 		const beforeCursor = text.substring(0, cursorPos);
 		const match = beforeCursor.match(/:([a-zA-Z0-9_-]*)$/);
 
-		if (match) {
-			const start = cursorPos - match[0].length;
-			const selection = window.getSelection();
+	if (match) {
+		const selection = window.getSelection();
 
 			if (selection && selection.rangeCount > 0) {
 				const range = selection.getRangeAt(0);
@@ -1238,8 +1184,7 @@
 						</span>`;
 					}
 				}
-				const escapedEmoji = emoji.emoji.replace(/"/g, '&quot;');
-				const escapedName = emoji.name.replace(/"/g, '&quot;');
+			const escapedName = emoji.name.replace(/"/g, '&quot;');
 				return `<span class="emoji-hover"><span class="emoji-char">${emoji.emoji}</span><span class="emoji-tooltip-popup"><span class="tooltip-emoji-char">${emoji.emoji}</span><span class="tooltip-name">:${escapedName}:</span></span></span>`;
 			}
 			return match;
@@ -1297,10 +1242,9 @@
 					document.addEventListener('keydown', unlockAudio);
 					document.addEventListener('touchstart', unlockAudio);
 
-					loadNotificationSetting();
-					currentNickname = getSavedNickname();
+				loadNotificationSetting();
 
-					window.addEventListener(
+				window.addEventListener(
 						'chatNotificationSettingChanged',
 						handleNotificationSettingChange as EventListener
 					);

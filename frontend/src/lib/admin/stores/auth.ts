@@ -18,7 +18,7 @@ export interface AuthState {
 
 // Create the auth store
 function createAuthStore() {
-	const { subscribe, set, update } = writable<AuthState>({
+	const { subscribe, update } = writable<AuthState>({
 		user: null,
 		isAuthenticated: false,
 		isLoading: true,
@@ -56,7 +56,7 @@ function createAuthStore() {
 
 		// Logout
 		logout: () => {
-			update((state) => ({
+			update(() => ({
 				user: null,
 				isAuthenticated: false,
 				isLoading: false,

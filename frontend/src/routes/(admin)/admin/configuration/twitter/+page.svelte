@@ -5,7 +5,6 @@
 		XCircle,
 		AlertCircle,
 		RefreshCw,
-		Twitter,
 		ExternalLink,
 		Calendar,
 		User,
@@ -216,11 +215,6 @@
 			hour: '2-digit',
 			minute: '2-digit'
 		});
-	}
-
-	function getConnectionStatusColor(connection: ConnectionStatus | null): string {
-		if (!connection) return '#6b7280';
-		return connection.connected ? '#10b981' : '#ef4444';
 	}
 
 	async function startEditingUsername() {

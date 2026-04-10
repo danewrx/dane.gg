@@ -4,7 +4,6 @@
 	import { Plus, Edit, Trash2, X } from 'lucide-svelte';
 	import { createEventDispatcher } from 'svelte';
 	import {
-		getAllProjectTags,
 		createProjectTag,
 		updateProjectTag,
 		deleteProjectTag,
@@ -108,7 +107,6 @@
 		> = {};
 		tags.forEach((tag) => {
 			const categoryId = tag.category?.id || 'uncategorized';
-			const categoryName = tag.category?.name || 'Uncategorized';
 
 			if (!groups[categoryId]) {
 				// Always use categoryOrderMap as the authoritative source

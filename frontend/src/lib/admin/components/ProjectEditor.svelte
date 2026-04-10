@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Save, Upload, X, Settings, ChevronDown, Image } from 'lucide-svelte';
+	import { Save, X, Settings, ChevronDown } from 'lucide-svelte';
 	import Icon from '@iconify/svelte';
 	import type { ComponentType } from 'svelte';
 	import UnifiedIconPicker from './ui/UnifiedIconPicker.svelte';
@@ -19,7 +19,6 @@
 		createProject,
 		updateProject,
 		getAllProjectCategories,
-		type Project,
 		type ProjectCategory,
 		type ProjectTag
 	} from '$lib/admin/services/projectsService';
@@ -52,14 +51,12 @@
 	let projectText = $state('View Project');
 	let projectTextCustom = $state(false);
 	let projectTextDropdown = $state('View Project');
-	let projectIcon = $state<string | null>(null);
 	let projectIconOption = $state<IconOption | null>(null);
 	let projectIconPickerOpen = $state(false);
 	let repoUrl = $state('');
 	let repoText = $state('View Repository');
 	let repoTextCustom = $state(false);
 	let repoTextDropdown = $state('View Repository');
-	let repoIcon = $state<string | null>(null);
 	let repoIconOption = $state<IconOption | null>(null);
 	let repoIconPickerOpen = $state(false);
 	let tagIds = $state<string[]>([]);
@@ -88,7 +85,6 @@
 		'View on Git Server',
 		'Custom...'
 	];
-	let createdAt = $state<string>('');
 	let overwriteCreatedDate = $state(false);
 	let newCreatedDate = $state('');
 	let newCreatedTime = $state('');
@@ -169,17 +165,14 @@
 				projectUrl = '';
 				projectText = 'View Project';
 				projectTextCustom = false;
-				projectTextDropdown = 'View Project';
-				projectIcon = null;
-				projectIconOption = null;
+			projectTextDropdown = 'View Project';
+			projectIconOption = null;
 				repoUrl = '';
 				repoText = 'View Repository';
 				repoTextCustom = false;
-				repoTextDropdown = 'View Repository';
-				repoIcon = null;
-				repoIconOption = null;
-				tagIds = [];
-				createdAt = '';
+			repoTextDropdown = 'View Repository';
+			repoIconOption = null;
+			tagIds = [];
 				overwriteCreatedDate = false;
 				newCreatedDate = '';
 				newCreatedTime = '';
@@ -266,8 +259,7 @@
 				projectTextDropdown = 'Custom...';
 				projectTextCustom = true;
 			}
-			projectIcon = project.projectIcon || null;
-			projectIconOption = await iconNameToOption(project.projectIcon || null);
+		projectIconOption = await iconNameToOption(project.projectIcon || null);
 			repoUrl = project.repoUrl || '';
 			const savedRepoText = project.repoText || 'View Repository';
 			if (repoButtonOptions.slice(0, -1).includes(savedRepoText)) {
@@ -279,10 +271,8 @@
 				repoTextDropdown = 'Custom...';
 				repoTextCustom = true;
 			}
-			repoIcon = project.repoIcon || null;
-			repoIconOption = await iconNameToOption(project.repoIcon || null);
-			tagIds = project.tags.map((t) => t.id);
-			createdAt = project.createdAt;
+		repoIconOption = await iconNameToOption(project.repoIcon || null);
+		tagIds = project.tags.map((t) => t.id);
 		} catch (err) {
 			console.error('Error loading project:', err);
 			toast.error('Failed to load project');
@@ -382,30 +372,6 @@
 			return `/api/upload/file/${filename}`;
 		}
 		return path;
-	}
-
-	function splitDateTime(dateString: string): { date: string; time: string } {
-		const date = new Date(dateString);
-		const year = date.getFullYear();
-		const month = String(date.getMonth() + 1).padStart(2, '0');
-		const day = String(date.getDate()).padStart(2, '0');
-		const hours = String(date.getHours()).padStart(2, '0');
-		const minutes = String(date.getMinutes()).padStart(2, '0');
-		return {
-			date: `${year}-${month}-${day}`,
-			time: `${hours}:${minutes}`
-		};
-	}
-
-	function formatDateTimeDisplay(dateString: string): string {
-		const date = new Date(dateString);
-		return date.toLocaleString('en-US', {
-			year: 'numeric',
-			month: 'long',
-			day: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
-		});
 	}
 
 	function combineDateTime(date: string, time: string): string {
@@ -946,7 +912,6 @@
 			selectedIcon={projectIconOption}
 			onIconSelect={(icon) => {
 				projectIconOption = icon;
-				projectIcon = iconOptionToName(icon);
 				projectIconPickerOpen = false;
 			}}
 			triggerless={true}
@@ -959,7 +924,6 @@
 			selectedIcon={repoIconOption}
 			onIconSelect={(icon) => {
 				repoIconOption = icon;
-				repoIcon = iconOptionToName(icon);
 				repoIconPickerOpen = false;
 			}}
 			triggerless={true}

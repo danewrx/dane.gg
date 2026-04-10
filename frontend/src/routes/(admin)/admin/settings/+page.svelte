@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { mode, setMode, userPrefersMode } from 'mode-watcher';
+	import { mode, setMode } from 'mode-watcher';
 	import Tabs from '$lib/admin/components/ui/Tabs.svelte';
 	import AccentColorPicker from '$lib/admin/components/ui/AccentColorPicker.svelte';
 	import {
@@ -17,7 +17,6 @@
 		EyeOff,
 		AlertTriangle
 	} from 'lucide-svelte';
-	import { authService } from '$lib/admin/services/auth';
 	import { themeService } from '$lib/admin/services/theme';
 	import { accentColorService } from '$lib/admin/services/accentColor';
 	import { settingsService } from '$lib/admin/services/settings';
@@ -203,7 +202,7 @@
 			setTimeout(() => {
 				copiedKey = false;
 			}, 3000);
-		} catch (err) {
+		} catch {
 			toast.error('Failed to copy to clipboard');
 		}
 	}

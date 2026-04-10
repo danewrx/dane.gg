@@ -3,7 +3,9 @@ import { TweetService, type TweetData } from './tweetService';
 import { NotificationService } from './notificationService';
 import { ConfigService } from './config';
 
-function parseTweetPostedAtFromLegacy(legacy: Record<string, unknown> | null | undefined): Date | undefined {
+function parseTweetPostedAtFromLegacy(
+	legacy: Record<string, unknown> | null | undefined
+): Date | undefined {
 	if (!legacy) return undefined;
 	const raw = legacy.created_at ?? legacy.createdAt;
 	if (typeof raw !== 'string') return undefined;

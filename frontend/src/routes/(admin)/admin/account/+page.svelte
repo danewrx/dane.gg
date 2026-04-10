@@ -226,7 +226,7 @@
 					message: result.message,
 					reason: result.reason
 				};
-			} catch (error) {
+			} catch {
 				usernameAvailability = {
 					status: 'error',
 					message: 'Failed to check availability'
@@ -283,7 +283,7 @@
 		isSubmitting = true;
 
 		try {
-			const response = await accountService.updateUsername({
+			await accountService.updateUsername({
 				newUsername: usernameForm.newUsername,
 				currentPassword: usernameForm.currentPassword
 			});
@@ -337,7 +337,7 @@
 		isSubmitting = true;
 
 		try {
-			const response = await accountService.updatePassword({
+			await accountService.updatePassword({
 				currentPassword: passwordForm.currentPassword,
 				newPassword: passwordForm.newPassword
 			});

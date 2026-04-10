@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { Loader2, Link2, Edit2, Check, X, Plus, GripVertical } from 'lucide-svelte';
+	import { Loader2, Link2, Edit2, Check, X, GripVertical } from 'lucide-svelte';
 	import Icon from '@iconify/svelte';
 
 	interface SocialLink {
@@ -65,7 +65,7 @@
 				if (linksData.success && linksData.data?.value) {
 					try {
 						selectedLinkIds = JSON.parse(linksData.data.value);
-					} catch (e) {
+					} catch {
 						selectedLinkIds = [];
 					}
 				}
@@ -174,17 +174,6 @@
 		} finally {
 			isSaving = false;
 		}
-	}
-
-	function renderIcon(link: SocialLink) {
-		if (link.iconType === 'custom-text' && link.iconText) {
-			return link.iconText;
-		} else if (link.iconType === 'svg-url' && link.svgUrl) {
-			return '🖼️';
-		} else if (link.iconType === 'coreui-brand' && link.iconName) {
-			return '🔗';
-		}
-		return '🔗';
 	}
 
 	function handleDragStart(index: number) {

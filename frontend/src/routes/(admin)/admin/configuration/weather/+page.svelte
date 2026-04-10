@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { siteConfig, loadSiteConfig } from '$lib/site/stores/siteConfig';
-	import { CloudRain } from 'lucide-svelte';
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
 	import { toast } from 'svelte-sonner';
 	import { notifySiteConfigConsumers } from '$lib/shared/utils/siteConfigLiveSync';

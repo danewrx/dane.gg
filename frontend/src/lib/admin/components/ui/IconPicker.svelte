@@ -68,11 +68,6 @@
 		searchQuery = '';
 	}
 
-	function clearSelection() {
-		selectedIcon = null;
-		onIconSelect(null);
-	}
-
 	function toggleDropdown() {
 		isOpen = !isOpen;
 		if (isOpen) {
@@ -100,7 +95,12 @@
 	</button>
 
 	{#if isOpen}
-		<div class="dropdown-overlay" onclick={closeDropdown}></div>
+		<div
+			class="dropdown-overlay"
+			role="presentation"
+			onclick={closeDropdown}
+			onkeydown={(e) => e.key === 'Escape' && closeDropdown()}
+		></div>
 		<div class="dropdown">
 			<div class="dropdown-header">
 				<div class="search-container">
@@ -312,14 +312,14 @@
 		align-items: center;
 	}
 
-	.search-icon {
+	:global(.search-icon) {
 		position: absolute;
 		left: 12px;
 		color: #9ca3af;
 		pointer-events: none;
 	}
 
-	:global(html:not(.dark)) .search-icon {
+	:global(html:not(.dark)) :global(.search-icon) {
 		color: #6b7280;
 	}
 
@@ -453,19 +453,7 @@
 		line-height: 1.2;
 	}
 
-	.text-icon {
-		font-size: 1.25rem;
-		line-height: 1;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		min-width: 24px;
-		min-height: 24px;
-	}
-
-	/* Custom icon styles removed - IconPicker only shows CoreUI brand icons */
-
-	/* No outline-icon styles needed - using CoreUI brand icons only */
+	/* IconPicker only shows CoreUI brand icons */
 
 	/* Responsive styles for centered modal */
 	@media (max-width: 768px) {

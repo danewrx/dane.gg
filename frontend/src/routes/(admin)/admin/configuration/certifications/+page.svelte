@@ -375,7 +375,7 @@
 
 			toast.success('Certification deleted');
 			await loadCertifications();
-		} catch (error) {
+		} catch {
 			toast.error('Failed to delete certification');
 		} finally {
 			cancelDeleteCertification();

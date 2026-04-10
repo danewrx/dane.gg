@@ -1,17 +1,15 @@
 <script lang="ts">
-	import { Copy, ChevronDown, ChevronRight } from 'lucide-svelte';
+	import { Copy } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 
 	let isExpanded = $state(false);
-	let copyButtonRef: HTMLButtonElement;
-
 	const buttonCode = `<a href="https://dane.gg"><img src="https://dane.gg/assets/img/buttons/1.gif" alt="dane.gg" width="88" height="31"></a>`;
 
 	async function copyCode() {
 		try {
 			await navigator.clipboard.writeText(buttonCode);
 			toast.success('Code copied to clipboard!');
-		} catch (err) {
+		} catch {
 			// Fallback for older browsers
 			const textArea = document.createElement('textarea');
 			textArea.value = buttonCode;

@@ -13,7 +13,7 @@
 	import SiteStats from '$lib/site/components/widgets/SiteStats.svelte';
 	import Chat from '$lib/site/components/Chat.svelte';
 	import ChatUserCount from '$lib/site/components/ChatUserCount.svelte';
-	import { Radio, Twitter } from 'lucide-svelte';
+	import { Radio } from 'lucide-svelte';
 	import { marked } from 'marked';
 	import type { PageData } from './$types';
 

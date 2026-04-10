@@ -25,7 +25,7 @@
 
 <div class="tab-switch" class:disabled>
 	<div class="tab-container">
-		{#each options as option, index}
+		{#each options as option}
 			<button
 				class="tab-option"
 				class:active={option === selected}

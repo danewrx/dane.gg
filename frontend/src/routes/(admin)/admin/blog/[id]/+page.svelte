@@ -2,15 +2,14 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { Save, ArrowLeft, Upload } from 'lucide-svelte';
+	import { Save, ArrowLeft } from 'lucide-svelte';
 	import MarkdownEditor from '$lib/admin/components/MarkdownEditor.svelte';
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
 	import {
 		getBlogPost,
 		createBlogPost,
 		updateBlogPost,
-		generateSlug,
-		type BlogPost
+		generateSlug
 	} from '$lib/admin/services/blogService';
 
 	let postId = $derived($page.params.id);

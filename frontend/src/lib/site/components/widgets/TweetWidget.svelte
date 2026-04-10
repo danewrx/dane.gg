@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import { browser } from '$app/environment';
-	import { Twitter } from 'lucide-svelte';
 
 	interface TweetData {
 		tweetId: string | null;
@@ -16,7 +15,6 @@
 	}
 
 	let { tweetData = $bindable() }: { tweetData?: TweetData | null } = $props();
-	let error: string | null = $state(null);
 	let hasReceivedApiResponse = $state(!!tweetData);
 	let lastTweetId: string | null = $state(tweetData?.tweetId || null);
 	let isPageVisible = $state(true);
@@ -149,8 +147,6 @@
 
 	async function fetchTweetData() {
 		try {
-			error = null;
-
 			const response = await fetch('/api/widgets/latest-tweet');
 
 			if (!response.ok) {
@@ -208,7 +204,6 @@
 			}
 		} catch (err) {
 			console.error('Error fetching tweet data:', err);
-			error = err instanceof Error ? err.message : 'Failed to fetch tweet data';
 			// Only set default data if no API response received
 			if (!hasReceivedApiResponse) {
 				tweetData = {
@@ -253,10 +248,6 @@
 		} else {
 			return `${diffInYears}y`;
 		}
-	}
-
-	function truncateText(text: string, maxLength: number): string {
-		return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
 	}
 </script>
 

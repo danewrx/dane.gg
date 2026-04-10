@@ -233,11 +233,6 @@
 			const selectedText = editorValue.substring(start, end);
 
 			const lineStart = editorValue.lastIndexOf('\n', start - 1) + 1;
-			const lineEnd = editorValue.indexOf('\n', start);
-			const fullLine = editorValue.substring(
-				lineStart,
-				lineEnd === -1 ? editorValue.length : lineEnd
-			);
 
 			const hasBoldItalic =
 				selectedText.startsWith('***') && selectedText.endsWith('***') && selectedText.length > 6;
@@ -278,7 +273,6 @@
 			activeFormats.code = hasCode;
 
 			const lineTextStart = start - lineStart;
-			const lineTextEnd = end - lineStart;
 
 			// Check if selection includes the beginning of the line
 			const includesLineStart = lineTextStart === 0;

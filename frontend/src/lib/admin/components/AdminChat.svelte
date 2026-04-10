@@ -103,7 +103,6 @@
 		Array<{ name: string; emoji: string; isCustom: boolean; imageUrl?: string }>
 	>([]);
 	let emojiAutocompleteIndex = $state(0);
-	let emojiAutocompleteQuery = $state('');
 
 	// Extract text content from contenteditable, converting emoji images back to :name:
 	function getInputText(): string {
@@ -802,7 +801,6 @@
 
 			if (completeMatch && completeMatch[1].length > 0) {
 				const query = completeMatch[1].toLowerCase();
-				emojiAutocompleteQuery = query;
 
 				const exactMatches: typeof allEmojis = [];
 				const startsWithMatches: typeof allEmojis = [];
@@ -882,11 +880,9 @@
 				return;
 			}
 
-			emojiAutocompleteQuery = query;
-
-			const exactMatches: typeof allEmojis = [];
-			const startsWithMatches: typeof allEmojis = [];
-			const containsMatches: typeof allEmojis = [];
+		const exactMatches: typeof allEmojis = [];
+		const startsWithMatches: typeof allEmojis = [];
+		const containsMatches: typeof allEmojis = [];
 
 			for (const emoji of allEmojis) {
 				const name = emoji.name.toLowerCase();

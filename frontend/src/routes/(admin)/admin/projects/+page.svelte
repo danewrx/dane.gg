@@ -1,16 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import {
-		Plus,
-		Edit,
-		Trash2,
-		Eye,
-		EyeOff,
-		FolderKanban,
-		Star,
-		FolderTree,
-		Tag
-	} from 'lucide-svelte';
+	import { Plus, Edit, Trash2, Eye, EyeOff, FolderKanban, FolderTree, Tag } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import {
 		getAllProjects,
@@ -72,7 +62,6 @@
 
 	let draggedProjectId = $state<string | null>(null);
 	let draggedOverProjectId = $state<string | null>(null);
-	let isDragging = $state(false);
 
 	onMount(async () => {
 		await loadProjects();
@@ -165,15 +154,9 @@
 		});
 	}
 
-	function truncateDescription(description: string, maxLength: number = 80): string {
-		if (description.length <= maxLength) return description;
-		return description.substring(0, maxLength) + '...';
-	}
-
 	function handleDragStart(event: DragEvent, projectId: string) {
 		if (!event.dataTransfer) return;
 		draggedProjectId = projectId;
-		isDragging = true;
 		event.dataTransfer.effectAllowed = 'move';
 		event.dataTransfer.setData('text/plain', projectId);
 		setTimeout(() => {
@@ -196,30 +179,27 @@
 
 	async function handleDrop(event: DragEvent, targetProjectId: string, categoryId: string) {
 		event.preventDefault();
-		if (!draggedProjectId || draggedProjectId === targetProjectId) {
-			draggedProjectId = null;
-			draggedOverProjectId = null;
-			isDragging = false;
-			return;
-		}
+	if (!draggedProjectId || draggedProjectId === targetProjectId) {
+		draggedProjectId = null;
+		draggedOverProjectId = null;
+		return;
+	}
 
-		const categoryGroup = projectsByCategory.find((g) => g.category.id === categoryId);
-		if (!categoryGroup) {
-			draggedProjectId = null;
-			draggedOverProjectId = null;
-			isDragging = false;
-			return;
-		}
+	const categoryGroup = projectsByCategory.find((g) => g.category.id === categoryId);
+	if (!categoryGroup) {
+		draggedProjectId = null;
+		draggedOverProjectId = null;
+		return;
+	}
 
-		const draggedProject = categoryGroup.projects.find((p) => p.id === draggedProjectId);
-		const targetProject = categoryGroup.projects.find((p) => p.id === targetProjectId);
+	const draggedProject = categoryGroup.projects.find((p) => p.id === draggedProjectId);
+	const targetProject = categoryGroup.projects.find((p) => p.id === targetProjectId);
 
-		if (!draggedProject || !targetProject) {
-			draggedProjectId = null;
-			draggedOverProjectId = null;
-			isDragging = false;
-			return;
-		}
+	if (!draggedProject || !targetProject) {
+		draggedProjectId = null;
+		draggedOverProjectId = null;
+		return;
+	}
 
 		// Get the current index positions
 		const draggedIndex = categoryGroup.projects.findIndex((p) => p.id === draggedProjectId);
@@ -249,16 +229,14 @@
 			});
 		}
 
-		draggedProjectId = null;
-		draggedOverProjectId = null;
-		isDragging = false;
-	}
+	draggedProjectId = null;
+	draggedOverProjectId = null;
+}
 
-	function handleDragEnd() {
-		draggedProjectId = null;
-		draggedOverProjectId = null;
-		isDragging = false;
-	}
+function handleDragEnd() {
+	draggedProjectId = null;
+	draggedOverProjectId = null;
+}
 </script>
 
 <ConfirmDialog

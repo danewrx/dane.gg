@@ -77,7 +77,7 @@
 				setTimeout(() => (backupCodesCopied = false), 2000);
 			}
 			toast.success('Copied to clipboard');
-		} catch (error) {
+		} catch {
 			toast.error('Failed to copy to clipboard');
 		}
 	}

@@ -13,7 +13,6 @@
 	}
 
 	let { musicData = $bindable() }: { musicData?: MusicData | null } = $props();
-	let error: string | null = $state(null);
 	let hasReceivedApiResponse = $state(!!musicData);
 	let isCheckingOverflow = $state(false);
 
@@ -196,8 +195,6 @@
 
 	async function fetchMusicData() {
 		try {
-			error = null;
-
 			console.log('Fetching music data from Last.fm...');
 			const response = await fetch('/api/widgets/nowplaying');
 
@@ -231,7 +228,6 @@
 			}
 		} catch (err) {
 			console.error('Error fetching music data:', err);
-			error = err instanceof Error ? err.message : 'Failed to fetch music data';
 			// Only set default data if no API response yet
 			if (!hasReceivedApiResponse) {
 				musicData = {
@@ -300,10 +296,6 @@
 		// Decades (10+ years)
 		const decades = Math.floor(diffInYears / 10);
 		return decades === 1 ? '1 decade ago' : `${decades} decades ago`;
-	}
-
-	function truncateText(text: string, maxLength: number): string {
-		return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
 	}
 </script>
 

@@ -107,7 +107,7 @@
 				if (linksConfigData.success && linksConfigData.data?.value) {
 					try {
 						selectedLinkIds = JSON.parse(linksConfigData.data.value);
-					} catch (e) {
+					} catch {
 						selectedLinkIds = [];
 					}
 				}

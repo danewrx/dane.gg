@@ -80,7 +80,7 @@ if (browser) {
 			if (isAdminRoute(currentPath)) {
 				try {
 					await authService.checkAuth();
-				} catch (error) {
+				} catch {
 					// Auth check failed - this is normal for unauthenticated users
 					// Only redirect to login if we're on an admin route
 					if (isAdminRoute(currentPath)) {
