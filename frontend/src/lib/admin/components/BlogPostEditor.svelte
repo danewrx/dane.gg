@@ -61,8 +61,15 @@
 	let hasUnsavedChanges = $state(false);
 	let isInitialLoad = $state(true);
 	let isLoadingFromDatabase = $state(false);
-	let loadedBaseline = $state<{ title: string; slug: string; content: string; thumbnail: string; published: boolean; tags: string[] } | null>(null);
-	
+	let loadedBaseline = $state<{
+		title: string;
+		slug: string;
+		content: string;
+		thumbnail: string;
+		published: boolean;
+		tags: string[];
+	} | null>(null);
+
 	// Track restore prompt state
 	let showRestorePrompt = $state(false);
 	let databasePostData = $state<BlogPost | null>(null);
@@ -75,7 +82,7 @@
 		if (postId && postId !== 'new') {
 			isInitialLoad = true;
 			isLoadingFromDatabase = true;
-			
+
 			// Clear any existing autosave timers
 			if (autosaveTimer) {
 				clearTimeout(autosaveTimer);
@@ -86,7 +93,7 @@
 				countdownTimer = null;
 			}
 			countdownSeconds = null;
-			
+
 			loadPost();
 			draftPostId = postId;
 			showRestorePrompt = false;
@@ -119,7 +126,7 @@
 				clearInterval(countdownTimer);
 				countdownTimer = null;
 			}
-			
+
 			setTimeout(() => {
 				isInitialLoad = false;
 			}, 100);
@@ -127,7 +134,7 @@
 	});
 
 	// Autosave effect - watches for changes to form fields
-                       
+
 	$effect(() => {
 		// Skip autosave if loading, saving manually, during initial load, loading from database
 		if (loading || saving || isInitialLoad || isLoadingFromDatabase) return;
@@ -138,15 +145,16 @@
 		if (!title.trim() && !content.trim()) return;
 
 		if (loadedBaseline) {
-			const tagsChanged = JSON.stringify([...tags].sort()) !== JSON.stringify([...loadedBaseline.tags].sort());
-			const valuesChanged = 
+			const tagsChanged =
+				JSON.stringify([...tags].sort()) !== JSON.stringify([...loadedBaseline.tags].sort());
+			const valuesChanged =
 				title !== loadedBaseline.title ||
 				slug !== loadedBaseline.slug ||
 				content !== loadedBaseline.content ||
 				(thumbnail || '') !== loadedBaseline.thumbnail ||
 				published !== loadedBaseline.published ||
 				tagsChanged;
-			
+
 			if (!valuesChanged) return;
 		}
 
@@ -166,7 +174,7 @@
 
 		// Start countdown from 3 seconds
 		countdownSeconds = 3;
-		
+
 		// Update countdown every second
 		countdownTimer = setInterval(() => {
 			if (countdownSeconds !== null && countdownSeconds > 0) {
@@ -214,7 +222,7 @@
 			loading = true;
 			if (!postId) return;
 			const post = await getBlogPost(postId);
-			
+
 			// Check localStorage for autosaved version
 			const autosaveKey = `blog_autosave_${post.id}`;
 			let autosaveData: any = null;
@@ -222,18 +230,18 @@
 				const autosaveStr = localStorage.getItem(autosaveKey);
 				if (autosaveStr) {
 					autosaveData = JSON.parse(autosaveStr);
-					
-					const dbTags = [...post.tags.map(t => t.name)].sort().join(',');
+
+					const dbTags = [...post.tags.map((t) => t.name)].sort().join(',');
 					const autosaveTags = [...(autosaveData.tags || [])].sort().join(',');
-					
-					const contentMatches = 
+
+					const contentMatches =
 						autosaveData.title === post.title &&
 						autosaveData.slug === post.slug &&
 						autosaveData.content === post.content &&
 						(autosaveData.thumbnail || '') === (post.thumbnail || '') &&
 						autosaveData.published === post.published &&
 						dbTags === autosaveTags;
-					
+
 					if (contentMatches) {
 						localStorage.removeItem(autosaveKey);
 						lastLocalSaveAt = null;
@@ -241,7 +249,7 @@
 						lastLocalSaveAt = new Date(autosaveData.timestamp);
 						const autosaveTime = new Date(autosaveData.timestamp).getTime();
 						const dbUpdateTime = new Date(post.updatedAt).getTime();
-						
+
 						// If localStorage has a newer autosave than the database, prompt to restore
 						if (autosaveTime > dbUpdateTime) {
 							databasePostData = {
@@ -268,7 +276,7 @@
 				console.warn('Could not check localStorage for autosave:', e);
 				lastLocalSaveAt = null;
 			}
-			
+
 			// Always load the post data from database (not from autosave)
 			// User will see the prompt if there's a newer autosave
 			untrack(() => {
@@ -289,7 +297,7 @@
 					thumbnailFilename = null;
 				}
 				published = post.published;
-				tags = post.tags.map(t => t.name);
+				tags = post.tags.map((t) => t.name);
 				createdAt = post.createdAt;
 				const { date, time } = splitDateTime(post.createdAt);
 				newCreatedDate = date;
@@ -299,7 +307,7 @@
 				hasUnsavedChanges = false;
 				autosaveStatus = 'idle';
 				lastSavedAt = new Date(post.updatedAt);
-				
+
 				// Store baseline values to compare against for autosave
 				loadedBaseline = {
 					title: post.title,
@@ -307,10 +315,10 @@
 					content: post.content,
 					thumbnail: post.thumbnail || '',
 					published: post.published,
-					tags: post.tags.map(t => t.name)
+					tags: post.tags.map((t) => t.name)
 				};
 			});
-			
+
 			setTimeout(() => {
 				isInitialLoad = false;
 				setTimeout(() => {
@@ -328,22 +336,22 @@
 			loading = false;
 		}
 	}
-	
+
 	async function handleRestoreAutosave() {
 		if (!databasePostData || !postId) return;
-		
+
 		try {
 			saving = true;
-			
+
 			await updateBlogPost(postId, {
 				title: databasePostData.title,
 				slug: databasePostData.slug,
 				content: databasePostData.content,
 				thumbnail: databasePostData.thumbnail || undefined,
 				published: databasePostData.published,
-				tags: databasePostData.tags.map(t => t.name)
+				tags: databasePostData.tags.map((t) => t.name)
 			});
-			
+
 			title = databasePostData.title;
 			slug = databasePostData.slug;
 			content = databasePostData.content;
@@ -360,20 +368,20 @@
 				thumbnailFilename = null;
 			}
 			published = databasePostData.published;
-			tags = databasePostData.tags.map(t => t.name);
-			
+			tags = databasePostData.tags.map((t) => t.name);
+
 			try {
 				localStorage.removeItem(`blog_autosave_${postId}`);
 			} catch (e) {
 				// Ignore localStorage errors
 			}
-			
+
 			lastSavedAt = new Date();
 			lastLocalSaveAt = null;
 			hasUnsavedChanges = false;
 			showRestorePrompt = false;
 			databasePostData = null;
-			
+
 			toast.success('Autosave restored and saved', {
 				description: 'Your last autosave has been restored and saved to the database'
 			});
@@ -386,7 +394,7 @@
 			saving = false;
 		}
 	}
-	
+
 	function handleDismissRestore() {
 		const saveId = postId || draftPostId;
 		if (saveId) {
@@ -436,7 +444,7 @@
 				tags: tags,
 				timestamp: new Date().toISOString()
 			};
-			
+
 			try {
 				localStorage.setItem(`blog_autosave_${saveId}`, JSON.stringify(autosaveData));
 				autosaveStatus = 'saved';
@@ -482,34 +490,34 @@
 	function handleSlugChange(e: Event) {
 		const target = e.target as HTMLInputElement;
 		let value = target.value;
-		
+
 		// Replace spaces with hyphens
 		value = value.replace(/\s+/g, '-');
-		
+
 		// Only allow alphanumeric characters and hyphens
 		// Remove any invalid characters
 		value = value.replace(/[^a-zA-Z0-9-]/g, '');
-		
+
 		// Remove consecutive hyphens
 		value = value.replace(/-+/g, '-');
-		
+
 		// Remove leading and trailing hyphens
 		value = value.replace(/^-+|-+$/g, '');
-		
+
 		slug = value;
 		autoSlug = false;
 	}
 
 	function toggleTag(tagName: string) {
 		if (tags.includes(tagName)) {
-			tags = tags.filter(t => t !== tagName);
+			tags = tags.filter((t) => t !== tagName);
 		} else {
 			tags = [...tags, tagName];
 		}
 	}
 
 	function removeTag(tagToRemove: string) {
-		tags = tags.filter(t => t !== tagToRemove);
+		tags = tags.filter((t) => t !== tagToRemove);
 	}
 
 	function toggleDropdown() {
@@ -536,7 +544,7 @@
 		const day = String(date.getDate()).padStart(2, '0');
 		const hours = String(date.getHours()).padStart(2, '0');
 		const minutes = String(date.getMinutes()).padStart(2, '0');
-		
+
 		return {
 			date: `${year}-${month}-${day}`,
 			time: `${hours}:${minutes}`
@@ -610,7 +618,7 @@
 			if (isNewPost && !draftPostId) {
 				const savedPost = await createBlogPost(postData);
 				draftPostId = savedPost.id;
-				
+
 				try {
 					const newAutosave = localStorage.getItem('blog_autosave_new');
 					if (newAutosave) {
@@ -620,7 +628,7 @@
 				} catch (e) {
 					// Ignore localStorage errors
 				}
-				
+
 				toast.success('Post created!', {
 					description: `"${title}" has been created successfully`
 				});
@@ -842,10 +850,7 @@
 							<span class="date-value">{formatDateTimeDisplay(createdAt)}</span>
 						</div>
 						<label class="overwrite-checkbox">
-							<input
-								type="checkbox"
-								bind:checked={overwriteCreatedDate}
-							/>
+							<input type="checkbox" bind:checked={overwriteCreatedDate} />
 							<span>Overwrite creation date</span>
 						</label>
 					</div>
@@ -870,7 +875,9 @@
 								/>
 							</div>
 						</div>
-						<p class="help-text warning">⚠️ Changing the creation date will affect post sorting and timestamps</p>
+						<p class="help-text warning">
+							⚠️ Changing the creation date will affect post sorting and timestamps
+						</p>
 					{/if}
 				</div>
 			{/if}
@@ -882,10 +889,14 @@
 					{#if thumbnail}
 						<div class="thumbnail-preview-container">
 							<div class="thumbnail-preview">
-								<img src={getThumbnailUrl(thumbnail)} alt="Thumbnail preview" onerror={(e) => {
-									console.error('Failed to load thumbnail:', thumbnail);
-									(e.target as HTMLImageElement).style.display = 'none';
-								}} />
+								<img
+									src={getThumbnailUrl(thumbnail)}
+									alt="Thumbnail preview"
+									onerror={(e) => {
+										console.error('Failed to load thumbnail:', thumbnail);
+										(e.target as HTMLImageElement).style.display = 'none';
+									}}
+								/>
 								<button
 									type="button"
 									class="remove-thumbnail"
@@ -912,7 +923,11 @@
 			<!-- Content -->
 			<div class="form-group">
 				<label for="content">Content (Markdown)</label>
-				<MarkdownEditor bind:value={content} minHeight="500px" placeholder="Write your post content in Markdown..." />
+				<MarkdownEditor
+					bind:value={content}
+					minHeight="500px"
+					placeholder="Write your post content in Markdown..."
+				/>
 			</div>
 
 			<!-- Tags -->
@@ -924,10 +939,14 @@
 						Manage Tags
 					</button>
 				</div>
-				
+
 				<div class="tags-dropdown-container">
 					<button type="button" onclick={toggleDropdown} class="tags-dropdown-button">
-						<span>{tags.length > 0 ? `${tags.length} tag${tags.length > 1 ? 's' : ''} selected` : 'Select tags'}</span>
+						<span
+							>{tags.length > 0
+								? `${tags.length} tag${tags.length > 1 ? 's' : ''} selected`
+								: 'Select tags'}</span
+						>
 						<ChevronDown size={18} class={showTagDropdown ? 'rotate' : ''} />
 					</button>
 
@@ -961,7 +980,12 @@
 						{#each tags as tag}
 							<span class="tag">
 								{tag}
-								<button type="button" onclick={() => removeTag(tag)} class="remove-tag" aria-label="Remove tag">
+								<button
+									type="button"
+									onclick={() => removeTag(tag)}
+									class="remove-tag"
+									aria-label="Remove tag"
+								>
 									<X size={14} />
 								</button>
 							</span>
@@ -974,13 +998,20 @@
 			<div class="form-group">
 				<Toggle bind:checked={published} label="Published" />
 				<p class="help-text">
-					{published ? 'This post is visible to the public' : 'This post is a draft and not visible to the public'}
+					{published
+						? 'This post is visible to the public'
+						: 'This post is a draft and not visible to the public'}
 				</p>
 			</div>
 
 			<!-- Actions -->
 			<div class="form-actions">
-				<button type="button" onclick={handleClose} class="button button-secondary" disabled={saving}>
+				<button
+					type="button"
+					onclick={handleClose}
+					class="button button-secondary"
+					disabled={saving}
+				>
 					Cancel
 				</button>
 				<button type="button" onclick={handleSave} class="button button-primary" disabled={saving}>
@@ -1004,16 +1035,16 @@
 
 <!-- Restore Autosave Prompt -->
 {#if showRestorePrompt && databasePostData}
-	<div 
-		class="restore-prompt-overlay" 
+	<div
+		class="restore-prompt-overlay"
 		onclick={handleDismissRestore}
 		onkeydown={(e) => e.key === 'Enter' && handleDismissRestore()}
 		role="button"
 		tabindex="0"
 		aria-label="Close restore prompt"
 	>
-		<div 
-			class="restore-prompt" 
+		<div
+			class="restore-prompt"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 			role="dialog"
@@ -1025,7 +1056,11 @@
 				<h3 id="restore-prompt-title">Unsaved Changes Detected</h3>
 			</div>
 			<div class="prompt-content">
-				<p>This post was autosaved locally on <strong>{new Date(databasePostData.updatedAt).toLocaleString()}</strong>.</p>
+				<p>
+					This post was autosaved locally on <strong
+						>{new Date(databasePostData.updatedAt).toLocaleString()}</strong
+					>.
+				</p>
 				<p>Would you like to restore and save the autosaved version to the database?</p>
 			</div>
 			<div class="prompt-actions">
@@ -1066,8 +1101,12 @@
 	}
 
 	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
 
 	.editor-form {
@@ -1148,7 +1187,7 @@
 		user-select: none;
 	}
 
-	.overwrite-checkbox input[type="checkbox"] {
+	.overwrite-checkbox input[type='checkbox'] {
 		width: 16px;
 		height: 16px;
 		cursor: pointer;
@@ -1242,7 +1281,6 @@
 		background: rgba(239, 68, 68, 0.9);
 		border-color: #ef4444;
 	}
-
 
 	.tags-header {
 		display: flex;
@@ -1354,7 +1392,7 @@
 		background: var(--bg-secondary, #2d2d2d);
 	}
 
-	.tag-option input[type="checkbox"] {
+	.tag-option input[type='checkbox'] {
 		width: 16px;
 		height: 16px;
 		cursor: pointer;
@@ -1579,4 +1617,3 @@
 		justify-content: flex-end;
 	}
 </style>
-

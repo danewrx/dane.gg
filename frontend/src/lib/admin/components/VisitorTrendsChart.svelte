@@ -21,11 +21,11 @@
 	const padding = { top: 20, right: 60, bottom: 60, left: 60 };
 
 	// Tooltip state
-	let tooltip = $state<{ 
-		show: boolean; 
-		x: number; 
-		y: number; 
-		data: { date: string; visitors: number; views: number } | null 
+	let tooltip = $state<{
+		show: boolean;
+		x: number;
+		y: number;
+		data: { date: string; visitors: number; views: number } | null;
 	}>({
 		show: false,
 		x: 0,
@@ -36,12 +36,12 @@
 	let tooltipElement: HTMLElement | null = $state(null);
 
 	// Calculate scales
-	const chartData = $derived(data.slice().sort((a, b) => 
-		new Date(a.date).getTime() - new Date(b.date).getTime()
-	));
+	const chartData = $derived(
+		data.slice().sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+	);
 
-	const maxVisitors = $derived(Math.max(...chartData.map(d => d.visitors), 1));
-	const maxViews = $derived(Math.max(...chartData.map(d => d.views), 1));
+	const maxVisitors = $derived(Math.max(...chartData.map((d) => d.visitors), 1));
+	const maxViews = $derived(Math.max(...chartData.map((d) => d.views), 1));
 	const maxY = $derived(Math.max(maxVisitors, maxViews));
 
 	const innerWidth = $derived(chartWidth - padding.left - padding.right);
@@ -85,10 +85,10 @@
 			const first = new Date(chartData[0].date);
 			const second = new Date(chartData[1].date);
 			const diffHours = (second.getTime() - first.getTime()) / (1000 * 60 * 60);
-			
+
 			return diffHours < 23;
 		}
-		
+
 		const date = new Date(chartData[0].date);
 		return date.getHours() !== 0 || date.getMinutes() !== 0;
 	});
@@ -96,12 +96,12 @@
 	// Format date for display
 	function formatDate(dateStr: string): string {
 		const date = new Date(dateStr);
-		
+
 		if (isHourlyData()) {
-			return date.toLocaleTimeString('en-US', { 
-				hour: 'numeric', 
+			return date.toLocaleTimeString('en-US', {
+				hour: 'numeric',
 				minute: '2-digit',
-				hour12: true 
+				hour12: true
 			});
 		}
 		return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -110,19 +110,19 @@
 	// Format date/time for tooltip
 	function formatFullDateTime(dateStr: string): string {
 		const date = new Date(dateStr);
-		
+
 		if (isHourlyData()) {
-			return date.toLocaleString('en-US', { 
-				month: 'short', 
+			return date.toLocaleString('en-US', {
+				month: 'short',
 				day: 'numeric',
 				hour: 'numeric',
 				minute: '2-digit',
 				hour12: true
 			});
 		}
-		
-		return date.toLocaleDateString('en-US', { 
-			month: 'short', 
+
+		return date.toLocaleDateString('en-US', {
+			month: 'short',
 			day: 'numeric',
 			year: 'numeric'
 		});
@@ -253,10 +253,9 @@
 			<!-- X-axis labels -->
 			<g class="x-axis">
 				{#each chartData as point, i}
-					{@const skipInterval = isHourlyData() 
+					{@const skipInterval = isHourlyData()
 						? Math.max(1, Math.ceil(chartData.length / 12))
-						: Math.max(1, Math.ceil(chartData.length / 8))
-					}
+						: Math.max(1, Math.ceil(chartData.length / 8))}
 					{#if i === 0 || i === chartData.length - 1 || i % skipInterval === 0}
 						<text
 							x={scaleX(i)}
@@ -272,21 +271,9 @@
 
 			<!-- Line paths -->
 			<g class="lines">
-				<path
-					d={visitorsPath()}
-					fill="none"
-					stroke="#60a5fa"
-					stroke-width="2"
-					class="line-path"
-				/>
+				<path d={visitorsPath()} fill="none" stroke="#60a5fa" stroke-width="2" class="line-path" />
 
-				<path
-					d={viewsPath()}
-					fill="none"
-					stroke="#34d399"
-					stroke-width="2"
-					class="line-path"
-				/>
+				<path d={viewsPath()} fill="none" stroke="#34d399" stroke-width="2" class="line-path" />
 			</g>
 
 			<!-- Data points -->
@@ -300,6 +287,9 @@
 						stroke="var(--bg-secondary, #282828)"
 						stroke-width="2"
 						class="data-point"
+						role="img"
+						aria-label={`${formatFullDateTime(point.date)}: ${point.visitors.toLocaleString()} unique visitors`}
+						tabindex="-1"
 						onmouseenter={(e) => showTooltip(e, point)}
 						onmouseleave={hideTooltip}
 						ontouchstart={(e) => {
@@ -318,6 +308,9 @@
 						stroke="var(--bg-secondary, #282828)"
 						stroke-width="2"
 						class="data-point"
+						role="img"
+						aria-label={`${formatFullDateTime(point.date)}: ${point.views.toLocaleString()} total views`}
+						tabindex="-1"
 						onmouseenter={(e) => showTooltip(e, point)}
 						onmouseleave={hideTooltip}
 						ontouchstart={(e) => {
@@ -370,7 +363,9 @@
 		padding: 20px;
 		width: 100%;
 		box-sizing: border-box;
-		transition: background 0.2s ease, border-color 0.2s ease;
+		transition:
+			background 0.2s ease,
+			border-color 0.2s ease;
 	}
 
 	.trends-header {
@@ -423,7 +418,10 @@
 	.axis-label {
 		fill: var(--text-secondary, #9ca3af);
 		font-size: 11px;
-		font-family: system-ui, -apple-system, sans-serif;
+		font-family:
+			system-ui,
+			-apple-system,
+			sans-serif;
 	}
 
 	.x-axis .axis-label {
@@ -552,4 +550,3 @@
 		}
 	}
 </style>
-

@@ -5,7 +5,11 @@
 	import Icon from '@iconify/svelte';
 	import UnifiedIconPicker from '$lib/admin/components/ui/UnifiedIconPicker.svelte';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
-	import { getIconCategories, getCustomOptions, type IconOption } from '$lib/admin/services/iconLibraryService';
+	import {
+		getIconCategories,
+		getCustomOptions,
+		type IconOption
+	} from '$lib/admin/services/iconLibraryService';
 	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
 	import type { ComponentType } from 'svelte';
 
@@ -95,7 +99,7 @@
 
 			if (selectedIcon) {
 				iconType = selectedIcon.type as 'coreui-brand' | 'lucide' | 'svg-url' | 'custom-text';
-				
+
 				if (selectedIcon.type === 'svg-url') {
 					svgUrl = selectedIcon.svgUrl || selectedIcon.name; // Use name if it's the URL
 					iconName = null;
@@ -249,11 +253,14 @@
 				category: 'custom'
 			};
 		} else if (link.iconType === 'lucide' && link.iconName) {
-			const allIcons = iconCategories.flatMap(cat => cat.icons);
-			selectedIcon = allIcons.find(icon => icon.type === 'lucide' && icon.iconName === link.iconName) || null;
+			const allIcons = iconCategories.flatMap((cat) => cat.icons);
+			selectedIcon =
+				allIcons.find((icon) => icon.type === 'lucide' && icon.iconName === link.iconName) || null;
 		} else if (link.iconType === 'coreui-brand' && link.iconName) {
-			const allIcons = iconCategories.flatMap(cat => cat.icons);
-			selectedIcon = allIcons.find(icon => icon.type === 'coreui-brand' && icon.iconName === link.iconName) || null;
+			const allIcons = iconCategories.flatMap((cat) => cat.icons);
+			selectedIcon =
+				allIcons.find((icon) => icon.type === 'coreui-brand' && icon.iconName === link.iconName) ||
+				null;
 		} else {
 			selectedIcon = null;
 		}
@@ -384,7 +391,7 @@
 
 <div class="social-links-page">
 	<div class="settings-description">
-				<p>Manage your social media and external links displayed on the website</p>
+		<p>Manage your social media and external links displayed on the website</p>
 	</div>
 
 	{#if isLoading}
@@ -393,11 +400,13 @@
 			<p>Loading social links...</p>
 		</div>
 	{:else}
-		<div class="links-list">
+		<div class="links-list" role="list">
 			{#if socialLinks.length > 0}
 				{#each socialLinks as link, index (link.id)}
-					<div 
+					<div
 						class="link-item"
+						role="listitem"
+						aria-label={`Reorder social link: ${link.name}`}
 						class:inactive={!link.isActive}
 						class:dragging={draggedIndex === index}
 						class:drag-over={dragOverIndex === index}
@@ -417,11 +426,16 @@
 						{#if editingLink?.id === link.id}
 							<div class="new-link-form">
 								<h3>{editingLink ? 'Edit Link' : 'Add New Link'}</h3>
-								<form onsubmit={(e) => { e.preventDefault(); saveLink(); }}>
+								<form
+									onsubmit={(e) => {
+										e.preventDefault();
+										saveLink();
+									}}
+								>
 									<div class="form-group">
 										<label for="name">Link Name *</label>
-										<input 
-											type="text" 
+										<input
+											type="text"
 											id="name"
 											class="edit-input"
 											bind:value={formData.name}
@@ -432,8 +446,8 @@
 
 									<div class="form-group">
 										<label for="url">URL *</label>
-										<input 
-											type="url" 
+										<input
+											type="url"
 											id="url"
 											class="edit-input"
 											bind:value={formData.url}
@@ -443,12 +457,13 @@
 									</div>
 
 									<div class="form-group">
-										<label>Icon</label>
+										<label for="social-link-icon-edit">Icon</label>
 										<div class="icon-selection-section">
-			<button 
+											<button
+												id="social-link-icon-edit"
 												type="button"
 												class="icon-button"
-												onclick={() => iconPickerOpen = true}
+												onclick={() => (iconPickerOpen = true)}
 												title="Choose icon"
 											>
 												{#if selectedIcon}
@@ -469,18 +484,22 @@
 												{:else}
 													<Icon icon="lucide:image" width="20" height="20" />
 												{/if}
-			</button>
+											</button>
 											<div class="icon-info">
 												{#if selectedIcon}
 													<div class="icon-name">{selectedIcon.displayName}</div>
 													<div class="icon-pack">
-														{selectedIcon.type === 'coreui-brand' ? 'CoreUI' : 
-														 selectedIcon.type === 'lucide' ? 'Lucide' : 
-														 selectedIcon.type === 'svg-url' ? 'Custom SVG' : 
-														 selectedIcon.type === 'custom-text' ? 'Custom Text' : 
-														 'Unknown'}
-		</div>
-	{:else}
+														{selectedIcon.type === 'coreui-brand'
+															? 'CoreUI'
+															: selectedIcon.type === 'lucide'
+																? 'Lucide'
+																: selectedIcon.type === 'svg-url'
+																	? 'Custom SVG'
+																	: selectedIcon.type === 'custom-text'
+																		? 'Custom Text'
+																		: 'Unknown'}
+													</div>
+												{:else}
 													<div class="icon-name">No icon selected</div>
 													<div class="icon-pack">Click to choose</div>
 												{/if}
@@ -490,186 +509,185 @@
 
 									<div class="form-group">
 										<label class="checkbox-label">
-											<input 
-												type="checkbox" 
-												bind:checked={formData.isActive}
-											/>
+											<input type="checkbox" bind:checked={formData.isActive} />
 											<span>Active (visible on website)</span>
 										</label>
 									</div>
 
 									<div class="form-actions">
 										<button type="submit" class="save-btn" disabled={isSaving}>
-											{isSaving ? 'Saving...' : (editingLink ? 'Update Link' : 'Add Link')}
+											{isSaving ? 'Saving...' : editingLink ? 'Update Link' : 'Add Link'}
 										</button>
-										<button type="button" class="cancel-btn" onclick={resetForm}>
-											Cancel
-										</button>
+										<button type="button" class="cancel-btn" onclick={resetForm}> Cancel </button>
 									</div>
 								</form>
 							</div>
 						{:else}
-					<div class="link-info">
-						<div class="link-icon">
-							{#if link.iconType === 'custom-text' && link.iconText}
-								<span class="text-icon">{link.iconText}</span>
-							{:else if link.iconType === 'svg-url' && link.svgUrl}
-								<img src={link.svgUrl} alt={link.name} width="20" height="20" />
-							{:else if link.iconType === 'coreui-brand' && link.iconName}
-								<Icon icon={`cib:${link.iconName.replace('cb-', '')}`} width="20" height="20" />
-							{:else if link.iconType === 'lucide' && link.iconName}
-								{@const iconInfo = getIconRenderInfo(link.iconName)}
-								{#if iconInfo.type === 'component' && iconInfo.component}
-									{@const IconComponent = iconInfo.component}
-									<IconComponent size={20} />
-								{:else}
-									<Icon icon="lucide:external-link" width="20" height="20" />
-								{/if}
-							{:else}
-								<Icon icon="lucide:external-link" width="20" height="20" class="default-icon" />
-							{/if}
-						</div>
-						<div class="link-details">
-							<h3>{link.name}</h3>
-							<p>{link.url}</p>
-							<div class="link-meta">
-								<span class="icon-type">{link.iconType}</span>
-								<span class="display-order">Order: {link.displayOrder}</span>
+							<div class="link-info">
+								<div class="link-icon">
+									{#if link.iconType === 'custom-text' && link.iconText}
+										<span class="text-icon">{link.iconText}</span>
+									{:else if link.iconType === 'svg-url' && link.svgUrl}
+										<img src={link.svgUrl} alt={link.name} width="20" height="20" />
+									{:else if link.iconType === 'coreui-brand' && link.iconName}
+										<Icon icon={`cib:${link.iconName.replace('cb-', '')}`} width="20" height="20" />
+									{:else if link.iconType === 'lucide' && link.iconName}
+										{@const iconInfo = getIconRenderInfo(link.iconName)}
+										{#if iconInfo.type === 'component' && iconInfo.component}
+											{@const IconComponent = iconInfo.component}
+											<IconComponent size={20} />
+										{:else}
+											<Icon icon="lucide:external-link" width="20" height="20" />
+										{/if}
+									{:else}
+										<Icon icon="lucide:external-link" width="20" height="20" class="default-icon" />
+									{/if}
+								</div>
+								<div class="link-details">
+									<h3>{link.name}</h3>
+									<p>{link.url}</p>
+									<div class="link-meta">
+										<span class="icon-type">{link.iconType}</span>
+										<span class="display-order">Order: {link.displayOrder}</span>
+									</div>
+								</div>
 							</div>
-						</div>
-					</div>
-					<div class="link-actions">
-						<button 
-							class="action-button" 
-							onclick={() => toggleActive(link.id)}
-							title={link.isActive ? 'Hide link' : 'Show link'}
-						>
-							{#if link.isActive}
-								<Eye size={16} />
-							{:else}
-								<EyeOff size={16} />
-							{/if}
-						</button>
-						<button 
-							class="action-button" 
-							onclick={() => editLink(link)}
-							title="Edit link"
-						>
-							<Edit size={16} />
-						</button>
-						<button 
-							class="action-button danger" 
-							onclick={() => requestDeleteLink(link.id)}
-							title="Delete link"
-						>
-							<Trash2 size={16} />
-						</button>
-					</div>
+							<div class="link-actions">
+								<button
+									class="action-button"
+									onclick={() => toggleActive(link.id)}
+									title={link.isActive ? 'Hide link' : 'Show link'}
+								>
+									{#if link.isActive}
+										<Eye size={16} />
+									{:else}
+										<EyeOff size={16} />
+									{/if}
+								</button>
+								<button class="action-button" onclick={() => editLink(link)} title="Edit link">
+									<Edit size={16} />
+								</button>
+								<button
+									class="action-button danger"
+									onclick={() => requestDeleteLink(link.id)}
+									title="Delete link"
+								>
+									<Trash2 size={16} />
+								</button>
+							</div>
 						{/if}
-				</div>
-			{/each}
-	{/if}
+					</div>
+				{/each}
+			{/if}
 
 			{#if showAddForm && !editingLink}
 				<div class="new-link-form">
 					<h3>Add New Link</h3>
-					<form onsubmit={(e) => { e.preventDefault(); saveLink(); }}>
-					<div class="form-group">
+					<form
+						onsubmit={(e) => {
+							e.preventDefault();
+							saveLink();
+						}}
+					>
+						<div class="form-group">
 							<label for="name-new">Link Name *</label>
-						<input 
-							type="text" 
+							<input
+								type="text"
 								id="name-new"
 								class="edit-input"
-							bind:value={formData.name}
-							placeholder="e.g., Twitter, GitHub, Portfolio"
-							required
-						/>
-					</div>
+								bind:value={formData.name}
+								placeholder="e.g., Twitter, GitHub, Portfolio"
+								required
+							/>
+						</div>
 
-					<div class="form-group">
+						<div class="form-group">
 							<label for="url-new">URL *</label>
-						<input 
-							type="url" 
+							<input
+								type="url"
 								id="url-new"
 								class="edit-input"
-							bind:value={formData.url}
-							placeholder="https://example.com"
-							required
-						/>
-					</div>
+								bind:value={formData.url}
+								placeholder="https://example.com"
+								required
+							/>
+						</div>
 
-					<div class="form-group">
-						<label>Icon</label>
-						<div class="icon-selection-section">
-							<button
-								type="button"
-								class="icon-button"
-								onclick={() => iconPickerOpen = true}
-								title="Choose icon"
-							>
-								{#if selectedIcon}
-									{@const iconName = getIconNameFromOption(selectedIcon)}
-									{@const iconInfo = getIconRenderInfo(iconName)}
-									{#if iconInfo.type === 'component' && iconInfo.component}
-										{@const IconComponent = iconInfo.component}
-										<IconComponent size={20} />
-									{:else if iconInfo.type === 'iconify' && iconInfo.icon}
-										<Icon icon={iconInfo.icon} width="20" height="20" />
-									{:else if iconInfo.type === 'svg' && iconInfo.url}
-										<img src={iconInfo.url} alt="Icon" width="20" height="20" />
-									{:else if iconInfo.type === 'text' && iconInfo.text}
-										<span class="text-icon-small">{iconInfo.text}</span>
+						<div class="form-group">
+							<label for="social-link-icon-new">Icon</label>
+							<div class="icon-selection-section">
+								<button
+									id="social-link-icon-new"
+									type="button"
+									class="icon-button"
+									onclick={() => (iconPickerOpen = true)}
+									title="Choose icon"
+								>
+									{#if selectedIcon}
+										{@const iconName = getIconNameFromOption(selectedIcon)}
+										{@const iconInfo = getIconRenderInfo(iconName)}
+										{#if iconInfo.type === 'component' && iconInfo.component}
+											{@const IconComponent = iconInfo.component}
+											<IconComponent size={20} />
+										{:else if iconInfo.type === 'iconify' && iconInfo.icon}
+											<Icon icon={iconInfo.icon} width="20" height="20" />
+										{:else if iconInfo.type === 'svg' && iconInfo.url}
+											<img src={iconInfo.url} alt="Icon" width="20" height="20" />
+										{:else if iconInfo.type === 'text' && iconInfo.text}
+											<span class="text-icon-small">{iconInfo.text}</span>
+										{:else}
+											<Icon icon="lucide:image" width="20" height="20" />
+										{/if}
 									{:else}
 										<Icon icon="lucide:image" width="20" height="20" />
 									{/if}
-								{:else}
-									<Icon icon="lucide:image" width="20" height="20" />
-								{/if}
-							</button>
-							<div class="icon-info">
-								{#if selectedIcon}
-									<div class="icon-name">{selectedIcon.displayName}</div>
-									<div class="icon-pack">
-										{selectedIcon.type === 'coreui-brand' ? 'CoreUI' : 
-										 selectedIcon.type === 'lucide' ? 'Lucide' : 
-										 selectedIcon.type === 'svg-url' ? 'Custom SVG' : 
-										 selectedIcon.type === 'custom-text' ? 'Custom Text' : 
-										 'Unknown'}
-									</div>
-								{:else}
-									<div class="icon-name">No icon selected</div>
-									<div class="icon-pack">Click to choose</div>
-								{/if}
+								</button>
+								<div class="icon-info">
+									{#if selectedIcon}
+										<div class="icon-name">{selectedIcon.displayName}</div>
+										<div class="icon-pack">
+											{selectedIcon.type === 'coreui-brand'
+												? 'CoreUI'
+												: selectedIcon.type === 'lucide'
+													? 'Lucide'
+													: selectedIcon.type === 'svg-url'
+														? 'Custom SVG'
+														: selectedIcon.type === 'custom-text'
+															? 'Custom Text'
+															: 'Unknown'}
+										</div>
+									{:else}
+										<div class="icon-name">No icon selected</div>
+										<div class="icon-pack">Click to choose</div>
+									{/if}
+								</div>
 							</div>
 						</div>
-					</div>
 
-					<div class="form-group">
-						<label class="checkbox-label">
-							<input 
-								type="checkbox" 
-								bind:checked={formData.isActive}
-							/>
+						<div class="form-group">
+							<label class="checkbox-label">
+								<input type="checkbox" bind:checked={formData.isActive} />
 								<span>Active (visible on website)</span>
-						</label>
-					</div>
+							</label>
+						</div>
 
-					<div class="form-actions">
+						<div class="form-actions">
 							<button type="submit" class="save-btn" disabled={isSaving}>
 								{isSaving ? 'Saving...' : 'Add Link'}
 							</button>
-							<button type="button" class="cancel-btn" onclick={resetForm}>
-							Cancel
-						</button>
-					</div>
-				</form>
-			</div>
+							<button type="button" class="cancel-btn" onclick={resetForm}> Cancel </button>
+						</div>
+					</form>
+				</div>
 			{/if}
 
 			{#if !showAddForm && editingLink === null}
-				<button 
-					class="add-link-btn" 
-					onclick={() => { resetForm(); showAddForm = true; }}
+				<button
+					class="add-link-btn"
+					onclick={() => {
+						resetForm();
+						showAddForm = true;
+					}}
 					disabled={isSaving || editingLink !== null}
 				>
 					<Plus size={18} />
@@ -679,10 +697,9 @@
 		</div>
 	{/if}
 
-
 	{#if iconPickerOpen}
 		<UnifiedIconPicker
-			selectedIcon={selectedIcon}
+			{selectedIcon}
 			onIconSelect={(icon) => {
 				handleIconSelect(icon);
 				iconPickerOpen = false;
@@ -714,7 +731,6 @@
 		line-height: 1.5;
 	}
 
-
 	.loading {
 		display: flex;
 		flex-direction: column;
@@ -735,10 +751,13 @@
 	}
 
 	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
-
 
 	.links-list {
 		display: flex;
@@ -817,10 +836,6 @@
 		border-radius: 6px;
 		color: var(--text-primary, #ffffff);
 		flex-shrink: 0;
-	}
-	
-	.default-icon {
-		opacity: 0.7;
 	}
 
 	.text-icon {
@@ -1111,33 +1126,6 @@
 			padding: 0;
 		}
 
-		.header-content {
-			flex-direction: column;
-			align-items: flex-start;
-			gap: 16px;
-		}
-
-		.modal {
-			width: 95%;
-			max-width: none;
-			margin: 16px;
-			max-height: 95vh;
-		}
-
-		.modal-overlay {
-			padding: 16px;
-			align-items: flex-start;
-			justify-content: center;
-		}
-
-		.modal-header {
-			padding: 16px 20px;
-		}
-
-		.modal-form {
-			padding: 20px;
-		}
-
 		.form-actions {
 			flex-direction: column;
 		}
@@ -1181,41 +1169,6 @@
 	}
 
 	@media (max-width: 480px) {
-		.page-header {
-			margin-bottom: 24px;
-		}
-
-		.header-text h1 {
-			font-size: 24px;
-		}
-
-		.header-text p {
-			font-size: 14px;
-		}
-
-		.add-button {
-			padding: 10px 16px;
-			font-size: 14px;
-		}
-
-		.modal {
-			width: 100%;
-			margin: 8px;
-			max-height: 98vh;
-		}
-
-		.modal-overlay {
-			padding: 8px;
-		}
-
-		.modal-header {
-			padding: 16px;
-		}
-
-		.modal-form {
-			padding: 16px;
-		}
-
 		.link-item {
 			padding: 16px;
 		}

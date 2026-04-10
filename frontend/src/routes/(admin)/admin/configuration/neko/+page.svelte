@@ -26,9 +26,7 @@
 
 	const defaultDirty = $derived(pendingDefault !== savedDefault);
 	const enforcedSelectionDirty = $derived(pendingEnforced !== savedEnforced);
-	const lockDirty = $derived(
-		pendingEnforceToggle !== savedEnforceToggle || enforcedSelectionDirty
-	);
+	const lockDirty = $derived(pendingEnforceToggle !== savedEnforceToggle || enforcedSelectionDirty);
 
 	$effect(() => {
 		if (!pendingEnforceToggle) {
@@ -145,9 +143,10 @@
 		<div>
 			<h2 class="page-title">Web Neko</h2>
 			<p class="page-desc">
-				Art and script from <a href="https://webneko.net/" target="_blank" rel="noopener noreferrer">webneko.net</a>.
-				Optional site-wide lock is below; further down, set the default for new visitors and for anyone without a
-				saved choice while the lock is off.
+				Art and script from <a href="https://webneko.net/" target="_blank" rel="noopener noreferrer"
+					>webneko.net</a
+				>. Optional site-wide lock is below; further down, set the default for new visitors and for
+				anyone without a saved choice while the lock is off.
 			</p>
 		</div>
 	</div>
@@ -158,8 +157,9 @@
 			<h2 id="neko-enforcement-heading" class="neko-enforcement-title">Site-wide Neko lock</h2>
 		</div>
 		<p class="neko-enforcement-desc">
-			When enabled, every visitor sees the Neko skin you choose below and cannot change it from the site settings
-			panel. When disabled, returning visitors keep their personal pick (stored in the browser).
+			When enabled, every visitor sees the Neko skin you choose below and cannot change it from the
+			site settings panel. When disabled, returning visitors keep their personal pick (stored in the
+			browser).
 		</p>
 		<div class="neko-enforcement-controls">
 			<Toggle
@@ -182,13 +182,21 @@
 								class:neko-cell--saved={savedEnforced === opt.id && !enforcedSelectionDirty}
 								onclick={() => selectEnforced(opt)}
 								aria-pressed={pendingEnforced === opt.id}
-								aria-label={opt.id === WEB_NEKO_DISABLED ? 'Locked: no Neko' : `Locked: ${opt.label}`}
+								aria-label={opt.id === WEB_NEKO_DISABLED
+									? 'Locked: no Neko'
+									: `Locked: ${opt.label}`}
 							>
 								<span class="thumb-wrap" class:thumb-wrap--none={opt.id === WEB_NEKO_DISABLED}>
 									{#if opt.id === WEB_NEKO_DISABLED}
 										<span class="thumb-none" aria-hidden="true">×</span>
 									{:else}
-										<img src={webNekoStillUrl(opt.id)} alt="" class="thumb" draggable="false" loading="lazy" />
+										<img
+											src={webNekoStillUrl(opt.id)}
+											alt=""
+											class="thumb"
+											draggable="false"
+											loading="lazy"
+										/>
 									{/if}
 								</span>
 								<span class="cell-label">{opt.label}</span>
@@ -216,7 +224,8 @@
 	<section class="neko-default-block" aria-labelledby="neko-default-heading">
 		<h3 id="neko-default-heading" class="default-block-title">Default for new visitors</h3>
 		<p class="default-block-desc">
-			Used when someone has no personal choice yet, and as the server fallback while Neko lock is off.
+			Used when someone has no personal choice yet, and as the server fallback while Neko lock is
+			off.
 		</p>
 		<div class="neko-grid" role="group" aria-label="Default Web Neko skin">
 			{#each WEB_NEKO_GRID_OPTIONS as opt (opt.id)}
@@ -233,7 +242,13 @@
 						{#if opt.id === WEB_NEKO_DISABLED}
 							<span class="thumb-none" aria-hidden="true">×</span>
 						{:else}
-							<img src={webNekoStillUrl(opt.id)} alt="" class="thumb" draggable="false" loading="lazy" />
+							<img
+								src={webNekoStillUrl(opt.id)}
+								alt=""
+								class="thumb"
+								draggable="false"
+								loading="lazy"
+							/>
 						{/if}
 					</span>
 					<span class="cell-label">{opt.label}</span>
@@ -416,7 +431,11 @@
 	}
 
 	.neko-cell--saved:not(.neko-cell--pending) {
-		border-color: color-mix(in srgb, var(--accent-color, #6366f1) 45%, var(--border-color, #3a3a3a));
+		border-color: color-mix(
+			in srgb,
+			var(--accent-color, #6366f1) 45%,
+			var(--border-color, #3a3a3a)
+		);
 	}
 
 	.thumb-wrap {

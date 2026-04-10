@@ -128,12 +128,8 @@
 					/>
 				</div>
 				<div class="custom-actions">
-					<button class="apply-btn" {disabled} onclick={handleCustomColorChange}>
-						Apply
-					</button>
-					<button class="cancel-btn" {disabled} onclick={cancelCustomInput}>
-						Cancel
-					</button>
+					<button class="apply-btn" {disabled} onclick={handleCustomColorChange}> Apply </button>
+					<button class="cancel-btn" {disabled} onclick={cancelCustomInput}> Cancel </button>
 				</div>
 			</div>
 		{/if}

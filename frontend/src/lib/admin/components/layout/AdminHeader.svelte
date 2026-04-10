@@ -57,17 +57,17 @@
 		<!-- Left side - Menu toggle and site title -->
 		<div class="header-left">
 			<!-- Desktop sidebar toggle -->
-			<button 
+			<button
 				class="menu-toggle desktop-only"
 				onclick={handleToggleSidebar}
 				aria-label="Toggle sidebar"
 			>
 				<Menu size={20} />
 			</button>
-			
+
 			<!-- Mobile sidebar toggle -->
 			{#if showMobileMenu}
-				<button 
+				<button
 					class="menu-toggle mobile-only"
 					onclick={handleToggleMobileSidebar}
 					aria-label="Open menu"
@@ -75,25 +75,21 @@
 					<Menu size={20} />
 				</button>
 			{/if}
-			
+
 			<h1 class="site-title">DANEGG</h1>
 		</div>
-		
+
 		<!-- Right side - Account dropdown -->
 		<div class="header-right">
 			<div class="account-dropdown">
-				<button 
-					class="account-button"
-					onclick={toggleAccountDropdown}
-					aria-label="Account menu"
-				>
+				<button class="account-button" onclick={toggleAccountDropdown} aria-label="Account menu">
 					<div class="account-info">
 						<User size={16} />
 						<span class="username">{$user?.username || 'User'}</span>
 						<ChevronDown size={14} class="dropdown-arrow {showAccountDropdown ? 'open' : ''}" />
 					</div>
 				</button>
-				
+
 				{#if showAccountDropdown}
 					<div class="dropdown-menu">
 						<button class="dropdown-item" onclick={handleAccountClick}>
@@ -120,7 +116,9 @@
 		position: sticky;
 		top: 0;
 		border-bottom: 1px solid #2a2a2a;
-		transition: background-color 0.2s ease, border-color 0.2s ease;
+		transition:
+			background-color 0.2s ease,
+			border-color 0.2s ease;
 	}
 
 	:global(html:not(.dark)) .admin-header {
@@ -153,7 +151,9 @@
 		border: none;
 		padding: 8px;
 		cursor: pointer;
-		transition: background-color 0.2s ease, color 0.2s ease;
+		transition:
+			background-color 0.2s ease,
+			color 0.2s ease;
 		border-radius: 4px;
 	}
 
@@ -206,7 +206,9 @@
 		border: none;
 		padding: 8px 12px;
 		cursor: pointer;
-		transition: background-color 0.2s ease, color 0.2s ease;
+		transition:
+			background-color 0.2s ease,
+			color 0.2s ease;
 		border-radius: 6px;
 	}
 

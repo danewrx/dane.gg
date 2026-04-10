@@ -47,7 +47,7 @@
 			content = post.content;
 			thumbnail = post.thumbnail || '';
 			published = post.published;
-			tags = post.tags.map(t => t.name);
+			tags = post.tags.map((t) => t.name);
 			autoSlug = false;
 		} catch (err) {
 			console.error('Error loading post:', err);
@@ -80,7 +80,7 @@
 	}
 
 	function removeTag(tagToRemove: string) {
-		tags = tags.filter(t => t !== tagToRemove);
+		tags = tags.filter((t) => t !== tagToRemove);
 	}
 
 	function handleTagKeydown(e: KeyboardEvent) {
@@ -166,7 +166,13 @@
 			<p>Loading post...</p>
 		</div>
 	{:else}
-		<form class="editor-form" onsubmit={(e) => { e.preventDefault(); handleSave(); }}>
+		<form
+			class="editor-form"
+			onsubmit={(e) => {
+				e.preventDefault();
+				handleSave();
+			}}
+		>
 			<!-- Title -->
 			<div class="form-group">
 				<label for="title">
@@ -249,18 +255,14 @@
 						placeholder="Add a tag..."
 						class="text-input"
 					/>
-					<button type="button" class="add-tag-button" onclick={addTag}>
-						Add
-					</button>
+					<button type="button" class="add-tag-button" onclick={addTag}> Add </button>
 				</div>
 				{#if tags.length > 0}
 					<div class="tags-list">
 						{#each tags as tag}
 							<span class="tag">
 								{tag}
-								<button type="button" class="remove-tag" onclick={() => removeTag(tag)}>
-									×
-								</button>
+								<button type="button" class="remove-tag" onclick={() => removeTag(tag)}> × </button>
 							</span>
 						{/each}
 					</div>
@@ -290,9 +292,7 @@
 
 			<!-- Actions -->
 			<div class="form-actions">
-				<button type="button" class="cancel-button" onclick={handleBack}>
-					Cancel
-				</button>
+				<button type="button" class="cancel-button" onclick={handleBack}> Cancel </button>
 				<button type="submit" class="save-button" disabled={saving}>
 					{#if saving}
 						<div class="button-spinner"></div>
@@ -364,8 +364,12 @@
 	}
 
 	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
 
 	.editor-form {
@@ -632,4 +636,3 @@
 		}
 	}
 </style>
-

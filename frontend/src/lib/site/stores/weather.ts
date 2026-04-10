@@ -33,17 +33,19 @@ export const weatherSettings = writable<{
 } | null>(null);
 
 // Weather particles store
-export const weatherParticles = writable<Array<{
-	id: number;
-	x: number;
-	y: number;
-	vx: number;
-	vy: number;
-	size: number;
-	opacity: number;
-	life: number;
-	type: 'rain' | 'snow';
-}>>([]);
+export const weatherParticles = writable<
+	Array<{
+		id: number;
+		x: number;
+		y: number;
+		vx: number;
+		vy: number;
+		size: number;
+		opacity: number;
+		life: number;
+		type: 'rain' | 'snow';
+	}>
+>([]);
 
 // Track if we've initialized weather settings
 let weatherInitialized = false;
@@ -60,19 +62,29 @@ if (browser) {
 					type: config.default_weather_type,
 					speed: config.default_weather_speed
 				});
-				console.log('🔒 Using enforced weather settings:', config.default_weather_type, config.default_weather_speed);
+				console.log(
+					'🔒 Using enforced weather settings:',
+					config.default_weather_type,
+					config.default_weather_speed
+				);
 			} else if (!weatherInitialized) {
 				// Only restore user preferences on first load when not enforced
 				const savedWeather = localStorage.getItem('weatherType') as WeatherType;
 				const savedSpeed = localStorage.getItem('weatherSpeed');
 
-				console.log('🔄 Restoring weather settings from localStorage:', { savedWeather, savedSpeed });
+				console.log('🔄 Restoring weather settings from localStorage:', {
+					savedWeather,
+					savedSpeed
+				});
 
 				let weatherType = config.default_weather_type;
 				let weatherSpeed = config.default_weather_speed;
 
 				// Use saved values if they exist and are valid
-				if (savedWeather && (savedWeather === 'none' || savedWeather === 'rain' || savedWeather === 'snow')) {
+				if (
+					savedWeather &&
+					(savedWeather === 'none' || savedWeather === 'rain' || savedWeather === 'snow')
+				) {
 					weatherType = savedWeather;
 					console.log('✅ Using saved weather type:', weatherType);
 				} else {
@@ -134,7 +146,7 @@ if (browser) {
 // Weather control functions
 export function setWeatherType(type: WeatherType) {
 	userChangedSettings = true; // Mark that user changed settings
-	weatherSettings.update(settings => {
+	weatherSettings.update((settings) => {
 		if (settings) {
 			return {
 				...settings,
@@ -147,7 +159,7 @@ export function setWeatherType(type: WeatherType) {
 
 export function setWeatherSpeed(speed: number) {
 	userChangedSettings = true; // Mark that user changed settings
-	weatherSettings.update(settings => {
+	weatherSettings.update((settings) => {
 		if (settings) {
 			return {
 				...settings,
@@ -169,7 +181,10 @@ export function restoreUserPreferences() {
 	let weatherSpeed = 1.0;
 
 	// Use saved values if they exist and are valid
-	if (savedWeather && (savedWeather === 'none' || savedWeather === 'rain' || savedWeather === 'snow')) {
+	if (
+		savedWeather &&
+		(savedWeather === 'none' || savedWeather === 'rain' || savedWeather === 'snow')
+	) {
 		weatherType = savedWeather;
 	}
 
@@ -208,7 +223,10 @@ export function applyWeatherFromServerConfig(config: SiteConfig): void {
 	let weatherType = config.default_weather_type;
 	let weatherSpeed = config.default_weather_speed;
 
-	if (savedWeather && (savedWeather === 'none' || savedWeather === 'rain' || savedWeather === 'snow')) {
+	if (
+		savedWeather &&
+		(savedWeather === 'none' || savedWeather === 'rain' || savedWeather === 'snow')
+	) {
 		weatherType = savedWeather;
 	}
 

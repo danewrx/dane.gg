@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Save, Eye, EyeOff } from 'lucide-svelte';
-	import { 
-		getBannerConfig, 
-		saveBannerConfig, 
-		type BannerConfig 
+	import {
+		getBannerConfig,
+		saveBannerConfig,
+		type BannerConfig
 	} from '$lib/admin/services/bannerService';
 	import BannerDisplay from '$lib/site/components/BannerDisplay.svelte';
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
@@ -92,7 +92,10 @@
 					enabledTools={['bold', 'italic', 'underline', 'strikethrough']}
 					outputFormat="html"
 				/>
-				<p class="help-text">This text will scroll across the banner. Use the toolbar to format text (bold, italic, underline, strikethrough).</p>
+				<p class="help-text">
+					This text will scroll across the banner. Use the toolbar to format text (bold, italic,
+					underline, strikethrough).
+				</p>
 			</div>
 
 			<!-- Enabled Toggle -->
@@ -123,8 +126,16 @@
 						<div class="color-row">
 							<label for="bg-color" class="color-label">Background Color</label>
 							<div class="color-input-group">
-								<button type="button" class="color-swatch" onclick={() => document.getElementById('bg-color')?.click()} aria-label="Choose background color">
-									<div class="color-swatch-inner" style="background-color: {config.backgroundColor};"></div>
+								<button
+									type="button"
+									class="color-swatch"
+									onclick={() => document.getElementById('bg-color')?.click()}
+									aria-label="Choose background color"
+								>
+									<div
+										class="color-swatch-inner"
+										style="background-color: {config.backgroundColor};"
+									></div>
 									<input
 										type="color"
 										id="bg-color"
@@ -145,14 +156,23 @@
 
 					<!-- Transparent Background Toggle -->
 					<div class="toggle-row">
-						<Toggle bind:checked={config.transparentBackground} label="Transparent Background" size="small" />
+						<Toggle
+							bind:checked={config.transparentBackground}
+							label="Transparent Background"
+							size="small"
+						/>
 					</div>
 
 					<!-- Text Color -->
 					<div class="color-row">
 						<label for="text-color" class="color-label">Text Color</label>
 						<div class="color-input-group">
-							<button type="button" class="color-swatch" onclick={() => document.getElementById('text-color')?.click()} aria-label="Choose text color">
+							<button
+								type="button"
+								class="color-swatch"
+								onclick={() => document.getElementById('text-color')?.click()}
+								aria-label="Choose text color"
+							>
 								<div class="color-swatch-inner" style="background-color: {config.textColor};"></div>
 								<input
 									type="color"
@@ -175,24 +195,24 @@
 
 			<!-- Speed Setting -->
 			<div class="form-group">
-			<label for="speed">
-				Animation Speed
-				<span class="speed-value">{config.speed} px/s</span>
-			</label>
-			<input
-				type="range"
-				id="speed"
-				value={config.speed}
-				oninput={(e) => config.speed = Number((e.target as HTMLInputElement).value)}
-				min="20"
-				max="300"
-				step="10"
-				class="range-input"
-			/>
-			<div class="range-labels">
-				<span>Slow</span>
-				<span>Fast</span>
-			</div>
+				<label for="speed">
+					Animation Speed
+					<span class="speed-value">{config.speed} px/s</span>
+				</label>
+				<input
+					type="range"
+					id="speed"
+					value={config.speed}
+					oninput={(e) => (config.speed = Number((e.target as HTMLInputElement).value))}
+					min="20"
+					max="300"
+					step="10"
+					class="range-input"
+				/>
+				<div class="range-labels">
+					<span>Slow</span>
+					<span>Fast</span>
+				</div>
 			</div>
 
 			<!-- Preview -->
@@ -200,18 +220,14 @@
 				<div class="preview-section">
 					<h3>Preview</h3>
 					<div class="preview-wrapper">
-						<BannerDisplay config={config} />
+						<BannerDisplay {config} />
 					</div>
 				</div>
 			{/if}
 
 			<!-- Save Button -->
 			<div class="form-actions">
-				<button
-					class="save-button"
-					onclick={saveConfig}
-					disabled={saving}
-				>
+				<button class="save-button" onclick={saveConfig} disabled={saving}>
 					<Save size={18} />
 					{saving ? 'Saving...' : 'Save Configuration'}
 				</button>
@@ -248,8 +264,12 @@
 	}
 
 	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
 
 	.config-form {
@@ -297,7 +317,6 @@
 			width: 100%;
 		}
 	}
-
 
 	.help-text {
 		color: var(--text-secondary, #a1a1aa);
@@ -378,13 +397,17 @@
 		overflow: hidden;
 		transition: border-color 0.2s ease;
 		padding: 0;
-		background-image: 
+		background-image:
 			linear-gradient(45deg, #555 25%, transparent 25%),
 			linear-gradient(-45deg, #555 25%, transparent 25%),
 			linear-gradient(45deg, transparent 75%, #555 75%),
 			linear-gradient(-45deg, transparent 75%, #555 75%);
 		background-size: 8px 8px;
-		background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
+		background-position:
+			0 0,
+			0 4px,
+			4px -4px,
+			-4px 0px;
 		background-color: #333;
 	}
 
@@ -537,4 +560,3 @@
 		}
 	}
 </style>
-

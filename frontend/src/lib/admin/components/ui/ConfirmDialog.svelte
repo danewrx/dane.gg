@@ -186,7 +186,9 @@
 		background: transparent;
 		color: var(--text-secondary, #a1a1aa);
 		cursor: pointer;
-		transition: background 0.15s ease, color 0.15s ease;
+		transition:
+			background 0.15s ease,
+			color 0.15s ease;
 		flex-shrink: 0;
 	}
 
@@ -237,7 +239,9 @@
 		font-size: 14px;
 		font-weight: 500;
 		cursor: pointer;
-		transition: background 0.15s ease, opacity 0.15s ease;
+		transition:
+			background 0.15s ease,
+			opacity 0.15s ease;
 	}
 
 	.btn-cancel {

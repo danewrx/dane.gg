@@ -31,36 +31,32 @@
 <div class="my-button-widget">
 	<div class="button-content">
 		<div class="button-image">
-			<img 
-				src="/assets/img/buttons/svelte.gif" 
-				alt="dane.gg button" 
-				width="88" 
-				height="31"
-			/>
+			<img src="/assets/img/buttons/svelte.gif" alt="dane.gg button" width="88" height="31" />
 		</div>
-		
+
 		<div class="code-section">
 			<div class="code-block">
 				<pre><code>{buttonCode}</code></pre>
 			</div>
-			<button 
-				class="copy-button" 
-				onclick={copyCode}
-				title="Copy code to clipboard"
-			>
+			<button class="copy-button" onclick={copyCode} title="Copy code to clipboard">
 				<Copy size={16} />
 			</button>
 		</div>
 	</div>
-	
+
 	<div class="hotlink-section">
 		<button class="hotlink-toggle" onclick={toggleExpanded}>
-			<span>DO hotlink my button <span class="question-mark" class:bold={isExpanded}>[?]</span></span>
+			<span
+				>DO hotlink my button <span class="question-mark" class:bold={isExpanded}>[?]</span></span
+			>
 		</button>
-		
+
 		{#if isExpanded}
 			<div class="hotlink-explanation">
-				<p>I have endless bandwidth on my site & I want to be able to change my button any time I want, without having to ask people to change it.</p>
+				<p>
+					I have endless bandwidth on my site & I want to be able to change my button any time I
+					want, without having to ask people to change it.
+				</p>
 			</div>
 		{/if}
 	</div>
@@ -194,7 +190,7 @@
 	.hotlink-section {
 		display: flex;
 		flex-direction: column;
-		gap: 4px; 
+		gap: 4px;
 		align-items: center;
 		margin-top: 0;
 	}

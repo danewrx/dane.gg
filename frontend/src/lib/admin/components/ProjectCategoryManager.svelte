@@ -36,8 +36,8 @@
 		try {
 			loading = true;
 			categories = await getAllProjectCategories();
-			
-			const allHaveZeroOrder = categories.every(cat => cat.displayOrder === 0);
+
+			const allHaveZeroOrder = categories.every((cat) => cat.displayOrder === 0);
 			if (allHaveZeroOrder && categories.length > 0) {
 				const categoryOrders = categories.map((cat, index) => ({
 					id: cat.id,
@@ -50,7 +50,7 @@
 					console.error('Error initializing category order:', err);
 				}
 			}
-			
+
 			categories.sort((a, b) => a.displayOrder - b.displayOrder);
 		} catch (err) {
 			console.error('Error loading categories:', err);
@@ -112,7 +112,7 @@
 	}
 
 	async function handleDelete(id: string) {
-		const category = categories.find(c => c.id === id);
+		const category = categories.find((c) => c.id === id);
 		if (!category) return;
 
 		try {
@@ -218,10 +218,12 @@
 			<button onclick={startAdd} type="button">Create your first category</button>
 		</div>
 	{:else}
-		<div class="categories-list">
+		<div class="categories-list" role="list">
 			{#each categories as category, index (category.id)}
 				<div
 					class="category-item"
+					role="listitem"
+					aria-label={`Reorder category: ${category.name}`}
 					class:dragging={draggedIndex === index}
 					class:drag-over={dragOverIndex === index}
 					draggable="true"
@@ -262,8 +264,26 @@
 	{/if}
 
 	{#if showAddForm}
-		<div class="modal-overlay" onclick={cancelEdit}>
-			<div class="modal" onclick={(e) => e.stopPropagation()}>
+		<div
+			class="modal-overlay"
+			onclick={cancelEdit}
+			role="button"
+			tabindex="0"
+			onkeydown={(e) => {
+				if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					cancelEdit();
+				}
+			}}
+		>
+			<div
+				class="modal"
+				role="dialog"
+				aria-modal="true"
+				tabindex="-1"
+				onclick={(e) => e.stopPropagation()}
+				onkeydown={(e) => e.stopPropagation()}
+			>
 				<div class="modal-header">
 					<h3>{editingCategory ? 'Edit Category' : 'Add Category'}</h3>
 					<button class="close-button" onclick={cancelEdit} type="button">
@@ -293,8 +313,13 @@
 					<button class="cancel-button" onclick={cancelEdit} type="button" disabled={isSaving}>
 						Cancel
 					</button>
-					<button class="save-button" onclick={saveCategory} type="button" disabled={isSaving || !formData.name.trim()}>
-						{isSaving ? 'Saving...' : (editingCategory ? 'Update' : 'Create')}
+					<button
+						class="save-button"
+						onclick={saveCategory}
+						type="button"
+						disabled={isSaving || !formData.name.trim()}
+					>
+						{isSaving ? 'Saving...' : editingCategory ? 'Update' : 'Create'}
 					</button>
 				</div>
 			</div>
@@ -625,4 +650,3 @@
 		transform: none;
 	}
 </style>
-

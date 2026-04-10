@@ -11,7 +11,17 @@
 	let loadingEmails = $state(true);
 	let emailsHeader = $state('');
 	let loadingEmailsHeader = $state(true);
-	let socialLinks = $state<{ id: string; name: string; url: string; iconType: string; iconName?: string; iconText?: string; svgUrl?: string }[]>([]);
+	let socialLinks = $state<
+		{
+			id: string;
+			name: string;
+			url: string;
+			iconType: string;
+			iconName?: string;
+			iconText?: string;
+			svgUrl?: string;
+		}[]
+	>([]);
 	let socialHeader = $state('');
 	let loadingSocial = $state(true);
 
@@ -23,7 +33,7 @@
 		try {
 			loadingTagline = true;
 			const response = await fetch('/api/contact/settings/tagline');
-			
+
 			if (response.ok) {
 				const result = await response.json();
 				if (result.success && result.data?.value) {
@@ -44,7 +54,7 @@
 		try {
 			loadingEmails = true;
 			const response = await fetch('/api/contact/emails');
-			
+
 			if (response.ok) {
 				const result = await response.json();
 				if (result.success && result.data) {
@@ -65,7 +75,7 @@
 		try {
 			loadingEmailsHeader = true;
 			const response = await fetch('/api/contact/settings/emails_header');
-			
+
 			if (response.ok) {
 				const result = await response.json();
 				if (result.success && result.data?.value) {
@@ -82,7 +92,7 @@
 	async function loadSocialLinks() {
 		try {
 			loadingSocial = true;
-			
+
 			// Fetch link IDs and header
 			const [linksConfigResponse, headerResponse, allLinksResponse] = await Promise.all([
 				fetch('/api/contact/settings/social_links'),
@@ -117,7 +127,7 @@
 					const allLinks = allLinksData.data;
 					// Maintain order from selectedLinkIds
 					socialLinks = selectedLinkIds
-						.map(id => allLinks.find((link: any) => link.id === id))
+						.map((id) => allLinks.find((link: any) => link.id === id))
 						.filter((link): link is any => link !== undefined);
 				}
 			}
@@ -186,17 +196,9 @@
 						{#if link.iconType === 'custom-text' && link.iconText}
 							<span class="text-icon">{link.iconText}</span>
 						{:else if link.iconType === 'svg-url' && link.svgUrl}
-							<img 
-								src={link.svgUrl} 
-								alt={link.name}
-								class="svg-icon"
-							/>
+							<img src={link.svgUrl} alt={link.name} class="svg-icon" />
 						{:else if link.iconType === 'coreui-brand' && link.iconName}
-							<Icon 
-								icon={`cib:${link.iconName.replace('cb-', '')}`} 
-								width="20" 
-								height="20"
-							/>
+							<Icon icon={`cib:${link.iconName.replace('cb-', '')}`} width="20" height="20" />
 						{:else}
 							<Icon icon="simple-icons:link" width="20" height="20" />
 						{/if}

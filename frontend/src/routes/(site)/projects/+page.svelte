@@ -59,7 +59,7 @@
 			loading = true;
 			error = '';
 			const response = await fetch('/api/projects');
-			
+
 			if (!response.ok) {
 				throw new Error('Failed to load projects');
 			}
@@ -69,13 +69,14 @@
 
 			// Filter projects: only show featured projects
 			const filteredCategories = allCategories
-				.map(categoryGroup => {
-					const visibleProjects = categoryGroup.projects.filter(project => {
+				.map((categoryGroup) => {
+					const visibleProjects = categoryGroup.projects.filter((project) => {
 						return project.featured === true;
 					});
 
-					const allFeatured = categoryGroup.projects.length > 0 && 
-						categoryGroup.projects.every(project => project.featured === true);
+					const allFeatured =
+						categoryGroup.projects.length > 0 &&
+						categoryGroup.projects.every((project) => project.featured === true);
 
 					return {
 						...categoryGroup,
@@ -83,7 +84,7 @@
 						allFeatured: allFeatured
 					};
 				})
-				.filter(categoryGroup => categoryGroup.projects.length > 0)
+				.filter((categoryGroup) => categoryGroup.projects.length > 0)
 				// Sort by category displayOrder
 				.sort((a, b) => {
 					const orderDiff = (a.category.displayOrder || 0) - (b.category.displayOrder || 0);
@@ -102,21 +103,20 @@
 
 	function getImageUrl(imageUrl: string | null): string {
 		if (!imageUrl) return '';
-		
+
 		// If it's an external URL, return as-is
 		if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
 			return imageUrl;
 		}
-		
+
 		// If it's a local upload, serve through API
 		if (imageUrl.startsWith('/uploads/')) {
 			const filename = imageUrl.replace('/uploads/', '');
 			return `/api/upload/file/${filename}`;
 		}
-		
+
 		return imageUrl;
 	}
-
 </script>
 
 <svelte:head>
@@ -148,107 +148,102 @@
 						<a href="/projects/{categoryGroup.category.id}" class="view-all-link">View all →</a>
 					{/if}
 				</div>
-				
+
 				<div class="projects-grid-container">
 					<div class="projects-grid">
 						{#each categoryGroup.projects as project (project.id)}
 							<article class="project-card">
-							{#if project.imageUrl}
-								<div class="project-image">
-									<img 
-										src={getImageUrl(project.imageUrl)} 
-										alt={project.title}
-										loading="lazy"
-									/>
-								</div>
-							{/if}
-							
-							<div class="project-content">
-								<div class="project-header">
-									<h3 class="project-title">{project.title}</h3>
-									<div class="project-status">
-										<span class="status-indicator" style="background-color: {getProjectStatusColor(project.active)};"></span>
-										<span class="status-text">{project.active}</span>
-									</div>
-								</div>
-								
-								{#if project.tags && project.tags.length > 0}
-									<div class="project-tags">
-										{#each project.tags as tag (tag.id)}
-											<span 
-												class="tag" 
-												style="background-color: {tag.color}20; color: {tag.color}; border-color: {tag.color}40;"
-											>
-												{tag.title}
-											</span>
-										{/each}
+								{#if project.imageUrl}
+									<div class="project-image">
+										<img src={getImageUrl(project.imageUrl)} alt={project.title} loading="lazy" />
 									</div>
 								{/if}
-								
-								<p class="project-description">{project.description}</p>
-								
-								<div class="project-actions">
-									{#if project.projectUrl}
-										{@const projectIconInfo = getIconRenderInfo(project.projectIcon)}
-										<a 
-											href={project.projectUrl} 
-											target="_blank" 
-											rel="noopener noreferrer"
-											class="action-button"
-										>
-											{#if projectIconInfo.type === 'component' && projectIconInfo.component}
-												{@const IconComponent = projectIconInfo.component}
-												<IconComponent size={16} />
-											{:else if projectIconInfo.type === 'iconify' && projectIconInfo.icon}
-												<Icon icon={projectIconInfo.icon} width="16" height="16" />
-											{:else if projectIconInfo.type === 'svg' && projectIconInfo.url}
-												<img src={projectIconInfo.url} alt="Icon" width="16" height="16" />
-											{:else if projectIconInfo.type === 'text' && projectIconInfo.text}
-												<span class="text-icon">{projectIconInfo.text}</span>
-											{:else}
-												{#if projectIconInfo.component}
+
+								<div class="project-content">
+									<div class="project-header">
+										<h3 class="project-title">{project.title}</h3>
+										<div class="project-status">
+											<span
+												class="status-indicator"
+												style="background-color: {getProjectStatusColor(project.active)};"
+											></span>
+											<span class="status-text">{project.active}</span>
+										</div>
+									</div>
+
+									{#if project.tags && project.tags.length > 0}
+										<div class="project-tags">
+											{#each project.tags as tag (tag.id)}
+												<span
+													class="tag"
+													style="background-color: {tag.color}20; color: {tag.color}; border-color: {tag.color}40;"
+												>
+													{tag.title}
+												</span>
+											{/each}
+										</div>
+									{/if}
+
+									<p class="project-description">{project.description}</p>
+
+									<div class="project-actions">
+										{#if project.projectUrl}
+											{@const projectIconInfo = getIconRenderInfo(project.projectIcon)}
+											<a
+												href={project.projectUrl}
+												target="_blank"
+												rel="noopener noreferrer"
+												class="action-button"
+											>
+												{#if projectIconInfo.type === 'component' && projectIconInfo.component}
+													{@const IconComponent = projectIconInfo.component}
+													<IconComponent size={16} />
+												{:else if projectIconInfo.type === 'iconify' && projectIconInfo.icon}
+													<Icon icon={projectIconInfo.icon} width="16" height="16" />
+												{:else if projectIconInfo.type === 'svg' && projectIconInfo.url}
+													<img src={projectIconInfo.url} alt="Icon" width="16" height="16" />
+												{:else if projectIconInfo.type === 'text' && projectIconInfo.text}
+													<span class="text-icon">{projectIconInfo.text}</span>
+												{:else if projectIconInfo.component}
 													{@const DefaultIcon = projectIconInfo.component}
 													<DefaultIcon size={16} />
 												{:else}
 													<Icon icon="lucide:external-link" width="16" height="16" />
 												{/if}
-											{/if}
-											{project.projectText || 'Visit Website'}
-										</a>
-									{/if}
-									
-									{#if project.repoUrl}
-										{@const repoIconInfo = getIconRenderInfo(project.repoIcon)}
-										<a 
-											href={project.repoUrl} 
-											target="_blank" 
-											rel="noopener noreferrer"
-											class="action-button"
-										>
-											{#if repoIconInfo.type === 'component' && repoIconInfo.component}
-												{@const IconComponent = repoIconInfo.component}
-												<IconComponent size={16} />
-											{:else if repoIconInfo.type === 'iconify' && repoIconInfo.icon}
-												<Icon icon={repoIconInfo.icon} width="16" height="16" />
-											{:else if repoIconInfo.type === 'svg' && repoIconInfo.url}
-												<img src={repoIconInfo.url} alt="Icon" width="16" height="16" />
-											{:else if repoIconInfo.type === 'text' && repoIconInfo.text}
-												<span class="text-icon">{repoIconInfo.text}</span>
-											{:else}
-												{#if repoIconInfo.component}
+												{project.projectText || 'Visit Website'}
+											</a>
+										{/if}
+
+										{#if project.repoUrl}
+											{@const repoIconInfo = getIconRenderInfo(project.repoIcon)}
+											<a
+												href={project.repoUrl}
+												target="_blank"
+												rel="noopener noreferrer"
+												class="action-button"
+											>
+												{#if repoIconInfo.type === 'component' && repoIconInfo.component}
+													{@const IconComponent = repoIconInfo.component}
+													<IconComponent size={16} />
+												{:else if repoIconInfo.type === 'iconify' && repoIconInfo.icon}
+													<Icon icon={repoIconInfo.icon} width="16" height="16" />
+												{:else if repoIconInfo.type === 'svg' && repoIconInfo.url}
+													<img src={repoIconInfo.url} alt="Icon" width="16" height="16" />
+												{:else if repoIconInfo.type === 'text' && repoIconInfo.text}
+													<span class="text-icon">{repoIconInfo.text}</span>
+												{:else if repoIconInfo.component}
 													{@const DefaultIcon = repoIconInfo.component}
 													<DefaultIcon size={16} />
 												{:else}
 													<Icon icon="lucide:external-link" width="16" height="16" />
 												{/if}
-											{/if}
-											{project.repoText || 'View on GitHub'}
-										</a>
-									{/if}
+												{project.repoText || 'View on GitHub'}
+											</a>
+										{/if}
+									</div>
 								</div>
-							</div>
-						</article>
-					{/each}
+							</article>
+						{/each}
 					</div>
 				</div>
 			</section>
@@ -493,8 +488,8 @@
 		color: var(--theme-accent, #6366f1);
 	}
 
-	.action-button svg,
-	.action-button img {
+	.action-button :global(svg),
+	.action-button :global(img) {
 		flex-shrink: 0;
 	}
 
@@ -545,7 +540,6 @@
 			padding: 1rem;
 		}
 	}
-
 
 	@media (min-width: 769px) and (max-width: 1024px) {
 		.projects-grid {

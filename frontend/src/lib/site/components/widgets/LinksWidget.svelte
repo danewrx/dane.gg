@@ -2,18 +2,17 @@
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
 
-interface SocialLink {
-	id: string;
-	name: string;
-	url: string;
-	iconType: 'coreui-brand' | 'svg-url' | 'custom-text';
-	iconName?: string;
-	iconText?: string;
-	svgUrl?: string;
-	displayOrder: number;
-	isActive: boolean;
-}
-
+	interface SocialLink {
+		id: string;
+		name: string;
+		url: string;
+		iconType: 'coreui-brand' | 'svg-url' | 'custom-text';
+		iconName?: string;
+		iconText?: string;
+		svgUrl?: string;
+		displayOrder: number;
+		isActive: boolean;
+	}
 
 	let socialLinks: SocialLink[] = $state([]);
 	let isLoading = $state(true);
@@ -21,11 +20,11 @@ interface SocialLink {
 	onMount(async () => {
 		try {
 			const response = await fetch('/api/social-links');
-			
+
 			if (!response.ok) {
 				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 			}
-			
+
 			const data = await response.json();
 
 			if (data.success && data.data) {
@@ -53,8 +52,8 @@ interface SocialLink {
 	<div class="links-container">
 		<div class="links-grid">
 			{#each socialLinks as link, index}
-				<button 
-					class="link-item" 
+				<button
+					class="link-item"
 					onclick={() => handleLinkClick(link.url)}
 					aria-label={link.name}
 					title={link.name}
@@ -62,17 +61,10 @@ interface SocialLink {
 					{#if link.iconType === 'custom-text' && link.iconText}
 						<span class="text-icon custom-text">{link.iconText}</span>
 					{:else if link.iconType === 'svg-url' && link.svgUrl}
-						<img 
-							src={link.svgUrl} 
-							alt={link.name}
-							class="svg-icon"
-						/>
+						<img src={link.svgUrl} alt={link.name} class="svg-icon" />
 					{:else if link.iconType === 'coreui-brand' && link.iconName}
-					<Icon 
-						icon={`cib:${link.iconName.replace('cb-', '')}`} 
-						class="iconify-icon"
-					/>
-				{/if}
+						<Icon icon={`cib:${link.iconName.replace('cb-', '')}`} class="iconify-icon" />
+					{/if}
 				</button>
 			{/each}
 		</div>
@@ -122,7 +114,6 @@ interface SocialLink {
 		box-sizing: border-box;
 	}
 
-
 	.loading {
 		display: flex;
 		justify-content: center;
@@ -140,8 +131,12 @@ interface SocialLink {
 	}
 
 	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
 
 	.no-links-message {
@@ -282,17 +277,18 @@ interface SocialLink {
 			--icon-height: 24px;
 			--gap-height: 2px;
 		}
-		
+
 		.link-item {
 			height: 24px;
 			font-size: calc(9 * 1em / 14);
 		}
-		
+
 		.text-icon {
 			font-size: calc(8 * 1em / 14);
 		}
-		
-		.svg-icon, :global(.link-item svg) {
+
+		.svg-icon,
+		:global(.link-item svg) {
 			width: 16px;
 			height: 16px;
 		}
@@ -306,20 +302,20 @@ interface SocialLink {
 			--icon-height: 24px;
 			--gap-height: 2px;
 		}
-		
+
 		.link-item {
 			height: 24px;
 			font-size: calc(9 * 1em / 14);
 		}
-		
+
 		.text-icon {
 			font-size: calc(8 * 1em / 14);
 		}
-		
-		.svg-icon, :global(.link-item svg) {
+
+		.svg-icon,
+		:global(.link-item svg) {
 			width: 16px;
 			height: 16px;
 		}
 	}
 </style>
-

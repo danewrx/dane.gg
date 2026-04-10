@@ -1,6 +1,19 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Save, RefreshCw, Server, CheckCircle2, XCircle, AlertCircle, Wrench, Edit2, Check, X, Wifi, WifiOff } from 'lucide-svelte';
+	import {
+		Save,
+		RefreshCw,
+		Server,
+		CheckCircle2,
+		XCircle,
+		AlertCircle,
+		Wrench,
+		Edit2,
+		Check,
+		X,
+		Wifi,
+		WifiOff
+	} from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 
 	interface Monitor {
@@ -71,7 +84,7 @@
 				const selectedResult = await selectedResponse.json();
 				if (selectedResult.success) {
 					selectedMonitorIds = selectedResult.data || [];
-					
+
 					if (selectedMonitorIds.length > 0) {
 						await loadCustomNames();
 					}
@@ -94,7 +107,9 @@
 
 	async function loadMonitors() {
 		if (!config.isConfigured) {
-			toast.error('Uptime Kuma is not configured. Please set UPTIME_KUMA_URL environment variable.');
+			toast.error(
+				'Uptime Kuma is not configured. Please set UPTIME_KUMA_URL environment variable.'
+			);
 			return;
 		}
 
@@ -186,7 +201,7 @@
 
 	function startEditing(monitorId: number) {
 		editingMonitorId = monitorId;
-		const monitor = allMonitors.find(m => m.id === monitorId);
+		const monitor = allMonitors.find((m) => m.id === monitorId);
 		editingValue = customNames[monitorId] || monitor?.name || '';
 	}
 
@@ -210,7 +225,7 @@
 
 	function toggleMonitor(monitorId: number) {
 		if (selectedMonitorIds.includes(monitorId)) {
-			selectedMonitorIds = selectedMonitorIds.filter(id => id !== monitorId);
+			selectedMonitorIds = selectedMonitorIds.filter((id) => id !== monitorId);
 		} else {
 			selectedMonitorIds = [...selectedMonitorIds, monitorId];
 		}
@@ -293,18 +308,20 @@
 			<!-- Uptime Kuma Configuration -->
 			<div class="form-section">
 				<h2 class="section-title">Uptime Kuma Configuration</h2>
-				
+
 				{#if !config.isConfigured}
 					<div class="config-warning">
 						<AlertCircle size={20} />
 						<div class="warning-content">
 							<p class="warning-title">Uptime Kuma is not configured</p>
-							<p class="warning-text">
-								Please set the following environment variables:
-							</p>
+							<p class="warning-text">Please set the following environment variables:</p>
 							<ul class="env-vars-list">
-								<li><code>UPTIME_KUMA_URL</code> - The base URL of your Uptime Kuma instance (e.g., https://uptime.example.com)</li>
-								<li><code>UPTIME_KUMA_API_KEY</code> - Optional API key for authenticated requests</li>
+								<li>
+									<code>UPTIME_KUMA_URL</code> - The base URL of your Uptime Kuma instance (e.g., https://uptime.example.com)
+								</li>
+								<li>
+									<code>UPTIME_KUMA_API_KEY</code> - Optional API key for authenticated requests
+								</li>
 							</ul>
 							<p class="warning-text">
 								After setting these variables, restart your server for the changes to take effect.
@@ -329,7 +346,11 @@
 								{/if}
 							</div>
 							{#if connectionStatus}
-								<div class="connection-status" class:connected={connectionStatus.connected} class:disconnected={!connectionStatus.connected}>
+								<div
+									class="connection-status"
+									class:connected={connectionStatus.connected}
+									class:disconnected={!connectionStatus.connected}
+								>
 									{#if connectionStatus.connected}
 										<Wifi size={16} />
 									{:else}
@@ -348,9 +369,11 @@
 								</div>
 							{/if}
 						</div>
-						<p class="help-text">Configuration is read from environment variables. To change these values, update your environment configuration and restart the server.</p>
+						<p class="help-text">
+							Configuration is read from environment variables. To change these values, update your
+							environment configuration and restart the server.
+						</p>
 					</div>
-
 				{/if}
 			</div>
 
@@ -360,10 +383,10 @@
 					<h2 class="section-title">
 						Select Monitors to Display
 						<span class="selected-count">({selectedMonitorIds.length} selected)</span>
-						<button 
-							type="button" 
-							class="refresh-button" 
-							onclick={loadMonitors} 
+						<button
+							type="button"
+							class="refresh-button"
+							onclick={loadMonitors}
 							disabled={loadingMonitors}
 							title="Refresh monitors"
 						>
@@ -381,7 +404,7 @@
 								<h3 class="subsection-title">Selected Monitors</h3>
 								<div class="selected-monitors-list">
 									{#each selectedMonitorIds as monitorId}
-										{@const monitor = allMonitors.find(m => m.id === monitorId)}
+										{@const monitor = allMonitors.find((m) => m.id === monitorId)}
 										{#if monitor}
 											<div class="selected-monitor-item">
 												<div class="selected-monitor-info">
@@ -389,7 +412,7 @@
 														<input
 															type="text"
 															value={editingValue}
-															oninput={(e) => editingValue = e.currentTarget.value}
+															oninput={(e) => (editingValue = e.currentTarget.value)}
 															onkeydown={(e) => {
 																if (e.key === 'Enter') {
 																	saveEditing();
@@ -437,7 +460,10 @@
 															<Edit2 size={16} />
 														</button>
 													{/if}
-													<div class="selected-monitor-status" style="--status-color: {getStatusColor(monitor.status)}">
+													<div
+														class="selected-monitor-status"
+														style="--status-color: {getStatusColor(monitor.status)}"
+													>
 														{#if monitor.status === 'up'}
 															<CheckCircle2 size={14} />
 														{:else if monitor.status === 'down'}
@@ -447,7 +473,10 @@
 														{:else}
 															<AlertCircle size={14} />
 														{/if}
-														<span>{monitor.status.charAt(0).toUpperCase() + monitor.status.slice(1)}</span>
+														<span
+															>{monitor.status.charAt(0).toUpperCase() +
+																monitor.status.slice(1)}</span
+														>
 													</div>
 												</div>
 											</div>
@@ -458,94 +487,97 @@
 						{/if}
 
 						{#if allMonitors.length > 0}
-						<div class="monitors-list">
-						{#each (() => {
-							const groups = new Map<string, Monitor[]>();
-							const ungrouped: Monitor[] = [];
-							
-							for (const monitor of allMonitors) {
-								if (monitor.group) {
-									if (!groups.has(monitor.group)) {
-										groups.set(monitor.group, []);
+							<div class="monitors-list">
+								{#each (() => {
+									const groups = new Map<string, Monitor[]>();
+									const ungrouped: Monitor[] = [];
+
+									for (const monitor of allMonitors) {
+										if (monitor.group) {
+											if (!groups.has(monitor.group)) {
+												groups.set(monitor.group, []);
+											}
+											groups.get(monitor.group)!.push(monitor);
+										} else {
+											ungrouped.push(monitor);
+										}
 									}
-									groups.get(monitor.group)!.push(monitor);
-								} else {
-									ungrouped.push(monitor);
-								}
-							}
-							
-							const result: Array<{groupName: string | null; monitors: Monitor[]}> = [];
-							for (const [groupName, monitors] of groups) {
-								result.push({ groupName, monitors });
-							}
-							if (ungrouped.length > 0) {
-								result.push({ groupName: null, monitors: ungrouped });
-							}
-							return result;
-						})() as { groupName, monitors } (groupName || 'ungrouped')}
-							{#if groupName}
-								<h3 class="monitor-group-heading">{groupName}</h3>
-							{/if}
-							<div class="monitor-group-items">
-								{#each monitors as monitor (monitor.id)}
-									<div class="monitor-item-wrapper">
-										<label class="monitor-item" class:selected={selectedMonitorIds.includes(monitor.id)}>
-											<input
-												type="checkbox"
-												checked={selectedMonitorIds.includes(monitor.id)}
-												onchange={() => toggleMonitor(monitor.id)}
-												class="monitor-checkbox"
-											/>
-											<div class="monitor-info">
-												<div class="monitor-header">
-													<span class="monitor-name">{monitor.name}</span>
-													<div class="monitor-status" style="--status-color: {getStatusColor(monitor.status)}">
-														{#if monitor.status === 'up'}
-															<CheckCircle2 size={16} />
-														{:else if monitor.status === 'down'}
-															<XCircle size={16} />
-														{:else if monitor.status === 'maintenance'}
-															<Wrench size={16} />
-														{:else}
-															<AlertCircle size={16} />
+
+									const result: Array<{ groupName: string | null; monitors: Monitor[] }> = [];
+									for (const [groupName, monitors] of groups) {
+										result.push({ groupName, monitors });
+									}
+									if (ungrouped.length > 0) {
+										result.push({ groupName: null, monitors: ungrouped });
+									}
+									return result;
+								})() as { groupName, monitors } (groupName || 'ungrouped')}
+									{#if groupName}
+										<h3 class="monitor-group-heading">{groupName}</h3>
+									{/if}
+									<div class="monitor-group-items">
+										{#each monitors as monitor (monitor.id)}
+											<div class="monitor-item-wrapper">
+												<label
+													class="monitor-item"
+													class:selected={selectedMonitorIds.includes(monitor.id)}
+												>
+													<input
+														type="checkbox"
+														checked={selectedMonitorIds.includes(monitor.id)}
+														onchange={() => toggleMonitor(monitor.id)}
+														class="monitor-checkbox"
+													/>
+													<div class="monitor-info">
+														<div class="monitor-header">
+															<span class="monitor-name">{monitor.name}</span>
+															<div
+																class="monitor-status"
+																style="--status-color: {getStatusColor(monitor.status)}"
+															>
+																{#if monitor.status === 'up'}
+																	<CheckCircle2 size={16} />
+																{:else if monitor.status === 'down'}
+																	<XCircle size={16} />
+																{:else if monitor.status === 'maintenance'}
+																	<Wrench size={16} />
+																{:else}
+																	<AlertCircle size={16} />
+																{/if}
+																<span class="status-text">{monitor.status}</span>
+															</div>
+														</div>
+														{#if monitor.url}
+															<p class="monitor-url">{monitor.url}</p>
 														{/if}
-														<span class="status-text">{monitor.status}</span>
+														<div class="monitor-meta">
+															<span class="monitor-type">{monitor.type}</span>
+															{#if monitor.uptime !== undefined}
+																<span class="monitor-uptime"
+																	>Uptime: {monitor.uptime.toFixed(2)}%</span
+																>
+															{/if}
+														</div>
 													</div>
-												</div>
-												{#if monitor.url}
-													<p class="monitor-url">{monitor.url}</p>
-												{/if}
-												<div class="monitor-meta">
-													<span class="monitor-type">{monitor.type}</span>
-													{#if monitor.uptime !== undefined}
-														<span class="monitor-uptime">Uptime: {monitor.uptime.toFixed(2)}%</span>
-													{/if}
-												</div>
+												</label>
 											</div>
-										</label>
+										{/each}
 									</div>
 								{/each}
 							</div>
-						{/each}
-						</div>
+						{:else if !loadingMonitors}
+							<div class="empty-state">
+								<Server size={48} />
+								<p>No monitors found. Click the refresh icon to fetch monitors from Uptime Kuma.</p>
+							</div>
 						{/if}
 					</div>
-				</div>
-			{:else if !loadingMonitors && config.isConfigured}
-				<div class="empty-state">
-					<Server size={48} />
-					<p>No monitors found. Click the refresh icon to fetch monitors from Uptime Kuma.</p>
 				</div>
 			{/if}
 
 			<!-- Save Button -->
 			<div class="form-actions">
-				<button
-					type="button"
-					class="btn btn-primary"
-					onclick={saveConfig}
-					disabled={saving}
-				>
+				<button type="button" class="btn btn-primary" onclick={saveConfig} disabled={saving}>
 					<Save size={18} />
 					{saving ? 'Saving...' : 'Save Configuration'}
 				</button>
@@ -584,7 +616,9 @@
 	}
 
 	@keyframes spin {
-		to { transform: rotate(360deg); }
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.config-form {
@@ -849,7 +883,6 @@
 		cursor: not-allowed;
 	}
 
-
 	.monitors-list {
 		display: flex;
 		flex-direction: column;
@@ -960,7 +993,6 @@
 	.monitor-type {
 		text-transform: uppercase;
 	}
-
 
 	.selected-monitors-section {
 		padding: 16px;
@@ -1140,4 +1172,3 @@
 		font-size: 14px;
 	}
 </style>
-

@@ -77,11 +77,13 @@
 		if (!postIdPendingDelete) return;
 		const id = postIdPendingDelete;
 		try {
-			const postToDelete = posts.find(p => p.id === id);
+			const postToDelete = posts.find((p) => p.id === id);
 			await deleteBlogPost(id);
 			await loadPosts();
 			toast.success('Post deleted', {
-				description: postToDelete ? `"${postToDelete.title}" has been deleted` : 'The blog post has been deleted'
+				description: postToDelete
+					? `"${postToDelete.title}" has been deleted`
+					: 'The blog post has been deleted'
 			});
 		} catch (err) {
 			console.error('Error deleting post:', err);
@@ -94,7 +96,7 @@
 	}
 
 	let postPendingDeleteTitle = $derived(
-		postIdPendingDelete ? posts.find((p) => p.id === postIdPendingDelete)?.title ?? '' : ''
+		postIdPendingDelete ? (posts.find((p) => p.id === postIdPendingDelete)?.title ?? '') : ''
 	);
 
 	function toggleSort() {
@@ -147,7 +149,11 @@
 			<p class="subtitle">Manage your blog posts</p>
 		</div>
 		<div class="header-actions">
-			<button class="sort-toggle" onclick={toggleSort} title={sortBy === 'created' ? 'Sorted by creation date' : 'Sorted by last updated'}>
+			<button
+				class="sort-toggle"
+				onclick={toggleSort}
+				title={sortBy === 'created' ? 'Sorted by creation date' : 'Sorted by last updated'}
+			>
 				{#if sortBy === 'created'}
 					<Calendar size={18} />
 					Created
@@ -210,10 +216,18 @@
 								{/if}
 							</td>
 							<td class="actions-cell">
-								<button class="action-icon edit" onclick={() => editPost(post.id)} title="Edit post">
+								<button
+									class="action-icon edit"
+									onclick={() => editPost(post.id)}
+									title="Edit post"
+								>
 									<Edit size={18} />
 								</button>
-								<button class="action-icon delete" onclick={() => requestDeletePost(post.id)} title="Delete post">
+								<button
+									class="action-icon delete"
+									onclick={() => requestDeletePost(post.id)}
+									title="Delete post"
+								>
 									<Trash2 size={18} />
 								</button>
 							</td>
@@ -226,8 +240,8 @@
 </div>
 
 <!-- Blog Post Editor Panel -->
-<SlideInPanel 
-	isOpen={isPanelOpen} 
+<SlideInPanel
+	isOpen={isPanelOpen}
 	title={editingPostId === 'new' ? 'Create New Post' : 'Edit Post'}
 	icon={FileText}
 	on:close={closePanel}
@@ -236,10 +250,7 @@
 </SlideInPanel>
 
 {#if showTagManager}
-	<TagManager
-		on:close={() => (showTagManager = false)}
-		on:tagsUpdated={loadPosts}
-	/>
+	<TagManager on:close={() => (showTagManager = false)} on:tagsUpdated={loadPosts} />
 {/if}
 
 <style>
@@ -379,8 +390,12 @@
 	}
 
 	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
 
 	.table-container {
@@ -579,4 +594,3 @@
 		}
 	}
 </style>
-

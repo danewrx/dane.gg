@@ -1,6 +1,10 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { getIconCategories, searchIcons, type IconOption } from '$lib/admin/services/iconLibraryService';
+	import {
+		getIconCategories,
+		searchIcons,
+		type IconOption
+	} from '$lib/admin/services/iconLibraryService';
 	import { Search, X } from 'lucide-svelte';
 
 	interface Props {
@@ -9,10 +13,10 @@
 		placeholder?: string;
 	}
 
-	let { 
-		selectedIcon = null, 
-		onIconSelect = () => {}, 
-		placeholder = 'Choose from icon library...' 
+	let {
+		selectedIcon = null,
+		onIconSelect = () => {},
+		placeholder = 'Choose from icon library...'
 	}: Props = $props();
 
 	let isOpen = $state(false);
@@ -23,16 +27,18 @@
 	let isLoading = $state(true);
 
 	// Load icons when component mounts
-	$effect(async () => {
-		try {
-			isLoading = true;
-			iconCategories = await getIconCategories();
-			await updateFilteredIcons();
-		} catch (error) {
-			console.error('Failed to load icon categories:', error);
-		} finally {
-			isLoading = false;
-		}
+	$effect(() => {
+		void (async () => {
+			try {
+				isLoading = true;
+				iconCategories = await getIconCategories();
+				await updateFilteredIcons();
+			} catch (error) {
+				console.error('Failed to load icon categories:', error);
+			} finally {
+				isLoading = false;
+			}
+		})();
 	});
 
 	// Update filtered icons when search query or category changes
@@ -40,17 +46,18 @@
 		if (searchQuery.trim()) {
 			filteredIcons = await searchIcons(searchQuery);
 		} else {
-			const categories = selectedCategory === 'all' 
-				? iconCategories 
-				: iconCategories.filter(cat => cat.name === selectedCategory);
-			filteredIcons = categories.flatMap(category => category.icons);
+			const categories =
+				selectedCategory === 'all'
+					? iconCategories
+					: iconCategories.filter((cat) => cat.name === selectedCategory);
+			filteredIcons = categories.flatMap((category) => category.icons);
 		}
 	}
 
 	// Watch for changes in search query and category
-	$effect(async () => {
+	$effect(() => {
 		if (iconCategories.length > 0) {
-			await updateFilteredIcons();
+			void updateFilteredIcons();
 		}
 	});
 
@@ -80,26 +87,16 @@
 </script>
 
 <div class="icon-picker">
-	<button 
-		class="picker-trigger" 
-		onclick={toggleDropdown}
-		type="button"
-	>
+	<button class="picker-trigger" onclick={toggleDropdown} type="button">
 		{#if selectedIcon}
 			<div class="selected-icon">
-				<Icon 
-					icon={`${selectedIcon.iconSet}:${selectedIcon.iconName}`} 
-					width="20" 
-					height="20" 
-				/>
+				<Icon icon={`${selectedIcon.iconSet}:${selectedIcon.iconName}`} width="20" height="20" />
 				<span class="icon-name">{selectedIcon.displayName}</span>
 			</div>
 		{:else}
 			<span class="placeholder">{placeholder}</span>
 		{/if}
-		<div class="dropdown-arrow" class:open={isOpen}>
-			▼
-		</div>
+		<div class="dropdown-arrow" class:open={isOpen}>▼</div>
 	</button>
 
 	{#if isOpen}
@@ -108,9 +105,9 @@
 			<div class="dropdown-header">
 				<div class="search-container">
 					<Search size={16} class="search-icon" />
-					<input 
-						type="text" 
-						placeholder="Search icons..." 
+					<input
+						type="text"
+						placeholder="Search icons..."
 						bind:value={searchQuery}
 						class="search-input"
 					/>
@@ -121,18 +118,18 @@
 			</div>
 
 			<div class="category-tabs">
-				<button 
-					class="category-tab" 
+				<button
+					class="category-tab"
 					class:active={selectedCategory === 'all'}
-					onclick={() => selectedCategory = 'all'}
+					onclick={() => (selectedCategory = 'all')}
 				>
 					All
 				</button>
 				{#each iconCategories as category}
-					<button 
-						class="category-tab" 
+					<button
+						class="category-tab"
 						class:active={selectedCategory === category.name}
-						onclick={() => selectedCategory = category.name}
+						onclick={() => (selectedCategory = category.name)}
 					>
 						{category.displayName}
 					</button>
@@ -147,27 +144,19 @@
 			{:else}
 				<div class="icons-grid">
 					{#each filteredIcons as icon}
-					<button 
-						class="icon-option" 
-						class:selected={selectedIcon?.name === icon.name}
-						onclick={() => selectIcon(icon)}
-						title={icon.displayName}
-					>
-						{#if icon.type === 'coreui-brand' && icon.iconSet && icon.iconName}
-							<Icon 
-								icon={`${icon.iconSet}:${icon.iconName}`} 
-								width="24" 
-								height="24" 
-							/>
-						{:else}
-							<Icon 
-								icon="cib:link" 
-								width="24" 
-								height="24" 
-							/>
-						{/if}
-						<span class="icon-label">{icon.displayName}</span>
-					</button>
+						<button
+							class="icon-option"
+							class:selected={selectedIcon?.name === icon.name}
+							onclick={() => selectIcon(icon)}
+							title={icon.displayName}
+						>
+							{#if icon.type === 'coreui-brand' && icon.iconSet && icon.iconName}
+								<Icon icon={`${icon.iconSet}:${icon.iconName}`} width="24" height="24" />
+							{:else}
+								<Icon icon="cib:link" width="24" height="24" />
+							{/if}
+							<span class="icon-label">{icon.displayName}</span>
+						</button>
 					{/each}
 				</div>
 
@@ -491,17 +480,17 @@
 			width: 98%;
 			height: 85vh;
 		}
-		
+
 		.icons-grid {
 			grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
 			gap: 6px;
 			padding: 12px;
 		}
-		
+
 		.icon-option {
 			padding: 8px 6px;
 		}
-		
+
 		.icon-label {
 			font-size: 10px;
 		}
@@ -524,8 +513,12 @@
 	}
 
 	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
 
 	.no-results {

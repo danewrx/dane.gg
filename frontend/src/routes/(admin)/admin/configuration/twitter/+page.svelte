@@ -1,6 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { CheckCircle2, XCircle, AlertCircle, RefreshCw, Twitter, ExternalLink, Calendar, User, Edit2 } from 'lucide-svelte';
+	import {
+		CheckCircle2,
+		XCircle,
+		AlertCircle,
+		RefreshCw,
+		Twitter,
+		ExternalLink,
+		Calendar,
+		User,
+		Edit2
+	} from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 
 	interface ConnectionStatus {
@@ -69,7 +79,7 @@
 					error = 'Authentication required. Please log in to view Twitter status.';
 					return;
 				}
-				
+
 				const errorData = await response.json().catch(() => ({}));
 				throw new Error(errorData.error || errorData.message || 'Failed to load Twitter status');
 			}
@@ -129,7 +139,7 @@
 			error = '';
 
 			// Add a small delay
-			await new Promise(resolve => setTimeout(resolve, 500));
+			await new Promise((resolve) => setTimeout(resolve, 500));
 
 			const response = await fetch('/api/twitter/tweets', {
 				credentials: 'include'
@@ -140,7 +150,7 @@
 					error = 'Authentication required. Please log in to view tweets.';
 					return;
 				}
-				
+
 				const errorData = await response.json().catch(() => ({}));
 				throw new Error(errorData.error || errorData.message || 'Failed to load tweets');
 			}
@@ -252,7 +262,7 @@
 			toast.success('Username saved successfully');
 			editingUsername = false;
 			usernameInput = '';
-			
+
 			await loadStatus();
 		} catch (err) {
 			console.error('Error saving username:', err);
@@ -279,11 +289,11 @@
 
 			if (statusResponse.ok) {
 				const statusResult = await statusResponse.json();
-				
+
 				if (status && statusResult.connection) {
 					const oldConnected = status.connection?.connected;
 					const newConnected = statusResult.connection.connected;
-					
+
 					if (oldConnected !== newConnected || statusResult.username !== status.username) {
 						status = statusResult;
 					}
@@ -297,12 +307,12 @@
 
 			if (tweetResponse.ok) {
 				const tweetResult = await tweetResponse.json();
-				
+
 				if (tweetResult.tweetId) {
 					// Check if tweet ID changed
 					if (lastTweetId !== tweetResult.tweetId) {
 						lastTweetId = tweetResult.tweetId;
-						
+
 						// Update latest tweet
 						latestTweet = {
 							id: tweetResult.tweetId,
@@ -339,7 +349,7 @@
 	// Handle page visibility changes
 	function handleVisibilityChange() {
 		isPageVisible = !document.hidden;
-		
+
 		if (isPageVisible && status?.configured) {
 			pollForUpdates();
 		}
@@ -385,17 +395,18 @@
 			<!-- Twitter Configuration -->
 			<div class="form-section">
 				<h2 class="section-title">Twitter Configuration</h2>
-				
+
 				{#if !status?.configured}
 					<div class="config-warning">
 						<AlertCircle size={20} />
 						<div class="warning-content">
 							<p class="warning-title">Twitter API is not configured</p>
-							<p class="warning-text">
-								Please set the following environment variables:
-							</p>
+							<p class="warning-text">Please set the following environment variables:</p>
 							<ul class="env-vars-list">
-								<li><code>TWITTER_COOKIES</code> - Twitter/X authentication cookies (obtained from a logged-in session)</li>
+								<li>
+									<code>TWITTER_COOKIES</code> - Twitter/X authentication cookies (obtained from a logged-in
+									session)
+								</li>
 								<li><code>TWITTER_USERNAME</code> - Your Twitter/X username (without @)</li>
 							</ul>
 							<p class="warning-text">
@@ -448,7 +459,11 @@
 								<div class="username-display">
 									<span class="info-value">{status.username || 'Not set'}</span>
 									{#if status.usernameSource}
-										<span class="username-source" class:database={status.usernameSource === 'database'} class:environment={status.usernameSource === 'environment'}>
+										<span
+											class="username-source"
+											class:database={status.usernameSource === 'database'}
+											class:environment={status.usernameSource === 'environment'}
+										>
 											({status.usernameSource === 'database' ? 'Database' : 'Environment'})
 										</span>
 									{/if}
@@ -475,7 +490,11 @@
 								{/if}
 							</div>
 							{#if status.connection}
-								<div class="connection-status" class:connected={status.connection.connected} class:disconnected={!status.connection.connected}>
+								<div
+									class="connection-status"
+									class:connected={status.connection.connected}
+									class:disconnected={!status.connection.connected}
+								>
 									{#if status.connection.connected}
 										<CheckCircle2 size={16} />
 									{:else}
@@ -502,16 +521,15 @@
 								</div>
 							{/if}
 						</div>
-						<p class="help-text">Configuration is read from environment variables. To change these values, update your environment configuration and restart the server.</p>
+						<p class="help-text">
+							Configuration is read from environment variables. To change these values, update your
+							environment configuration and restart the server.
+						</p>
 					</div>
 
 					<!-- Test Button -->
 					<div class="test-section">
-						<button 
-							class="btn btn-primary"
-							onclick={testConnection}
-							disabled={testingConnection}
-						>
+						<button class="btn btn-primary" onclick={testConnection} disabled={testingConnection}>
 							{#if testingConnection}
 								<RefreshCw size={16} class="spinning" />
 							{:else}
@@ -525,7 +543,7 @@
 					{#if showRequestResponse && status?.connection && (status.connection.request || status.connection.response)}
 						<div class="request-response-section">
 							<h3 class="subsection-title">Request & Response Details</h3>
-							
+
 							{#if status.connection.request}
 								<div class="request-response-box">
 									<div class="request-response-header">
@@ -535,15 +553,23 @@
 									<div class="request-response-content">
 										<div class="request-response-item">
 											<span class="request-response-key">Endpoint:</span>
-											<span class="request-response-value">{status.connection.request.endpoint}</span>
+											<span class="request-response-value"
+												>{status.connection.request.endpoint}</span
+											>
 										</div>
 										<div class="request-response-item">
 											<span class="request-response-key">Username:</span>
-											<span class="request-response-value">{status.connection.request.username}</span>
+											<span class="request-response-value"
+												>{status.connection.request.username}</span
+											>
 										</div>
 										<div class="request-response-item">
 											<span class="request-response-key">Cookies Configured:</span>
-											<span class="request-response-value" class:success={status.connection.request.hasCookies} class:error={!status.connection.request.hasCookies}>
+											<span
+												class="request-response-value"
+												class:success={status.connection.request.hasCookies}
+												class:error={!status.connection.request.hasCookies}
+											>
 												{status.connection.request.hasCookies ? 'Yes' : 'No'}
 											</span>
 										</div>
@@ -556,7 +582,12 @@
 									<div class="request-response-header">
 										<span class="request-response-label">Response</span>
 										{#if status.connection.response.status}
-											<span class="request-response-status" class:success={status.connection.response.status >= 200 && status.connection.response.status < 300} class:error={status.connection.response.status >= 400}>
+											<span
+												class="request-response-status"
+												class:success={status.connection.response.status >= 200 &&
+													status.connection.response.status < 300}
+												class:error={status.connection.response.status >= 400}
+											>
 												{status.connection.response.status}
 											</span>
 										{/if}
@@ -565,13 +596,19 @@
 										{#if status.connection.response.error}
 											<div class="request-response-item">
 												<span class="request-response-key">Error:</span>
-												<span class="request-response-value error-text">{status.connection.response.error}</span>
+												<span class="request-response-value error-text"
+													>{status.connection.response.error}</span
+												>
 											</div>
 										{/if}
 										{#if status.connection.response.data}
 											<div class="request-response-item full-width">
 												<span class="request-response-key">Data:</span>
-												<pre class="request-response-json">{JSON.stringify(status.connection.response.data, null, 2)}</pre>
+												<pre class="request-response-json">{JSON.stringify(
+														status.connection.response.data,
+														null,
+														2
+													)}</pre>
 											</div>
 										{/if}
 									</div>
@@ -589,8 +626,8 @@
 					<div class="tweet-card">
 						<div class="tweet-header">
 							{#if latestTweet.authorProfileImage}
-								<img 
-									src={latestTweet.authorProfileImage} 
+								<img
+									src={latestTweet.authorProfileImage}
 									alt={latestTweet.authorName}
 									class="profile-image"
 								/>
@@ -604,9 +641,9 @@
 								<span class="author-username">@{latestTweet.authorUsername}</span>
 							</div>
 							{#if latestTweet.tweetUrl}
-								<a 
-									href={latestTweet.tweetUrl} 
-									target="_blank" 
+								<a
+									href={latestTweet.tweetUrl}
+									target="_blank"
 									rel="noopener noreferrer"
 									class="tweet-link"
 								>
@@ -658,16 +695,16 @@
 										</td>
 										<td class="content-cell">
 											<div class="tweet-preview">
-												{tweet.content.length > 100 
-													? tweet.content.substring(0, 100) + '...' 
+												{tweet.content.length > 100
+													? tweet.content.substring(0, 100) + '...'
 													: tweet.content}
 											</div>
 										</td>
 										<td class="author-cell">
 											<div class="author-info">
 												{#if tweet.authorProfileImage}
-													<img 
-														src={tweet.authorProfileImage} 
+													<img
+														src={tweet.authorProfileImage}
 														alt={tweet.authorName}
 														class="author-avatar"
 													/>
@@ -677,9 +714,9 @@
 										</td>
 										<td class="actions-cell">
 											{#if tweet.tweetUrl}
-												<a 
-													href={tweet.tweetUrl} 
-													target="_blank" 
+												<a
+													href={tweet.tweetUrl}
+													target="_blank"
 													rel="noopener noreferrer"
 													class="action-link"
 												>
@@ -730,12 +767,14 @@
 		animation: spin 1s linear infinite;
 	}
 
-	.spinning {
+	.btn-primary :global(.spinning) {
 		animation: spin 1s linear infinite;
 	}
 
 	@keyframes spin {
-		to { transform: rotate(360deg); }
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.config-form {
@@ -1396,5 +1435,3 @@
 		color: var(--accent-color-dark);
 	}
 </style>
-
-

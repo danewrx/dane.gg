@@ -65,7 +65,11 @@
 			uploading = true;
 			const form = new FormData();
 			form.append('file', file);
-			const name = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]+/g, ' ').trim() || 'Custom Font';
+			const name =
+				file.name
+					.replace(/\.[^.]+$/, '')
+					.replace(/[^a-zA-Z0-9]+/g, ' ')
+					.trim() || 'Custom Font';
 			form.append('name', name);
 
 			const res = await fetch('/api/fonts/upload', {
@@ -165,13 +169,22 @@
 					<Type size={20} />
 					Manage fonts
 				</h2>
-				<button type="button" class="dialog-close" aria-label="Close" onclick={() => { open = false; onClose?.(); }}>
+				<button
+					type="button"
+					class="dialog-close"
+					aria-label="Close"
+					onclick={() => {
+						open = false;
+						onClose?.();
+					}}
+				>
 					<X size={18} />
 				</button>
 			</div>
 			<div class="dialog-body">
 				<p class="dialog-description">
-					Custom fonts are available in the font dropdown when editing themes. Google Fonts are built-in and cannot be removed.
+					Custom fonts are available in the font dropdown when editing themes. Google Fonts are
+					built-in and cannot be removed.
 				</p>
 
 				<!-- Add new font -->
@@ -257,8 +270,12 @@
 	}
 
 	@keyframes fadeIn {
-		from { opacity: 0; }
-		to { opacity: 1; }
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
 	}
 
 	.dialog-panel {
@@ -315,7 +332,9 @@
 		border-radius: 6px;
 		color: var(--text-secondary, #a1a1aa);
 		cursor: pointer;
-		transition: border-color 0.2s, color 0.2s;
+		transition:
+			border-color 0.2s,
+			color 0.2s;
 	}
 
 	.dialog-close:hover {
@@ -355,7 +374,10 @@
 		color: var(--text-secondary, #a1a1aa);
 		font-size: 14px;
 		cursor: pointer;
-		transition: border-color 0.2s, color 0.2s, background 0.2s;
+		transition:
+			border-color 0.2s,
+			color 0.2s,
+			background 0.2s;
 	}
 
 	.upload-zone-btn:hover:not(:disabled) {
@@ -449,7 +471,10 @@
 		border-radius: 6px;
 		color: var(--text-secondary, #a1a1aa);
 		cursor: pointer;
-		transition: border-color 0.2s, color 0.2s, background 0.2s;
+		transition:
+			border-color 0.2s,
+			color 0.2s,
+			background 0.2s;
 	}
 
 	.font-list-delete:hover:not(:disabled) {
@@ -479,6 +504,8 @@
 		animation: spin 1s linear infinite;
 	}
 	@keyframes spin {
-		to { transform: rotate(360deg); }
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>

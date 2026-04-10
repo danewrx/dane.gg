@@ -39,11 +39,11 @@
 
 		update(containerTop: number) {
 			this.y += this.speed;
-			
+
 			const container = document.querySelector('.content-window');
 			const containerRect = container?.getBoundingClientRect();
-			const isOverContainer = containerRect && this.x >= containerRect.left && 
-								  this.x <= containerRect.right;
+			const isOverContainer =
+				containerRect && this.x >= containerRect.left && this.x <= containerRect.right;
 
 			if (isOverContainer && !this.bounced && this.y > containerTop) {
 				this.bounced = true;
@@ -125,7 +125,7 @@
 				if (!this.fadeStartTime) {
 					this.fadeStartTime = Date.now();
 				}
-				
+
 				const elapsed = Date.now() - this.fadeStartTime;
 				if (elapsed > this.lifetime) {
 					this.opacity = Math.max(0, 0.8 * (1 - (elapsed - this.lifetime) / 1000));
@@ -143,14 +143,14 @@
 
 			const container = document.querySelector('.content-window');
 			const containerRect = container?.getBoundingClientRect();
-			const isOverContainer = containerRect && this.x >= containerRect.left && 
-								  this.x <= containerRect.right;
+			const isOverContainer =
+				containerRect && this.x >= containerRect.left && this.x <= containerRect.right;
 
 			if (isOverContainer && containerRect) {
 				const relativeX = Math.floor(this.x - containerRect.left);
 				if (relativeX >= 0 && relativeX < accumulation.length) {
 					const settlementY = containerTop + accumulation[relativeX];
-					
+
 					if (this.y >= settlementY) {
 						this.settled = true;
 						this.settledX = this.x;
@@ -208,7 +208,7 @@
 			updateContainerPosition: () => {
 				const oldTop = rainSystem.containerTop;
 				rainSystem.containerTop = rainSystem.container?.getBoundingClientRect().top || 0;
-				
+
 				const diff = rainSystem.containerTop - oldTop;
 				rainSystem.splashes.forEach((particles: any) => {
 					particles.forEach((p: any) => {
@@ -226,7 +226,7 @@
 				const particles = [];
 
 				for (let i = 0; i < particleCount; i++) {
-					const angle = (Math.PI / 4) + (Math.random() * Math.PI / 2);
+					const angle = Math.PI / 4 + (Math.random() * Math.PI) / 2;
 					const speed = 1 + Math.random() * 2;
 					particles.push({
 						x: x,
@@ -264,7 +264,7 @@
 			},
 			draw: () => {
 				rainSystem.ctx.clearRect(0, 0, canvas.width, canvas.height);
-				
+
 				rainSystem.drops.forEach((drop: RainDrop) => drop.draw(rainSystem.ctx));
 
 				rainSystem.splashes.forEach((particles: any) => {
@@ -280,7 +280,7 @@
 			},
 			animate: () => {
 				if (!rainSystem.isAnimating) return;
-				
+
 				rainSystem.update();
 				rainSystem.draw();
 				requestAnimationFrame(() => rainSystem.animate());
@@ -309,7 +309,9 @@
 			settledFlakes: [],
 			container: document.querySelector('.content-window'),
 			containerRect: document.querySelector('.content-window')?.getBoundingClientRect() || null,
-			accumulation: new Array(Math.ceil((document.querySelector('.content-window')?.getBoundingClientRect().width || 800))).fill(0),
+			accumulation: new Array(
+				Math.ceil(document.querySelector('.content-window')?.getBoundingClientRect().width || 800)
+			).fill(0),
 			maxSnowHeight: 50,
 			isAnimating: false,
 			speedMultiplier: 1,
@@ -323,7 +325,7 @@
 				snowSystem.containerRect = snowSystem.container?.getBoundingClientRect() || null;
 				snowSystem.settledFlakes.forEach((flake: SnowFlake) => {
 					if (flake.settled) {
-						flake.settledY += (window.scrollY - snowSystem.lastScrollY);
+						flake.settledY += window.scrollY - snowSystem.lastScrollY;
 					}
 				});
 				snowSystem.lastScrollY = window.scrollY;
@@ -336,7 +338,8 @@
 			update: () => {
 				if (!snowSystem.isAnimating) return;
 
-				if (Math.random() < 0.3) { // Exact match to old site
+				if (Math.random() < 0.3) {
+					// Exact match to old site
 					snowSystem.createFlake();
 				}
 
@@ -344,20 +347,22 @@
 
 				snowSystem.settledFlakes = snowSystem.settledFlakes.filter((flake: SnowFlake) => {
 					const remove = flake.update(
-						snowSystem.containerRect?.top || 0, 
-						snowSystem.containerRect?.bottom || 0, 
+						snowSystem.containerRect?.top || 0,
+						snowSystem.containerRect?.bottom || 0,
 						snowSystem.accumulation
 					);
 					return !remove;
 				});
-				
+
 				for (let i = snowSystem.flakes.length - 1; i >= 0; i--) {
 					const flake = snowSystem.flakes[i];
-					if (flake.update(
-						snowSystem.containerRect?.top || 0, 
-						snowSystem.containerRect?.bottom || 0, 
-						snowSystem.accumulation
-					)) {
+					if (
+						flake.update(
+							snowSystem.containerRect?.top || 0,
+							snowSystem.containerRect?.bottom || 0,
+							snowSystem.accumulation
+						)
+					) {
 						if (flake.settled) {
 							snowSystem.settledFlakes.push(flake);
 						}
@@ -367,7 +372,7 @@
 			},
 			draw: () => {
 				snowSystem.ctx.clearRect(0, 0, canvas.width, canvas.height);
-				
+
 				[...snowSystem.settledFlakes, ...snowSystem.flakes].forEach((flake: SnowFlake) => {
 					flake.draw(snowSystem.ctx);
 				});
@@ -378,7 +383,7 @@
 			},
 			animate: () => {
 				if (!snowSystem.isAnimating) return;
-				
+
 				snowSystem.update();
 				snowSystem.draw();
 				requestAnimationFrame(() => snowSystem.animate());

@@ -2,7 +2,11 @@
 	import { onMount } from 'svelte';
 	import { X, Plus, Edit, Trash2 } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
-	import { getAllBlogTags, getPostsUsingBlogTag, type BlogTag } from '$lib/admin/services/blogService';
+	import {
+		getAllBlogTags,
+		getPostsUsingBlogTag,
+		type BlogTag
+	} from '$lib/admin/services/blogService';
 	import { createEventDispatcher } from 'svelte';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
@@ -272,11 +276,7 @@
 
 		{#if showAddForm}
 			<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-			<div
-				class="modal-overlay"
-				onclick={cancelForm}
-				role="presentation"
-			>
+			<div class="modal-overlay" onclick={cancelForm} role="presentation">
 				<div
 					class="modal"
 					role="dialog"

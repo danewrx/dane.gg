@@ -20,8 +20,8 @@
 	const dispatch = createEventDispatcher();
 </script>
 
-<div 
-	class="bordered-box {className}" 
+<div
+	class="bordered-box {className}"
 	class:dynamic-height={dynamicHeight}
 	class:no-content-padding-mobile={noContentPaddingOnMobile}
 	style="
@@ -55,7 +55,11 @@
 			<div class="header-divider"></div>
 		</div>
 	{/if}
-	<div class="bordered-box-content" class:padded={contentPadding} class:bottom-padded={contentBottomPadding}>
+	<div
+		class="bordered-box-content"
+		class:padded={contentPadding}
+		class:bottom-padded={contentBottomPadding}
+	>
 		<slot />
 	</div>
 </div>
@@ -94,21 +98,25 @@
 	.bordered-box {
 		width: 100%;
 		background: var(--box-background-color, var(--theme-surface, #1a1a1a));
-		border: var(--theme-widget-border-width, 2px) solid var(--box-border-color, var(--theme-border, #ffffff));
+		border: var(--theme-widget-border-width, 2px) solid
+			var(--box-border-color, var(--theme-border, #ffffff));
 		border-radius: var(--theme-widget-border-radius, var(--theme-border-radius, 0px));
 		padding: 0 12px;
 		transition: all 0.3s ease;
 		box-sizing: border-box;
 		overflow: hidden;
 	}
-	
+
 	.bordered-box.dynamic-height {
 		height: auto;
 		min-height: fit-content;
 	}
 
 	.bordered-box:hover {
-		background: var(--box-hover-background, var(--box-background-color, var(--theme-surface, #1a1a1a)));
+		background: var(
+			--box-hover-background,
+			var(--box-background-color, var(--theme-surface, #1a1a1a))
+		);
 	}
 
 	.bordered-box:focus {
@@ -119,21 +127,21 @@
 		margin-bottom: -2px;
 		padding: 8px 0 0 0;
 	}
-	
+
 	.bordered-box-content {
 		margin: 0 -12px 0 -12px;
 		padding: 0;
 	}
-	
+
 	.bordered-box-content.padded {
 		margin: 0;
 		padding: 0;
 	}
-	
+
 	.bordered-box-content.bottom-padded {
 		padding-bottom: 16px;
 	}
-	
+
 	@media (max-width: 768px) {
 		.bordered-box.no-content-padding-mobile .bordered-box-content.padded {
 			margin: 0 -10px 0 -10px;
@@ -154,13 +162,13 @@
 		gap: 6px;
 		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
 	}
-	
+
 	.header-left {
 		display: flex;
 		align-items: center;
 		gap: 6px;
 	}
-	
+
 	.header-right-wrapper {
 		margin-left: auto;
 	}
@@ -205,24 +213,24 @@
 		.bordered-box {
 			padding: 0 10px;
 		}
-		
+
 		.bordered-box-header {
 			padding: 6px 0 0 0;
 		}
-		
+
 		.bordered-box-content {
 			margin: 0 -10px 0 -10px;
 		}
-		
+
 		.bordered-box-content.padded {
 			margin: 0;
 			padding: 0;
 		}
-		
+
 		.bordered-box-content.bottom-padded {
 			padding-bottom: 12px;
 		}
-		
+
 		.header-divider {
 			margin-left: 0;
 			margin-right: 0;
@@ -233,24 +241,24 @@
 		.bordered-box {
 			padding: 0 6px;
 		}
-		
+
 		.bordered-box-header {
 			padding: 4px 0 0 0;
 		}
-		
+
 		.bordered-box-content {
 			margin: 0 -6px 0 -6px;
 		}
-		
+
 		.bordered-box-content.padded {
 			margin: 0;
 			padding: 0;
 		}
-		
+
 		.bordered-box-content.bottom-padded {
 			padding-bottom: 8px;
 		}
-		
+
 		.header-divider {
 			margin-left: 0;
 			margin-right: 0;

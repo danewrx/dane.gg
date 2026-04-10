@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
-	import { siteTheme, applyThemeStyles, loadGoogleFonts, applyCustomCss, type SiteTheme } from '$lib/site/stores/theme';
+	import {
+		siteTheme,
+		applyThemeStyles,
+		loadGoogleFonts,
+		applyCustomCss,
+		type SiteTheme
+	} from '$lib/site/stores/theme';
 	import { themeDarkenToRgba } from '$lib/site/constants/themeOverlayOpacity';
 	import { Check, Palette, Loader2 } from 'lucide-svelte';
 
@@ -21,11 +27,11 @@
 
 	onMount(async () => {
 		await loadThemes();
-		
+
 		if (browser) {
 			const savedThemeId = localStorage.getItem(STORAGE_KEY);
 			if (savedThemeId && themes.length > 0) {
-				const savedTheme = themes.find(t => t.id === savedThemeId);
+				const savedTheme = themes.find((t) => t.id === savedThemeId);
 				if (savedTheme) {
 					applyTheme(savedTheme);
 				}
@@ -36,13 +42,13 @@
 	async function loadThemes() {
 		try {
 			const response = await fetch('/api/themes');
-			
+
 			if (!response.ok) {
 				throw new Error('Failed to load themes');
 			}
 
 			const data = await response.json();
-			
+
 			if (data.success && data.data) {
 				themes = data.data;
 			}
@@ -55,12 +61,12 @@
 
 	function applyTheme(theme: SiteTheme) {
 		siteTheme.set(theme);
-		
+
 		applyThemeStyles(theme);
-		
+
 		const fontsToLoad = [theme.fontFamily, theme.headingFontFamily].filter(Boolean);
 		loadGoogleFonts(fontsToLoad);
-		
+
 		applyCustomCss(theme.customCss);
 
 		if (browser) {
@@ -74,18 +80,16 @@
 
 	function getThemePreviewStyle(theme: SiteTheme): string {
 		let bgStyle = `background: ${theme.backgroundColor};`;
-		
+
 		if (theme.backgroundImage) {
-			const bgUrl = theme.backgroundImageExternal 
-				? theme.backgroundImage 
-				: theme.backgroundImage;
+			const bgUrl = theme.backgroundImageExternal ? theme.backgroundImage : theme.backgroundImage;
 			const darken = themeDarkenToRgba(theme.overlayDarkenOpacity, '0');
 			bgStyle = `
 				background: linear-gradient(${darken}, ${darken}), 
 				url('${bgUrl}') ${theme.backgroundPosition} / ${theme.backgroundSize};
 			`;
 		}
-		
+
 		return bgStyle;
 	}
 </script>
@@ -110,11 +114,8 @@
 					onclick={() => selectTheme(theme)}
 					title={theme.description || theme.name}
 				>
-					<div 
-						class="theme-preview"
-						style={getThemePreviewStyle(theme)}
-					>
-						<div 
+					<div class="theme-preview" style={getThemePreviewStyle(theme)}>
+						<div
 							class="preview-card"
 							style="
 								background: {theme.surfaceColor};
@@ -122,10 +123,7 @@
 								border-radius: {theme.widgetBorderRadius ?? theme.borderRadius};
 							"
 						>
-							<div 
-								class="preview-accent"
-								style="background: {theme.accentColor};"
-							></div>
+							<div class="preview-accent" style="background: {theme.accentColor};"></div>
 						</div>
 					</div>
 					<div class="theme-info">
@@ -162,8 +160,12 @@
 	}
 
 	@keyframes spin {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.theme-list {

@@ -41,7 +41,7 @@
 
 		try {
 			const result = await TotpService.verifyToken(verificationCode);
-			
+
 			if (result.valid) {
 				toast.success('Authentication successful!');
 				onVerified();
@@ -67,7 +67,7 @@
 		try {
 			const cleanedCode = TotpService.cleanBackupCode(backupCode);
 			const result = await TotpService.verifyBackupCode(cleanedCode);
-			
+
 			if (result.valid) {
 				toast.success('Authentication successful!');
 				onVerified();
@@ -161,7 +161,9 @@
 			<button
 				type="submit"
 				class="verify-button"
-				disabled={isVerifying || (!verificationCode && !showBackupForm) || (!backupCode && showBackupForm)}
+				disabled={isVerifying ||
+					(!verificationCode && !showBackupForm) ||
+					(!backupCode && showBackupForm)}
 			>
 				{#if isVerifying}
 					<Loader2 size={16} class="spin" />
@@ -185,9 +187,7 @@
 					Use Backup Code
 				</button>
 			{/if}
-			<button type="button" class="cancel-button" onclick={onCancel}>
-				Cancel
-			</button>
+			<button type="button" class="cancel-button" onclick={onCancel}> Cancel </button>
 		</div>
 	</form>
 </div>
@@ -290,7 +290,9 @@
 	.form-input:focus {
 		outline: none;
 		border-color: var(--accent-color);
-		box-shadow: 0 0 0 3px var(--accent-color-light, rgba(59, 130, 246, 0.1)), 0 2px 8px rgba(0, 0, 0, 0.15);
+		box-shadow:
+			0 0 0 3px var(--accent-color-light, rgba(59, 130, 246, 0.1)),
+			0 2px 8px rgba(0, 0, 0, 0.15);
 		transform: translateY(-1px);
 	}
 
@@ -357,8 +359,12 @@
 	}
 
 	@keyframes spin {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.alternative-options {
@@ -369,7 +375,8 @@
 		border-top: 1px solid var(--border-color);
 	}
 
-	.switch-method, .cancel-button {
+	.switch-method,
+	.cancel-button {
 		display: flex;
 		align-items: center;
 		justify-content: center;

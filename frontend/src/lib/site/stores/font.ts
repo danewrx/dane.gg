@@ -19,7 +19,8 @@ export const fontConfigs = {
 	system: {
 		name: 'System font',
 		description: 'Your system default font for better readability',
-		fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif"
+		fontFamily:
+			"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif"
 	}
 };
 
@@ -55,6 +56,8 @@ export function setFontMode(mode: FontMode) {
 // Initialize font on load
 if (browser) {
 	const saved = localStorage.getItem('fontMode');
-	const mode = (saved === 'theme' || saved === 'system' ? saved : saved === 'w95' ? 'theme' : defaultFontMode) as FontMode;
+	const mode = (
+		saved === 'theme' || saved === 'system' ? saved : saved === 'w95' ? 'theme' : defaultFontMode
+	) as FontMode;
 	updateGlobalFont(mode);
 }

@@ -2,8 +2,10 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import SlideInPanel from '$lib/admin/components/ui/SlideInPanel.svelte';
-	import ConfigurationSidebar, { type ConfigurationCategory } from '$lib/admin/components/ui/ConfigurationSidebar.svelte';
-	import { 
+	import ConfigurationSidebar, {
+		type ConfigurationCategory
+	} from '$lib/admin/components/ui/ConfigurationSidebar.svelte';
+	import {
 		CloudRain,
 		Cat,
 		Settings as SettingsIcon,
@@ -203,8 +205,8 @@
 
 	function checkCurrentRoute() {
 		const currentPath = $page.url.pathname;
-		const category = settingsCategories.find(cat => currentPath === cat.path);
-		
+		const category = settingsCategories.find((cat) => currentPath === cat.path);
+
 		if (category) {
 			selectedCategory = category;
 			// Only open panel on mobile (will be hidden on desktop via CSS)
@@ -238,7 +240,7 @@
 
 <div class="settings-container desktop-layout">
 	<!-- Sidebar -->
-	<ConfigurationSidebar 
+	<ConfigurationSidebar
 		categories={settingsCategories}
 		selectedCategoryId={selectedCategory?.id || null}
 		onItemClick={openSettingsPanel}
@@ -286,10 +288,9 @@
 	</main>
 </div>
 
-
 <div class="mobile-layout">
 	<div class="mobile-settings-container">
-		<ConfigurationSidebar 
+		<ConfigurationSidebar
 			categories={settingsCategories}
 			selectedCategoryId={selectedCategory?.id || null}
 			onItemClick={openSettingsPanel}
@@ -298,7 +299,7 @@
 </div>
 
 <div class="mobile-panel">
-	<SlideInPanel 
+	<SlideInPanel
 		isOpen={isPanelOpen}
 		title={selectedCategory?.title || ''}
 		icon={selectedCategory?.icon || null}
@@ -328,7 +329,6 @@
 		width: calc(100% + 48px);
 		position: relative;
 	}
-
 
 	.settings-content {
 		flex: 1;
@@ -400,7 +400,8 @@
 		box-sizing: border-box;
 	}
 
-	.settings-page-content :global(input:not([type='checkbox']):not([type='radio']):not([type='range'])),
+	.settings-page-content
+		:global(input:not([type='checkbox']):not([type='radio']):not([type='range'])),
 	.settings-page-content :global(select),
 	.settings-page-content :global(textarea) {
 		max-width: 100%;

@@ -25,7 +25,7 @@ const commonIconMap: Record<string, ComponentType> = {
 	Eye: ComponentIcons.Eye,
 	Download: ComponentIcons.Download,
 	FileText: ComponentIcons.FileText,
-	Package: ComponentIcons.Package,
+	Package: ComponentIcons.Package
 };
 
 /**
@@ -36,7 +36,6 @@ function findComponentIcon(iconName: string): ComponentType | null {
 	if (iconName in commonIconMap) {
 		return commonIconMap[iconName];
 	}
-
 
 	const lowerName = iconName.toLowerCase();
 	for (const [key, value] of Object.entries(commonIconMap)) {
@@ -66,7 +65,7 @@ function findComponentIcon(iconName: string): ComponentType | null {
 
 /**
  * Get icon render information based on icon identifier string
- * 
+ *
  * @param iconName - Icon identifier string (can be name, URL, or prefixed identifier)
  * @returns IconRenderInfo object with type and rendering data
  */
@@ -112,4 +111,3 @@ export function getIconRenderInfo(iconName: string | null | undefined): IconRend
 		text: iconName
 	};
 }
-

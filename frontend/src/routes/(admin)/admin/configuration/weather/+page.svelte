@@ -25,7 +25,7 @@
 
 	async function saveSettings() {
 		isSaving = true;
-		
+
 		try {
 			// Update site configuration
 			const updates = [
@@ -43,8 +43,11 @@
 					credentials: 'include',
 					body: JSON.stringify({
 						value: update.value,
-						dataType: update.key.includes('speed') ? 'number' : 
-								 update.key.includes('enforce') ? 'boolean' : 'string'
+						dataType: update.key.includes('speed')
+							? 'number'
+							: update.key.includes('enforce')
+								? 'boolean'
+								: 'string'
 					})
 				});
 
@@ -86,8 +89,8 @@
 
 	<div class="form-group">
 		<label for="weather-type">Default Weather Type</label>
-		<select 
-			id="weather-type" 
+		<select
+			id="weather-type"
 			class="form-select"
 			value={localSettings.defaultWeatherType}
 			onchange={handleWeatherTypeChange}
@@ -96,17 +99,19 @@
 			<option value="rain">Rain</option>
 			<option value="snow">Snow</option>
 		</select>
-		<p class="form-help">This will be the default weather effect when users first visit your site.</p>
+		<p class="form-help">
+			This will be the default weather effect when users first visit your site.
+		</p>
 	</div>
 
 	<div class="form-group">
 		<label for="weather-speed">Default Weather Speed</label>
-		<input 
-			type="range" 
-			id="weather-speed" 
-			class="form-range" 
-			min="0.5" 
-			max="3.0" 
+		<input
+			type="range"
+			id="weather-speed"
+			class="form-range"
+			min="0.5"
+			max="3.0"
 			step="0.1"
 			value={localSettings.defaultWeatherSpeed}
 			oninput={handleSpeedChange}
@@ -117,21 +122,20 @@
 
 	<div class="form-group toggle-group">
 		<div class="toggle-wrapper">
-			<Toggle 
-				bind:checked={localSettings.enforceWeatherEffects}
-			/>
-			<span class="toggle-label">Enforce weather effects <span class="toggle-label-subtext">(prevent users from changing)</span></span>
+			<Toggle bind:checked={localSettings.enforceWeatherEffects} />
+			<span class="toggle-label"
+				>Enforce weather effects <span class="toggle-label-subtext"
+					>(prevent users from changing)</span
+				></span
+			>
 		</div>
-		<p class="form-help">When enabled, users won't be able to change weather settings from the frontend.</p>
+		<p class="form-help">
+			When enabled, users won't be able to change weather settings from the frontend.
+		</p>
 	</div>
 
 	<div class="form-actions">
-		<button 
-			type="button"
-			class="save-button" 
-			onclick={saveSettings}
-			disabled={isSaving}
-		>
+		<button type="button" class="save-button" onclick={saveSettings} disabled={isSaving}>
 			{isSaving ? 'Saving...' : 'Save Settings'}
 		</button>
 	</div>

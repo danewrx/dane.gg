@@ -13,7 +13,6 @@
 	let sidebarCollapsed = $state(false);
 	let showMobileSidebar = $state(false);
 	let mobileSidebarItems = $state<any[]>([]);
-	
 
 	// Handle logout
 	async function handleLogout() {
@@ -44,7 +43,6 @@
 	// Track whether mobile menu should be shown
 	let showMobileMenu = $derived(mobileSidebarItems.length > 0);
 
-
 	// Handle sidebar items update
 	function handleSidebarItemsUpdate(event: Event) {
 		const customEvent = event as CustomEvent;
@@ -54,12 +52,12 @@
 	// Add event listener for sidebar items
 	onMount(() => {
 		window.addEventListener('updateSidebarItems', handleSidebarItemsUpdate);
-		
+
 		// Request initial update from app bar
 		setTimeout(() => {
 			window.dispatchEvent(new CustomEvent('requestSidebarUpdate'));
 		}, 100);
-		
+
 		return () => {
 			window.removeEventListener('updateSidebarItems', handleSidebarItemsUpdate);
 		};
@@ -75,17 +73,17 @@
 
 <div class="admin-layout">
 	<!-- Header Bar -->
-	<AdminHeader 
-		on:logout={handleLogout} 
+	<AdminHeader
+		on:logout={handleLogout}
 		on:toggleSidebar={handleToggleSidebar}
 		on:toggleMobileSidebar={handleToggleMobileSidebar}
 		{showMobileMenu}
 	/>
-	
+
 	<div class="admin-content">
 		<!-- Collapsible Sidebar -->
 		<AdminSidebar isCollapsed={sidebarCollapsed} />
-		
+
 		<!-- Main Content Area -->
 		<main class="admin-main">
 			{@render children?.()}
@@ -94,16 +92,16 @@
 
 	<!-- Mobile App Bar -->
 	<AdminMobileAppBar />
-	
+
 	<!-- Mobile Sidebar -->
-	<AdminMobileSidebar 
-		isOpen={showMobileSidebar} 
+	<AdminMobileSidebar
+		isOpen={showMobileSidebar}
 		onClose={closeMobileSidebar}
 		items={mobileSidebarItems}
 	/>
 
 	<!-- Toast Notifications -->
-	<Toaster 
+	<Toaster
 		theme={mode.current === 'light' ? 'light' : 'dark'}
 		position="top-right"
 		closeButton
@@ -115,7 +113,7 @@
 			classes: {
 				success: 'sonner-success-accent',
 				error: 'sonner-error',
-				warning: 'sonner-warning', 
+				warning: 'sonner-warning',
 				info: 'sonner-info',
 				actionButton: 'sonner-action-accent',
 				cancelButton: 'sonner-cancel-accent'
@@ -135,7 +133,9 @@
 		background: #1a1a1a;
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 		color: #ffffff;
-		transition: background-color 0.2s ease, color 0.2s ease;
+		transition:
+			background-color 0.2s ease,
+			color 0.2s ease;
 	}
 
 	:global(html:not(.dark)) .admin-layout {
@@ -236,7 +236,9 @@
 	}
 
 	/* Input focus states */
-	:global(input:focus), :global(textarea:focus), :global(select:focus) {
+	:global(input:focus),
+	:global(textarea:focus),
+	:global(select:focus) {
 		outline: 2px solid var(--accent-color, #3b82f6);
 		outline-offset: 2px;
 		border-color: var(--accent-color, #3b82f6);
@@ -256,67 +258,67 @@
 	}
 
 	/* Default toast types with solid backgrounds */
-	:global([data-sonner-toast][data-type="success"]) {
+	:global([data-sonner-toast][data-type='success']) {
 		background: #22c55e !important;
 		color: white !important;
 	}
 
-	:global([data-sonner-toast][data-type="error"]) {
+	:global([data-sonner-toast][data-type='error']) {
 		background: #ef4444 !important;
 		color: white !important;
 	}
 
-	:global([data-sonner-toast][data-type="warning"]) {
+	:global([data-sonner-toast][data-type='warning']) {
 		background: #f59e0b !important;
 		color: white !important;
 	}
 
-	:global([data-sonner-toast][data-type="info"]) {
+	:global([data-sonner-toast][data-type='info']) {
 		background: #3b82f6 !important;
 		color: white !important;
 	}
 
 	/* Sonner toast customization with accent colors */
-	:global(.sonner-success-accent[data-type="success"]) {
+	:global(.sonner-success-accent[data-type='success']) {
 		background: var(--accent-color, #3b82f6) !important;
 		border-left: 4px solid var(--accent-color-dark, #2563eb) !important;
 		color: white !important;
 	}
 
-	:global(.sonner-success-accent[data-type="success"] [data-icon]) {
+	:global(.sonner-success-accent[data-type='success'] [data-icon]) {
 		color: white !important;
 	}
 
 	/* Error toasts */
-	:global(.sonner-error[data-type="error"]) {
+	:global(.sonner-error[data-type='error']) {
 		background: #ef4444 !important;
 		border-left: 4px solid #dc2626 !important;
 		color: white !important;
 	}
 
-	:global(.sonner-error[data-type="error"] [data-icon]) {
+	:global(.sonner-error[data-type='error'] [data-icon]) {
 		color: white !important;
 	}
 
 	/* Warning toasts */
-	:global(.sonner-warning[data-type="warning"]) {
+	:global(.sonner-warning[data-type='warning']) {
 		background: #f59e0b !important;
 		border-left: 4px solid #d97706 !important;
 		color: white !important;
 	}
 
-	:global(.sonner-warning[data-type="warning"] [data-icon]) {
+	:global(.sonner-warning[data-type='warning'] [data-icon]) {
 		color: white !important;
 	}
 
 	/* Info toasts */
-	:global(.sonner-info[data-type="info"]) {
+	:global(.sonner-info[data-type='info']) {
 		background: #3b82f6 !important;
 		border-left: 4px solid #2563eb !important;
 		color: white !important;
 	}
 
-	:global(.sonner-info[data-type="info"] [data-icon]) {
+	:global(.sonner-info[data-type='info'] [data-icon]) {
 		color: white !important;
 	}
 
@@ -345,7 +347,7 @@
 		.admin-content {
 			flex-direction: column;
 		}
-		
+
 		.admin-main {
 			padding: 16px;
 			padding-bottom: 100px; /* Space for mobile app bar */

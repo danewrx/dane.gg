@@ -10,24 +10,24 @@ const router = Router();
  * Get current Discord status for widgets
  */
 router.get('/discord-status', async (req, res) => {
-  try {
-    const statusData = await DiscordStatusService.getCurrentStatus();
-    
-    if (!statusData) {
-      return res.json({
-        status: 0,
-        lastUpdate: new Date().toISOString()
-      });
-    }
+	try {
+		const statusData = await DiscordStatusService.getCurrentStatus();
 
-    res.json({
-      status: statusData.status,
-      lastUpdate: statusData.lastUpdate?.toISOString() || new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Error fetching Discord status:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+		if (!statusData) {
+			return res.json({
+				status: 0,
+				lastUpdate: new Date().toISOString()
+			});
+		}
+
+		res.json({
+			status: statusData.status,
+			lastUpdate: statusData.lastUpdate?.toISOString() || new Date().toISOString()
+		});
+	} catch (error) {
+		console.error('Error fetching Discord status:', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
 });
 
 /**
@@ -35,37 +35,37 @@ router.get('/discord-status', async (req, res) => {
  * Get now playing information from Last.fm API
  */
 router.get('/nowplaying', async (req, res) => {
-  try {
-    if (!LastFmService.isConfigured()) {
-      // Return default data if Last.fm is not configured
-      return res.json({
-        track: null,
-        artist: null,
-        album: null,
-        image: null,
-        url: null,
-        nowPlaying: false,
-        lastUpdate: new Date().toISOString()
-      });
-    }
+	try {
+		if (!LastFmService.isConfigured()) {
+			// Return default data if Last.fm is not configured
+			return res.json({
+				track: null,
+				artist: null,
+				album: null,
+				image: null,
+				url: null,
+				nowPlaying: false,
+				lastUpdate: new Date().toISOString()
+			});
+		}
 
-    // Get fresh data directly from Last.fm API
-    const musicData = await LastFmService.getCurrentMusicStatus();
-    res.json(musicData);
-  } catch (error) {
-    console.error('Error fetching now playing from Last.fm:', error);
-    
-    // Return default data on error
-    res.json({
-      track: null,
-      artist: null,
-      album: null,
-      image: null,
-      url: null,
-      nowPlaying: false,
-      lastUpdate: new Date().toISOString()
-    });
-  }
+		// Get fresh data directly from Last.fm API
+		const musicData = await LastFmService.getCurrentMusicStatus();
+		res.json(musicData);
+	} catch (error) {
+		console.error('Error fetching now playing from Last.fm:', error);
+
+		// Return default data on error
+		res.json({
+			track: null,
+			artist: null,
+			album: null,
+			image: null,
+			url: null,
+			nowPlaying: false,
+			lastUpdate: new Date().toISOString()
+		});
+	}
 });
 
 /**
@@ -73,46 +73,46 @@ router.get('/nowplaying', async (req, res) => {
  * Get latest tweet from database
  */
 router.get('/latest-tweet', async (req, res) => {
-  try {
-    const latestTweet = await TweetService.getLatestTweet();
-    
-    if (!latestTweet) {
-      return res.json({
-        tweetId: null,
-        content: null,
-        authorName: null,
-        authorUsername: null,
-        authorProfileImage: null,
-        authorProfileUrl: null,
-        tweetUrl: null,
-        createdAt: null,
-        lastUpdate: new Date().toISOString()
-      });
-    }
+	try {
+		const latestTweet = await TweetService.getLatestTweet();
 
-    // If profile image exists, convert to proxy URL
-    let profileImageUrl = latestTweet.authorProfileImage;
-    if (profileImageUrl && profileImageUrl.includes('pbs.twimg.com')) {
-      // Use proxy endpoint to bypass tracking protection
-      const imageUrl = encodeURIComponent(profileImageUrl);
-      profileImageUrl = `/api/widgets/tweet-profile-image?url=${imageUrl}`;
-    }
+		if (!latestTweet) {
+			return res.json({
+				tweetId: null,
+				content: null,
+				authorName: null,
+				authorUsername: null,
+				authorProfileImage: null,
+				authorProfileUrl: null,
+				tweetUrl: null,
+				createdAt: null,
+				lastUpdate: new Date().toISOString()
+			});
+		}
 
-    res.json({
-      tweetId: latestTweet.tweetId,
-      content: latestTweet.content,
-      authorName: latestTweet.authorName,
-      authorUsername: latestTweet.authorUsername,
-      authorProfileImage: profileImageUrl,
-      authorProfileUrl: latestTweet.authorProfileUrl,
-      tweetUrl: latestTweet.tweetUrl,
-      createdAt: latestTweet.createdAt,
-      lastUpdate: latestTweet.updatedAt
-    });
-  } catch (error) {
-    console.error('Error fetching latest tweet:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+		// If profile image exists, convert to proxy URL
+		let profileImageUrl = latestTweet.authorProfileImage;
+		if (profileImageUrl && profileImageUrl.includes('pbs.twimg.com')) {
+			// Use proxy endpoint to bypass tracking protection
+			const imageUrl = encodeURIComponent(profileImageUrl);
+			profileImageUrl = `/api/widgets/tweet-profile-image?url=${imageUrl}`;
+		}
+
+		res.json({
+			tweetId: latestTweet.tweetId,
+			content: latestTweet.content,
+			authorName: latestTweet.authorName,
+			authorUsername: latestTweet.authorUsername,
+			authorProfileImage: profileImageUrl,
+			authorProfileUrl: latestTweet.authorProfileUrl,
+			tweetUrl: latestTweet.tweetUrl,
+			createdAt: latestTweet.createdAt,
+			lastUpdate: latestTweet.updatedAt
+		});
+	} catch (error) {
+		console.error('Error fetching latest tweet:', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
 });
 
 /**
@@ -121,40 +121,40 @@ router.get('/latest-tweet', async (req, res) => {
  * Bypasses browser tracking protection by serving images from site domain
  */
 router.get('/tweet-profile-image', async (req, res) => {
-  try {
-    const imageUrl = req.query.url as string;
-    
-    if (!imageUrl) {
-      return res.status(400).json({ error: 'Missing url parameter' });
-    }
+	try {
+		const imageUrl = req.query.url as string;
 
-    if (!imageUrl.includes('pbs.twimg.com') && !imageUrl.includes('twimg.com')) {
-      return res.status(400).json({ error: 'Invalid image URL' });
-    }
+		if (!imageUrl) {
+			return res.status(400).json({ error: 'Missing url parameter' });
+		}
 
-    const response = await fetch(imageUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Referer': 'https://x.com/'
-      }
-    });
+		if (!imageUrl.includes('pbs.twimg.com') && !imageUrl.includes('twimg.com')) {
+			return res.status(400).json({ error: 'Invalid image URL' });
+		}
 
-    if (!response.ok) {
-      return res.status(response.status).json({ error: 'Failed to fetch image' });
-    }
+		const response = await fetch(imageUrl, {
+			headers: {
+				'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+				Referer: 'https://x.com/'
+			}
+		});
 
-    const imageBuffer = await response.arrayBuffer();
-    const contentType = response.headers.get('content-type') || 'image/jpeg';
+		if (!response.ok) {
+			return res.status(response.status).json({ error: 'Failed to fetch image' });
+		}
 
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
-    res.setHeader('Access-Control-Allow-Origin', '*');
+		const imageBuffer = await response.arrayBuffer();
+		const contentType = response.headers.get('content-type') || 'image/jpeg';
 
-    res.send(Buffer.from(imageBuffer));
-  } catch (error: any) {
-    console.error('Error proxying tweet profile image:', error);
-    res.status(500).json({ error: 'Failed to fetch image' });
-  }
+		res.setHeader('Content-Type', contentType);
+		res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+		res.setHeader('Access-Control-Allow-Origin', '*');
+
+		res.send(Buffer.from(imageBuffer));
+	} catch (error: any) {
+		console.error('Error proxying tweet profile image:', error);
+		res.status(500).json({ error: 'Failed to fetch image' });
+	}
 });
 
 export default router;

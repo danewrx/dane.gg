@@ -15,13 +15,13 @@
 		try {
 			isLoading = true;
 			error = null;
-			
+
 			const response = await fetch(`/api/widgets/discord-status`);
-			
+
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
-			
+
 			const data = await response.json();
 			status = data;
 		} catch (err) {
@@ -39,10 +39,10 @@
 
 	onMount(() => {
 		fetchDiscordStatus();
-		
+
 		// Set up auto-refresh
 		refreshInterval = setInterval(fetchDiscordStatus, 30000);
-		
+
 		return () => {
 			if (refreshInterval) {
 				clearInterval(refreshInterval);
@@ -177,7 +177,8 @@
 
 	/* Animations */
 	@keyframes pulse {
-		0%, 100% {
+		0%,
+		100% {
 			opacity: 1;
 		}
 		50% {
@@ -186,7 +187,8 @@
 	}
 
 	@keyframes shake {
-		0%, 100% {
+		0%,
+		100% {
 			transform: translateX(0);
 		}
 		25% {
@@ -202,30 +204,29 @@
 		.discord-status {
 			text-align: left;
 		}
-		
+
 		.status-prefix {
 			font-size: calc(20 * 1em / 14);
 		}
-		
-		.status-state, .status-exclaim {
+
+		.status-state,
+		.status-exclaim {
 			font-size: calc(26 * 1em / 14);
 		}
-		
 	}
 
 	@media (max-width: 480px) {
 		.discord-status {
 			text-align: left;
 		}
-		
+
 		.status-prefix {
 			font-size: calc(18 * 1em / 14);
 		}
-		
-		.status-state, .status-exclaim {
+
+		.status-state,
+		.status-exclaim {
 			font-size: calc(24 * 1em / 14);
 		}
-		
 	}
-
 </style>

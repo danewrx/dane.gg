@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { 
+	import {
 		Palette,
 		CloudRain,
 		Link,
@@ -40,10 +40,10 @@
 
 	// Group categories by section
 	let groupedCategories = $derived({
-		general: categories.filter(c => c.section === 'general'),
-		home: categories.filter(c => c.section === 'home'),
-		about: categories.filter(c => c.section === 'about'),
-		contact: categories.filter(c => c.section === 'contact')
+		general: categories.filter((c) => c.section === 'general'),
+		home: categories.filter((c) => c.section === 'home'),
+		about: categories.filter((c) => c.section === 'about'),
+		contact: categories.filter((c) => c.section === 'contact')
 	});
 </script>
 
@@ -59,17 +59,19 @@
 					{@const isFirst = index === 0}
 					{@const isLast = index === groupedCategories.general.length - 1}
 					{@const isOnly = groupedCategories.general.length === 1}
-					<button 
+					<button
 						class="sidebar-item"
 						class:active={selectedCategoryId === category.id}
 						class:first={isFirst || isOnly}
 						class:last={isLast || isOnly}
 						onclick={() => onItemClick(category)}
 					>
-						<div 
+						<div
 							class="sidebar-icon"
 							class:active={selectedCategoryId === category.id}
-							style="color: {selectedCategoryId === category.id ? 'var(--accent-color, #6366f1)' : category.iconBgColor};"
+							style="color: {selectedCategoryId === category.id
+								? 'var(--accent-color, #6366f1)'
+								: category.iconBgColor};"
 						>
 							{#if category.icon === Palette}
 								<Palette size={20} stroke-width={1.5} />
@@ -104,17 +106,19 @@
 					{@const isFirst = index === 0}
 					{@const isLast = index === groupedCategories.home.length - 1}
 					{@const isOnly = groupedCategories.home.length === 1}
-					<button 
+					<button
 						class="sidebar-item"
 						class:active={selectedCategoryId === category.id}
 						class:first={isFirst || isOnly}
 						class:last={isLast || isOnly}
 						onclick={() => onItemClick(category)}
 					>
-						<div 
+						<div
 							class="sidebar-icon"
 							class:active={selectedCategoryId === category.id}
-							style="color: {selectedCategoryId === category.id ? 'var(--accent-color, #6366f1)' : category.iconBgColor};"
+							style="color: {selectedCategoryId === category.id
+								? 'var(--accent-color, #6366f1)'
+								: category.iconBgColor};"
 						>
 							{#if category.icon === CloudRain}
 								<CloudRain size={20} stroke-width={1.5} />
@@ -151,17 +155,19 @@
 					{@const isFirst = index === 0}
 					{@const isLast = index === groupedCategories.about.length - 1}
 					{@const isOnly = groupedCategories.about.length === 1}
-					<button 
+					<button
 						class="sidebar-item"
 						class:active={selectedCategoryId === category.id}
 						class:first={isFirst || isOnly}
 						class:last={isLast || isOnly}
 						onclick={() => onItemClick(category)}
 					>
-						<div 
+						<div
 							class="sidebar-icon"
 							class:active={selectedCategoryId === category.id}
-							style="color: {selectedCategoryId === category.id ? 'var(--accent-color, #6366f1)' : category.iconBgColor};"
+							style="color: {selectedCategoryId === category.id
+								? 'var(--accent-color, #6366f1)'
+								: category.iconBgColor};"
 						>
 							{#if category.icon === FileText}
 								<FileText size={20} stroke-width={1.5} />
@@ -192,17 +198,19 @@
 					{@const isFirst = index === 0}
 					{@const isLast = index === groupedCategories.contact.length - 1}
 					{@const isOnly = groupedCategories.contact.length === 1}
-					<button 
+					<button
 						class="sidebar-item"
 						class:active={selectedCategoryId === category.id}
 						class:first={isFirst || isOnly}
 						class:last={isLast || isOnly}
 						onclick={() => onItemClick(category)}
 					>
-						<div 
+						<div
 							class="sidebar-icon"
 							class:active={selectedCategoryId === category.id}
-							style="color: {selectedCategoryId === category.id ? 'var(--accent-color, #6366f1)' : category.iconBgColor};"
+							style="color: {selectedCategoryId === category.id
+								? 'var(--accent-color, #6366f1)'
+								: category.iconBgColor};"
 						>
 							{#if category.icon === Mail}
 								<Mail size={20} stroke-width={1.5} />
@@ -242,7 +250,8 @@
 
 	.sidebar-nav {
 		flex: 1;
-		padding: 12px max(12px, env(safe-area-inset-right, 0px)) 12px max(12px, env(safe-area-inset-left, 0px));
+		padding: 12px max(12px, env(safe-area-inset-right, 0px)) 12px
+			max(12px, env(safe-area-inset-left, 0px));
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
@@ -381,7 +390,8 @@
 
 	@media (max-width: 360px) {
 		.sidebar-nav {
-			padding: 10px max(10px, env(safe-area-inset-right, 0px)) 10px max(10px, env(safe-area-inset-left, 0px));
+			padding: 10px max(10px, env(safe-area-inset-right, 0px)) 10px
+				max(10px, env(safe-area-inset-left, 0px));
 		}
 
 		.sidebar-item {
@@ -394,4 +404,3 @@
 		}
 	}
 </style>
-

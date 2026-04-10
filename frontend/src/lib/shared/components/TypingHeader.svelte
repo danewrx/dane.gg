@@ -8,12 +8,7 @@
 		pauseTime?: number;
 	}
 
-	let {
-		text = 'Blog',
-		typingSpeed = 150,
-		deletingSpeed = 100,
-		pauseTime = 2000
-	}: Props = $props();
+	let { text = 'Blog', typingSpeed = 150, deletingSpeed = 100, pauseTime = 2000 }: Props = $props();
 
 	let displayedText = $state('');
 	let isDeleting = $state(false);
@@ -91,10 +86,12 @@
 	}
 
 	@keyframes blink {
-		0%, 50% {
+		0%,
+		50% {
 			opacity: 1;
 		}
-		51%, 100% {
+		51%,
+		100% {
 			opacity: 0;
 		}
 	}
@@ -111,4 +108,3 @@
 		}
 	}
 </style>
-

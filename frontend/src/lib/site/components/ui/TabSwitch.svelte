@@ -30,7 +30,7 @@
 				class="tab-option"
 				class:active={option === selected}
 				on:click={() => handleClick(option)}
-				disabled={disabled}
+				{disabled}
 				aria-pressed={option === selected}
 			>
 				{option}
@@ -115,7 +115,6 @@
 	.disabled .tab-option {
 		cursor: not-allowed;
 	}
-
 
 	/* Responsive adjustments */
 	@media (max-width: 480px) {

@@ -14,7 +14,7 @@ function createThemeStore() {
 		subscribe,
 		// Toggle between light and dark themes
 		toggle: () => {
-			update(currentTheme => currentTheme === 'light' ? 'dark' : 'light');
+			update((currentTheme) => (currentTheme === 'light' ? 'dark' : 'light'));
 		},
 		// Set a specific theme
 		setTheme: (theme: Theme) => {
@@ -43,7 +43,7 @@ export const theme = createThemeStore();
 
 // Subscribe to theme changes and save to localStorage
 if (browser) {
-	theme.subscribe(currentTheme => {
+	theme.subscribe((currentTheme) => {
 		localStorage.setItem('theme', currentTheme);
 		// Update the document class for CSS targeting
 		document.documentElement.setAttribute('data-theme', currentTheme);

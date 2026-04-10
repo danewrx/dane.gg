@@ -1,7 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { Loader2, Plus, Trash2, Edit2, Save, X, Image as ImageIcon, GripVertical } from 'lucide-svelte';
+	import {
+		Loader2,
+		Plus,
+		Trash2,
+		Edit2,
+		Save,
+		X,
+		Image as ImageIcon,
+		GripVertical
+	} from 'lucide-svelte';
 	import FileUpload, { type UploadedFile } from '$lib/admin/components/ui/FileUpload.svelte';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
@@ -22,10 +31,10 @@
 	let certifications = $state<Certification[]>([]);
 	let isLoading = $state(true);
 	let isSaving = $state(false);
-	
+
 	let draggedIndex = $state<number | null>(null);
 	let dragOverIndex = $state<number | null>(null);
-	
+
 	// New certification form
 	let showNewCertForm = $state(false);
 	let newCertTitle = $state('');
@@ -37,7 +46,7 @@
 	let newCertImageUrl = $state('');
 	let newCertImageIsExternal = $state(false);
 	let newCertImageFilename = $state<string | null>(null);
-	
+
 	// Editing
 	let editingCertId = $state<string | null>(null);
 	let editingCertTitle = $state('');
@@ -63,7 +72,7 @@
 			const response = await fetch('/api/certifications/all', {
 				credentials: 'include'
 			});
-			
+
 			if (response.ok) {
 				const result = await response.json();
 				certifications = result.data || [];
@@ -161,7 +170,7 @@
 	// Auto-update status based on isPresent and endDate
 	function updateNewCertStatus() {
 		if (newCertStatusManual) return; // Don't auto-update if manually set
-		
+
 		if (newCertIsPresent) {
 			newCertStatus = 'Active';
 		} else if (newCertEndDate.trim()) {
@@ -173,7 +182,7 @@
 
 	function updateEditingCertStatus() {
 		if (editingCertStatusManual) return; // Don't auto-update if manually set
-		
+
 		if (editingCertIsPresent) {
 			editingCertStatus = 'Active';
 		} else if (editingCertEndDate.trim()) {
@@ -341,7 +350,7 @@
 		if (!pendingDeleteCertId) return;
 		const certId = pendingDeleteCertId;
 
-		const cert = certifications.find(c => c.id === certId);
+		const cert = certifications.find((c) => c.id === certId);
 		if (cert && !cert.isExternal && cert.imageUrl && cert.imageUrl.startsWith('/uploads/')) {
 			const filename = cert.imageUrl.replace('/uploads/', '');
 			try {
@@ -379,7 +388,7 @@
 		editingCertEarned = cert.earned || '';
 		editingCertEndDate = cert.endDate || '';
 		// Default to present if no end date is set
-		editingCertIsPresent = cert.endDate ? (cert.isPresent || false) : true;
+		editingCertIsPresent = cert.endDate ? cert.isPresent || false : true;
 		editingCertStatus = cert.status;
 		editingCertStatusManual = false; // Start fresh - will be set to true if user manually changes status
 		editingCertImageUrl = cert.imageUrl || '';
@@ -511,7 +520,10 @@
 
 <div class="certifications-settings">
 	<div class="settings-description">
-		<p>Manage certifications that appear on your About page. You can upload an image or use an external URL for each certification badge.</p>
+		<p>
+			Manage certifications that appear on your About page. You can upload an image or use an
+			external URL for each certification badge.
+		</p>
 	</div>
 
 	{#if isLoading}
@@ -520,10 +532,12 @@
 			<span>Loading certifications...</span>
 		</div>
 	{:else}
-		<div class="certifications-list">
+		<div class="certifications-list" role="list">
 			{#each certifications as cert, index (cert.id)}
-				<div 
+				<div
 					class="certification-card"
+					role="listitem"
+					aria-label={`Reorder certification: ${cert.title}`}
 					class:dragging={draggedIndex === index}
 					class:drag-over={dragOverIndex === index}
 					class:not-draggable={editingCertId !== null || showNewCertForm}
@@ -537,8 +551,9 @@
 					{#if editingCertId === cert.id}
 						<div class="editing-certification">
 							<div class="form-group">
-								<label>Title *</label>
+								<label for={`edit-cert-title-${cert.id}`}>Title *</label>
 								<input
+									id={`edit-cert-title-${cert.id}`}
 									type="text"
 									class="edit-input"
 									bind:value={editingCertTitle}
@@ -548,8 +563,9 @@
 							</div>
 							<div class="form-row">
 								<div class="form-group">
-									<label>Start Date (Year) *</label>
+									<label for={`edit-cert-earned-${cert.id}`}>Start Date (Year) *</label>
 									<input
+										id={`edit-cert-earned-${cert.id}`}
 										type="text"
 										class="edit-input"
 										bind:value={editingCertEarned}
@@ -558,8 +574,9 @@
 									/>
 								</div>
 								<div class="form-group">
-									<label>End Date (Year)</label>
+									<label for={`edit-cert-end-${cert.id}`}>End Date (Year)</label>
 									<input
+										id={`edit-cert-end-${cert.id}`}
 										type="text"
 										class="edit-input"
 										bind:value={editingCertEndDate}
@@ -580,16 +597,17 @@
 								</label>
 							</div>
 							<div class="form-group">
-								<label>
+								<label for={`edit-cert-status-${cert.id}`}>
 									Status
 									{#if !editingCertStatusManual}
 										<span class="auto-status-badge">(Auto-set)</span>
 									{/if}
 								</label>
-								<select 
-									class="edit-input" 
+								<select
+									id={`edit-cert-status-${cert.id}`}
+									class="edit-input"
 									bind:value={editingCertStatus}
-									onchange={() => editingCertStatusManual = true}
+									onchange={() => (editingCertStatusManual = true)}
 								>
 									<option value="Active">Active</option>
 									<option value="Inactive">Inactive</option>
@@ -597,30 +615,41 @@
 								</select>
 							</div>
 							<div class="form-group">
-								<label>Image *</label>
-								{#if editingCertImageUrl}
-									<div class="image-preview">
-										<img src={getImageUrl(editingCertImageUrl, editingCertImageIsExternal)} alt="Preview" />
-										<button 
-											class="remove-image-btn" 
-											onclick={handleRemoveEditImage}
-											title="Remove image (image is required, upload a new one to replace)"
-										>
-											<X size={16} />
-										</button>
-									</div>
-									<p class="image-required-hint">Image is required. Upload a new image to replace the current one.</p>
-								{:else}
-									<FileUpload
-										acceptedTypes={['image']}
-										onUpload={handleEditImageUpload}
-										showPreview={false}
-										label="Upload Image"
-									/>
-								{/if}
+								<fieldset class="cert-image-fieldset">
+									<legend>Image *</legend>
+									{#if editingCertImageUrl}
+										<div class="image-preview">
+											<img
+												src={getImageUrl(editingCertImageUrl, editingCertImageIsExternal)}
+												alt="Preview"
+											/>
+											<button
+												class="remove-image-btn"
+												onclick={handleRemoveEditImage}
+												title="Remove image (image is required, upload a new one to replace)"
+											>
+												<X size={16} />
+											</button>
+										</div>
+										<p class="image-required-hint">
+											Image is required. Upload a new image to replace the current one.
+										</p>
+									{:else}
+										<FileUpload
+											acceptedTypes={['image']}
+											onUpload={handleEditImageUpload}
+											showPreview={false}
+											label="Upload Image"
+										/>
+									{/if}
+								</fieldset>
 							</div>
 							<div class="form-actions">
-								<button class="icon-btn save" onclick={() => updateCertification(cert.id)} disabled={isSaving}>
+								<button
+									class="icon-btn save"
+									onclick={() => updateCertification(cert.id)}
+									disabled={isSaving}
+								>
 									<Save size={16} />
 									Save
 								</button>
@@ -674,8 +703,9 @@
 				<div class="new-certification-form">
 					<h3>New Certification</h3>
 					<div class="form-group">
-						<label>Title *</label>
+						<label for="new-cert-title">Title *</label>
 						<input
+							id="new-cert-title"
 							type="text"
 							class="edit-input"
 							bind:value={newCertTitle}
@@ -684,8 +714,9 @@
 					</div>
 					<div class="form-row">
 						<div class="form-group">
-							<label>Start Date (Year) *</label>
+							<label for="new-cert-earned">Start Date (Year) *</label>
 							<input
+								id="new-cert-earned"
 								type="text"
 								class="edit-input"
 								bind:value={newCertEarned}
@@ -694,8 +725,9 @@
 							/>
 						</div>
 						<div class="form-group">
-							<label>End Date (Year)</label>
+							<label for="new-cert-end">End Date (Year)</label>
 							<input
+								id="new-cert-end"
 								type="text"
 								class="edit-input"
 								bind:value={newCertEndDate}
@@ -716,16 +748,17 @@
 						</label>
 					</div>
 					<div class="form-group">
-						<label>
+						<label for="new-cert-status">
 							Status
 							{#if !newCertStatusManual}
 								<span class="auto-status-badge">(Auto-set)</span>
 							{/if}
 						</label>
-						<select 
-							class="edit-input" 
+						<select
+							id="new-cert-status"
+							class="edit-input"
 							bind:value={newCertStatus}
-							onchange={() => newCertStatusManual = true}
+							onchange={() => (newCertStatusManual = true)}
 						>
 							<option value="Active">Active</option>
 							<option value="Inactive">Inactive</option>
@@ -733,27 +766,31 @@
 						</select>
 					</div>
 					<div class="form-group">
-						<label>Image *</label>
-						{#if newCertImageUrl}
-							<div class="image-preview">
-								<img src={getImageUrl(newCertImageUrl, newCertImageIsExternal)} alt="Preview" />
-								<button 
-									class="remove-image-btn" 
-									onclick={handleRemoveNewImage}
-									title="Remove image (image is required, upload a new one to replace)"
-								>
-									<X size={16} />
-								</button>
-							</div>
-							<p class="image-required-hint">Image is required. Upload a new image to replace the current one.</p>
-						{:else}
-							<FileUpload
-								acceptedTypes={['image']}
-								onUpload={handleNewImageUpload}
-								showPreview={false}
-								label="Upload Image"
-							/>
-						{/if}
+						<fieldset class="cert-image-fieldset">
+							<legend>Image *</legend>
+							{#if newCertImageUrl}
+								<div class="image-preview">
+									<img src={getImageUrl(newCertImageUrl, newCertImageIsExternal)} alt="Preview" />
+									<button
+										class="remove-image-btn"
+										onclick={handleRemoveNewImage}
+										title="Remove image (image is required, upload a new one to replace)"
+									>
+										<X size={16} />
+									</button>
+								</div>
+								<p class="image-required-hint">
+									Image is required. Upload a new image to replace the current one.
+								</p>
+							{:else}
+								<FileUpload
+									acceptedTypes={['image']}
+									onUpload={handleNewImageUpload}
+									showPreview={false}
+									label="Upload Image"
+								/>
+							{/if}
+						</fieldset>
 					</div>
 					<div class="form-actions">
 						<button class="save-btn" onclick={createCertification} disabled={isSaving}>
@@ -762,13 +799,11 @@
 							{/if}
 							Create Certification
 						</button>
-						<button class="cancel-btn" onclick={cancelNewCert}>
-							Cancel
-						</button>
+						<button class="cancel-btn" onclick={cancelNewCert}> Cancel </button>
 					</div>
 				</div>
 			{:else}
-				<button class="add-certification-btn" onclick={() => showNewCertForm = true}>
+				<button class="add-certification-btn" onclick={() => (showNewCertForm = true)}>
 					<Plus size={18} />
 					Add Certification
 				</button>
@@ -953,6 +988,25 @@
 		margin-bottom: 2px;
 	}
 
+	.cert-image-fieldset {
+		border: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		width: 100%;
+		min-width: 0;
+	}
+
+	.cert-image-fieldset legend {
+		font-size: 13px;
+		font-weight: 500;
+		color: var(--text-secondary, #a1a1aa);
+		margin-bottom: 2px;
+		padding: 0;
+	}
+
 	.form-row {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
@@ -995,7 +1049,7 @@
 		flex-direction: row !important;
 	}
 
-	.checkbox-label input[type="checkbox"] {
+	.checkbox-label input[type='checkbox'] {
 		width: auto;
 		cursor: pointer;
 	}
@@ -1211,7 +1265,11 @@
 	}
 
 	@keyframes spin {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>

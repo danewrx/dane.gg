@@ -12,7 +12,10 @@ type WebNekoPageVars = { type: string; enforce: boolean };
 let webNekoPageVarsCache: { vars: WebNekoPageVars; expires: number } | null = null;
 const WEB_NEKO_PAGE_VARS_CACHE_MS = 60_000;
 
-async function resolveWebNekoPageVars(event: { fetch: typeof fetch; url: URL }): Promise<WebNekoPageVars> {
+async function resolveWebNekoPageVars(event: {
+	fetch: typeof fetch;
+	url: URL;
+}): Promise<WebNekoPageVars> {
 	const now = Date.now();
 	if (webNekoPageVarsCache && now < webNekoPageVarsCache.expires) {
 		return webNekoPageVarsCache.vars;
@@ -38,119 +41,122 @@ async function resolveWebNekoPageVars(event: { fetch: typeof fetch; url: URL }):
 }
 
 interface User {
-  id: string;
-  username: string;
-  isAdmin: boolean;
+	id: string;
+	username: string;
+	isAdmin: boolean;
 }
 
 // Helper function to verify authentication with backend
 async function verifyAuth(cookies: any, fetch: typeof globalThis.fetch): Promise<User | null> {
-  try {
-    const sessionCookie = cookies.get('dane.gg.sid');
-    
-    if (!sessionCookie) {
-      return null;
-    }
+	try {
+		const sessionCookie = cookies.get('dane.gg.sid');
 
-    // Try to get user from session first
-    const sessionResponse = await fetch(`${API_BASE_URL}/auth/me`, {
-      method: 'GET',
-      headers: {
-        'Cookie': `dane.gg.sid=${sessionCookie}`,
-        'Content-Type': 'application/json'
-      }
-    });
+		if (!sessionCookie) {
+			return null;
+		}
 
-    if (sessionResponse.ok) {
-      const data = await sessionResponse.json();
-      if (data.success && data.user) {
-        return data.user;
-      }
-    }
+		// Try to get user from session first
+		const sessionResponse = await fetch(`${API_BASE_URL}/auth/me`, {
+			method: 'GET',
+			headers: {
+				Cookie: `dane.gg.sid=${sessionCookie}`,
+				'Content-Type': 'application/json'
+			}
+		});
 
-    // If session fails, try JWT token verification
-    const authHeader = cookies.get('authorization');
-    if (authHeader) {
-      const tokenResponse = await fetch(`${API_BASE_URL}/auth/verify`, {
-        method: 'GET',
-        headers: {
-          'Authorization': authHeader,
-          'Content-Type': 'application/json'
-        }
-      });
+		if (sessionResponse.ok) {
+			const data = await sessionResponse.json();
+			if (data.success && data.user) {
+				return data.user;
+			}
+		}
 
-      if (tokenResponse.ok) {
-        const data = await tokenResponse.json();
-        if (data.success && data.user) {
-          return data.user;
-        }
-      }
-    }
+		// If session fails, try JWT token verification
+		const authHeader = cookies.get('authorization');
+		if (authHeader) {
+			const tokenResponse = await fetch(`${API_BASE_URL}/auth/verify`, {
+				method: 'GET',
+				headers: {
+					Authorization: authHeader,
+					'Content-Type': 'application/json'
+				}
+			});
 
-    return null;
-  } catch (error) {
-    console.error('Auth verification failed:', error);
-    return null;
-  }
+			if (tokenResponse.ok) {
+				const data = await tokenResponse.json();
+				if (data.success && data.user) {
+					return data.user;
+				}
+			}
+		}
+
+		return null;
+	} catch (error) {
+		console.error('Auth verification failed:', error);
+		return null;
+	}
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
-  const { url, cookies } = event;
-  const pathname = url.pathname;
+	const { url, cookies } = event;
+	const pathname = url.pathname;
 
-  // Skip auth check for system routes (assets, API, etc.)
-  const systemRoutes = [
-    '/api/health',
-    '/favicon.ico',
-    '/robots.txt',
-    '/assets/',
-    '/static/',
-    '/_app/',
-    '/_svelte/'
-  ];
+	// Skip auth check for system routes (assets, API, etc.)
+	const systemRoutes = [
+		'/api/health',
+		'/favicon.ico',
+		'/robots.txt',
+		'/assets/',
+		'/static/',
+		'/_app/',
+		'/_svelte/'
+	];
 
-  const isSystemRoute = systemRoutes.some(route => pathname.startsWith(route));
-  
-  if (isSystemRoute) {
-    return resolve(event);
-  }
+	const isSystemRoute = systemRoutes.some((route) => pathname.startsWith(route));
 
-  if (pathname.startsWith('/api')) {
-    return resolve(event);
-  }
+	if (isSystemRoute) {
+		return resolve(event);
+	}
 
-  const injectWebNekoDefault = async () => {
-    const { type, enforce } = await resolveWebNekoPageVars(event);
-    return resolve(event, {
-      transformPageChunk: ({ html }) =>
-        html
-          .split(DANE_DEFAULT_WEB_NEKO_PLACEHOLDER).join(JSON.stringify(type))
-          .split(DANE_ENFORCE_WEB_NEKO_PLACEHOLDER).join(String(enforce))
-    });
-  };
+	if (pathname.startsWith('/api')) {
+		return resolve(event);
+	}
 
-  // Check if admin route (/admin, /login, /logout)
-  const isAdminRoute = pathname.startsWith('/admin') || 
-                      pathname.startsWith('/login') || 
-                      pathname.startsWith('/logout');
+	const injectWebNekoDefault = async () => {
+		const { type, enforce } = await resolveWebNekoPageVars(event);
+		return resolve(event, {
+			transformPageChunk: ({ html }) =>
+				html
+					.split(DANE_DEFAULT_WEB_NEKO_PLACEHOLDER)
+					.join(JSON.stringify(type))
+					.split(DANE_ENFORCE_WEB_NEKO_PLACEHOLDER)
+					.join(String(enforce))
+		});
+	};
 
-  if (isAdminRoute) {
-    // Verify authentication for admin routes
-    const user = await verifyAuth(cookies, event.fetch);
-    
-    if (!user) {
-      // Don't redirect if already on login page
-      if (pathname === '/login') {
-        return injectWebNekoDefault();
-      }
-      // Redirect to login page
-      throw redirect(302, '/login?redirect=' + encodeURIComponent(pathname));
-    }
+	// Check if admin route (/admin, /login, /logout)
+	const isAdminRoute =
+		pathname.startsWith('/admin') ||
+		pathname.startsWith('/login') ||
+		pathname.startsWith('/logout');
 
-    // Add user to locals for use in load functions
-    event.locals.user = user;
-    event.locals.isAuthenticated = true;
-  }
+	if (isAdminRoute) {
+		// Verify authentication for admin routes
+		const user = await verifyAuth(cookies, event.fetch);
 
-  return injectWebNekoDefault();
+		if (!user) {
+			// Don't redirect if already on login page
+			if (pathname === '/login') {
+				return injectWebNekoDefault();
+			}
+			// Redirect to login page
+			throw redirect(302, '/login?redirect=' + encodeURIComponent(pathname));
+		}
+
+		// Add user to locals for use in load functions
+		event.locals.user = user;
+		event.locals.isAuthenticated = true;
+	}
+
+	return injectWebNekoDefault();
 };

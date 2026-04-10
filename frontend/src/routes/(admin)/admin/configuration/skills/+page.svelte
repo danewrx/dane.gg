@@ -1,7 +1,17 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { Loader2, Plus, Trash2, GripVertical, ChevronDown, ChevronUp, Edit2, Save, X } from 'lucide-svelte';
+	import {
+		Loader2,
+		Plus,
+		Trash2,
+		GripVertical,
+		ChevronDown,
+		ChevronUp,
+		Edit2,
+		Save,
+		X
+	} from 'lucide-svelte';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
 	interface Skill {
@@ -28,25 +38,25 @@
 	let draggedSkillIndex = $state<number | null>(null);
 	let dragOverSkillIndex = $state<number | null>(null);
 	let draggedSkillCategoryId = $state<string | null>(null);
-	
+
 	// New category form
 	let showNewCategoryForm = $state(false);
 	let newCategoryName = $state('');
 	let newCategoryColor = $state('#6366f1');
-	
+
 	// New skill form
 	let addingSkillToCategoryId = $state<string | null>(null);
 	let newSkillName = $state('');
 	let newSkillLevel = $state(50);
-	
+
 	// Editing
 	let editingCategoryId = $state<string | null>(null);
 	let editingCategoryName = $state('');
 	let editingCategoryColor = $state('');
-	
+
 	// Preview colors
 	let previewColors = $state<Record<string, string>>({});
-	
+
 	let editingSkillId = $state<string | null>(null);
 	let editingSkillName = $state('');
 	let editingSkillLevel = $state(50);
@@ -67,11 +77,11 @@
 			const response = await fetch('/api/skills', {
 				credentials: 'include'
 			});
-			
+
 			if (response.ok) {
 				const result = await response.json();
 				categories = result.data || [];
-				expandedCategories = new Set(categories.map(c => c.id));
+				expandedCategories = new Set(categories.map((c) => c.id));
 			}
 		} catch (error) {
 			console.error('Error loading skills:', error);
@@ -180,17 +190,16 @@
 		if (!skillsDeleteTarget) return;
 		const { type, id } = skillsDeleteTarget;
 		try {
-			const url =
-				type === 'category'
-					? `/api/skills/categories/${id}`
-					: `/api/skills/skills/${id}`;
+			const url = type === 'category' ? `/api/skills/categories/${id}` : `/api/skills/skills/${id}`;
 			const response = await fetch(url, {
 				method: 'DELETE',
 				credentials: 'include'
 			});
 
 			if (!response.ok) {
-				throw new Error(type === 'category' ? 'Failed to delete category' : 'Failed to delete skill');
+				throw new Error(
+					type === 'category' ? 'Failed to delete category' : 'Failed to delete skill'
+				);
 			}
 
 			toast.success(type === 'category' ? 'Category deleted' : 'Skill deleted');
@@ -218,12 +227,12 @@
 		editingCategoryName = '';
 		editingCategoryColor = '';
 	}
-	
+
 	function updatePreviewColor(categoryId: string, color: string) {
 		previewColors = { ...previewColors, [categoryId]: color };
 		editingCategoryColor = color;
 	}
-	
+
 	function getCategoryColor(category: SkillCategory): string {
 		return previewColors[category.id] || category.color || '#6366f1';
 	}
@@ -328,7 +337,8 @@
 
 	function handleDragOver(e: DragEvent, index: number) {
 		e.preventDefault();
-		if (editingCategoryId || showNewCategoryForm || draggedIndex === null || draggedIndex === index) return;
+		if (editingCategoryId || showNewCategoryForm || draggedIndex === null || draggedIndex === index)
+			return;
 		dragOverIndex = index;
 	}
 
@@ -338,7 +348,12 @@
 
 	async function handleDrop(e: DragEvent, index: number) {
 		e.preventDefault();
-		if (editingCategoryId || showNewCategoryForm || draggedIndex === null || draggedIndex === index) {
+		if (
+			editingCategoryId ||
+			showNewCategoryForm ||
+			draggedIndex === null ||
+			draggedIndex === index
+		) {
 			draggedIndex = null;
 			dragOverIndex = null;
 			return;
@@ -396,7 +411,14 @@
 
 	function handleSkillDragOver(e: DragEvent, categoryId: string, skillIndex: number) {
 		e.preventDefault();
-		if (editingSkillId || addingSkillToCategoryId || draggedSkillIndex === null || draggedSkillCategoryId !== categoryId || draggedSkillIndex === skillIndex) return;
+		if (
+			editingSkillId ||
+			addingSkillToCategoryId ||
+			draggedSkillIndex === null ||
+			draggedSkillCategoryId !== categoryId ||
+			draggedSkillIndex === skillIndex
+		)
+			return;
 		dragOverSkillIndex = skillIndex;
 	}
 
@@ -406,14 +428,20 @@
 
 	async function handleSkillDrop(e: DragEvent, categoryId: string, skillIndex: number) {
 		e.preventDefault();
-		if (editingSkillId || addingSkillToCategoryId || draggedSkillIndex === null || draggedSkillCategoryId !== categoryId || draggedSkillIndex === skillIndex) {
+		if (
+			editingSkillId ||
+			addingSkillToCategoryId ||
+			draggedSkillIndex === null ||
+			draggedSkillCategoryId !== categoryId ||
+			draggedSkillIndex === skillIndex
+		) {
 			draggedSkillIndex = null;
 			dragOverSkillIndex = null;
 			draggedSkillCategoryId = null;
 			return;
 		}
 
-		const category = categories.find(cat => cat.id === categoryId);
+		const category = categories.find((cat) => cat.id === categoryId);
 		if (!category || !category.skills) {
 			draggedSkillIndex = null;
 			dragOverSkillIndex = null;
@@ -486,7 +514,10 @@
 
 <div class="skills-settings">
 	<div class="settings-description">
-		<p>Manage skill categories and individual skills that appear on your About page. Each skill has a proficiency level from 0-100%.</p>
+		<p>
+			Manage skill categories and individual skills that appear on your About page. Each skill has a
+			proficiency level from 0-100%.
+		</p>
 	</div>
 
 	{#if isLoading}
@@ -497,14 +528,20 @@
 	{:else}
 		<div class="categories-list">
 			{#each categories as category, index (category.id)}
-				<div 
+				<div
 					class="category-card"
 					class:dragging={draggedIndex === index}
 					class:drag-over={dragOverIndex === index}
-					class:not-draggable={editingCategoryId !== null || showNewCategoryForm || editingSkillId !== null || addingSkillToCategoryId !== null}
+					class:not-draggable={editingCategoryId !== null ||
+						showNewCategoryForm ||
+						editingSkillId !== null ||
+						addingSkillToCategoryId !== null}
 					role="button"
 					tabindex="0"
-					draggable={editingCategoryId === null && !showNewCategoryForm && editingSkillId === null && addingSkillToCategoryId === null}
+					draggable={editingCategoryId === null &&
+						!showNewCategoryForm &&
+						editingSkillId === null &&
+						addingSkillToCategoryId === null}
 					ondragstart={() => handleDragStart(index)}
 					ondragover={(e) => handleDragOver(e, index)}
 					ondragleave={handleDragLeave}
@@ -517,17 +554,14 @@
 								<GripVertical size={18} />
 							</div>
 						{/if}
-						<button 
-							class="expand-toggle"
-							onclick={() => toggleCategory(category.id)}
-						>
+						<button class="expand-toggle" onclick={() => toggleCategory(category.id)}>
 							{#if expandedCategories.has(category.id)}
 								<ChevronUp size={18} />
 							{:else}
 								<ChevronDown size={18} />
 							{/if}
 						</button>
-						
+
 						{#if editingCategoryId === category.id}
 							<div class="editing-category">
 								<input
@@ -540,9 +574,14 @@
 									type="color"
 									class="color-input"
 									value={editingCategoryColor}
-									oninput={(e) => updatePreviewColor(category.id, (e.target as HTMLInputElement).value)}
+									oninput={(e) =>
+										updatePreviewColor(category.id, (e.target as HTMLInputElement).value)}
 								/>
-								<button class="icon-btn save" onclick={() => updateCategory(category.id)} disabled={isSaving}>
+								<button
+									class="icon-btn save"
+									onclick={() => updateCategory(category.id)}
+									disabled={isSaving}
+								>
 									<Save size={16} />
 								</button>
 								<button class="icon-btn cancel" onclick={cancelEditingCategory}>
@@ -551,8 +590,8 @@
 							</div>
 						{:else}
 							<div class="category-info">
-								<div 
-									class="category-color-dot" 
+								<div
+									class="category-color-dot"
 									style="background: {getCategoryColor(category)}"
 								></div>
 								<span class="category-name">{category.name}</span>
@@ -573,11 +612,14 @@
 						<div class="skills-list">
 							{#if category.skills && category.skills.length > 0}
 								{#each category.skills as skill, skillIndex (skill.id)}
-									<div 
+									<div
 										class="skill-item"
-										class:dragging={draggedSkillIndex === skillIndex && draggedSkillCategoryId === category.id}
-										class:drag-over={dragOverSkillIndex === skillIndex && draggedSkillCategoryId === category.id}
-										class:not-draggable={editingSkillId !== null || addingSkillToCategoryId !== null}
+										class:dragging={draggedSkillIndex === skillIndex &&
+											draggedSkillCategoryId === category.id}
+										class:drag-over={dragOverSkillIndex === skillIndex &&
+											draggedSkillCategoryId === category.id}
+										class:not-draggable={editingSkillId !== null ||
+											addingSkillToCategoryId !== null}
 										role="button"
 										tabindex="0"
 										draggable={editingSkillId === null && addingSkillToCategoryId === null}
@@ -607,12 +649,16 @@
 														bind:value={editingSkillLevel}
 														min="0"
 														max="100"
-													ondragstart={(e) => e.stopPropagation()}
-													onmousedown={(e) => e.stopPropagation()}
+														ondragstart={(e) => e.stopPropagation()}
+														onmousedown={(e) => e.stopPropagation()}
 													/>
 													<span class="level-value">{editingSkillLevel}%</span>
 												</div>
-												<button class="icon-btn save" onclick={() => updateSkill(skill.id)} disabled={isSaving}>
+												<button
+													class="icon-btn save"
+													onclick={() => updateSkill(skill.id)}
+													disabled={isSaving}
+												>
 													<Save size={16} />
 												</button>
 												<button class="icon-btn cancel" onclick={cancelEditingSkill}>
@@ -623,8 +669,8 @@
 											<div class="skill-info">
 												<span class="skill-name">{skill.name}</span>
 												<div class="skill-bar-wrapper">
-													<div 
-														class="skill-bar" 
+													<div
+														class="skill-bar"
 														style="width: {skill.level}%; background: {getCategoryColor(category)}"
 													></div>
 												</div>
@@ -634,7 +680,10 @@
 												<button class="icon-btn edit" onclick={() => startEditingSkill(skill)}>
 													<Edit2 size={14} />
 												</button>
-												<button class="icon-btn delete" onclick={() => requestDeleteSkill(skill.id)}>
+												<button
+													class="icon-btn delete"
+													onclick={() => requestDeleteSkill(skill.id)}
+												>
 													<Trash2 size={14} />
 												</button>
 											</div>
@@ -665,7 +714,11 @@
 										/>
 										<span class="level-value">{newSkillLevel}%</span>
 									</div>
-									<button class="icon-btn save" onclick={() => createSkill(category.id)} disabled={isSaving}>
+									<button
+										class="icon-btn save"
+										onclick={() => createSkill(category.id)}
+										disabled={isSaving}
+									>
 										<Save size={16} />
 									</button>
 									<button class="icon-btn cancel" onclick={cancelAddingSkill}>
@@ -693,11 +746,7 @@
 							bind:value={newCategoryName}
 							placeholder="Category name"
 						/>
-						<input
-							type="color"
-							class="color-input"
-							bind:value={newCategoryColor}
-						/>
+						<input type="color" class="color-input" bind:value={newCategoryColor} />
 					</div>
 					<div class="form-actions">
 						<button class="save-btn" onclick={createCategory} disabled={isSaving}>
@@ -706,13 +755,19 @@
 							{/if}
 							Create Category
 						</button>
-						<button class="cancel-btn" onclick={() => { showNewCategoryForm = false; newCategoryName = ''; }}>
+						<button
+							class="cancel-btn"
+							onclick={() => {
+								showNewCategoryForm = false;
+								newCategoryName = '';
+							}}
+						>
 							Cancel
 						</button>
 					</div>
 				</div>
 			{:else}
-				<button class="add-category-btn" onclick={() => showNewCategoryForm = true}>
+				<button class="add-category-btn" onclick={() => (showNewCategoryForm = true)}>
 					<Plus size={18} />
 					Add Category
 				</button>
@@ -1235,8 +1290,12 @@
 	}
 
 	@keyframes spin {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	@media (max-width: 560px) {

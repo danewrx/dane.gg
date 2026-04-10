@@ -10,25 +10,25 @@
 	// Form states
 	let isEditingUsername = $state(false);
 	let isEditingPassword = $state(false);
-	
+
 	// Form data
 	let usernameForm = $state({
 		newUsername: '',
 		currentPassword: ''
 	});
-	
+
 	let passwordForm = $state({
 		currentPassword: '',
 		newPassword: '',
 		confirmPassword: ''
 	});
-	
+
 	// UI states
 	let showCurrentPassword = $state(false);
 	let showNewPassword = $state(false);
 	let showConfirmPassword = $state(false);
 	let isSubmitting = $state(false);
-	
+
 	// Username availability checking
 	let usernameAvailability = $state<{
 		status: 'idle' | 'checking' | 'available' | 'unavailable' | 'error';
@@ -50,25 +50,28 @@
 	function updateTotpButtonState() {
 		if (typeof window !== 'undefined') {
 			// Try multiple selectors to find the buttons
-			const enableButton = document.querySelector('.totp-manager-container .action-button.enable') || 
-								document.querySelector('.action-button.enable');
-			const disableButton = document.querySelector('.totp-manager-container .action-button.disable') || 
-								 document.querySelector('.action-button.disable');
-			const regenerateButton = document.querySelector('.totp-manager-container .action-button.regenerate') || 
-									document.querySelector('.action-button.regenerate');
-			
+			const enableButton =
+				document.querySelector('.totp-manager-container .action-button.enable') ||
+				document.querySelector('.action-button.enable');
+			const disableButton =
+				document.querySelector('.totp-manager-container .action-button.disable') ||
+				document.querySelector('.action-button.disable');
+			const regenerateButton =
+				document.querySelector('.totp-manager-container .action-button.regenerate') ||
+				document.querySelector('.action-button.regenerate');
+
 			// Also check if we can detect the status from the status card
 			const statusCard = document.querySelector('.totp-manager-container .status-card');
 			const isEnabled = statusCard?.classList.contains('enabled');
-			
+
 			// Check for the status text content as well
 			const statusText = document.querySelector('.totp-manager-container .status-info h3');
 			const isEnabledByText = statusText?.textContent?.includes('Enabled');
-			
+
 			// Check for backup codes text as well
 			const backupText = document.querySelector('.totp-manager-container .backup-info');
 			const hasBackupCodes = backupText?.textContent?.includes('unused backup codes');
-			
+
 			console.log('Updating TOTP button state:', {
 				enableButton: !!enableButton,
 				disableButton: !!disableButton,
@@ -78,14 +81,19 @@
 				hasBackupCodes: hasBackupCodes,
 				totpStatus: totpStatus
 			});
-			
+
 			if (enableButton || (!isEnabled && !isEnabledByText && !hasBackupCodes)) {
 				// 2FA is disabled
 				totpButtonText = 'Enable 2FA';
 				totpButtonClass = 'section-action-button';
 				showRegenerateButton = false;
 				console.log('Set to Enable 2FA');
-			} else if ((disableButton && regenerateButton) || isEnabled || isEnabledByText || hasBackupCodes) {
+			} else if (
+				(disableButton && regenerateButton) ||
+				isEnabled ||
+				isEnabledByText ||
+				hasBackupCodes
+			) {
 				// 2FA is enabled - show disable as primary action
 				totpButtonText = 'Disable 2FA';
 				totpButtonClass = 'section-action-button disable';
@@ -131,7 +139,7 @@
 		if ($user) {
 			usernameForm.newUsername = $user.username;
 		}
-		
+
 		// Update TOTP button state immediately and then more frequently
 		updateTotpButtonState();
 		const interval = setInterval(() => {
@@ -155,7 +163,7 @@
 			const observer = new MutationObserver(() => {
 				updateTotpButtonState();
 			});
-			
+
 			observer.observe(totpContainer, {
 				childList: true,
 				subtree: true,
@@ -176,7 +184,7 @@
 			setTimeout(updateTotpButtonState, 50);
 			setTimeout(updateTotpButtonState, 200);
 		};
-		
+
 		window.addEventListener('totpStatusChanged', handleTotpStatusChange);
 
 		// Clean up interval and event listener after 30 seconds
@@ -212,7 +220,7 @@
 		usernameCheckTimeout = setTimeout(async () => {
 			try {
 				const result = await accountService.checkUsernameAvailability(username);
-				
+
 				usernameAvailability = {
 					status: result.available ? 'available' : 'unavailable',
 					message: result.message,
@@ -231,7 +239,7 @@
 	function handleUsernameInput(event: Event) {
 		const target = event.target as HTMLInputElement;
 		usernameForm.newUsername = target.value;
-		
+
 		// Only check availability when editing
 		if (isEditingUsername) {
 			checkUsernameAvailability(target.value);
@@ -241,23 +249,23 @@
 	// Handle username change
 	async function handleUsernameChange(event: Event) {
 		event.preventDefault();
-		
+
 		if (!usernameForm.newUsername.trim()) {
 			toast.error('Username cannot be empty');
 			return;
 		}
-		
+
 		if (usernameForm.newUsername === $user?.username) {
 			toast.info('Username is the same as current');
 			isEditingUsername = false;
 			return;
 		}
-		
+
 		if (!usernameForm.currentPassword) {
 			toast.error('Current password is required');
 			return;
 		}
-		
+
 		// Check if username is available before submitting
 		if (usernameAvailability.status === 'unavailable') {
 			toast.error('Please choose a different username', {
@@ -265,29 +273,28 @@
 			});
 			return;
 		}
-		
+
 		// If still checking, wait a moment and try again
 		if (usernameAvailability.status === 'checking') {
 			toast.info('Please wait while we verify username availability');
 			return;
 		}
-		
+
 		isSubmitting = true;
-		
+
 		try {
 			const response = await accountService.updateUsername({
 				newUsername: usernameForm.newUsername,
 				currentPassword: usernameForm.currentPassword
 			});
-			
+
 			toast.success('Username updated successfully', {
 				description: `Changed from "${$user?.username}" to "${usernameForm.newUsername}"`
 			});
-			
+
 			// Reset form
 			usernameForm.currentPassword = '';
 			isEditingUsername = false;
-			
 		} catch (error) {
 			console.error('Username update failed:', error);
 			toast.error('Failed to update username', {
@@ -301,44 +308,44 @@
 	// Handle password change
 	async function handlePasswordChange(event: Event) {
 		event.preventDefault();
-		
+
 		if (!passwordForm.currentPassword) {
 			toast.error('Current password is required');
 			return;
 		}
-		
+
 		if (!passwordForm.newPassword) {
 			toast.error('New password is required');
 			return;
 		}
-		
+
 		if (passwordForm.newPassword.length < 6) {
 			toast.error('New password must be at least 6 characters');
 			return;
 		}
-		
+
 		if (passwordForm.newPassword !== passwordForm.confirmPassword) {
 			toast.error('Passwords do not match');
 			return;
 		}
-		
+
 		if (passwordForm.newPassword === passwordForm.currentPassword) {
 			toast.error('New password must be different from current password');
 			return;
 		}
-		
+
 		isSubmitting = true;
-		
+
 		try {
 			const response = await accountService.updatePassword({
 				currentPassword: passwordForm.currentPassword,
 				newPassword: passwordForm.newPassword
 			});
-			
+
 			toast.success('Password updated successfully', {
 				description: 'Your password has been changed'
 			});
-			
+
 			// Reset form
 			passwordForm = {
 				currentPassword: '',
@@ -346,7 +353,6 @@
 				confirmPassword: ''
 			};
 			isEditingPassword = false;
-			
 		} catch (error) {
 			console.error('Password update failed:', error);
 			toast.error('Failed to update password', {
@@ -362,7 +368,7 @@
 		usernameForm.newUsername = $user?.username || '';
 		usernameForm.currentPassword = '';
 		isEditingUsername = false;
-		
+
 		// Clear timeout and reset availability status
 		if (usernameCheckTimeout) {
 			clearTimeout(usernameCheckTimeout);
@@ -411,7 +417,7 @@
 				</div>
 				<p class="section-description">Your basic account details</p>
 			</div>
-			
+
 			<div class="account-overview">
 				<div class="overview-item">
 					<span class="overview-label">Username</span>
@@ -419,7 +425,7 @@
 						<span class="username">{$user?.username || 'Loading...'}</span>
 					</div>
 				</div>
-				
+
 				<div class="overview-item">
 					<span class="overview-label">Account Type</span>
 					<div class="overview-value">
@@ -441,19 +447,22 @@
 						<p class="section-description">Change your login username</p>
 					</div>
 					{#if !isEditingUsername}
-						<button class="edit-button" onclick={() => {
-							isEditingUsername = true;
-							// Check availability of current value when starting to edit
-							if (usernameForm.newUsername !== $user?.username) {
-								checkUsernameAvailability(usernameForm.newUsername);
-							}
-						}}>
+						<button
+							class="edit-button"
+							onclick={() => {
+								isEditingUsername = true;
+								// Check availability of current value when starting to edit
+								if (usernameForm.newUsername !== $user?.username) {
+									checkUsernameAvailability(usernameForm.newUsername);
+								}
+							}}
+						>
 							Edit
 						</button>
 					{/if}
 				</div>
 			</div>
-			
+
 			<div class="card-content">
 				{#if isEditingUsername}
 					<form onsubmit={handleUsernameChange} class="edit-form">
@@ -485,15 +494,18 @@
 								</div>
 							</div>
 							{#if usernameAvailability.message}
-								<div class="availability-message" 
+								<div
+									class="availability-message"
 									class:success={usernameAvailability.status === 'available'}
-									class:error={usernameAvailability.status === 'unavailable' || usernameAvailability.status === 'error'}
-									class:checking={usernameAvailability.status === 'checking'}>
+									class:error={usernameAvailability.status === 'unavailable' ||
+										usernameAvailability.status === 'error'}
+									class:checking={usernameAvailability.status === 'checking'}
+								>
 									{usernameAvailability.message}
 								</div>
 							{/if}
 						</div>
-						
+
 						<div class="form-group">
 							<label for="current-password-username">Current Password</label>
 							<div class="password-input-group">
@@ -509,7 +521,7 @@
 								<button
 									type="button"
 									class="password-toggle"
-									onclick={() => showCurrentPassword = !showCurrentPassword}
+									onclick={() => (showCurrentPassword = !showCurrentPassword)}
 									disabled={isSubmitting}
 								>
 									{#if showCurrentPassword}
@@ -520,9 +532,14 @@
 								</button>
 							</div>
 						</div>
-						
+
 						<div class="form-actions">
-							<button type="button" class="cancel-button" onclick={cancelUsernameEdit} disabled={isSubmitting}>
+							<button
+								type="button"
+								class="cancel-button"
+								onclick={cancelUsernameEdit}
+								disabled={isSubmitting}
+							>
 								Cancel
 							</button>
 							<button type="submit" class="save-button" disabled={isSubmitting}>
@@ -547,13 +564,13 @@
 						<p class="section-description">Change your login password</p>
 					</div>
 					{#if !isEditingPassword}
-						<button class="edit-button" onclick={() => isEditingPassword = true}>
+						<button class="edit-button" onclick={() => (isEditingPassword = true)}>
 							Change Password
 						</button>
 					{/if}
 				</div>
 			</div>
-			
+
 			<div class="card-content">
 				{#if isEditingPassword}
 					<form onsubmit={handlePasswordChange} class="edit-form">
@@ -572,7 +589,7 @@
 								<button
 									type="button"
 									class="password-toggle"
-									onclick={() => showCurrentPassword = !showCurrentPassword}
+									onclick={() => (showCurrentPassword = !showCurrentPassword)}
 									disabled={isSubmitting}
 								>
 									{#if showCurrentPassword}
@@ -583,7 +600,7 @@
 								</button>
 							</div>
 						</div>
-						
+
 						<div class="form-group">
 							<label for="new-password">New Password</label>
 							<div class="password-input-group">
@@ -600,7 +617,7 @@
 								<button
 									type="button"
 									class="password-toggle"
-									onclick={() => showNewPassword = !showNewPassword}
+									onclick={() => (showNewPassword = !showNewPassword)}
 									disabled={isSubmitting}
 								>
 									{#if showNewPassword}
@@ -611,7 +628,7 @@
 								</button>
 							</div>
 						</div>
-						
+
 						<div class="form-group">
 							<label for="confirm-password">Confirm New Password</label>
 							<div class="password-input-group">
@@ -627,7 +644,7 @@
 								<button
 									type="button"
 									class="password-toggle"
-									onclick={() => showConfirmPassword = !showConfirmPassword}
+									onclick={() => (showConfirmPassword = !showConfirmPassword)}
 									disabled={isSubmitting}
 								>
 									{#if showConfirmPassword}
@@ -638,9 +655,14 @@
 								</button>
 							</div>
 						</div>
-						
+
 						<div class="form-actions">
-							<button type="button" class="cancel-button" onclick={cancelPasswordEdit} disabled={isSubmitting}>
+							<button
+								type="button"
+								class="cancel-button"
+								onclick={cancelPasswordEdit}
+								disabled={isSubmitting}
+							>
 								Cancel
 							</button>
 							<button type="submit" class="save-button" disabled={isSubmitting}>
@@ -667,10 +689,12 @@
 					</div>
 					<div class="section-actions">
 						{#if showRegenerateButton}
-							<button 
+							<button
 								class="section-action-button secondary"
 								onclick={() => {
-									const regenerateButton = document.querySelector('.totp-manager-container .action-button.regenerate');
+									const regenerateButton = document.querySelector(
+										'.totp-manager-container .action-button.regenerate'
+									);
 									if (regenerateButton) {
 										(regenerateButton as HTMLButtonElement).click();
 									}
@@ -679,12 +703,16 @@
 								<span class="button-text">Regenerate Codes</span>
 							</button>
 						{/if}
-						<button 
+						<button
 							class={totpButtonClass}
 							onclick={() => {
 								// This will be handled by the TotpManager component
-								const enableButton = document.querySelector('.totp-manager-container .action-button.enable');
-								const disableButton = document.querySelector('.totp-manager-container .action-button.disable');
+								const enableButton = document.querySelector(
+									'.totp-manager-container .action-button.enable'
+								);
+								const disableButton = document.querySelector(
+									'.totp-manager-container .action-button.disable'
+								);
 								if (enableButton) {
 									(enableButton as HTMLButtonElement).click();
 								} else if (disableButton) {
@@ -951,19 +979,9 @@
 		transition: all 0.2s ease;
 	}
 
-	:global(html:not(.dark)) .totp-manager-container .status-card {
-		background: rgba(0, 0, 0, 0.02);
-		border-color: rgba(0, 0, 0, 0.1);
-	}
-
 	:global(.totp-manager-container .status-card:hover) {
 		background: rgba(255, 255, 255, 0.04);
 		border-color: rgba(255, 255, 255, 0.15);
-	}
-
-	:global(html:not(.dark)) .totp-manager-container .status-card:hover {
-		background: rgba(0, 0, 0, 0.04);
-		border-color: rgba(0, 0, 0, 0.15);
 	}
 
 	/* Style the status info section */
@@ -986,19 +1004,11 @@
 		margin: 0 0 8px 0;
 	}
 
-	:global(html:not(.dark)) .totp-manager-container .status-info h3 {
-		color: #1f2937;
-	}
-
 	:global(.totp-manager-container .status-info p) {
 		color: rgba(255, 255, 255, 0.7);
 		margin: 0;
 		font-size: 0.9rem;
 		line-height: 1.5;
-	}
-
-	:global(html:not(.dark)) .totp-manager-container .status-info p {
-		color: rgba(0, 0, 0, 0.6);
 	}
 
 	/* Style the action buttons */
@@ -1042,18 +1052,18 @@
 		color: rgba(255, 255, 255, 0.7);
 	}
 
-	:global(html:not(.dark)) .totp-manager-container .loading-state {
-		color: rgba(0, 0, 0, 0.6);
-	}
-
 	:global(.totp-manager-container .loading-state .spin) {
 		animation: spin 1s linear infinite;
 		margin-bottom: 16px;
 	}
 
 	@keyframes spin {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	/* Form styles */
@@ -1094,7 +1104,8 @@
 	}
 
 	/* Input group containers */
-	.password-input-group, .username-input-group {
+	.password-input-group,
+	.username-input-group {
 		position: relative;
 		display: flex;
 		align-items: center;
@@ -1203,15 +1214,15 @@
 		justify-content: center;
 	}
 
-	.availability-indicator .success {
+	.availability-indicator :global(.success) {
 		color: #22c55e;
 	}
 
-	.availability-indicator .error {
+	.availability-indicator :global(.error) {
 		color: #ef4444;
 	}
 
-	.availability-indicator .spin {
+	.availability-indicator :global(.spin) {
 		animation: spin 1s linear infinite;
 	}
 
@@ -1243,7 +1254,9 @@
 		margin-top: 8px;
 	}
 
-	.edit-button, .save-button, .cancel-button {
+	.edit-button,
+	.save-button,
+	.cancel-button {
 		padding: 8px 16px;
 		border-radius: 6px;
 		font-weight: 500;

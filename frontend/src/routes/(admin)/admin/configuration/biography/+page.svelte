@@ -28,7 +28,7 @@ This is my personal website where I showcase some of the side projects I'm worki
 			const response = await fetch('/api/config/about_biography', {
 				credentials: 'include'
 			});
-			
+
 			if (response.ok) {
 				const result = await response.json();
 				biography = result.data?.value || '';
@@ -44,7 +44,7 @@ This is my personal website where I showcase some of the side projects I'm worki
 	async function saveBiography() {
 		try {
 			isSaving = true;
-			
+
 			const response = await fetch('/api/config/about_biography', {
 				method: 'PUT',
 				headers: {
@@ -56,11 +56,11 @@ This is my personal website where I showcase some of the side projects I'm worki
 					dataType: 'string'
 				})
 			});
-			
+
 			if (!response.ok) {
 				throw new Error('Failed to save biography');
 			}
-			
+
 			toast.success('Biography saved successfully');
 		} catch (error) {
 			console.error('Error saving biography:', error);
@@ -70,7 +70,10 @@ This is my personal website where I showcase some of the side projects I'm worki
 
 <div class="biography-settings">
 	<div class="settings-description">
-		<p>Edit the biography content that appears on the About page. Use the toolbar to format your text with headings, bold, italic, lists, and more.</p>
+		<p>
+			Edit the biography content that appears on the About page. Use the toolbar to format your text
+			with headings, bold, italic, lists, and more.
+		</p>
 	</div>
 
 	{#if isLoading}
@@ -82,21 +85,12 @@ This is my personal website where I showcase some of the side projects I'm worki
 		<div class="form-group">
 			<label for="biography">Biography Content</label>
 			<div class="editor-container">
-				<MarkdownEditor
-					bind:value={biography}
-					placeholder={defaultBiography}
-					minHeight="500px"
-				/>
+				<MarkdownEditor bind:value={biography} placeholder={defaultBiography} minHeight="500px" />
 			</div>
 		</div>
 
 		<div class="form-actions">
-			<button 
-				type="button"
-				class="save-button" 
-				onclick={saveBiography}
-				disabled={isSaving}
-			>
+			<button type="button" class="save-button" onclick={saveBiography} disabled={isSaving}>
 				{#if isSaving}
 					<Loader2 size={16} class="spin" />
 					Saving...
@@ -186,7 +180,11 @@ This is my personal website where I showcase some of the side projects I'm worki
 	}
 
 	@keyframes spin {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>

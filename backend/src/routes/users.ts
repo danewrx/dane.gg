@@ -10,347 +10,365 @@ const router = Router();
 
 // Get all users (admin only) with rate limiting
 router.get('/', adminLimiter, requireSession, requireAdmin, async (req: Request, res: Response) => {
-  try {
-    const allUsers = await db.select({
-      id: users.id,
-      username: users.username,
-      isAdmin: users.isAdmin,
-      createdAt: users.createdAt,
-      totpEnabled: users.totpEnabled
-    }).from(users).orderBy(users.createdAt);
+	try {
+		const allUsers = await db
+			.select({
+				id: users.id,
+				username: users.username,
+				isAdmin: users.isAdmin,
+				createdAt: users.createdAt,
+				totpEnabled: users.totpEnabled
+			})
+			.from(users)
+			.orderBy(users.createdAt);
 
-    res.json({
-      success: true,
-      users: allUsers,
-      count: allUsers.length
-    });
-  } catch (error) {
-    console.error('Get users error:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to fetch users'
-    });
-  }
+		res.json({
+			success: true,
+			users: allUsers,
+			count: allUsers.length
+		});
+	} catch (error) {
+		console.error('Get users error:', error);
+		res.status(500).json({
+			error: 'Internal server error',
+			message: 'Failed to fetch users'
+		});
+	}
 });
 
 // Get user by ID (admin only)
 router.get('/:id', requireSession, requireAdmin, async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
+	try {
+		const { id } = req.params;
 
-    const user = await db.select({
-      id: users.id,
-      username: users.username,
-      isAdmin: users.isAdmin,
-      createdAt: users.createdAt,
-      totpEnabled: users.totpEnabled
-    }).from(users).where(eq(users.id, id)).limit(1);
+		const user = await db
+			.select({
+				id: users.id,
+				username: users.username,
+				isAdmin: users.isAdmin,
+				createdAt: users.createdAt,
+				totpEnabled: users.totpEnabled
+			})
+			.from(users)
+			.where(eq(users.id, id))
+			.limit(1);
 
-    if (user.length === 0) {
-      return res.status(404).json({
-        error: 'User not found',
-        message: 'User does not exist'
-      });
-    }
+		if (user.length === 0) {
+			return res.status(404).json({
+				error: 'User not found',
+				message: 'User does not exist'
+			});
+		}
 
-    res.json({
-      success: true,
-      user: user[0]
-    });
-  } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to fetch user'
-    });
-  }
+		res.json({
+			success: true,
+			user: user[0]
+		});
+	} catch (error) {
+		console.error('Get user error:', error);
+		res.status(500).json({
+			error: 'Internal server error',
+			message: 'Failed to fetch user'
+		});
+	}
 });
 
 // Create new user (admin only) with rate limiting
-router.post('/', userCreationLimiter, requireSession, requireAdmin, async (req: Request, res: Response) => {
-  try {
-    const { username, password, isAdmin = false } = req.body;
+router.post(
+	'/',
+	userCreationLimiter,
+	requireSession,
+	requireAdmin,
+	async (req: Request, res: Response) => {
+		try {
+			const { username, password, isAdmin = false } = req.body;
 
-    // Validate input
-    if (!username || !password) {
-      return res.status(400).json({
-        error: 'Validation failed',
-        message: 'Username and password are required'
-      });
-    }
+			// Validate input
+			if (!username || !password) {
+				return res.status(400).json({
+					error: 'Validation failed',
+					message: 'Username and password are required'
+				});
+			}
 
-    // Validate password strength
-    const passwordValidation = validatePasswordStrength(password);
-    if (!passwordValidation.isValid) {
-      return res.status(400).json({
-        error: 'Validation failed',
-        message: passwordValidation.message
-      });
-    }
+			// Validate password strength
+			const passwordValidation = validatePasswordStrength(password);
+			if (!passwordValidation.isValid) {
+				return res.status(400).json({
+					error: 'Validation failed',
+					message: passwordValidation.message
+				});
+			}
 
-    // Check if username already exists
-    const existingUser = await db.select({ id: users.id })
-      .from(users)
-      .where(eq(users.username, username))
-      .limit(1);
+			// Check if username already exists
+			const existingUser = await db
+				.select({ id: users.id })
+				.from(users)
+				.where(eq(users.username, username))
+				.limit(1);
 
-    if (existingUser.length > 0) {
-      return res.status(409).json({
-        error: 'Conflict',
-        message: 'Username already exists'
-      });
-    }
+			if (existingUser.length > 0) {
+				return res.status(409).json({
+					error: 'Conflict',
+					message: 'Username already exists'
+				});
+			}
 
-    // Hash password
-    const passwordHash = await hashPassword(password);
+			// Hash password
+			const passwordHash = await hashPassword(password);
 
-    // Create user
-    const newUser = await db.insert(users).values({
-      username,
-      passwordHash,
-      isAdmin
-    }).returning({
-      id: users.id,
-      username: users.username,
-      isAdmin: users.isAdmin,
-      createdAt: users.createdAt
-    });
+			// Create user
+			const newUser = await db
+				.insert(users)
+				.values({
+					username,
+					passwordHash,
+					isAdmin
+				})
+				.returning({
+					id: users.id,
+					username: users.username,
+					isAdmin: users.isAdmin,
+					createdAt: users.createdAt
+				});
 
-    res.status(201).json({
-      success: true,
-      message: 'User created successfully',
-      user: newUser[0]
-    });
-
-  } catch (error) {
-    console.error('Create user error:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to create user'
-    });
-  }
-});
+			res.status(201).json({
+				success: true,
+				message: 'User created successfully',
+				user: newUser[0]
+			});
+		} catch (error) {
+			console.error('Create user error:', error);
+			res.status(500).json({
+				error: 'Internal server error',
+				message: 'Failed to create user'
+			});
+		}
+	}
+);
 
 // Update user (admin only)
 router.put('/:id', requireSession, requireAdmin, async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { username, password, isAdmin, totpEnabled } = req.body;
+	try {
+		const { id } = req.params;
+		const { username, password, isAdmin, totpEnabled } = req.body;
 
-    // Check if user exists
-    const existingUser = await db.select({ id: users.id })
-      .from(users)
-      .where(eq(users.id, id))
-      .limit(1);
+		// Check if user exists
+		const existingUser = await db
+			.select({ id: users.id })
+			.from(users)
+			.where(eq(users.id, id))
+			.limit(1);
 
-    if (existingUser.length === 0) {
-      return res.status(404).json({
-        error: 'User not found',
-        message: 'User does not exist'
-      });
-    }
+		if (existingUser.length === 0) {
+			return res.status(404).json({
+				error: 'User not found',
+				message: 'User does not exist'
+			});
+		}
 
-    // Check if username is being changed and if it already exists
-    if (username) {
-      const usernameExists = await db.select({ id: users.id })
-        .from(users)
-        .where(eq(users.username, username))
-        .limit(1);
+		// Check if username is being changed and if it already exists
+		if (username) {
+			const usernameExists = await db
+				.select({ id: users.id })
+				.from(users)
+				.where(eq(users.username, username))
+				.limit(1);
 
-      if (usernameExists.length > 0 && usernameExists[0].id !== id) {
-        return res.status(409).json({
-          error: 'Conflict',
-          message: 'Username already exists'
-        });
-      }
-    }
+			if (usernameExists.length > 0 && usernameExists[0].id !== id) {
+				return res.status(409).json({
+					error: 'Conflict',
+					message: 'Username already exists'
+				});
+			}
+		}
 
-    // Validate and hash password if provided
-    if (password) {
-      const passwordValidation = validatePasswordStrength(password);
-      if (!passwordValidation.isValid) {
-        return res.status(400).json({
-          error: 'Validation failed',
-          message: passwordValidation.message
-        });
-      }
-    }
+		// Validate and hash password if provided
+		if (password) {
+			const passwordValidation = validatePasswordStrength(password);
+			if (!passwordValidation.isValid) {
+				return res.status(400).json({
+					error: 'Validation failed',
+					message: passwordValidation.message
+				});
+			}
+		}
 
-    // Update user
-    const updateData: any = {};
-    if (username !== undefined) updateData.username = username;
-    if (password !== undefined) {
-      updateData.passwordHash = await hashPassword(password);
-    }
-    if (isAdmin !== undefined) updateData.isAdmin = isAdmin;
-    if (totpEnabled !== undefined) updateData.totpEnabled = totpEnabled;
+		// Update user
+		const updateData: any = {};
+		if (username !== undefined) updateData.username = username;
+		if (password !== undefined) {
+			updateData.passwordHash = await hashPassword(password);
+		}
+		if (isAdmin !== undefined) updateData.isAdmin = isAdmin;
+		if (totpEnabled !== undefined) updateData.totpEnabled = totpEnabled;
 
-    const updatedUser = await db.update(users)
-      .set(updateData)
-      .where(eq(users.id, id))
-      .returning({
-        id: users.id,
-        username: users.username,
-        isAdmin: users.isAdmin,
-        createdAt: users.createdAt,
-        totpEnabled: users.totpEnabled
-      });
+		const updatedUser = await db.update(users).set(updateData).where(eq(users.id, id)).returning({
+			id: users.id,
+			username: users.username,
+			isAdmin: users.isAdmin,
+			createdAt: users.createdAt,
+			totpEnabled: users.totpEnabled
+		});
 
-    res.json({
-      success: true,
-      message: 'User updated successfully',
-      user: updatedUser[0]
-    });
-
-  } catch (error) {
-    console.error('Update user error:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to update user'
-    });
-  }
+		res.json({
+			success: true,
+			message: 'User updated successfully',
+			user: updatedUser[0]
+		});
+	} catch (error) {
+		console.error('Update user error:', error);
+		res.status(500).json({
+			error: 'Internal server error',
+			message: 'Failed to update user'
+		});
+	}
 });
 
 // Delete user (admin only)
 router.delete('/:id', requireSession, requireAdmin, async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
+	try {
+		const { id } = req.params;
 
-    // Prevent deleting yourself
-    if (id === req.user!.id) {
-      return res.status(400).json({
-        error: 'Bad request',
-        message: 'Cannot delete your own account'
-      });
-    }
+		// Prevent deleting yourself
+		if (id === req.user!.id) {
+			return res.status(400).json({
+				error: 'Bad request',
+				message: 'Cannot delete your own account'
+			});
+		}
 
-    // Check if user exists
-    const existingUser = await db.select({ id: users.id })
-      .from(users)
-      .where(eq(users.id, id))
-      .limit(1);
+		// Check if user exists
+		const existingUser = await db
+			.select({ id: users.id })
+			.from(users)
+			.where(eq(users.id, id))
+			.limit(1);
 
-    if (existingUser.length === 0) {
-      return res.status(404).json({
-        error: 'User not found',
-        message: 'User does not exist'
-      });
-    }
+		if (existingUser.length === 0) {
+			return res.status(404).json({
+				error: 'User not found',
+				message: 'User does not exist'
+			});
+		}
 
-    // Delete user
-    await db.delete(users).where(eq(users.id, id));
+		// Delete user
+		await db.delete(users).where(eq(users.id, id));
 
-    res.json({
-      success: true,
-      message: 'User deleted successfully'
-    });
-
-  } catch (error) {
-    console.error('Delete user error:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to delete user'
-    });
-  }
+		res.json({
+			success: true,
+			message: 'User deleted successfully'
+		});
+	} catch (error) {
+		console.error('Delete user error:', error);
+		res.status(500).json({
+			error: 'Internal server error',
+			message: 'Failed to delete user'
+		});
+	}
 });
 
 // Reset user password (admin only)
-router.post('/:id/reset-password', requireSession, requireAdmin, async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { newPassword } = req.body;
+router.post(
+	'/:id/reset-password',
+	requireSession,
+	requireAdmin,
+	async (req: Request, res: Response) => {
+		try {
+			const { id } = req.params;
+			const { newPassword } = req.body;
 
-    if (!newPassword) {
-      return res.status(400).json({
-        error: 'Validation failed',
-        message: 'New password is required'
-      });
-    }
+			if (!newPassword) {
+				return res.status(400).json({
+					error: 'Validation failed',
+					message: 'New password is required'
+				});
+			}
 
-    // Validate password strength
-    const passwordValidation = validatePasswordStrength(newPassword);
-    if (!passwordValidation.isValid) {
-      return res.status(400).json({
-        error: 'Validation failed',
-        message: passwordValidation.message
-      });
-    }
+			// Validate password strength
+			const passwordValidation = validatePasswordStrength(newPassword);
+			if (!passwordValidation.isValid) {
+				return res.status(400).json({
+					error: 'Validation failed',
+					message: passwordValidation.message
+				});
+			}
 
-    // Check if user exists
-    const existingUser = await db.select({ id: users.id })
-      .from(users)
-      .where(eq(users.id, id))
-      .limit(1);
+			// Check if user exists
+			const existingUser = await db
+				.select({ id: users.id })
+				.from(users)
+				.where(eq(users.id, id))
+				.limit(1);
 
-    if (existingUser.length === 0) {
-      return res.status(404).json({
-        error: 'User not found',
-        message: 'User does not exist'
-      });
-    }
+			if (existingUser.length === 0) {
+				return res.status(404).json({
+					error: 'User not found',
+					message: 'User does not exist'
+				});
+			}
 
-    // Hash new password
-    const passwordHash = await hashPassword(newPassword);
+			// Hash new password
+			const passwordHash = await hashPassword(newPassword);
 
-    // Update password
-    await db.update(users)
-      .set({ passwordHash })
-      .where(eq(users.id, id));
+			// Update password
+			await db.update(users).set({ passwordHash }).where(eq(users.id, id));
 
-    res.json({
-      success: true,
-      message: 'Password reset successfully'
-    });
-
-  } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to reset password'
-    });
-  }
-});
+			res.json({
+				success: true,
+				message: 'Password reset successfully'
+			});
+		} catch (error) {
+			console.error('Reset password error:', error);
+			res.status(500).json({
+				error: 'Internal server error',
+				message: 'Failed to reset password'
+			});
+		}
+	}
+);
 
 // Reset user 2FA (admin only)
 router.post('/:id/reset-2fa', requireSession, requireAdmin, async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
+	try {
+		const { id } = req.params;
 
-    // Check if user exists
-    const existingUser = await db.select({ id: users.id })
-      .from(users)
-      .where(eq(users.id, id))
-      .limit(1);
+		// Check if user exists
+		const existingUser = await db
+			.select({ id: users.id })
+			.from(users)
+			.where(eq(users.id, id))
+			.limit(1);
 
-    if (existingUser.length === 0) {
-      return res.status(404).json({
-        error: 'User not found',
-        message: 'User does not exist'
-      });
-    }
+		if (existingUser.length === 0) {
+			return res.status(404).json({
+				error: 'User not found',
+				message: 'User does not exist'
+			});
+		}
 
-    // Reset 2FA
-    await db.update(users)
-      .set({
-        totpSecret: null,
-        totpEnabled: false
-      })
-      .where(eq(users.id, id));
+		// Reset 2FA
+		await db
+			.update(users)
+			.set({
+				totpSecret: null,
+				totpEnabled: false
+			})
+			.where(eq(users.id, id));
 
-    await db.delete(totpBackupCodes).where(eq(totpBackupCodes.userId, id));
+		await db.delete(totpBackupCodes).where(eq(totpBackupCodes.userId, id));
 
-    res.json({
-      success: true,
-      message: '2FA reset successfully'
-    });
-
-  } catch (error) {
-    console.error('Reset 2FA error:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to reset 2FA'
-    });
-  }
+		res.json({
+			success: true,
+			message: '2FA reset successfully'
+		});
+	} catch (error) {
+		console.error('Reset 2FA error:', error);
+		res.status(500).json({
+			error: 'Internal server error',
+			message: 'Failed to reset 2FA'
+		});
+	}
 });
 
 export default router;

@@ -1,5 +1,11 @@
 <script lang="ts">
-	import { weatherSettings, setWeatherType, setWeatherSpeed, weatherConfig, restoreUserPreferences } from '$lib/site/stores/weather';
+	import {
+		weatherSettings,
+		setWeatherType,
+		setWeatherSpeed,
+		weatherConfig,
+		restoreUserPreferences
+	} from '$lib/site/stores/weather';
 	import { enforceWeatherEffects } from '$lib/site/stores/siteConfig';
 
 	let { class: className = '' } = $props();
@@ -60,7 +66,7 @@
 		</select>
 	</div>
 
-		{#if $weatherSettings?.type !== 'none'}
+	{#if $weatherSettings?.type !== 'none'}
 		<!-- Speed -->
 		<div class="control-group">
 			<label class="control-label" for="weather-speed">
@@ -145,7 +151,11 @@
 	}
 
 	.weather-select:hover {
-		background: color-mix(in srgb, var(--theme-background, #0a0a0a) 90%, var(--theme-accent, #90ee90) 10%);
+		background: color-mix(
+			in srgb,
+			var(--theme-background, #0a0a0a) 90%,
+			var(--theme-accent, #90ee90) 10%
+		);
 	}
 
 	.weather-select:active {

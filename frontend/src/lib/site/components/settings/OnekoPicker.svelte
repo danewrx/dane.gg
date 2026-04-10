@@ -92,10 +92,7 @@
 							? 'Turn off Web Neko'
 							: `Use ${v.label} Web Neko`}
 					>
-						<span
-							class="thumb-wrap"
-							class:thumb-wrap--none={v.id === WEB_NEKO_DISABLED}
-						>
+						<span class="thumb-wrap" class:thumb-wrap--none={v.id === WEB_NEKO_DISABLED}>
 							{#if v.id === WEB_NEKO_DISABLED}
 								<span class="thumb-none" aria-hidden="true">×</span>
 							{:else}
@@ -208,7 +205,9 @@
 	.oneko-body {
 		width: 100%;
 		min-width: 0;
-		transition: filter 0.2s ease, opacity 0.2s ease;
+		transition:
+			filter 0.2s ease,
+			opacity 0.2s ease;
 	}
 
 	.oneko-body--locked {
@@ -253,7 +252,11 @@
 
 	.oneko-option:hover {
 		border-color: var(--theme-accent, #90ee90);
-		background: color-mix(in srgb, var(--theme-background, #0a0a0a) 88%, var(--theme-accent, #90ee90) 12%);
+		background: color-mix(
+			in srgb,
+			var(--theme-background, #0a0a0a) 88%,
+			var(--theme-accent, #90ee90) 12%
+		);
 		color: var(--theme-text-primary, #e4e4e7);
 	}
 
@@ -363,6 +366,10 @@
 
 	.oneko-expand:hover {
 		border-color: var(--theme-accent, #90ee90);
-		background: color-mix(in srgb, var(--theme-background, #0a0a0a) 82%, var(--theme-accent, #90ee90) 18%);
+		background: color-mix(
+			in srgb,
+			var(--theme-background, #0a0a0a) 82%,
+			var(--theme-accent, #90ee90) 18%
+		);
 	}
 </style>

@@ -29,7 +29,9 @@ function fallbackOptions(): ChatNotificationSoundOption[] {
 }
 
 function isBuiltinSoundRow(r: { id: string; name: string }): boolean {
-	return r.id === DEFAULT_CHAT_NOTIFICATION_SOUND_ID || r.name === DEFAULT_CHAT_NOTIFICATION_SOUND_NAME;
+	return (
+		r.id === DEFAULT_CHAT_NOTIFICATION_SOUND_ID || r.name === DEFAULT_CHAT_NOTIFICATION_SOUND_NAME
+	);
 }
 
 function mergePublicNotificationSoundOptions(
@@ -49,7 +51,9 @@ export function formatNotificationSoundLabel(name: string): string {
 	return name === DEFAULT_CHAT_NOTIFICATION_SOUND_NAME ? 'Default' : name;
 }
 
-export function labelForNotificationSoundOption(o: Pick<ChatNotificationSoundOption, 'name' | 'displayName'>): string {
+export function labelForNotificationSoundOption(
+	o: Pick<ChatNotificationSoundOption, 'name' | 'displayName'>
+): string {
 	const d = o.displayName?.trim();
 	if (d) return d;
 	return formatNotificationSoundLabel(o.name);

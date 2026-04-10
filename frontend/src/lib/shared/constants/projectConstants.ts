@@ -6,19 +6,25 @@
 /**
  * Valid project status values
  */
-export const PROJECT_STATUSES = ['Active', 'In Progress', 'Complete', 'Abandoned', 'Archived'] as const;
+export const PROJECT_STATUSES = [
+	'Active',
+	'In Progress',
+	'Complete',
+	'Abandoned',
+	'Archived'
+] as const;
 
-export type ProjectStatus = typeof PROJECT_STATUSES[number];
+export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
 /**
  * Color mapping for project status options
  */
 export const PROJECT_STATUS_COLORS: Record<ProjectStatus, string> = {
-	'Active': '#10b981',
+	Active: '#10b981',
 	'In Progress': '#f97316',
-	'Complete': '#10b981',
-	'Abandoned': '#ef4444',
-	'Archived': '#eab308'
+	Complete: '#10b981',
+	Abandoned: '#ef4444',
+	Archived: '#eab308'
 };
 
 /**
@@ -43,4 +49,3 @@ export function getProjectStatusColor(status: string): string {
 export function isValidProjectStatus(status: string): status is ProjectStatus {
 	return PROJECT_STATUSES.includes(status as ProjectStatus);
 }
-

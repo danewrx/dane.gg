@@ -51,4 +51,3 @@
 {#if !loading && bannerData && bannerData.enabled}
 	<BannerDisplay config={bannerData} />
 {/if}
-

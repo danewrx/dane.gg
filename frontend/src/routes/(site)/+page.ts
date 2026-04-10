@@ -7,10 +7,10 @@ export const load: PageLoad = async ({ fetch }) => {
 			fetch('/api/widgets/nowplaying'),
 			fetch('/api/widgets/latest-tweet')
 		]);
-		
+
 		const musicData = musicResponse.ok ? await musicResponse.json() : null;
 		const tweetData = tweetResponse.ok ? await tweetResponse.json() : null;
-		
+
 		return {
 			musicData,
 			tweetData

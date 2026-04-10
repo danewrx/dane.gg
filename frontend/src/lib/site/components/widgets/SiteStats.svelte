@@ -5,7 +5,7 @@
 	let uniqueVisitors = $state<number | null>(null);
 	let loading = $state(true);
 	let error = $state(false);
-	
+
 	let animatedTotalVisits = $state(0);
 	let animatedUniqueVisitors = $state(0);
 	let animationComplete = $state(false);
@@ -19,7 +19,7 @@
 			loading = true;
 			error = false;
 			const response = await fetch('/api/stats/public');
-			
+
 			if (response.ok) {
 				const result = await response.json();
 				if (result.success && result.data) {
@@ -42,20 +42,20 @@
 
 	function animateValues() {
 		if (totalVisits === null || uniqueVisitors === null) return;
-		
+
 		animationComplete = false;
 		const duration = 2000;
 		const startTime = Date.now();
-		
+
 		const animate = () => {
 			const elapsed = Date.now() - startTime;
 			const progress = Math.min(elapsed / duration, 1);
-			
+
 			const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-			
+
 			animatedTotalVisits = Math.floor(totalVisits! * easeOutQuart);
 			animatedUniqueVisitors = Math.floor(uniqueVisitors! * easeOutQuart);
-			
+
 			if (progress < 1) {
 				requestAnimationFrame(animate);
 			} else {
@@ -64,7 +64,7 @@
 				animationComplete = true;
 			}
 		};
-		
+
 		requestAnimationFrame(animate);
 	}
 
@@ -125,10 +125,9 @@
 		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
 		font-size: calc(16 * 1em / 14);
 		font-weight: normal;
-		text-shadow: 
+		text-shadow:
 			0 0 10px var(--theme-accent, #90ee90),
 			0 0 20px var(--theme-accent, #90ee90),
 			0 0 30px var(--theme-accent, #90ee90);
 	}
 </style>
-

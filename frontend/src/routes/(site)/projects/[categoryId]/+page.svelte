@@ -62,7 +62,7 @@
 			loading = true;
 			error = '';
 			const response = await fetch(`/api/projects/category/${categoryId}`);
-			
+
 			if (!response.ok) {
 				if (response.status === 404) {
 					throw new Error('Category not found');
@@ -82,26 +82,28 @@
 
 	function getImageUrl(imageUrl: string | null): string {
 		if (!imageUrl) return '';
-		
+
 		// If it's an external URL, return
 		if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
 			return imageUrl;
 		}
-		
+
 		// If it's a local upload, serve through API
 		if (imageUrl.startsWith('/uploads/')) {
 			const filename = imageUrl.replace('/uploads/', '');
 			return `/api/upload/file/${filename}`;
 		}
-		
+
 		return imageUrl;
 	}
-
 </script>
 
 <svelte:head>
 	<title>{categoryData?.category.name || 'Projects'} - dane.gg</title>
-	<meta name="description" content="Explore {categoryData?.category.name || 'projects'} from Dane's portfolio." />
+	<meta
+		name="description"
+		content="Explore {categoryData?.category.name || 'projects'} from Dane's portfolio."
+	/>
 </svelte:head>
 
 <div class="header-wrapper">
@@ -113,7 +115,6 @@
 </div>
 
 <div class="page-content">
-
 	{#if loading}
 		<div class="loading">
 			<p>Loading projects...</p>
@@ -129,34 +130,32 @@
 			<a href="/projects" class="back-link">← Back to Projects</a>
 		</div>
 	{:else}
-		
 		<div class="projects-grid">
 			{#each categoryData.projects as project (project.id)}
 				<article class="project-card">
 					{#if project.imageUrl}
 						<div class="project-image">
-							<img 
-								src={getImageUrl(project.imageUrl)} 
-								alt={project.title}
-								loading="lazy"
-							/>
+							<img src={getImageUrl(project.imageUrl)} alt={project.title} loading="lazy" />
 						</div>
 					{/if}
-					
+
 					<div class="project-content">
 						<div class="project-header">
 							<h3 class="project-title">{project.title}</h3>
 							<div class="project-status">
-								<span class="status-indicator" style="background-color: {getProjectStatusColor(project.active)};"></span>
+								<span
+									class="status-indicator"
+									style="background-color: {getProjectStatusColor(project.active)};"
+								></span>
 								<span class="status-text">{project.active}</span>
 							</div>
 						</div>
-						
+
 						{#if project.tags && project.tags.length > 0}
 							<div class="project-tags">
 								{#each project.tags as tag (tag.id)}
-									<span 
-										class="tag" 
+									<span
+										class="tag"
 										style="background-color: {tag.color}20; color: {tag.color}; border-color: {tag.color}40;"
 									>
 										{tag.title}
@@ -164,15 +163,15 @@
 								{/each}
 							</div>
 						{/if}
-						
+
 						<p class="project-description">{project.description}</p>
-						
+
 						<div class="project-actions">
 							{#if project.projectUrl}
 								{@const projectIconInfo = getIconRenderInfo(project.projectIcon)}
-								<a 
-									href={project.projectUrl} 
-									target="_blank" 
+								<a
+									href={project.projectUrl}
+									target="_blank"
 									rel="noopener noreferrer"
 									class="action-button"
 								>
@@ -185,23 +184,21 @@
 										<img src={projectIconInfo.url} alt="Icon" width="16" height="16" />
 									{:else if projectIconInfo.type === 'text' && projectIconInfo.text}
 										<span class="text-icon">{projectIconInfo.text}</span>
+									{:else if projectIconInfo.component}
+										{@const DefaultIcon = projectIconInfo.component}
+										<DefaultIcon size={16} />
 									{:else}
-										{#if projectIconInfo.component}
-											{@const DefaultIcon = projectIconInfo.component}
-											<DefaultIcon size={16} />
-										{:else}
-											<Icon icon="lucide:external-link" width="16" height="16" />
-										{/if}
+										<Icon icon="lucide:external-link" width="16" height="16" />
 									{/if}
 									{project.projectText || 'Visit Website'}
 								</a>
 							{/if}
-							
+
 							{#if project.repoUrl}
 								{@const repoIconInfo = getIconRenderInfo(project.repoIcon)}
-								<a 
-									href={project.repoUrl} 
-									target="_blank" 
+								<a
+									href={project.repoUrl}
+									target="_blank"
 									rel="noopener noreferrer"
 									class="action-button"
 								>
@@ -214,13 +211,11 @@
 										<img src={repoIconInfo.url} alt="Icon" width="16" height="16" />
 									{:else if repoIconInfo.type === 'text' && repoIconInfo.text}
 										<span class="text-icon">{repoIconInfo.text}</span>
+									{:else if repoIconInfo.component}
+										{@const DefaultIcon = repoIconInfo.component}
+										<DefaultIcon size={16} />
 									{:else}
-										{#if repoIconInfo.component}
-											{@const DefaultIcon = repoIconInfo.component}
-											<DefaultIcon size={16} />
-										{:else}
-											<Icon icon="lucide:external-link" width="16" height="16" />
-										{/if}
+										<Icon icon="lucide:external-link" width="16" height="16" />
 									{/if}
 									{project.repoText || 'View on GitHub'}
 								</a>
@@ -473,8 +468,8 @@
 		color: var(--theme-accent, #6366f1);
 	}
 
-	.action-button svg,
-	.action-button img {
+	.action-button :global(svg),
+	.action-button :global(img) {
 		flex-shrink: 0;
 	}
 
@@ -521,6 +516,4 @@
 			padding: 1rem;
 		}
 	}
-
 </style>
-

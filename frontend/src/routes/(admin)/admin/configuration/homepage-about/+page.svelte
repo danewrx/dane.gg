@@ -31,7 +31,7 @@
 			const response = await fetch('/api/config/homepage_about_me', {
 				credentials: 'include'
 			});
-			
+
 			if (response.ok) {
 				const result = await response.json();
 				aboutMe = result.data?.value || '';
@@ -47,7 +47,7 @@
 	async function saveAboutMe() {
 		try {
 			isSaving = true;
-			
+
 			const response = await fetch('/api/config/homepage_about_me', {
 				method: 'PUT',
 				headers: {
@@ -59,11 +59,11 @@
 					dataType: 'string'
 				})
 			});
-			
+
 			if (!response.ok) {
 				throw new Error('Failed to save about me content');
 			}
-			
+
 			toast.success('About me content saved successfully');
 		} catch (error) {
 			console.error('Error saving about me:', error);
@@ -76,7 +76,10 @@
 
 <div class="homepage-about-settings">
 	<div class="settings-description">
-		<p>Edit the "About Me" content that appears on the homepage. You can use markdown formatting and inline HTML for styling (like colored text).</p>
+		<p>
+			Edit the "About Me" content that appears on the homepage. You can use markdown formatting and
+			inline HTML for styling (like colored text).
+		</p>
 	</div>
 
 	{#if isLoading}
@@ -88,21 +91,12 @@
 		<div class="form-group">
 			<label for="about-me">About Me Content</label>
 			<div class="editor-container">
-				<MarkdownEditor
-					bind:value={aboutMe}
-					placeholder={defaultAboutMe}
-					minHeight="400px"
-				/>
+				<MarkdownEditor bind:value={aboutMe} placeholder={defaultAboutMe} minHeight="400px" />
 			</div>
 		</div>
 
 		<div class="form-actions">
-			<button 
-				type="button"
-				class="save-button" 
-				onclick={saveAboutMe}
-				disabled={isSaving}
-			>
+			<button type="button" class="save-button" onclick={saveAboutMe} disabled={isSaving}>
 				{#if isSaving}
 					<Loader2 size={16} class="spin" />
 					Saving...
@@ -192,7 +186,11 @@
 	}
 
 	@keyframes spin {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>

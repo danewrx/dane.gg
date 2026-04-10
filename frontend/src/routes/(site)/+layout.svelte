@@ -1,6 +1,5 @@
 <script lang="ts">
 	import favicon from '$lib/shared/assets/favicon.svg';
-	import '../../app.css';
 	import { page } from '$app/stores';
 	import { THEME_PREVIEW_SEARCH_PARAM } from '$lib/site/themePreview';
 	import SettingsIcon from '$lib/admin/components/settings/SettingsIcon.svelte';
@@ -28,49 +27,46 @@
 <svelte:head>
 	<link rel="icon" href={favicon} />
 	<title>dane.gg - Software Engineer & Designer</title>
-	<meta name="description" content="Hi, I'm Dane! I'm a software engineer & freelance designer from Manchester, UK." />
+	<meta
+		name="description"
+		content="Hi, I'm Dane! I'm a software engineer & freelance designer from Manchester, UK."
+	/>
 </svelte:head>
 
 <!-- Public website layout -->
 <div class="main-container dark-theme">
 	<ThemeProvider />
-	
+
 	<!-- Weather Effects -->
 	{#if !isThemePreviewEmbed}
 		<WeatherEffects />
 	{/if}
-	
+
 	<div class="scanlines"></div>
 	<div class="bg-overlay bg-overlay--grid" aria-hidden="true"></div>
 	<div class="bg-overlay bg-overlay--grain" aria-hidden="true"></div>
 	<div class="bg-overlay bg-overlay--vignette" aria-hidden="true"></div>
 	<div class="bg-overlay bg-overlay--glare" aria-hidden="true"></div>
-	
+
 	<div class="content-window">
 		<div class="content-area">
 			<!-- Header -->
 			<Header />
-			
+
 			<!-- Scrolling Banner -->
 			<ScrollingBanner />
-			
+
 			<!-- Page content -->
 			{@render children?.()}
 		</div>
 	</div>
-	
+
 	{#if !isThemePreviewEmbed}
 		<!-- Settings Icon -->
-		<SettingsIcon 
-			isOpen={settingsOpen} 
-			on:toggle={handleSettingsToggle}
-		/>
-		
+		<SettingsIcon isOpen={settingsOpen} on:toggle={handleSettingsToggle} />
+
 		<!-- Settings Panel -->
-		<SettingsPanel 
-			isOpen={settingsOpen} 
-			onClose={handleSettingsClose}
-		/>
+		<SettingsPanel isOpen={settingsOpen} onClose={handleSettingsClose} />
 	{/if}
 </div>
 
@@ -107,7 +103,7 @@
 		--status-pending: #e5e7eb;
 		--status-neutral: #d1d5db;
 		--status-loading: #fcd34d;
-		
+
 		--bg-primary: var(--theme-surface);
 		--bg-secondary: var(--theme-background);
 		--bg-tertiary: #3a3a3a;
@@ -126,7 +122,7 @@
 		background: var(--theme-background) !important;
 		transition: all 0.3s ease;
 	}
-	
+
 	:global(body) {
 		background: transparent !important;
 		margin: 0;
@@ -191,8 +187,12 @@
 	}
 
 	@keyframes scanline-move {
-		0% { transform: translateY(0); }
-		100% { transform: translateY(4px); }
+		0% {
+			transform: translateY(0);
+		}
+		100% {
+			transform: translateY(4px);
+		}
 	}
 
 	.bg-overlay {
@@ -277,16 +277,15 @@
 		.main-container {
 			padding: 10px;
 		}
-		
+
 		.content-window {
 			height: 95vh;
 			min-height: 600px;
 		}
-		
+
 		.content-area {
 			padding: 0.75rem 1rem 2rem 1rem;
 		}
-		
 	}
 
 	@media (max-width: 480px) {
@@ -294,10 +293,9 @@
 			height: 98vh;
 			min-height: 500px;
 		}
-		
+
 		.content-area {
 			padding: 0.5rem 0.75rem 1.5rem 0.75rem;
 		}
 	}
 </style>
-

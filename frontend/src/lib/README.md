@@ -9,19 +9,21 @@ The library is organized following the same pattern as the route structure, with
 ```
 lib/
 ├── admin/          # Admin panel specific code
-├── site/           # Public site specific code  
+├── site/           # Public site specific code
 ├── shared/         # Code shared between admin and site
 ├── index.ts        # Main exports for convenience
 └── README.md       # This file
 ```
 
 ### `admin/` - Admin Panel Code
+
 All code specific to the admin dashboard and management interface.
 
 #### `admin/components/`
+
 - **`layout/`** - Layout components for admin interface
   - `AdminHeader.svelte` - Admin dashboard header with navigation
-  - `AdminSidebar.svelte` - Admin dashboard sidebar navigation  
+  - `AdminSidebar.svelte` - Admin dashboard sidebar navigation
   - `AdminMobileAppBar.svelte` - Mobile app-style bottom navigation
   - `AdminMobileSidebar.svelte` - Mobile slide-out sidebar
 - **`ui/`** - Admin-specific UI components
@@ -35,25 +37,33 @@ All code specific to the admin dashboard and management interface.
   - `WeatherControls.svelte` - Weather effects control panel
 
 #### `admin/services/`
+
 Business logic and API services for admin functionality:
+
 - `accentColor.ts` - Accent color management service
 - `auth.ts` - Authentication service
-- `settings.ts` - Settings API service  
+- `settings.ts` - Settings API service
 - `theme.ts` - Theme management service
 
 #### `admin/stores/`
+
 Svelte stores for admin state management:
+
 - `auth.ts` - Authentication state store
 - `theme.ts` - Theme state management
 
 #### `admin/config/`
+
 Configuration files for admin panel:
+
 - `navigation.ts` - Navigation configuration for admin panel
 
 ### `site/` - Public Site Code
+
 All code specific to the public-facing website.
 
 #### `site/components/`
+
 - **`layout/`** - Layout components for public site
   - `Header.svelte` - Main site header
 - **`ui/`** - Public site UI components
@@ -63,18 +73,23 @@ All code specific to the public-facing website.
   - `WeatherEffects.svelte` - Weather effects overlay
 
 #### `site/stores/`
+
 Svelte stores for public site state:
+
 - `font.ts` - Font selection state
 - `siteConfig.ts` - Site configuration state
 - `weather.ts` - Weather effects state
 
 ### `shared/` - Shared Code
+
 Code that can be used by both admin and public site.
 
 #### `shared/components/ui/`
+
 - `Tabs.example.svelte` - Example usage of Tabs component
 
 #### `shared/assets/`
+
 - `favicon.svg` - Site favicon
 
 ## 🚀 Usage
@@ -82,31 +97,35 @@ Code that can be used by both admin and public site.
 ### Import Patterns
 
 **Admin components:**
+
 ```svelte
-import AdminHeader from '$lib/admin/components/layout/AdminHeader.svelte';
-import { authService } from '$lib/admin/services/auth';
-import { user } from '$lib/admin/stores/auth';
+import AdminHeader from '$lib/admin/components/layout/AdminHeader.svelte'; import {authService} from
+'$lib/admin/services/auth'; import {user} from '$lib/admin/stores/auth';
 ```
 
 **Site components:**
+
 ```svelte
-import Header from '$lib/site/components/layout/Header.svelte';
-import LoadingSpinner from '$lib/site/components/ui/LoadingSpinner.svelte';
+import Header from '$lib/site/components/layout/Header.svelte'; import LoadingSpinner from
+'$lib/site/components/ui/LoadingSpinner.svelte';
 ```
 
 **Shared components:**
+
 ```svelte
 import favicon from '$lib/shared/assets/favicon.svg';
 ```
 
 **Convenience exports (from main index.ts):**
+
 ```svelte
-import { authService, user, themeService } from '$lib';
+import {(authService, user, themeService)} from '$lib';
 ```
 
 ## 📋 Guidelines
 
 ### 🧩 Component Guidelines
+
 1. **Keep components focused** - Single responsibility principle
 2. **Use TypeScript** - All components should be typed
 3. **Follow naming conventions** - PascalCase for components, camelCase for utilities
@@ -115,6 +134,7 @@ import { authService, user, themeService } from '$lib';
 6. **Place in correct directory** - Admin-specific in `admin/`, site-specific in `site/`, shared in `shared/`
 
 ### 🔧 Service Guidelines
+
 1. **Use classes for stateful services** - Export instances, not classes
 2. **Handle errors gracefully** - Always catch and handle potential errors
 3. **Use TypeScript interfaces** - Define clear contracts for data structures
@@ -122,6 +142,7 @@ import { authService, user, themeService } from '$lib';
 5. **Place services correctly** - Admin services in `admin/services/`, site services in `site/services/`
 
 ### 📦 Store Guidelines
+
 1. **Use Svelte 5 runes** - Prefer `$state` and `$derived` over legacy stores where possible
 2. **Keep stores simple** - Complex logic should be in services
 3. **Use TypeScript** - Type your store data

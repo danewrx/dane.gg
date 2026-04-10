@@ -3,7 +3,17 @@
 	import { toast } from 'svelte-sonner';
 	import { TotpService, type TotpSetupData } from '../../services/totp';
 	import { getErrorMessage } from '$lib/shared/utils/errorUtils';
-	import { Eye, EyeOff, Copy, Check, Shield, Key, Download, AlertTriangle, Loader2 } from 'lucide-svelte';
+	import {
+		Eye,
+		EyeOff,
+		Copy,
+		Check,
+		Shield,
+		Key,
+		Download,
+		AlertTriangle,
+		Loader2
+	} from 'lucide-svelte';
 
 	export let onComplete: () => void;
 	export let onCancel: () => void;
@@ -20,15 +30,18 @@
 	const steps = [
 		{
 			title: 'Install Authenticator App',
-			description: 'Download and install a TOTP authenticator app like Google Authenticator, Authy, or 1Password.'
+			description:
+				'Download and install a TOTP authenticator app like Google Authenticator, Authy, or 1Password.'
 		},
 		{
 			title: 'Scan QR Code',
-			description: 'Use your authenticator app to scan the QR code or manually enter the secret key.'
+			description:
+				'Use your authenticator app to scan the QR code or manually enter the secret key.'
 		},
 		{
 			title: 'Save Backup Codes',
-			description: 'Download and securely store these backup codes. You can use them to access your account if you lose your device.'
+			description:
+				'Download and securely store these backup codes. You can use them to access your account if you lose your device.'
 		},
 		{
 			title: 'Verify Setup',
@@ -58,10 +71,10 @@
 			await navigator.clipboard.writeText(text);
 			if (type === 'secret') {
 				copied = true;
-				setTimeout(() => copied = false, 2000);
+				setTimeout(() => (copied = false), 2000);
 			} else {
 				backupCodesCopied = true;
-				setTimeout(() => backupCodesCopied = false, 2000);
+				setTimeout(() => (backupCodesCopied = false), 2000);
 			}
 			toast.success('Copied to clipboard');
 		} catch (error) {
@@ -163,7 +176,11 @@
 		<!-- Step Progress -->
 		<div class="step-progress">
 			{#each steps as step, index}
-				<div class="step" class:active={currentStep === index + 1} class:completed={currentStep > index + 1}>
+				<div
+					class="step"
+					class:active={currentStep === index + 1}
+					class:completed={currentStep > index + 1}
+				>
 					<div class="step-number">
 						{#if currentStep > index + 1}
 							<Check size={16} />
@@ -209,25 +226,25 @@
 						Scan QR Code
 					</h3>
 					<p>Use your authenticator app to scan this QR code:</p>
-					
+
 					<div class="qr-section">
 						<div class="qr-code">
 							<img src={setupData.qrCodeUrl} alt="TOTP QR Code" />
 						</div>
-						
+
 						<div class="manual-entry">
 							<h4>Can't scan? Enter manually:</h4>
 							<div class="secret-display">
 								<div class="secret-input">
-									<input 
-										type={showSecret ? 'text' : 'password'} 
-										value={setupData.secret} 
-										readonly 
+									<input
+										type={showSecret ? 'text' : 'password'}
+										value={setupData.secret}
+										readonly
 									/>
-									<button 
-										type="button" 
+									<button
+										type="button"
 										class="toggle-visibility"
-										onclick={() => showSecret = !showSecret}
+										onclick={() => (showSecret = !showSecret)}
 										aria-label={showSecret ? 'Hide secret' : 'Show secret'}
 									>
 										{#if showSecret}
@@ -236,8 +253,8 @@
 											<Eye size={16} />
 										{/if}
 									</button>
-									<button 
-										type="button" 
+									<button
+										type="button"
 										class="copy-button"
 										onclick={() => copyToClipboard(setupData!.secret, 'secret')}
 										aria-label="Copy secret"
@@ -263,10 +280,11 @@
 					<div class="warning-box">
 						<AlertTriangle size={20} />
 						<div>
-							<strong>Important:</strong> Store these backup codes securely. Each code can only be used once and will help you regain access if you lose your authenticator device.
+							<strong>Important:</strong> Store these backup codes securely. Each code can only be used
+							once and will help you regain access if you lose your authenticator device.
 						</div>
 					</div>
-					
+
 					<div class="backup-codes">
 						<div class="codes-grid">
 							{#each setupData.backupCodes as code, index}
@@ -276,18 +294,14 @@
 								</div>
 							{/each}
 						</div>
-						
+
 						<div class="backup-actions">
-							<button 
-								type="button" 
-								class="backup-action-btn"
-								onclick={downloadBackupCodes}
-							>
+							<button type="button" class="backup-action-btn" onclick={downloadBackupCodes}>
 								<Download size={16} />
 								Download Codes
 							</button>
-							<button 
-								type="button" 
+							<button
+								type="button"
 								class="backup-action-btn"
 								onclick={() => copyToClipboard(setupData!.backupCodes.join('\n'), 'backup')}
 							>
@@ -310,11 +324,11 @@
 						Verify Setup
 					</h3>
 					<p>Enter the 6-digit code from your authenticator app to complete the setup:</p>
-					
+
 					<div class="verification-form">
 						<div class="token-input-group">
-							<input 
-								type="text" 
+							<input
+								type="text"
 								bind:value={verificationToken}
 								placeholder="000000"
 								maxlength="6"
@@ -324,9 +338,9 @@
 								autocomplete="one-time-code"
 							/>
 						</div>
-						
-						<button 
-							type="button" 
+
+						<button
+							type="button"
 							class="verify-button"
 							onclick={verifyAndEnable}
 							disabled={!verificationToken || isVerifying}
@@ -352,15 +366,11 @@
 						Previous
 					</button>
 				{/if}
-				<button type="button" class="nav-button cancel" onclick={onCancel}>
-					Cancel
-				</button>
+				<button type="button" class="nav-button cancel" onclick={onCancel}> Cancel </button>
 			</div>
 			<div class="nav-right">
 				{#if currentStep < 4}
-					<button type="button" class="nav-button primary" onclick={nextStep}>
-						Next
-					</button>
+					<button type="button" class="nav-button primary" onclick={nextStep}> Next </button>
 				{/if}
 			</div>
 		</div>
@@ -368,9 +378,7 @@
 		<div class="error-state">
 			<AlertTriangle size={32} />
 			<p>Failed to generate setup data. Please try again.</p>
-			<button type="button" class="retry-button" onclick={generateSetup}>
-				Retry
-			</button>
+			<button type="button" class="retry-button" onclick={generateSetup}> Retry </button>
 		</div>
 	{/if}
 </div>
@@ -420,7 +428,8 @@
 		font-size: 0.95rem;
 	}
 
-	.loading-state, .error-state {
+	.loading-state,
+	.error-state {
 		text-align: center;
 		padding: 3rem 1rem;
 		color: var(--text-secondary);
@@ -433,8 +442,12 @@
 	}
 
 	@keyframes spin {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.loading-state :global(.spin) {
@@ -653,7 +666,8 @@
 		box-shadow: 0 0 0 3px var(--accent-color-light, rgba(59, 130, 246, 0.1));
 	}
 
-	.toggle-visibility, .copy-button {
+	.toggle-visibility,
+	.copy-button {
 		flex-shrink: 0;
 		padding: 0.875rem;
 		border: none;
@@ -666,7 +680,8 @@
 		transition: color 0.2s ease;
 	}
 
-	.toggle-visibility:hover, .copy-button:hover {
+	.toggle-visibility:hover,
+	.copy-button:hover {
 		color: var(--text-primary);
 	}
 
@@ -823,7 +838,8 @@
 		border-top: 1px solid var(--border-color);
 	}
 
-	.nav-left, .nav-right {
+	.nav-left,
+	.nav-right {
 		display: flex;
 		gap: 1rem;
 	}

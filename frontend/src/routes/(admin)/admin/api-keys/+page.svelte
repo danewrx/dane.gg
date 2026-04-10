@@ -1,6 +1,17 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Plus, Trash2, Key, X, Copy, Check, RefreshCw, Eye, EyeOff, AlertTriangle } from 'lucide-svelte';
+	import {
+		Plus,
+		Trash2,
+		Key,
+		X,
+		Copy,
+		Check,
+		RefreshCw,
+		Eye,
+		EyeOff,
+		AlertTriangle
+	} from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import Tabs from '$lib/admin/components/ui/Tabs.svelte';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
@@ -113,16 +124,16 @@
 			}
 
 			const data = await response.json();
-			
+
 			newlyCreatedKey = data.key;
 			showNewKeyModal = true;
 			copiedKey = false;
-			
+
 			closeAddModal();
 			await loadApiKeys();
-			
+
 			toast.success('API key created', {
-				description: 'Make sure to copy the key - you won\'t be able to see it again!'
+				description: "Make sure to copy the key - you won't be able to see it again!"
 			});
 		} catch (err) {
 			console.error('Error creating API key:', err);
@@ -136,12 +147,12 @@
 
 	async function copyKeyToClipboard() {
 		if (!newlyCreatedKey) return;
-		
+
 		try {
 			await navigator.clipboard.writeText(newlyCreatedKey);
 			copiedKey = true;
 			toast.success('Copied to clipboard');
-			
+
 			setTimeout(() => {
 				copiedKey = false;
 			}, 3000);
@@ -287,10 +298,14 @@
 
 	function getPermissionLabel(permission: string): string {
 		switch (permission) {
-			case 'full': return 'Full Access';
-			case 'read': return 'Read Only';
-			case 'chat': return 'Chat Only';
-			default: return permission;
+			case 'full':
+				return 'Full Access';
+			case 'read':
+				return 'Read Only';
+			case 'chat':
+				return 'Chat Only';
+			default:
+				return permission;
 		}
 	}
 </script>
@@ -362,7 +377,9 @@
 				<code>Authorization: Bearer dk_your_key_here</code>
 				<code>X-Api-Key: dk_your_key_here</code>
 			</div>
-			<p class="info-note">API keys provide the same access as an admin session. Keep them secure!</p>
+			<p class="info-note">
+				API keys provide the same access as an admin session. Keep them secure!
+			</p>
 		</div>
 	</div>
 
@@ -464,15 +481,39 @@
 
 <!-- Add API Key Modal -->
 {#if showAddModal}
-	<div class="modal-overlay" onclick={closeAddModal}>
-		<div class="modal" onclick={(e) => e.stopPropagation()}>
+	<div
+		class="modal-overlay"
+		onclick={closeAddModal}
+		role="button"
+		tabindex="0"
+		onkeydown={(e) => {
+			if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				closeAddModal();
+			}
+		}}
+	>
+		<div
+			class="modal"
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+		>
 			<div class="modal-header">
 				<h2>Create API Key</h2>
 				<button class="close-button" onclick={closeAddModal}>
 					<X size={20} />
 				</button>
 			</div>
-			<form class="modal-form" onsubmit={(e) => { e.preventDefault(); handleCreateKey(); }}>
+			<form
+				class="modal-form"
+				onsubmit={(e) => {
+					e.preventDefault();
+					handleCreateKey();
+				}}
+			>
 				<div class="form-content">
 					<div class="form-group">
 						<label for="key-name">Name *</label>
@@ -506,7 +547,9 @@
 							{:else if addForm.permissions === 'read'}
 								<span class="permission-hint">GET requests only - Read-only access to data</span>
 							{:else if addForm.permissions === 'chat'}
-								<span class="permission-hint">WebSocket chat access - Send and receive chat messages</span>
+								<span class="permission-hint"
+									>WebSocket chat access - Send and receive chat messages</span
+								>
 							{/if}
 						</div>
 					</div>
@@ -524,7 +567,12 @@
 				</div>
 
 				<div class="modal-actions">
-					<button type="button" class="cancel-button" onclick={closeAddModal} disabled={isSubmitting}>
+					<button
+						type="button"
+						class="cancel-button"
+						onclick={closeAddModal}
+						disabled={isSubmitting}
+					>
 						Cancel
 					</button>
 					<button type="submit" class="save-button" disabled={isSubmitting}>
@@ -539,7 +587,7 @@
 <!-- New Key Display Modal -->
 {#if showNewKeyModal && newlyCreatedKey}
 	<div class="modal-overlay">
-		<div class="modal modal-key-display" onclick={(e) => e.stopPropagation()}>
+		<div class="modal modal-key-display" role="dialog" aria-modal="true">
 			<div class="modal-header">
 				<h2>API Key Created</h2>
 			</div>
@@ -548,14 +596,10 @@
 					<AlertTriangle size={20} />
 					<span>Copy this key now! You won't be able to see it again.</span>
 				</div>
-				
+
 				<div class="key-display">
 					<code class="full-key">{newlyCreatedKey}</code>
-					<button 
-						class="copy-button" 
-						onclick={copyKeyToClipboard}
-						class:copied={copiedKey}
-					>
+					<button class="copy-button" onclick={copyKeyToClipboard} class:copied={copiedKey}>
 						{#if copiedKey}
 							<Check size={18} />
 							Copied!
@@ -567,12 +611,8 @@
 				</div>
 			</div>
 			<div class="modal-actions">
-				<button 
-					class="save-button" 
-					onclick={closeNewKeyModal}
-					class:confirm-copy={!copiedKey}
-				>
-					{copiedKey ? 'Done' : 'I\'ve saved the key'}
+				<button class="save-button" onclick={closeNewKeyModal} class:confirm-copy={!copiedKey}>
+					{copiedKey ? 'Done' : "I've saved the key"}
 				</button>
 			</div>
 		</div>
@@ -719,7 +759,9 @@
 	}
 
 	@keyframes spin {
-		to { transform: rotate(360deg); }
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.empty-state {
@@ -930,10 +972,6 @@
 		box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
 	}
 
-	.modal-small {
-		max-width: 400px;
-	}
-
 	.modal-key-display {
 		max-width: 600px;
 	}
@@ -971,22 +1009,6 @@
 	.close-button:hover {
 		background: var(--bg-tertiary, #3a3a3a);
 		color: var(--text-primary, #ffffff);
-	}
-
-	.modal-content {
-		padding: 24px;
-	}
-
-	.modal-content p {
-		margin: 0 0 12px 0;
-		color: var(--text-primary, #ffffff);
-		font-size: 14px;
-		line-height: 1.5;
-	}
-
-	.warning-text {
-		color: #ef4444 !important;
-		font-size: 13px !important;
 	}
 
 	.modal-form {
@@ -1042,8 +1064,7 @@
 	}
 
 	.cancel-button,
-	.save-button,
-	.delete-button {
+	.save-button {
 		padding: 10px 20px;
 		border: none;
 		border-radius: 6px;
@@ -1077,15 +1098,6 @@
 
 	.save-button.confirm-copy:hover:not(:disabled) {
 		background: #d97706;
-	}
-
-	.delete-button {
-		background: #ef4444;
-		color: #ffffff;
-	}
-
-	.delete-button:hover:not(:disabled) {
-		background: #dc2626;
 	}
 
 	/* Key Display Modal */
@@ -1203,4 +1215,3 @@
 		}
 	}
 </style>
-

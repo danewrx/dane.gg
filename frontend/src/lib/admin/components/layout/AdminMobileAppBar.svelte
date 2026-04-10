@@ -30,9 +30,7 @@
 
 	const needsMore = $derived(navItems.length > maxSlotsInViewport);
 
-	const barItemCount = $derived(
-		needsMore ? Math.max(1, maxSlotsInViewport - 1) : navItems.length
-	);
+	const barItemCount = $derived(needsMore ? Math.max(1, maxSlotsInViewport - 1) : navItems.length);
 
 	const barItems = $derived(navItems.slice(0, barItemCount));
 	const overflowItems = $derived(navItems.slice(barItemCount));
@@ -80,9 +78,7 @@
 	$effect(() => {
 		if (typeof window === 'undefined') return;
 		const id = setTimeout(() => {
-			window.dispatchEvent(
-				new CustomEvent('updateSidebarItems', { detail: { items: [] } })
-			);
+			window.dispatchEvent(new CustomEvent('updateSidebarItems', { detail: { items: [] } }));
 		}, 0);
 		return () => clearTimeout(id);
 	});
@@ -95,11 +91,7 @@
 <svelte:window onkeydown={onGlobalKeydown} />
 
 {#if showMoreTray}
-	<button
-		type="button"
-		class="more-backdrop"
-		onclick={closeMoreTray}
-		aria-label="Close menu"
+	<button type="button" class="more-backdrop" onclick={closeMoreTray} aria-label="Close menu"
 	></button>
 	<div
 		class="more-sheet"
@@ -276,7 +268,9 @@
 		background: #242424;
 		color: #ffffff;
 		cursor: pointer;
-		transition: background 0.15s ease, border-color 0.15s ease;
+		transition:
+			background 0.15s ease,
+			border-color 0.15s ease;
 		min-height: 88px;
 	}
 
@@ -329,7 +323,9 @@
 		z-index: 1003;
 		display: none;
 		padding-bottom: env(safe-area-inset-bottom, 0px);
-		transition: background-color 0.2s ease, border-color 0.2s ease;
+		transition:
+			background-color 0.2s ease,
+			border-color 0.2s ease;
 	}
 
 	:global(html:not(.dark)) .mobile-app-bar {

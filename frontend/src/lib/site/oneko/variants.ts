@@ -79,9 +79,7 @@ export function normalizeDefaultWebNekoTypeForServer(value: unknown): string {
 	return 'white';
 }
 
-export type WebNekoGridOption =
-	| WebNekoVariant
-	| { id: typeof WEB_NEKO_DISABLED; label: string };
+export type WebNekoGridOption = WebNekoVariant | { id: typeof WEB_NEKO_DISABLED; label: string };
 
 export const WEB_NEKO_GRID_OPTIONS: WebNekoGridOption[] = [
 	{ id: WEB_NEKO_DISABLED, label: 'None' },
@@ -161,8 +159,12 @@ export function syncWebNekoInjectedGlobalsFromSiteConfig(): void {
 	const enf = normalizeDefaultWebNekoTypeForServer(
 		c.enforced_web_neko_type ?? c.default_web_neko_type
 	);
-	(window as unknown as { __DANE_DEFAULT_WEB_NEKO_TYPE__?: string }).__DANE_DEFAULT_WEB_NEKO_TYPE__ = def;
-	(window as unknown as { __DANE_ENFORCED_WEB_NEKO_TYPE__?: string }).__DANE_ENFORCED_WEB_NEKO_TYPE__ = enf;
+	(
+		window as unknown as { __DANE_DEFAULT_WEB_NEKO_TYPE__?: string }
+	).__DANE_DEFAULT_WEB_NEKO_TYPE__ = def;
+	(
+		window as unknown as { __DANE_ENFORCED_WEB_NEKO_TYPE__?: string }
+	).__DANE_ENFORCED_WEB_NEKO_TYPE__ = enf;
 	(window as unknown as { __DANE_ENFORCE_WEB_NEKO__?: boolean }).__DANE_ENFORCE_WEB_NEKO__ =
 		Boolean(c.enforce_web_neko);
 }

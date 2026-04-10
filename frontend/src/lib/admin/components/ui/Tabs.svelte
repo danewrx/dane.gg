@@ -30,12 +30,8 @@
 	}
 </script>
 
-<div 
-	class="tabs-container"
-	class:full-width={fullWidth}
-	class:disabled
->
-	<div 
+<div class="tabs-container" class:full-width={fullWidth} class:disabled>
+	<div
 		class="tabs"
 		class:variant-pills={variant === 'pills'}
 		class:variant-underline={variant === 'underline'}
@@ -99,7 +95,6 @@
 		border-color: rgba(255, 255, 255, 0.1);
 	}
 
-	
 	:global(html:not(.dark)) .tabs {
 		background: rgba(0, 0, 0, 0.05);
 		border-color: rgba(0, 0, 0, 0.1);
@@ -121,7 +116,6 @@
 		gap: 0;
 	}
 
-	
 	:global(html:not(.dark)) .tabs.variant-underline {
 		border-bottom-color: rgba(0, 0, 0, 0.1);
 	}
@@ -144,7 +138,6 @@
 		min-width: 0;
 	}
 
-	
 	:global(html:not(.dark)) .tab {
 		color: rgba(0, 0, 0, 0.7);
 	}
@@ -171,7 +164,6 @@
 		color: rgba(255, 255, 255, 0.9);
 	}
 
-	
 	:global(html:not(.dark)) .tab:hover:not(.disabled):not(.active) {
 		background: rgba(0, 0, 0, 0.1);
 		color: rgba(0, 0, 0, 0.9);
@@ -190,7 +182,6 @@
 		border-radius: 6px;
 	}
 
-	
 	:global(html:not(.dark)) .variant-pills .tab {
 		background: rgba(0, 0, 0, 0.05);
 		border-color: rgba(0, 0, 0, 0.1);
@@ -201,7 +192,6 @@
 		border-color: rgba(255, 255, 255, 0.2);
 	}
 
-	
 	:global(html:not(.dark)) .variant-pills .tab:hover:not(.disabled):not(.active) {
 		background: rgba(0, 0, 0, 0.1);
 		border-color: rgba(0, 0, 0, 0.2);
@@ -227,7 +217,6 @@
 		background: rgba(255, 255, 255, 0.05);
 	}
 
-	
 	:global(html:not(.dark)) .variant-underline .tab:hover:not(.disabled):not(.active) {
 		color: rgba(0, 0, 0, 0.9);
 		background: rgba(0, 0, 0, 0.05);

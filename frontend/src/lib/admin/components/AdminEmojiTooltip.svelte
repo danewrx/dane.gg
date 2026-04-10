@@ -3,7 +3,8 @@
 	import { browser } from '$app/environment';
 
 	// The container element to attach mouse events to
-	let { container = $bindable<HTMLElement | null>(null) }: { container?: HTMLElement | null } = $props();
+	let { container = $bindable<HTMLElement | null>(null) }: { container?: HTMLElement | null } =
+		$props();
 
 	// Global tooltip element
 	let tooltipElement: HTMLElement | null = null;
@@ -17,10 +18,11 @@
 			<div class="tooltip-emoji"></div>
 			<div class="tooltip-name"></div>
 		`;
-		
-		const isDark = document.documentElement.classList.contains('dark') || 
+
+		const isDark =
+			document.documentElement.classList.contains('dark') ||
 			!document.documentElement.classList.contains('light');
-		
+
 		tooltipElement.style.cssText = `
 			display: none;
 			position: fixed;
@@ -87,7 +89,8 @@
 		const tooltipEmoji = tooltipElement.querySelector('.tooltip-emoji') as HTMLElement;
 		const tooltipName = tooltipElement.querySelector('.tooltip-name') as HTMLElement;
 
-		const isDark = document.documentElement.classList.contains('dark') || 
+		const isDark =
+			document.documentElement.classList.contains('dark') ||
 			!document.documentElement.classList.contains('light');
 
 		if (emojiContent.tagName === 'IMG') {
@@ -158,4 +161,3 @@
 		destroyTooltip();
 	});
 </script>
-

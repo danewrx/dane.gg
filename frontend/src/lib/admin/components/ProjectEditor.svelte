@@ -4,7 +4,10 @@
 	import Icon from '@iconify/svelte';
 	import type { ComponentType } from 'svelte';
 	import UnifiedIconPicker from './ui/UnifiedIconPicker.svelte';
-	import { getAllIcons as getAllIconLibraryIcons, type IconOption } from '$lib/admin/services/iconLibraryService';
+	import {
+		getAllIcons as getAllIconLibraryIcons,
+		type IconOption
+	} from '$lib/admin/services/iconLibraryService';
 	import { toast } from 'svelte-sonner';
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	import Toggle from './ui/Toggle.svelte';
@@ -81,8 +84,8 @@
 		'View on GitHub',
 		'View on GitLab',
 		'View on Bitbucket',
-        'View on Codeberg',
-        'View on Git Server',
+		'View on Codeberg',
+		'View on Git Server',
 		'Custom...'
 	];
 	let createdAt = $state<string>('');
@@ -99,14 +102,15 @@
 	let loading = $state(false);
 	let saving = $state(false);
 
-
 	// Helper to convert icon name string to IconOption
 	async function iconNameToOption(iconName: string | null): Promise<IconOption | null> {
 		if (!iconName) return null;
 		const allIcons = await getAllIconLibraryIcons();
-		const lucideIcon = allIcons.find(icon => icon.type === 'lucide' && icon.iconName === iconName);
+		const lucideIcon = allIcons.find(
+			(icon) => icon.type === 'lucide' && icon.iconName === iconName
+		);
 		if (lucideIcon) return lucideIcon;
-		return allIcons.find(icon => icon.name === iconName) || null;
+		return allIcons.find((icon) => icon.name === iconName) || null;
 	}
 
 	function iconOptionToName(icon: IconOption | null): string | null {
@@ -117,9 +121,15 @@
 		return icon.name;
 	}
 
-	function getIconRenderInfo(icon: IconOption | null): { type: 'lucide' | 'iconify' | 'svg' | 'text' | null; component?: ComponentType; icon?: string; url?: string; text?: string } {
+	function getIconRenderInfo(icon: IconOption | null): {
+		type: 'lucide' | 'iconify' | 'svg' | 'text' | null;
+		component?: ComponentType;
+		icon?: string;
+		url?: string;
+		text?: string;
+	} {
 		if (!icon) return { type: null };
-		
+
 		if (icon.type === 'lucide' && icon.lucideComponent) {
 			return { type: 'lucide', component: icon.lucideComponent as ComponentType };
 		} else if (icon.type === 'coreui-brand' && icon.iconSet && icon.iconName) {
@@ -129,23 +139,20 @@
 		} else if (icon.type === 'custom-text' && icon.text) {
 			return { type: 'text', text: icon.text };
 		}
-		
+
 		return { type: null };
 	}
 
 	onMount(async () => {
-		await Promise.all([
-			loadCategories(),
-			loadAvailableTags()
-		]);
+		await Promise.all([loadCategories(), loadAvailableTags()]);
 	});
 
 	let lastProjectId = $state<string | null>(null);
-	
+
 	$effect(() => {
 		if (projectId !== lastProjectId) {
 			lastProjectId = projectId;
-			
+
 			if (projectId && projectId !== 'new') {
 				loadProject();
 			} else {
@@ -208,21 +215,21 @@
 			const response = await fetch('/api/projects/admin/tags/all?grouped=true', {
 				credentials: 'include'
 			});
-		if (response.ok) {
-			const result = await response.json();
-			const allTags: ProjectTag[] = [];
-			if (result.data && Array.isArray(result.data)) {
-				result.data.forEach((group: { category: any; tags: ProjectTag[] }) => {
-					group.tags.forEach(tag => {
-						allTags.push({
-							...tag,
-							category: tag.category || group.category
+			if (response.ok) {
+				const result = await response.json();
+				const allTags: ProjectTag[] = [];
+				if (result.data && Array.isArray(result.data)) {
+					result.data.forEach((group: { category: any; tags: ProjectTag[] }) => {
+						group.tags.forEach((tag) => {
+							allTags.push({
+								...tag,
+								category: tag.category || group.category
+							});
 						});
 					});
-				});
+				}
+				availableTags = allTags;
 			}
-			availableTags = allTags;
-		}
 		} catch (err) {
 			console.error('Error loading tags:', err);
 		}
@@ -237,7 +244,9 @@
 			description = project.description;
 			categoryId = project.categoryId;
 			imageUrl = project.imageUrl || '';
-			imageUrlIsExternal = imageUrl ? (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) : false;
+			imageUrlIsExternal = imageUrl
+				? imageUrl.startsWith('http://') || imageUrl.startsWith('https://')
+				: false;
 			if (!imageUrlIsExternal && imageUrl && imageUrl.startsWith('/uploads/')) {
 				imageUrlFilename = imageUrl.replace('/uploads/', '');
 			} else {
@@ -272,7 +281,7 @@
 			}
 			repoIcon = project.repoIcon || null;
 			repoIconOption = await iconNameToOption(project.repoIcon || null);
-			tagIds = project.tags.map(t => t.id);
+			tagIds = project.tags.map((t) => t.id);
 			createdAt = project.createdAt;
 		} catch (err) {
 			console.error('Error loading project:', err);
@@ -284,7 +293,7 @@
 
 	function toggleTag(tagId: string) {
 		if (tagIds.includes(tagId)) {
-			tagIds = tagIds.filter(id => id !== tagId);
+			tagIds = tagIds.filter((id) => id !== tagId);
 		} else {
 			tagIds = [...tagIds, tagId];
 		}
@@ -325,7 +334,7 @@
 	}
 
 	function removeTag(tagIdToRemove: string) {
-		tagIds = tagIds.filter(id => id !== tagIdToRemove);
+		tagIds = tagIds.filter((id) => id !== tagIdToRemove);
 	}
 
 	function toggleDropdown() {
@@ -478,54 +487,59 @@
 
 	// Get tags grouped by category for display
 	let groupedTags = $derived.by(() => {
-		const groups: Record<string, { category: { name: string; id: string; displayOrder?: number } | null; tags: ProjectTag[] }> = {};
-		availableTags.forEach(tag => {
+		const groups: Record<
+			string,
+			{ category: { name: string; id: string; displayOrder?: number } | null; tags: ProjectTag[] }
+		> = {};
+		availableTags.forEach((tag) => {
 			const categoryName = tag.category?.name || 'Uncategorized';
 			if (!groups[categoryName]) {
 				groups[categoryName] = {
-					category: tag.category ? { 
-						name: tag.category.name, 
-						id: tag.category.id,
-						displayOrder: tag.category.displayOrder ?? (tag.category as any).displayOrder
-					} : null,
+					category: tag.category
+						? {
+								name: tag.category.name,
+								id: tag.category.id,
+								displayOrder: tag.category.displayOrder ?? (tag.category as any).displayOrder
+							}
+						: null,
 					tags: []
 				};
 			}
 			groups[categoryName].tags.push(tag);
 		});
-		
+
 		const groupsArray = Object.values(groups);
-		
+
 		// Sort: current project's category
 		groupsArray.sort((a, b) => {
 			if (categoryId) {
 				const aMatches = a.category?.id === categoryId;
 				const bMatches = b.category?.id === categoryId;
-				
+
 				if (aMatches && !bMatches) return -1;
 				if (!aMatches && bMatches) return 1;
 			}
-			
+
 			// Second priority: category displayOrder
 			if (a.category && b.category) {
 				const aOrder = a.category.displayOrder ?? 999;
 				const bOrder = b.category.displayOrder ?? 999;
 				if (aOrder !== bOrder) return aOrder - bOrder;
 			}
-			
+
 			// Uncategorized
 			if (!a.category && b.category) return 1;
 			if (a.category && !b.category) return -1;
-			
+
 			return 0;
 		});
-		
+
 		return groupsArray;
 	});
 
 	// Get selected tags for display
 	let selectedTags = $derived.by(() => {
-		return availableTags.filter(tag => tagIds.includes(tag.id));
+		return availableTags.filter((tag) => tagIds.includes(tag.id));
 	});
 </script>
 
@@ -553,7 +567,11 @@
 			<div class="form-group">
 				<div class="category-header">
 					<label for="category">Category</label>
-					<button type="button" onclick={() => showCategoryManager = true} class="manage-categories-button">
+					<button
+						type="button"
+						onclick={() => (showCategoryManager = true)}
+						class="manage-categories-button"
+					>
 						<Settings size={16} />
 						Manage Categories
 					</button>
@@ -569,15 +587,22 @@
 			<!-- Description -->
 			<div class="form-group">
 				<label for="description">Description (Markdown)</label>
-				<MarkdownEditor 
-					bind:value={description} 
-					minHeight="400px" 
+				<MarkdownEditor
+					bind:value={description}
+					minHeight="400px"
 					placeholder="Write your project description in Markdown..."
 					enabledTools={[
-						'heading1', 'heading2', 'heading3',
-						'bold', 'italic', 'strikethrough', 'code',
+						'heading1',
+						'heading2',
+						'heading3',
+						'bold',
+						'italic',
+						'strikethrough',
+						'code',
 						'link',
-						'bulletList', 'numberedList', 'quote',
+						'bulletList',
+						'numberedList',
+						'quote',
 						'preview'
 					]}
 				/>
@@ -593,10 +618,14 @@
 					{#if imageUrl}
 						<div class="image-preview-container">
 							<div class="image-preview">
-								<img src={getImageUrl(imageUrl)} alt="Preview" onerror={(e) => {
-									console.error('Failed to load image:', imageUrl);
-									(e.target as HTMLImageElement).style.display = 'none';
-								}} />
+								<img
+									src={getImageUrl(imageUrl)}
+									alt="Preview"
+									onerror={(e) => {
+										console.error('Failed to load image:', imageUrl);
+										(e.target as HTMLImageElement).style.display = 'none';
+									}}
+								/>
 								<button
 									type="button"
 									class="remove-image"
@@ -624,7 +653,8 @@
 			<div class="form-group">
 				<label for="active">Status</label>
 				<div class="status-select-wrapper">
-					<span class="status-indicator" style="background-color: {getProjectStatusColor(active)};"></span>
+					<span class="status-indicator" style="background-color: {getProjectStatusColor(active)};"
+					></span>
 					<select id="active" bind:value={active} class="form-input status-select">
 						{#each PROJECT_STATUSES as state}
 							<option value={state} style="color: {getProjectStatusColor(state)};">{state}</option>
@@ -641,7 +671,7 @@
 						<button
 							type="button"
 							class="icon-button"
-							onclick={() => projectIconPickerOpen = true}
+							onclick={() => (projectIconPickerOpen = true)}
 							title="Choose project icon"
 						>
 							{#if projectIconOption}
@@ -715,7 +745,7 @@
 						<button
 							type="button"
 							class="icon-button"
-							onclick={() => repoIconPickerOpen = true}
+							onclick={() => (repoIconPickerOpen = true)}
 							title="Choose repository icon"
 						>
 							{#if repoIconOption}
@@ -785,15 +815,19 @@
 			<div class="form-group">
 				<div class="tags-header">
 					<label for="tags">Tags</label>
-					<button type="button" onclick={() => showTagManager = true} class="manage-tags-button">
+					<button type="button" onclick={() => (showTagManager = true)} class="manage-tags-button">
 						<Settings size={16} />
 						Manage Tags
 					</button>
 				</div>
-				
+
 				<div class="tags-dropdown-container">
 					<button type="button" onclick={toggleDropdown} class="tags-dropdown-button">
-						<span>{tagIds.length > 0 ? `${tagIds.length} tag${tagIds.length > 1 ? 's' : ''} selected` : 'Select tags'}</span>
+						<span
+							>{tagIds.length > 0
+								? `${tagIds.length} tag${tagIds.length > 1 ? 's' : ''} selected`
+								: 'Select tags'}</span
+						>
 						<ChevronDown size={18} class={showTagDropdown ? 'rotate' : ''} />
 					</button>
 
@@ -802,7 +836,11 @@
 							{#if availableTags.length === 0}
 								<div class="dropdown-empty">
 									<p>No tags available</p>
-									<button type="button" onclick={() => showTagManager = true} class="create-tag-button">
+									<button
+										type="button"
+										onclick={() => (showTagManager = true)}
+										class="create-tag-button"
+									>
 										Create Tag
 									</button>
 								</div>
@@ -820,7 +858,10 @@
 												checked={tagIds.includes(tag.id)}
 												onchange={() => toggleTag(tag.id)}
 											/>
-											<span class="tag-color" style="background-color: {tag.color}20; border-color: {tag.color}40;"></span>
+											<span
+												class="tag-color"
+												style="background-color: {tag.color}20; border-color: {tag.color}40;"
+											></span>
 											<span>{tag.title}</span>
 										</label>
 									{/each}
@@ -833,12 +874,17 @@
 				{#if selectedTags.length > 0}
 					<div class="selected-tags">
 						{#each selectedTags as tag}
-							<span 
-								class="tag" 
+							<span
+								class="tag"
 								style="background-color: {tag.color}20; color: {tag.color}; border-color: {tag.color}40;"
 							>
 								{tag.title}
-								<button type="button" onclick={() => removeTag(tag.id)} class="remove-tag" aria-label="Remove tag">
+								<button
+									type="button"
+									onclick={() => removeTag(tag.id)}
+									class="remove-tag"
+									aria-label="Remove tag"
+								>
 									<X size={14} />
 								</button>
 							</span>
@@ -847,14 +893,13 @@
 				{/if}
 			</div>
 
-
 			<!-- Featured & Published -->
 			<div class="form-group">
 				<label for="featured">Featured</label>
-				<select 
-					id="featured" 
+				<select
+					id="featured"
 					value={featured ? 'true' : 'false'}
-					onchange={(e) => featured = (e.target as HTMLSelectElement).value === 'true'}
+					onchange={(e) => (featured = (e.target as HTMLSelectElement).value === 'true')}
 					class="form-input"
 				>
 					<option value="false">No</option>
@@ -874,7 +919,12 @@
 
 			<!-- Actions -->
 			<div class="form-actions">
-				<button type="button" onclick={handleClose} class="button button-secondary" disabled={saving}>
+				<button
+					type="button"
+					onclick={handleClose}
+					class="button button-secondary"
+					disabled={saving}
+				>
 					Cancel
 				</button>
 				<button type="button" onclick={handleSave} class="button button-primary" disabled={saving}>
@@ -918,16 +968,52 @@
 	{/if}
 
 	{#if showCategoryManager}
-		<div class="category-manager-overlay" onclick={handleCategoryManagerClose}>
-			<div class="category-manager-container" onclick={(e) => e.stopPropagation()}>
+		<div
+			class="category-manager-overlay"
+			onclick={handleCategoryManagerClose}
+			role="button"
+			tabindex="0"
+			onkeydown={(e) => {
+				if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					handleCategoryManagerClose();
+				}
+			}}
+		>
+			<div
+				class="category-manager-container"
+				role="dialog"
+				aria-modal="true"
+				tabindex="-1"
+				onclick={(e) => e.stopPropagation()}
+				onkeydown={(e) => e.stopPropagation()}
+			>
 				<ProjectCategoryManager on:close={handleCategoryManagerClose} />
 			</div>
 		</div>
 	{/if}
 
 	{#if showTagManager}
-		<div class="category-manager-overlay" onclick={handleTagManagerClose}>
-			<div class="category-manager-container" onclick={(e) => e.stopPropagation()}>
+		<div
+			class="category-manager-overlay"
+			onclick={handleTagManagerClose}
+			role="button"
+			tabindex="0"
+			onkeydown={(e) => {
+				if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					handleTagManagerClose();
+				}
+			}}
+		>
+			<div
+				class="category-manager-container"
+				role="dialog"
+				aria-modal="true"
+				tabindex="-1"
+				onclick={(e) => e.stopPropagation()}
+				onkeydown={(e) => e.stopPropagation()}
+			>
 				<ProjectTagManager on:close={handleTagManagerClose} on:tagsUpdated={handleTagsUpdated} />
 			</div>
 		</div>
@@ -961,8 +1047,12 @@
 	}
 
 	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
 
 	.editor-form {
@@ -1129,7 +1219,6 @@
 		margin-bottom: 8px;
 	}
 
-
 	.image-input-group {
 		width: 100%;
 	}
@@ -1269,7 +1358,7 @@
 		background: var(--bg-tertiary, #3a3a3a);
 	}
 
-	.tag-option input[type="checkbox"] {
+	.tag-option input[type='checkbox'] {
 		margin: 0;
 		cursor: pointer;
 	}
@@ -1334,7 +1423,6 @@
 	.remove-tag:hover {
 		background: rgba(0, 0, 0, 0.2);
 	}
-
 
 	.form-actions {
 		display: flex;
@@ -1420,7 +1508,5 @@
 		.editor-container {
 			padding: 16px;
 		}
-
 	}
 </style>
-

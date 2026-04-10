@@ -3,8 +3,7 @@ declare module 'country-flag-colors' {
 		name: string;
 		colors: string[];
 	}
-	
+
 	const countryFlagColors: CountryFlagColor[];
 	export default countryFlagColors;
 }
-

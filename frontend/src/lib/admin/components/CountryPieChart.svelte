@@ -32,13 +32,18 @@
 	// Get flag colors (library)
 	function getFlagColorsFromLibrary(country: string): { primary: string; secondary: string } {
 		try {
-			const countryData = countryFlagColors.find((f: any) => 
-				f.name.toLowerCase() === country.toLowerCase()
+			const countryData = countryFlagColors.find(
+				(f: any) => f.name.toLowerCase() === country.toLowerCase()
 			);
-			
+
 			if (countryData && countryData.colors && countryData.colors.length > 0) {
 				const primary = countryData.colors[0];
-				const secondary = countryData.colors.length > 1 ? countryData.colors[1] : (countryData.colors.length > 0 ? countryData.colors[0] : '#6B7280');
+				const secondary =
+					countryData.colors.length > 1
+						? countryData.colors[1]
+						: countryData.colors.length > 0
+							? countryData.colors[0]
+							: '#6B7280';
 				return { primary, secondary };
 			}
 		} catch (e) {}
@@ -58,181 +63,203 @@
 			for (let i = 0; i < name.length; i++) {
 				hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
 			}
-			
+
 			const primary = colors[hash % colors.length];
 			const secondary = colors[(hash + 5) % colors.length];
-			
+
 			return { primary, secondary };
 		}
-		
+
 		return getFallbackColors(country);
 	}
 
 	// Get country code from lib
 	function getCountryCode(countryName: string): string {
 		// Try exact match
-		const match = countryData.find((c: any) => 
-			c.name.toLowerCase() === countryName.toLowerCase()
-		);
-		
+		const match = countryData.find((c: any) => c.name.toLowerCase() === countryName.toLowerCase());
+
 		if (match) {
 			return match.code;
 		}
-		
+
 		// Try fuzzy match for common variations
 		const lowerName = countryName.toLowerCase();
-		
+
 		// Country name variations
 		const variations: Record<string, string> = {
 			'united states': 'us',
-			'usa': 'us',
-			'us': 'us',
-			'america': 'us',
+			usa: 'us',
+			us: 'us',
+			america: 'us',
 			'united kingdom': 'gb',
-			'uk': 'gb',
+			uk: 'gb',
 			'great britain': 'gb',
-			'britain': 'gb',
-			'england': 'gb',
-			'russia': 'ru',
+			britain: 'gb',
+			england: 'gb',
+			russia: 'ru',
 			'south korea': 'kr',
-			'korea': 'kr',
+			korea: 'kr',
 			'north korea': 'kp',
 			'czech republic': 'cz',
-			'czechia': 'cz',
-			'uae': 'ae',
+			czechia: 'cz',
+			uae: 'ae',
 			'united arab emirates': 'ae',
-			'congo': 'cd',
-			'drc': 'cd',
+			congo: 'cd',
+			drc: 'cd',
 			'democratic republic of the congo': 'cd',
 			'ivory coast': 'ci',
-			'côte d\'ivoire': 'ci',
-			'cote d\'ivoire': 'ci',
+			"côte d'ivoire": 'ci',
+			"cote d'ivoire": 'ci',
 			'timor-leste': 'tl',
 			'east timor': 'tl',
-			'burma': 'mm',
-			'myanmar': 'mm',
-			'swaziland': 'sz',
-			'eswatini': 'sz',
-			'macedonia': 'mk',
+			burma: 'mm',
+			myanmar: 'mm',
+			swaziland: 'sz',
+			eswatini: 'sz',
+			macedonia: 'mk',
 			'north macedonia': 'mk'
 		};
-		
+
 		if (variations[lowerName]) {
 			return variations[lowerName];
 		}
-		
+
 		for (const item of countryData as any[]) {
-			if (item.name.toLowerCase().includes(lowerName) || 
-			    lowerName.includes(item.name.toLowerCase())) {
+			if (
+				item.name.toLowerCase().includes(lowerName) ||
+				lowerName.includes(item.name.toLowerCase())
+			) {
 				return item.code;
 			}
 		}
-		
+
 		return 'xx';
 	}
-	
+
 	// Flag mapping
 	function getCountryFlag(country: string): string {
 		return getCountryCode(country);
 	}
 
 	// Process data for chart
-	const chartData = $derived((() => {
-		// Utilities to work with color similarity (hue buckets)
-		function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
-			const normalized = hex.replace('#', '');
-			if (normalized.length !== 6) return null;
-			const r = parseInt(normalized.slice(0, 2), 16);
-			const g = parseInt(normalized.slice(2, 4), 16);
-			const b = parseInt(normalized.slice(4, 6), 16);
-			if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return null;
-			return { r, g, b };
-		}
-
-		function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
-			r /= 255; g /= 255; b /= 255;
-			const max = Math.max(r, g, b), min = Math.min(r, g, b);
-			let h = 0, s = 0; const l = (max + min) / 2;
-			if (max !== min) {
-				const d = max - min;
-				s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-				switch (max) {
-					case r: h = (g - b) / d + (g < b ? 6 : 1); break;
-					case g: h = (b - r) / d + 3; break;
-					case b: h = (r - g) / d + 5; break;
-				}
-				h *= 60;
+	const chartData = $derived(
+		(() => {
+			// Utilities to work with color similarity (hue buckets)
+			function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+				const normalized = hex.replace('#', '');
+				if (normalized.length !== 6) return null;
+				const r = parseInt(normalized.slice(0, 2), 16);
+				const g = parseInt(normalized.slice(2, 4), 16);
+				const b = parseInt(normalized.slice(4, 6), 16);
+				if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return null;
+				return { r, g, b };
 			}
-			return { h, s, l };
-		}
 
-		function hueFromHex(hex: string): number | null {
-			const rgb = hexToRgb(hex);
-			if (!rgb) return null;
-			return rgbToHsl(rgb.r, rgb.g, rgb.b).h;
-		}
-
-		function hueBucket(hex: string, bucketSize: number = 24): number | null {
-			const h = hueFromHex(hex);
-			if (h === null || Number.isNaN(h)) return null;
-			return Math.floor(h / bucketSize); // 15 buckets
-		}
-
-		const usedHue = new Set<number>();
-		const usedExact = new Set<string>();
-
-		return data
-			.filter(item => {
-				const visitors = typeof item.visitors === 'number' ? item.visitors : parseInt(item.visitors.toString()) || 0;
-				return item.country !== null && visitors >= 0;
-			})
-			.map((item) => {
-				const { primary, secondary } = getFlagColors(item.country!);
-				const pBucket = hueBucket(primary);
-				const sBucket = hueBucket(secondary);
-
-				let chosen = primary;
-				if ((pBucket !== null && usedHue.has(pBucket)) || usedExact.has(primary)) {
-					if ((sBucket !== null && !usedHue.has(sBucket)) && !usedExact.has(secondary)) {
-						chosen = secondary;
+			function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
+				r /= 255;
+				g /= 255;
+				b /= 255;
+				const max = Math.max(r, g, b),
+					min = Math.min(r, g, b);
+				let h = 0,
+					s = 0;
+				const l = (max + min) / 2;
+				if (max !== min) {
+					const d = max - min;
+					s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+					switch (max) {
+						case r:
+							h = (g - b) / d + (g < b ? 6 : 1);
+							break;
+						case g:
+							h = (b - r) / d + 3;
+							break;
+						case b:
+							h = (r - g) / d + 5;
+							break;
 					}
+					h *= 60;
 				}
+				return { h, s, l };
+			}
 
-				const chosenBucket = hueBucket(chosen);
-				if (chosenBucket !== null) usedHue.add(chosenBucket);
-				usedExact.add(chosen);
+			function hueFromHex(hex: string): number | null {
+				const rgb = hexToRgb(hex);
+				if (!rgb) return null;
+				return rgbToHsl(rgb.r, rgb.g, rgb.b).h;
+			}
 
-				return {
-					country: item.country!,
-					visitors: parseInt(item.visitors.toString()) || 0,
-					vpnVisitors: parseInt(item.vpnVisitors.toString()) || 0,
-					color: chosen,
-					flag: getCountryFlag(item.country!),
-					primaryColor: primary,
-					secondaryColor: secondary
-				};
-			});
-	})());
+			function hueBucket(hex: string, bucketSize: number = 24): number | null {
+				const h = hueFromHex(hex);
+				if (h === null || Number.isNaN(h)) return null;
+				return Math.floor(h / bucketSize); // 15 buckets
+			}
+
+			const usedHue = new Set<number>();
+			const usedExact = new Set<string>();
+
+			return data
+				.filter((item) => {
+					const visitors =
+						typeof item.visitors === 'number'
+							? item.visitors
+							: parseInt(item.visitors.toString()) || 0;
+					return item.country !== null && visitors >= 0;
+				})
+				.map((item) => {
+					const { primary, secondary } = getFlagColors(item.country!);
+					const pBucket = hueBucket(primary);
+					const sBucket = hueBucket(secondary);
+
+					let chosen = primary;
+					if ((pBucket !== null && usedHue.has(pBucket)) || usedExact.has(primary)) {
+						if (sBucket !== null && !usedHue.has(sBucket) && !usedExact.has(secondary)) {
+							chosen = secondary;
+						}
+					}
+
+					const chosenBucket = hueBucket(chosen);
+					if (chosenBucket !== null) usedHue.add(chosenBucket);
+					usedExact.add(chosen);
+
+					return {
+						country: item.country!,
+						visitors: parseInt(item.visitors.toString()) || 0,
+						vpnVisitors: parseInt(item.vpnVisitors.toString()) || 0,
+						color: chosen,
+						flag: getCountryFlag(item.country!),
+						primaryColor: primary,
+						secondaryColor: secondary
+					};
+				});
+		})()
+	);
 
 	const totalVisitors = $derived(chartData.reduce((sum, item) => sum + item.visitors, 0));
 
 	// Calculate pie segments
-	const segments = $derived(chartData.map((item, index) => {
-		const percentage = totalVisitors > 0 ? (item.visitors / totalVisitors) : 0;
-		const startAngle = chartData.slice(0, index).reduce((sum, prev) => 
-			sum + (totalVisitors > 0 ? (prev.visitors / totalVisitors) * 360 : 0), 0);
-		const endAngle = startAngle + (percentage * 360);
-		const middleAngle = startAngle + (percentage * 360 / 2);
-		
-		return {
-			...item,
-			percentage,
-			startAngle,
-			endAngle,
-			middleAngle,
-			index
-		};
-	}));
+	const segments = $derived(
+		chartData.map((item, index) => {
+			const percentage = totalVisitors > 0 ? item.visitors / totalVisitors : 0;
+			const startAngle = chartData
+				.slice(0, index)
+				.reduce(
+					(sum, prev) => sum + (totalVisitors > 0 ? (prev.visitors / totalVisitors) * 360 : 0),
+					0
+				);
+			const endAngle = startAngle + percentage * 360;
+			const middleAngle = startAngle + (percentage * 360) / 2;
+
+			return {
+				...item,
+				percentage,
+				startAngle,
+				endAngle,
+				middleAngle,
+				index
+			};
+		})
+	);
 
 	// Chart dimensions
 	let chartSize = $state(450);
@@ -241,14 +268,14 @@
 	let radius = $derived(chartSize * 0.256);
 	let innerRadius = $derived(chartSize * 0.129);
 	let flagDistance = $derived(chartSize * 0.378);
-	
+
 	let containerElement: HTMLElement | null = $state(null);
 
 	// Update chart size based on window width and available space
 	function updateChartSize() {
 		if (typeof window === 'undefined') return;
 		const width = window.innerWidth;
-		
+
 		// Mobile/Tablet breakpoints
 		if (width <= 480) {
 			chartSize = 280;
@@ -258,7 +285,7 @@
 			chartSize = 380;
 		} else if (width <= 1508) {
 			chartSize = 420; // Larger size for stacked layout on tablet/desktop
-		} 
+		}
 		// Desktop side-by-side layout
 		else {
 			chartSize = 450;
@@ -268,7 +295,7 @@
 	onMount(() => {
 		updateChartSize();
 		window.addEventListener('resize', updateChartSize);
-		
+
 		if (containerElement) {
 			const resizeObserver = new ResizeObserver(() => {
 				updateChartSize();
@@ -279,74 +306,122 @@
 				window.removeEventListener('resize', updateChartSize);
 			};
 		}
-		
+
 		return () => window.removeEventListener('resize', updateChartSize);
 	});
 
 	// Calculate flag positions
-	const flagPositions = $derived(segments.map(segment => {
-		const angleDiff = segment.endAngle - segment.startAngle;
-		const isFullCircle = angleDiff >= 359;
-		const angle = isFullCircle ? 0 : segment.middleAngle;
-		const radians = (angle - 90) * (Math.PI / 180);
-		const x = centerX + Math.cos(radians) * flagDistance;
-		const y = centerY + Math.sin(radians) * flagDistance;
-		
-		const segmentEdgeX = centerX + Math.cos(radians) * radius;
-		const segmentEdgeY = centerY + Math.sin(radians) * radius;
-		
-		return {
-			...segment,
-			flagX: x,
-			flagY: y,
-			segmentEdgeX,
-			segmentEdgeY,
-			isFullCircle
-		};
-	}));
+	const flagPositions = $derived(
+		segments.map((segment) => {
+			const angleDiff = segment.endAngle - segment.startAngle;
+			const isFullCircle = angleDiff >= 359;
+			const angle = isFullCircle ? 0 : segment.middleAngle;
+			const radians = (angle - 90) * (Math.PI / 180);
+			const x = centerX + Math.cos(radians) * flagDistance;
+			const y = centerY + Math.sin(radians) * flagDistance;
+
+			const segmentEdgeX = centerX + Math.cos(radians) * radius;
+			const segmentEdgeY = centerY + Math.sin(radians) * radius;
+
+			return {
+				...segment,
+				flagX: x,
+				flagY: y,
+				segmentEdgeX,
+				segmentEdgeY,
+				isFullCircle
+			};
+		})
+	);
 
 	// Convert angle to path for pie segment
-	function createArcPath(startAngle: number, endAngle: number, outerRadius: number, innerRadius: number) {
+	function createArcPath(
+		startAngle: number,
+		endAngle: number,
+		outerRadius: number,
+		innerRadius: number
+	) {
 		const angleDiff = endAngle - startAngle;
-		
+
 		if (angleDiff >= 359.99) {
 			const adjustedEndAngle = startAngle + 359;
-			
+
 			const start = polarToCartesian(centerX, centerY, outerRadius, adjustedEndAngle);
 			const end = polarToCartesian(centerX, centerY, outerRadius, startAngle);
 			const innerStart = polarToCartesian(centerX, centerY, innerRadius, adjustedEndAngle);
 			const innerEnd = polarToCartesian(centerX, centerY, innerRadius, startAngle);
-			
+
 			return [
-				"M", start.x, start.y,
-				"A", outerRadius, outerRadius, 0, "1", "0", end.x, end.y,
-				"L", innerEnd.x, innerEnd.y,
-				"A", innerRadius, innerRadius, 0, "1", "1", innerStart.x, innerStart.y,
-				"Z"
-			].join(" ");
+				'M',
+				start.x,
+				start.y,
+				'A',
+				outerRadius,
+				outerRadius,
+				0,
+				'1',
+				'0',
+				end.x,
+				end.y,
+				'L',
+				innerEnd.x,
+				innerEnd.y,
+				'A',
+				innerRadius,
+				innerRadius,
+				0,
+				'1',
+				'1',
+				innerStart.x,
+				innerStart.y,
+				'Z'
+			].join(' ');
 		}
-		
+
 		const start = polarToCartesian(centerX, centerY, outerRadius, endAngle);
 		const end = polarToCartesian(centerX, centerY, outerRadius, startAngle);
 		const innerStart = polarToCartesian(centerX, centerY, innerRadius, endAngle);
 		const innerEnd = polarToCartesian(centerX, centerY, innerRadius, startAngle);
-		
-		const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
-		
+
+		const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
+
 		return [
-			"M", start.x, start.y,
-			"A", outerRadius, outerRadius, 0, largeArcFlag, 0, end.x, end.y,
-			"L", innerEnd.x, innerEnd.y,
-			"A", innerRadius, innerRadius, 0, largeArcFlag, 1, innerStart.x, innerStart.y,
-			"Z"
-		].join(" ");
+			'M',
+			start.x,
+			start.y,
+			'A',
+			outerRadius,
+			outerRadius,
+			0,
+			largeArcFlag,
+			0,
+			end.x,
+			end.y,
+			'L',
+			innerEnd.x,
+			innerEnd.y,
+			'A',
+			innerRadius,
+			innerRadius,
+			0,
+			largeArcFlag,
+			1,
+			innerStart.x,
+			innerStart.y,
+			'Z'
+		].join(' ');
 	}
 
-	function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
-		const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+	function polarToCartesian(
+		centerX: number,
+		centerY: number,
+		radius: number,
+		angleInDegrees: number
+	) {
+		const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
 		return {
-			x: centerX + (radius * Math.cos(angleInRadians)),
-			y: centerY + (radius * Math.sin(angleInRadians))
+			x: centerX + radius * Math.cos(angleInRadians),
+			y: centerY + radius * Math.sin(angleInRadians)
 		};
 	}
 
@@ -357,13 +432,13 @@
 		flag: string;
 	}
 
-	let tooltip = $state<{ show: boolean; x: number; y: number; data: TooltipData | null }>({ 
-		show: false, 
-		x: 0, 
-		y: 0, 
-		data: null 
+	let tooltip = $state<{ show: boolean; x: number; y: number; data: TooltipData | null }>({
+		show: false,
+		x: 0,
+		y: 0,
+		data: null
 	});
-	
+
 	let tooltipElement: HTMLElement | null = $state(null);
 	let hideTooltipTimeout: number | null = null;
 
@@ -440,52 +515,61 @@
 
 <div class="chart-container" bind:this={containerElement}>
 	<h3 class="chart-title">{title}</h3>
-	
+
 	<div class="chart-content">
 		<div class="chart-main">
 			<div class="chart-left">
-				<div class="chart-wrapper" style="width: {chartSize}px; height: {chartSize}px; position: relative;">
-				<!-- SVG for pie chart -->
-				<svg width={chartSize} height={chartSize} class="chart-svg">
-					<!-- Pie chart segments -->
-					{#each segments as segment}
-						<path
-							d={createArcPath(segment.startAngle, segment.endAngle, radius, innerRadius)}
-							fill={segment.color}
-							stroke="#ffffff"
-							stroke-width="2"
-							class="pie-segment"
-							on:mouseenter={(e) => showTooltip(e, segment)}
-							on:mouseleave={hideTooltip}
-							on:mousemove={handleTooltipMove}
-							on:touchstart={(e) => {
-								e.preventDefault();
-								showTooltip(e, segment);
-							}}
-							on:touchend={hideTooltip}
-						/>
-					{/each}
-					
-					<!-- Leader lines -->
-					{#each flagPositions as flag}
-						<line
-							x1={flag.segmentEdgeX}
-							y1={flag.segmentEdgeY}
-							x2={flag.flagX}
-							y2={flag.flagY}
-							stroke={flag.color}
-							stroke-width="2"
-							opacity="0.8"
-							class="leader-line"
-						/>
-					{/each}
-				</svg>
+				<div
+					class="chart-wrapper"
+					style="width: {chartSize}px; height: {chartSize}px; position: relative;"
+				>
+					<!-- SVG for pie chart -->
+					<svg width={chartSize} height={chartSize} class="chart-svg">
+						<!-- Pie chart segments -->
+						{#each segments as segment}
+							<path
+								d={createArcPath(segment.startAngle, segment.endAngle, radius, innerRadius)}
+								fill={segment.color}
+								stroke="#ffffff"
+								stroke-width="2"
+								class="pie-segment"
+								role="img"
+								aria-label={`${segment.country}: ${segment.visitors.toLocaleString()} visitors (${(segment.percentage * 100).toFixed(1)}%)`}
+								tabindex="-1"
+								onmouseenter={(e) => showTooltip(e, segment)}
+								onmouseleave={hideTooltip}
+								onmousemove={handleTooltipMove}
+								ontouchstart={(e) => {
+									e.preventDefault();
+									showTooltip(e, segment);
+								}}
+								ontouchend={hideTooltip}
+							/>
+						{/each}
 
-				<!-- Country flags -->
-				{#each flagPositions as flag}
-					<div
-						class="flag-item"
-						style="
+						<!-- Leader lines -->
+						{#each flagPositions as flag}
+							<line
+								x1={flag.segmentEdgeX}
+								y1={flag.segmentEdgeY}
+								x2={flag.flagX}
+								y2={flag.flagY}
+								stroke={flag.color}
+								stroke-width="2"
+								opacity="0.8"
+								class="leader-line"
+							/>
+						{/each}
+					</svg>
+
+					<!-- Country flags -->
+					{#each flagPositions as flag}
+						<div
+							class="flag-item"
+							role="img"
+							aria-label={`${flag.country} flag`}
+							tabindex="-1"
+							style="
 							position: absolute;
 							left: {flag.flagX - 15}px;
 							top: {flag.flagY - 15}px;
@@ -497,18 +581,18 @@
 							cursor: pointer;
 							z-index: 10;
 						"
-						on:mouseenter={(e) => showTooltip(e, flag)}
-						on:mouseleave={hideTooltip}
-						on:mousemove={handleTooltipMove}
-						on:touchstart={(e) => {
-							e.preventDefault();
-							showTooltip(e, flag);
-						}}
-						on:touchend={hideTooltip}
-					>
-						<span class="fi fi-{flag.flag}"></span>
-					</div>
-				{/each}
+							onmouseenter={(e) => showTooltip(e, flag)}
+							onmouseleave={hideTooltip}
+							onmousemove={handleTooltipMove}
+							ontouchstart={(e) => {
+								e.preventDefault();
+								showTooltip(e, flag);
+							}}
+							ontouchend={hideTooltip}
+						>
+							<span class="fi fi-{flag.flag}"></span>
+						</div>
+					{/each}
 				</div>
 			</div>
 
@@ -518,10 +602,7 @@
 					<div class="legend-scroll">
 						{#each segments as segment}
 							<div class="legend-item">
-								<div 
-									class="legend-color" 
-									style="background-color: {segment.color};"
-								></div>
+								<div class="legend-color" style="background-color: {segment.color};"></div>
 								<span class="legend-flag"><span class="fi fi-{segment.flag}"></span></span>
 								<div class="legend-text-container">
 									<span class="legend-text">{segment.country}</span>
@@ -540,10 +621,7 @@
 				<div class="legend-scroll">
 					{#each segments as segment}
 						<div class="legend-item">
-							<div 
-								class="legend-color" 
-								style="background-color: {segment.color};"
-							></div>
+							<div class="legend-color" style="background-color: {segment.color};"></div>
 							<span class="legend-flag"><span class="fi fi-{segment.flag}"></span></span>
 							<div class="legend-text-container">
 								<span class="legend-text">{segment.country}</span>
@@ -558,7 +636,7 @@
 
 	<!-- Tooltip -->
 	{#if tooltip.show && tooltip.data}
-		<div 
+		<div
 			bind:this={tooltipElement}
 			class="tooltip"
 			style="
@@ -579,15 +657,15 @@
 					</div>
 					{#if tooltip.data.vpnVisitors > 0}
 						<div class="tooltip-stat">
-							VPN/Proxy: <strong style="color: #fbbf24;">{tooltip.data.vpnVisitors.toLocaleString()}</strong>
+							VPN/Proxy: <strong style="color: #fbbf24;"
+								>{tooltip.data.vpnVisitors.toLocaleString()}</strong
+							>
 							<span class="vpn-percentage">
 								({((tooltip.data.vpnVisitors / tooltip.data.visitors) * 100).toFixed(1)}%)
 							</span>
 						</div>
 					{:else}
-						<div class="tooltip-stat no-vpn">
-							No VPN/Proxy detected
-						</div>
+						<div class="tooltip-stat no-vpn">No VPN/Proxy detected</div>
 					{/if}
 				</div>
 			</div>
@@ -602,7 +680,9 @@
 		padding: 20px;
 		border: 1px solid var(--border-color, #3a3a3a);
 		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-		transition: background 0.2s ease, border-color 0.2s ease;
+		transition:
+			background 0.2s ease,
+			border-color 0.2s ease;
 		height: 100%;
 		min-height: 0;
 		display: flex;
@@ -682,7 +762,7 @@
 	.flag-item {
 		transition: transform 0.2s ease;
 	}
-	
+
 	.flag-item .fi {
 		font-size: 24px;
 		line-height: 1;
@@ -737,7 +817,9 @@
 		border-radius: 8px;
 		border: 1px solid var(--border-color, #3a3a3a);
 		margin-bottom: 8px;
-		transition: background-color 0.2s ease, border-color 0.2s ease;
+		transition:
+			background-color 0.2s ease,
+			border-color 0.2s ease;
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	}
 
@@ -762,7 +844,7 @@
 		align-items: center;
 		justify-content: center;
 	}
-	
+
 	.legend-flag .fi {
 		font-size: 20px;
 		line-height: 1;
@@ -809,7 +891,9 @@
 		border: 1px solid var(--border-color, #3a3a3a);
 		margin-bottom: 8px;
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-		transition: background 0.2s ease, border-color 0.2s ease;
+		transition:
+			background 0.2s ease,
+			border-color 0.2s ease;
 	}
 
 	.chart-legend-mobile .legend-text-container {
@@ -840,7 +924,9 @@
 		box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
 		min-width: 200px;
 		max-width: 300px;
-		transition: background 0.2s ease, border-color 0.2s ease;
+		transition:
+			background 0.2s ease,
+			border-color 0.2s ease;
 		word-wrap: break-word;
 	}
 
@@ -858,7 +944,7 @@
 		align-items: center;
 		justify-content: center;
 	}
-	
+
 	.tooltip-flag .fi {
 		font-size: 20px;
 		line-height: 1;
@@ -932,7 +1018,7 @@
 		.chart-container {
 			padding: 16px;
 		}
-		
+
 		.chart-title {
 			font-size: 16px;
 			margin-bottom: 12px;
@@ -960,7 +1046,7 @@
 			width: 20px;
 			height: 20px;
 		}
-		
+
 		.flag-item .fi {
 			font-size: 18px;
 		}
@@ -983,24 +1069,24 @@
 		.legend-scroll {
 			max-height: 200px;
 		}
-		
+
 		.flag-item {
 			width: 18px;
 			height: 18px;
 		}
-		
+
 		.flag-item .fi {
 			font-size: 16px;
 		}
-		
+
 		.legend-item {
 			padding: 10px 12px;
 		}
-		
+
 		.legend-text {
 			font-size: 13px;
 		}
-		
+
 		.legend-percentage {
 			font-size: 11px;
 		}

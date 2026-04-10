@@ -8,7 +8,7 @@ const SALT_ROUNDS = 12;
  * @returns Promise<string> - Hashed password
  */
 export async function hashPassword(password: string): Promise<string> {
-  return await bcrypt.hash(password, SALT_ROUNDS);
+	return await bcrypt.hash(password, SALT_ROUNDS);
 }
 
 /**
@@ -18,7 +18,7 @@ export async function hashPassword(password: string): Promise<string> {
  * @returns Promise<boolean> - True if password matches
  */
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return await bcrypt.compare(password, hash);
+	return await bcrypt.compare(password, hash);
 }
 
 /**
@@ -27,29 +27,30 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
  * @returns Object with validation result and message
  */
 export function validatePasswordStrength(password: string): { isValid: boolean; message: string } {
-  if (password.length < 8) {
-    return { isValid: false, message: 'Password must be at least 8 characters long' };
-  }
-  
-  if (password.length > 128) {
-    return { isValid: false, message: 'Password must be less than 128 characters' };
-  }
-  
-  if (!/(?=.*[a-z])/.test(password)) {
-    return { isValid: false, message: 'Password must contain at least one lowercase letter' };
-  }
-  
-  if (!/(?=.*[A-Z])/.test(password)) {
-    return { isValid: false, message: 'Password must contain at least one uppercase letter' };
-  }
-  
-  if (!/(?=.*\d)/.test(password)) {
-    return { isValid: false, message: 'Password must contain at least one number' };
-  }
-  
-  if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(password)) {
-    return { isValid: false, message: 'Password must contain at least one special character' };
-  }
-  
-  return { isValid: true, message: 'Password is valid' };
+	if (password.length < 8) {
+		return { isValid: false, message: 'Password must be at least 8 characters long' };
+	}
+
+	if (password.length > 128) {
+		return { isValid: false, message: 'Password must be less than 128 characters' };
+	}
+
+	if (!/(?=.*[a-z])/.test(password)) {
+		return { isValid: false, message: 'Password must contain at least one lowercase letter' };
+	}
+
+	if (!/(?=.*[A-Z])/.test(password)) {
+		return { isValid: false, message: 'Password must contain at least one uppercase letter' };
+	}
+
+	if (!/(?=.*\d)/.test(password)) {
+		return { isValid: false, message: 'Password must contain at least one number' };
+	}
+
+	const specialChars = String.raw`!@#$%^&*()_+-=[]{};':"\\|,.<>/?`;
+	if (![...password].some((c) => specialChars.includes(c))) {
+		return { isValid: false, message: 'Password must contain at least one special character' };
+	}
+
+	return { isValid: true, message: 'Password is valid' };
 }

@@ -15,8 +15,12 @@
 		<script src="%sveltekit.assets%/web-neko-restart.js"></script>
 		<script>
 			(function () {
-				if (typeof location !== 'undefined' && location.search.indexOf('themePreview') !== -1) return;
-				if (typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches)
+				if (typeof location !== 'undefined' && location.search.indexOf('themePreview') !== -1)
+					return;
+				if (
+					typeof matchMedia !== 'undefined' &&
+					matchMedia('(prefers-reduced-motion: reduce)').matches
+				)
 					return;
 				window.addEventListener('load', function () {
 					setTimeout(function () {

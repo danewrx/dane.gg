@@ -83,7 +83,7 @@
 			imageUrl: '/assets/img/buttons/winrar.gif',
 			alt: 'WinRAR Button'
 		},
-        {
+		{
 			id: '8',
 			imageUrl: '/assets/img/buttons/svelte.gif',
 			alt: 'Svelte Button'
@@ -98,8 +98,22 @@
 	let isBottomRowHovered = $state(false);
 
 	// Duplicate arrays many times for truly seamless scrolling
-	let topRowItems = $derived([...buttonLinks, ...buttonLinks, ...buttonLinks, ...buttonLinks, ...buttonLinks, ...buttonLinks]);
-	let bottomRowItems = $derived([...buttonImages, ...buttonImages, ...buttonImages, ...buttonImages, ...buttonImages, ...buttonImages]);
+	let topRowItems = $derived([
+		...buttonLinks,
+		...buttonLinks,
+		...buttonLinks,
+		...buttonLinks,
+		...buttonLinks,
+		...buttonLinks
+	]);
+	let bottomRowItems = $derived([
+		...buttonImages,
+		...buttonImages,
+		...buttonImages,
+		...buttonImages,
+		...buttonImages,
+		...buttonImages
+	]);
 
 	onMount(() => {
 		startAnimations();
@@ -116,10 +130,7 @@
 		const bottomRowWidth = bottomRowRef.scrollWidth / 6;
 
 		topRowAnimation = topRowRef.animate(
-			[
-				{ transform: 'translateX(0)' },
-				{ transform: `translateX(-${topRowWidth}px)` }
-			],
+			[{ transform: 'translateX(0)' }, { transform: `translateX(-${topRowWidth}px)` }],
 			{
 				duration: 10000, // 10 seconds
 				iterations: Infinity,
@@ -128,10 +139,7 @@
 		);
 
 		bottomRowAnimation = bottomRowRef.animate(
-			[
-				{ transform: 'translateX(0)' },
-				{ transform: `translateX(-${bottomRowWidth}px)` }
-			],
+			[{ transform: 'translateX(0)' }, { transform: `translateX(-${bottomRowWidth}px)` }],
 			{
 				duration: 3000, // 3 seconds
 				iterations: Infinity,
@@ -180,7 +188,7 @@
 
 <div class="button-banner">
 	<!-- Top row (pause on hover) -->
-	<div 
+	<div
 		class="button-row top-row"
 		class:hovered={isTopRowHovered}
 		bind:this={topRowRef}
@@ -196,21 +204,18 @@
 				rel="noopener noreferrer"
 				class="button-link"
 				title={item.title}
-				onclick={(e) => { e.preventDefault(); handleLinkClick(item.url); }}
+				onclick={(e) => {
+					e.preventDefault();
+					handleLinkClick(item.url);
+				}}
 			>
-				<img 
-					src={item.imageUrl} 
-					alt={item.alt}
-					width="88"
-					height="31"
-					loading="lazy"
-				/>
+				<img src={item.imageUrl} alt={item.alt} width="88" height="31" loading="lazy" />
 			</a>
 		{/each}
 	</div>
 
 	<!-- Bottom row -->
-	<div 
+	<div
 		class="button-row bottom-row"
 		class:hovered={isBottomRowHovered}
 		bind:this={bottomRowRef}
@@ -221,13 +226,7 @@
 	>
 		{#each bottomRowItems as item, index}
 			<div class="button-image">
-				<img 
-					src={item.imageUrl} 
-					alt={item.alt}
-					width="88"
-					height="31"
-					loading="lazy"
-				/>
+				<img src={item.imageUrl} alt={item.alt} width="88" height="31" loading="lazy" />
 			</div>
 		{/each}
 	</div>
@@ -292,7 +291,9 @@
 		flex-shrink: 0;
 		display: block;
 		text-decoration: none;
-		transition: transform 0.2s ease, opacity 0.2s ease;
+		transition:
+			transform 0.2s ease,
+			opacity 0.2s ease;
 		border-radius: 0;
 		overflow: hidden;
 	}
@@ -322,7 +323,6 @@
 	.button-link:hover img {
 		opacity: 0.9;
 	}
-
 
 	@media (max-width: 768px) {
 		.button-banner {

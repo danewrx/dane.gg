@@ -1,5 +1,12 @@
 <script lang="ts">
-	import { Upload, X, Loader2, Image as ImageIcon, File as FileIcon, Link as LinkIcon } from 'lucide-svelte';
+	import {
+		Upload,
+		X,
+		Loader2,
+		Image as ImageIcon,
+		File as FileIcon,
+		Link as LinkIcon
+	} from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 
 	export interface UploadedFile {
@@ -96,11 +103,11 @@
 		isUploading = true;
 
 		try {
-			const uploadPromises = filesToUpload.map(file => uploadFile(file));
+			const uploadPromises = filesToUpload.map((file) => uploadFile(file));
 			const results = await Promise.all(uploadPromises);
-			
+
 			const successfulUploads = results.filter((r): r is UploadedFile => r !== null);
-			
+
 			if (successfulUploads.length > 0) {
 				if (multiple) {
 					uploadedFiles = [...uploadedFiles, ...successfulUploads];
@@ -109,7 +116,7 @@
 					uploadedFiles = [successfulUploads[0]];
 					onUpload(successfulUploads[0]);
 				}
-				
+
 				toast.success('File uploaded successfully', {
 					description: `${successfulUploads.length} file(s) uploaded`
 				});
@@ -135,7 +142,7 @@
 			throw new Error(`File size exceeds maximum of ${maxSizeMB}MB`);
 		}
 
-		const isValidType = acceptedTypes.some(type => {
+		const isValidType = acceptedTypes.some((type) => {
 			if (type.startsWith('.')) {
 				// Extension check
 				const ext = '.' + file.name.split('.').pop()?.toLowerCase();
@@ -157,11 +164,11 @@
 		formData.append('file', file);
 
 		// Use custom endpoint if custom settings
-		const useCustomEndpoint = endpoint === '/api/upload' && 
-			(acceptedTypes.length > 0 || maxSize !== 10 * 1024 * 1024);
-		
+		const useCustomEndpoint =
+			endpoint === '/api/upload' && (acceptedTypes.length > 0 || maxSize !== 10 * 1024 * 1024);
+
 		const uploadUrl = useCustomEndpoint ? '/api/upload/custom' : endpoint;
-		
+
 		let finalUrl = uploadUrl;
 		if (useCustomEndpoint) {
 			const params = new URLSearchParams();
@@ -334,58 +341,58 @@
 				</div>
 			</div>
 		{/if}
+	{:else if !multiple && uploadedFiles.length > 0}
+		<!-- Already have a file, upload area is hidden -->
 	{:else}
-		{#if !multiple && uploadedFiles.length > 0}
-			<!-- Already have a file, upload area is hidden -->
-		{:else}
-			<div
-				class="upload-area"
-				class:dragging={isDragging}
-				class:disabled={disabled || isUploading}
-				ondragover={handleDragOver}
-				ondragleave={handleDragLeave}
-				ondrop={handleDrop}
-				role="button"
-				tabindex={disabled || isUploading ? -1 : 0}
-				onclick={() => !disabled && !isUploading && fileInput?.click()}
-				onkeydown={(e) => {
-					if ((e.key === 'Enter' || e.key === ' ') && !disabled && !isUploading) {
-						e.preventDefault();
-						fileInput?.click();
-					}
-				}}
-			>
-		<input
-			bind:this={fileInput}
-			type="file"
-			class="file-input"
-			{multiple}
-			accept={acceptedTypes.map(t => t.startsWith('.') ? t : t.includes('/') ? t : `${t}/*`).join(',')}
-			onchange={handleFileSelect}
-			{disabled}
-		/>
+		<div
+			class="upload-area"
+			class:dragging={isDragging}
+			class:disabled={disabled || isUploading}
+			ondragover={handleDragOver}
+			ondragleave={handleDragLeave}
+			ondrop={handleDrop}
+			role="button"
+			tabindex={disabled || isUploading ? -1 : 0}
+			onclick={() => !disabled && !isUploading && fileInput?.click()}
+			onkeydown={(e) => {
+				if ((e.key === 'Enter' || e.key === ' ') && !disabled && !isUploading) {
+					e.preventDefault();
+					fileInput?.click();
+				}
+			}}
+		>
+			<input
+				bind:this={fileInput}
+				type="file"
+				class="file-input"
+				{multiple}
+				accept={acceptedTypes
+					.map((t) => (t.startsWith('.') ? t : t.includes('/') ? t : `${t}/*`))
+					.join(',')}
+				onchange={handleFileSelect}
+				{disabled}
+			/>
 
-		{#if isUploading}
-			<div class="upload-content">
-				<Loader2 class="upload-icon spinning" size={24} />
-				<span>Uploading...</span>
-			</div>
-		{:else}
-			<div class="upload-content">
-				<Upload class="upload-icon" size={24} />
-				<span>{label}</span>
-				{#if acceptedTypes.length > 0}
+			{#if isUploading}
+				<div class="upload-content">
+					<Loader2 class="upload-icon spinning" size={24} />
+					<span>Uploading...</span>
+				</div>
+			{:else}
+				<div class="upload-content">
+					<Upload class="upload-icon" size={24} />
+					<span>{label}</span>
+					{#if acceptedTypes.length > 0}
+						<span class="upload-hint">
+							Accepted: {acceptedTypes.join(', ')}
+						</span>
+					{/if}
 					<span class="upload-hint">
-						Accepted: {acceptedTypes.join(', ')}
+						Max size: {(maxSize / (1024 * 1024)).toFixed(2)}MB
 					</span>
-				{/if}
-				<span class="upload-hint">
-					Max size: {(maxSize / (1024 * 1024)).toFixed(2)}MB
-				</span>
-			</div>
-		{/if}
-			</div>
-		{/if}
+				</div>
+			{/if}
+		</div>
 	{/if}
 
 	{#if showPreview && uploadedFiles.length > 0}
@@ -461,11 +468,11 @@
 		gap: 8px;
 	}
 
-	.upload-icon {
+	.upload-content :global(.upload-icon) {
 		color: var(--text-secondary, #9ca3af);
 	}
 
-	.upload-icon.spinning {
+	.upload-content :global(.upload-icon.spinning) {
 		animation: spin 1s linear infinite;
 	}
 
@@ -540,7 +547,7 @@
 		border-color: var(--accent-color, #6366f1);
 	}
 
-	.url-icon {
+	.url-input-wrapper :global(.url-icon) {
 		color: var(--text-secondary, #9ca3af);
 		flex-shrink: 0;
 	}
@@ -584,7 +591,7 @@
 		cursor: not-allowed;
 	}
 
-	.url-submit-button .spinning {
+	.url-submit-button :global(.spinning) {
 		animation: spin 1s linear infinite;
 	}
 
@@ -613,7 +620,7 @@
 		min-width: 0;
 	}
 
-	.file-info svg {
+	.file-info :global(svg) {
 		color: var(--text-secondary, #9ca3af);
 		flex-shrink: 0;
 	}
@@ -657,4 +664,3 @@
 		color: var(--text-primary, #ffffff);
 	}
 </style>
-

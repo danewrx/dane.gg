@@ -4,7 +4,17 @@
 	import { TotpService, type TotpStatus } from '../../services/totp';
 	import { getErrorMessage } from '$lib/shared/utils/errorUtils';
 	import TotpSetup from './TotpSetup.svelte';
-	import { Shield, ShieldCheck, ShieldX, Key, RotateCcw, AlertTriangle, Loader2, Eye, EyeOff } from 'lucide-svelte';
+	import {
+		Shield,
+		ShieldCheck,
+		ShieldX,
+		Key,
+		RotateCcw,
+		AlertTriangle,
+		Loader2,
+		Eye,
+		EyeOff
+	} from 'lucide-svelte';
 
 	let totpStatus: TotpStatus | null = null;
 	let isLoading = true;
@@ -13,11 +23,15 @@
 	$: if (typeof window !== 'undefined' && totpStatus !== null) {
 		// Small delay to ensure DOM has updated
 		setTimeout(() => {
-			console.log('TotpManager: Dispatching totpStatusChanged event:', { enabled: totpStatus?.enabled });
-			window.dispatchEvent(new CustomEvent('totpStatusChanged', { 
-				detail: { enabled: totpStatus?.enabled } 
-			}));
-			
+			console.log('TotpManager: Dispatching totpStatusChanged event:', {
+				enabled: totpStatus?.enabled
+			});
+			window.dispatchEvent(
+				new CustomEvent('totpStatusChanged', {
+					detail: { enabled: totpStatus?.enabled }
+				})
+			);
+
 			if ((window as any).updateAccountTotpButtons) {
 				console.log('TotpManager: Calling global update function from reactive');
 				setTimeout(() => {
@@ -66,14 +80,16 @@
 		showSetup = false;
 		await loadTotpStatus();
 		toast.success('Two-factor authentication has been successfully enabled!');
-		
+
 		// Force immediate update after setup completion
 		if (typeof window !== 'undefined') {
 			console.log('TotpManager: Setup complete, dispatching immediate update');
-			window.dispatchEvent(new CustomEvent('totpStatusChanged', { 
-				detail: { enabled: totpStatus?.enabled } 
-			}));
-			
+			window.dispatchEvent(
+				new CustomEvent('totpStatusChanged', {
+					detail: { enabled: totpStatus?.enabled }
+				})
+			);
+
 			if ((window as any).updateAccountTotpButtons) {
 				console.log('TotpManager: Calling global update function');
 				setTimeout(() => {
@@ -106,7 +122,7 @@
 		isDisabling = true;
 		try {
 			const result = await TotpService.disableTotp(disablePassword);
-			
+
 			if (result.success) {
 				toast.success('Two-factor authentication has been disabled');
 				showDisableForm = false;
@@ -148,7 +164,7 @@
 		isRegenerating = true;
 		try {
 			const result = await TotpService.regenerateBackupCodes(regeneratePassword);
-			
+
 			if (result.backupCodes) {
 				// Validation is now handled in the service layer
 				newBackupCodes = result.backupCodes;
@@ -206,7 +222,11 @@
 {:else}
 	<div class="totp-manager">
 		<div class="manager-header">
-			<div class="header-icon" class:enabled={totpStatus?.enabled} class:disabled={!totpStatus?.enabled}>
+			<div
+				class="header-icon"
+				class:enabled={totpStatus?.enabled}
+				class:disabled={!totpStatus?.enabled}
+			>
 				{#if totpStatus?.enabled}
 					<ShieldCheck size={32} />
 				{:else}
@@ -257,21 +277,13 @@
 								{/if}
 							</div>
 						</div>
-						
+
 						<div class="status-actions">
-							<button 
-								type="button" 
-								class="action-button regenerate"
-								onclick={startRegenerate}
-							>
+							<button type="button" class="action-button regenerate" onclick={startRegenerate}>
 								<RotateCcw size={16} />
 								Regenerate Backup Codes
 							</button>
-							<button 
-								type="button" 
-								class="action-button disable"
-								onclick={startDisable}
-							>
+							<button type="button" class="action-button disable" onclick={startDisable}>
 								<ShieldX size={16} />
 								Disable 2FA
 							</button>
@@ -286,16 +298,15 @@
 							</div>
 							<div>
 								<h3>Two-Factor Authentication is Disabled</h3>
-								<p>Protect your account by enabling two-factor authentication. This adds an extra layer of security by requiring a code from your mobile device when signing in.</p>
+								<p>
+									Protect your account by enabling two-factor authentication. This adds an extra
+									layer of security by requiring a code from your mobile device when signing in.
+								</p>
 							</div>
 						</div>
-						
+
 						<div class="status-actions">
-							<button 
-								type="button" 
-								class="action-button enable"
-								onclick={startSetup}
-							>
+							<button type="button" class="action-button enable" onclick={startSetup}>
 								<ShieldCheck size={16} />
 								Enable 2FA
 							</button>
@@ -309,14 +320,17 @@
 						<div class="modal">
 							<div class="modal-header">
 								<h3>Disable Two-Factor Authentication</h3>
-								<p>This will remove the extra security layer from your account. Are you sure you want to continue?</p>
+								<p>
+									This will remove the extra security layer from your account. Are you sure you want
+									to continue?
+								</p>
 							</div>
-							
+
 							<div class="modal-content">
 								<div class="form-group">
 									<label for="disable-password">Current Password</label>
 									<div class="password-input-group">
-										<input 
+										<input
 											id="disable-password"
 											type={showDisablePassword ? 'text' : 'password'}
 											bind:value={disablePassword}
@@ -329,10 +343,10 @@
 												}
 											}}
 										/>
-										<button 
-											type="button" 
+										<button
+											type="button"
 											class="password-toggle"
-											onclick={() => showDisablePassword = !showDisablePassword}
+											onclick={() => (showDisablePassword = !showDisablePassword)}
 										>
 											{#if showDisablePassword}
 												<EyeOff size={16} />
@@ -343,18 +357,18 @@
 									</div>
 								</div>
 							</div>
-							
+
 							<div class="modal-actions">
-								<button 
-									type="button" 
+								<button
+									type="button"
 									class="modal-button cancel"
 									onclick={cancelDisable}
 									disabled={isDisabling}
 								>
 									Cancel
 								</button>
-								<button 
-									type="button" 
+								<button
+									type="button"
 									class="modal-button danger"
 									onclick={confirmDisable}
 									disabled={isDisabling || !disablePassword.trim()}
@@ -383,11 +397,12 @@
 									<div class="warning-box">
 										<AlertTriangle size={20} />
 										<div>
-											<strong>Important:</strong> Your old backup codes are no longer valid. Save these new codes securely.
+											<strong>Important:</strong> Your old backup codes are no longer valid. Save these
+											new codes securely.
 										</div>
 									</div>
 								</div>
-								
+
 								<div class="modal-content">
 									<div class="backup-codes-display">
 										{#each newBackupCodes as code, index}
@@ -398,18 +413,18 @@
 										{/each}
 									</div>
 								</div>
-								
+
 								<div class="modal-actions">
-									<button 
-										type="button" 
+									<button
+										type="button"
 										class="modal-button secondary"
 										onclick={downloadBackupCodes}
 									>
 										<Key size={16} />
 										Download Codes
 									</button>
-									<button 
-										type="button" 
+									<button
+										type="button"
 										class="modal-button primary"
 										onclick={closeRegenerateSuccess}
 									>
@@ -420,14 +435,17 @@
 								<!-- Input State -->
 								<div class="modal-header">
 									<h3>Regenerate Backup Codes</h3>
-									<p>This will generate new backup codes and invalidate your existing ones. Make sure to save the new codes securely.</p>
+									<p>
+										This will generate new backup codes and invalidate your existing ones. Make sure
+										to save the new codes securely.
+									</p>
 								</div>
-								
+
 								<div class="modal-content">
 									<div class="form-group">
 										<label for="regenerate-password">Current Password</label>
 										<div class="password-input-group">
-											<input 
+											<input
 												id="regenerate-password"
 												type={showRegeneratePassword ? 'text' : 'password'}
 												bind:value={regeneratePassword}
@@ -440,10 +458,10 @@
 													}
 												}}
 											/>
-											<button 
-												type="button" 
+											<button
+												type="button"
 												class="password-toggle"
-												onclick={() => showRegeneratePassword = !showRegeneratePassword}
+												onclick={() => (showRegeneratePassword = !showRegeneratePassword)}
 											>
 												{#if showRegeneratePassword}
 													<EyeOff size={16} />
@@ -454,18 +472,18 @@
 										</div>
 									</div>
 								</div>
-								
+
 								<div class="modal-actions">
-									<button 
-										type="button" 
+									<button
+										type="button"
 										class="modal-button cancel"
 										onclick={cancelRegenerate}
 										disabled={isRegenerating}
 									>
 										Cancel
 									</button>
-									<button 
-										type="button" 
+									<button
+										type="button"
 										class="modal-button primary"
 										onclick={confirmRegenerate}
 										disabled={isRegenerating || !regeneratePassword.trim()}
@@ -557,8 +575,12 @@
 	}
 
 	@keyframes spin {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.status-card {
@@ -613,7 +635,8 @@
 		line-height: 1.5;
 	}
 
-	.backup-info, .backup-warning {
+	.backup-info,
+	.backup-warning {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;

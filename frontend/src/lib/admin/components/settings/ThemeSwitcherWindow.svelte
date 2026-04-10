@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
 	import { siteTheme, themeEnforcement } from '$lib/site/stores/theme';
-	
+
 	interface Theme {
 		id: string;
 		name: string;
@@ -32,27 +32,27 @@
 		widgetBorderRadius?: string;
 		customCss: string | null;
 	}
-	
+
 	let { isOpen = $bindable(false) } = $props();
-	
+
 	let themes = $state<Theme[]>([]);
 	let loading = $state(true);
 	let selectedThemeId = $state<string | null>(null);
 	let applying = $state(false);
-	
+
 	onMount(() => {
 		loadThemes();
 	});
-	
+
 	async function loadThemes() {
 		try {
 			loading = true;
 			const response = await fetch('/api/themes');
-			
+
 			if (!response.ok) {
 				throw new Error('Failed to load themes');
 			}
-			
+
 			const result = await response.json();
 			const raw = result.data || [];
 			themes = [...raw].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
@@ -67,12 +67,12 @@
 
 			if (get(themeEnforcement).enforced) {
 				const tid = get(themeEnforcement).themeId;
-				selectedThemeId = tid && themes.some((t) => t.id === tid) ? tid : themes[0]?.id ?? null;
+				selectedThemeId = tid && themes.some((t) => t.id === tid) ? tid : (themes[0]?.id ?? null);
 				return;
 			}
 
 			const savedThemeId = localStorage.getItem('selectedTheme');
-			if (savedThemeId && themes.some(t => t.id === savedThemeId)) {
+			if (savedThemeId && themes.some((t) => t.id === savedThemeId)) {
 				selectedThemeId = savedThemeId;
 			} else {
 				selectedThemeId = themes[0]?.id ?? null;
@@ -83,46 +83,46 @@
 			loading = false;
 		}
 	}
-	
+
 	async function selectTheme(themeId: string) {
 		if (get(themeEnforcement).enforced) return;
 		if (applying) return;
-		
+
 		try {
 			applying = true;
 			selectedThemeId = themeId;
-			
-			const theme = themes.find(t => t.id === themeId);
+
+			const theme = themes.find((t) => t.id === themeId);
 			if (!theme) {
 				throw new Error('Theme not found');
 			}
-			
+
 			// Save to localStorage
 			localStorage.setItem('selectedTheme', themeId);
-			
+
 			siteTheme.set(theme as any);
-			
+
 			applying = false;
 		} catch (error) {
 			console.error('Error selecting theme:', error);
 			applying = false;
 		}
 	}
-	
+
 	function getBackgroundUrl(theme: Theme): string {
 		if (!theme.backgroundImage) return '';
-		
+
 		if (theme.backgroundImageExternal) {
 			return theme.backgroundImage;
 		}
-		
+
 		return theme.backgroundImage;
 	}
-	
+
 	function handleBackdropClick() {
 		isOpen = false;
 	}
-	
+
 	function handleWindowClick(e: MouseEvent) {
 		e.stopPropagation();
 	}
@@ -130,7 +130,7 @@
 
 {#if isOpen}
 	<!-- Backdrop -->
-	<div 
+	<div
 		class="window-backdrop"
 		onclick={handleBackdropClick}
 		onkeydown={(e) => e.key === 'Escape' && handleBackdropClick()}
@@ -139,7 +139,7 @@
 		aria-label="Close theme switcher"
 	>
 		<!-- Window -->
-		<div 
+		<div
 			class="theme-window"
 			onclick={handleWindowClick}
 			onkeydown={(e) => e.stopPropagation()}
@@ -154,15 +154,11 @@
 					<Palette size={14} class="title-icon" />
 					<span id="theme-window-title" class="title-text">Theme Selector</span>
 				</div>
-				<button 
-					class="close-button"
-					onclick={() => isOpen = false}
-					aria-label="Close window"
-				>
+				<button class="close-button" onclick={() => (isOpen = false)} aria-label="Close window">
 					<X size={14} />
 				</button>
 			</div>
-			
+
 			<!-- Window Content -->
 			<div class="window-content">
 				{#if loading}
@@ -177,7 +173,9 @@
 				{:else if $themeEnforcement.enforced}
 					<div class="empty-state enforcement-msg">
 						<p><strong>Theme locked</strong></p>
-						<p>The administrator has set one theme for everyone. Your choice can’t be changed here.</p>
+						<p>
+							The administrator has set one theme for everyone. Your choice can’t be changed here.
+						</p>
 					</div>
 				{:else}
 					<div class="themes-grid">
@@ -190,7 +188,7 @@
 								disabled={applying || $themeEnforcement.enforced}
 							>
 								<!-- Theme Preview -->
-								<div 
+								<div
 									class="theme-preview"
 									style="
 										background: {theme.surfaceColor};
@@ -198,7 +196,7 @@
 									"
 								>
 									{#if theme.backgroundImage}
-										<div 
+										<div
 											class="preview-bg"
 											style="background-image: url('{getBackgroundUrl(theme)}');"
 										></div>
@@ -210,7 +208,7 @@
 										<div class="color-swatch" style="background: {theme.accentColor};"></div>
 									</div>
 								</div>
-								
+
 								<!-- Theme Info -->
 								<div class="theme-info">
 									<div class="theme-name-row">
@@ -228,7 +226,7 @@
 					</div>
 				{/if}
 			</div>
-			
+
 			<!-- Window Footer -->
 			<div class="window-footer">
 				<div class="footer-text">
@@ -258,7 +256,7 @@
 		box-sizing: border-box;
 		animation: fadeIn 0.2s ease-out;
 	}
-	
+
 	@keyframes fadeIn {
 		from {
 			opacity: 0;
@@ -267,11 +265,11 @@
 			opacity: 1;
 		}
 	}
-	
+
 	.theme-window {
 		background: var(--theme-surface, #1a1a1a);
 		border: 2px solid var(--theme-border, #ffffff);
-		box-shadow: 
+		box-shadow:
 			0 0 0 1px rgba(0, 0, 0, 0.1),
 			0 8px 32px rgba(0, 0, 0, 0.6),
 			0 0 40px var(--theme-accent, #90ee90);
@@ -285,7 +283,7 @@
 		animation: windowSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
 	}
-	
+
 	@keyframes windowSlideIn {
 		from {
 			transform: scale(0.9) translateY(-20px);
@@ -296,7 +294,7 @@
 			opacity: 1;
 		}
 	}
-	
+
 	/* Title Bar */
 	.window-titlebar {
 		background: var(--theme-accent, #90ee90);
@@ -307,11 +305,11 @@
 		justify-content: space-between;
 		border-bottom: 2px solid var(--theme-border, #ffffff);
 		user-select: none;
-		text-shadow: 
+		text-shadow:
 			0 0 10px var(--theme-accent, #90ee90),
 			0 0 20px var(--theme-accent, #90ee90);
 	}
-	
+
 	.titlebar-left {
 		display: flex;
 		align-items: center;
@@ -319,11 +317,11 @@
 		min-width: 0;
 		flex: 1;
 	}
-	
+
 	.titlebar-left :global(svg) {
 		flex-shrink: 0;
 	}
-	
+
 	.title-text {
 		font-size: 14px;
 		font-weight: bold;
@@ -334,7 +332,7 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
-	
+
 	.close-button {
 		background: transparent;
 		border: 2px solid currentColor;
@@ -347,13 +345,13 @@
 		transition: all 0.2s ease;
 		flex-shrink: 0;
 	}
-	
+
 	.close-button:hover {
 		background: var(--theme-background, #0a0a0a);
 		color: var(--theme-accent, #90ee90);
 		transform: scale(1.1);
 	}
-	
+
 	/* Window Content */
 	.window-content {
 		flex: 1;
@@ -365,7 +363,7 @@
 		background: var(--theme-background, #0a0a0a);
 		-webkit-overflow-scrolling: touch;
 	}
-	
+
 	.enforcement-msg strong {
 		color: var(--theme-text-primary, #ffffff);
 		display: block;
@@ -382,7 +380,7 @@
 		color: var(--theme-text-secondary, #a1a1aa);
 		text-align: center;
 	}
-	
+
 	.loading-spinner {
 		width: 40px;
 		height: 40px;
@@ -392,20 +390,20 @@
 		animation: spin 1s linear infinite;
 		margin-bottom: 16px;
 	}
-	
+
 	@keyframes spin {
 		to {
 			transform: rotate(360deg);
 		}
 	}
-	
+
 	/* Themes Grid */
 	.themes-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
 		gap: 16px;
 	}
-	
+
 	.theme-card {
 		background: var(--theme-surface, #1a1a1a);
 		border: 2px solid var(--theme-border, #ffffff);
@@ -417,22 +415,22 @@
 		position: relative;
 		overflow: hidden;
 	}
-	
+
 	.theme-card:hover {
 		transform: translateY(-4px);
-		box-shadow: 
+		box-shadow:
 			0 8px 16px rgba(0, 0, 0, 0.4),
 			0 0 20px var(--theme-accent, #90ee90);
 		border-color: var(--theme-accent, #90ee90);
 	}
-	
+
 	.theme-card.active {
 		border-color: var(--theme-accent, #90ee90);
-		box-shadow: 
+		box-shadow:
 			0 0 20px var(--theme-accent, #90ee90),
 			0 0 40px var(--theme-accent, #90ee90);
 	}
-	
+
 	.theme-card.active::before {
 		content: '';
 		position: absolute;
@@ -444,7 +442,7 @@
 		opacity: 0.1;
 		pointer-events: none;
 	}
-	
+
 	/* Theme Preview */
 	.theme-preview {
 		height: 100px;
@@ -452,7 +450,7 @@
 		border-bottom: 2px solid var(--theme-border, #ffffff);
 		overflow: hidden;
 	}
-	
+
 	.preview-bg {
 		position: absolute;
 		top: 0;
@@ -463,7 +461,7 @@
 		background-position: center;
 		opacity: 0.4;
 	}
-	
+
 	.preview-colors {
 		position: absolute;
 		bottom: 8px;
@@ -473,19 +471,19 @@
 		gap: 4px;
 		z-index: 1;
 	}
-	
+
 	.color-bar {
 		flex: 1;
 		height: 20px;
 		border: 1px solid rgba(0, 0, 0, 0.3);
 	}
-	
+
 	.color-swatch {
 		width: 20px;
 		height: 20px;
 		border: 1px solid rgba(0, 0, 0, 0.3);
 	}
-	
+
 	/* Theme Info */
 	.theme-info {
 		padding: 12px;
@@ -527,7 +525,7 @@
 		letter-spacing: 0.5px;
 		flex-shrink: 0;
 	}
-	
+
 	.active-badge {
 		background: var(--theme-accent, #90ee90);
 		color: var(--theme-background, #0a0a0a);
@@ -537,17 +535,16 @@
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
 		border: 1px solid var(--theme-border, #ffffff);
-		text-shadow: 
-			0 0 10px var(--theme-accent, #90ee90);
+		text-shadow: 0 0 10px var(--theme-accent, #90ee90);
 	}
-	
+
 	/* Window Footer */
 	.window-footer {
 		background: var(--theme-surface, #1a1a1a);
 		border-top: 2px solid var(--theme-border, #ffffff);
 		padding: 8px 12px;
 	}
-	
+
 	.footer-text {
 		font-size: 11px;
 		color: var(--theme-text-muted, #71717a);
@@ -559,7 +556,7 @@
 		hyphens: auto;
 		overflow-wrap: anywhere;
 	}
-	
+
 	/* Responsive */
 	@media (max-width: 768px) {
 		.theme-window {
@@ -567,16 +564,16 @@
 			max-width: min(600px, calc(100vw - 32px));
 			max-height: min(90vh, 90dvh);
 		}
-		
+
 		.themes-grid {
 			grid-template-columns: repeat(auto-fill, minmax(min(120px, 100%), 1fr));
 			gap: 12px;
 		}
-		
+
 		.theme-preview {
 			height: 80px;
 		}
-		
+
 		.window-content {
 			padding: 12px;
 		}

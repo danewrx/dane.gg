@@ -1,6 +1,6 @@
-import { 
-	Settings, 
-	Users, 
+import {
+	Settings,
+	Users,
 	FileText,
 	Sliders,
 	TrendingUp,

@@ -77,13 +77,7 @@
 	{#if label}
 		<label class="font-picker-label" for={id}>{label}</label>
 	{/if}
-	<select
-		{id}
-		class="font-picker-select"
-		{disabled}
-		value={value}
-		onchange={handleSelectChange}
-	>
+	<select {id} class="font-picker-select" {disabled} {value} onchange={handleSelectChange}>
 		{#if loading}
 			<option value="">Loading fonts…</option>
 		{/if}
@@ -106,19 +100,11 @@
 		{/if}
 	</select>
 	{#if allowUpload}
-		<button
-			type="button"
-			class="font-picker-manage"
-			disabled={disabled}
-			onclick={() => (manageOpen = true)}
-		>
+		<button type="button" class="font-picker-manage" {disabled} onclick={() => (manageOpen = true)}>
 			<Settings2 size={14} />
 			<span>Manage fonts</span>
 		</button>
-		<FontManageDialog
-			bind:open={manageOpen}
-			onFontsChange={loadFonts}
-		/>
+		<FontManageDialog bind:open={manageOpen} onFontsChange={loadFonts} />
 	{/if}
 </div>
 
@@ -180,7 +166,9 @@
 		border: 1px solid var(--border-color, #3a3a3a);
 		border-radius: 6px;
 		cursor: pointer;
-		transition: color 0.2s, border-color 0.2s;
+		transition:
+			color 0.2s,
+			border-color 0.2s;
 	}
 
 	.font-picker-manage:hover:not(:disabled) {
@@ -197,6 +185,8 @@
 		animation: spin 1s linear infinite;
 	}
 	@keyframes spin {
-		to { transform: rotate(360deg); }
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>

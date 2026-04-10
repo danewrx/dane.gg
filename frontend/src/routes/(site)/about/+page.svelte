@@ -40,15 +40,15 @@
 	let biographyContent = $state('');
 	let isLoadingBiography = $state(true);
 
-	onMount(async () => {
+	onMount(() => {
 		updateCertsPerPage();
-		
+
 		if (typeof window !== 'undefined') {
 			window.addEventListener('resize', updateCertsPerPage);
 		}
-		
-		await Promise.all([loadSkills(), loadCertifications(), loadBiography()]);
-		
+
+		void Promise.all([loadSkills(), loadCertifications(), loadBiography()]);
+
 		return () => {
 			if (typeof window !== 'undefined') {
 				window.removeEventListener('resize', updateCertsPerPage);
@@ -61,7 +61,7 @@
 		if (emblaApi) {
 			emblaApi.on('select', onSelect);
 			onSelect(); // Initial state
-			
+
 			return () => {
 				if (emblaApi) {
 					emblaApi.off('select', onSelect);
@@ -102,7 +102,7 @@
 		try {
 			isLoadingBiography = true;
 			const response = await fetch('/api/config/about_biography');
-			
+
 			if (response.ok) {
 				const result = await response.json();
 				if (result.data?.value) {
@@ -140,7 +140,7 @@
 
 	// Update certsPerPage based on screen size
 	let certsPerPage = $state(2);
-	
+
 	function updateCertsPerPage() {
 		if (typeof window !== 'undefined') {
 			certsPerPage = window.innerWidth <= 768 ? 1 : 2;
@@ -148,13 +148,15 @@
 	}
 
 	// Embla options - loop requires enough slides to work properly
-	let options = $derived({
+	let options = $derived.by(() => ({
 		loop: certifications.length > certsPerPage,
 		slidesToScroll: 1,
-		align: 'start',
+		align: 'start' as const,
 		dragFree: false,
-		containScroll: certifications.length > certsPerPage ? false : 'trimSnaps'
-	});
+		containScroll: (certifications.length > certsPerPage ? false : 'trimSnaps') as
+			| false
+			| 'trimSnaps'
+	}));
 
 	function onInit(event: CustomEvent) {
 		emblaApi = event.detail;
@@ -193,7 +195,10 @@
 
 <svelte:head>
 	<title>About - dane.gg</title>
-	<meta name="description" content="Learn more about Dane, a software engineer & designer from Manchester, UK." />
+	<meta
+		name="description"
+		content="Learn more about Dane, a software engineer & designer from Manchester, UK."
+	/>
 </svelte:head>
 
 <TypingHeader text="About" />
@@ -230,8 +235,8 @@
 								<div class="skill-item">
 									<span class="skill-name">{skill.name}</span>
 									<div class="skill-bar">
-										<div 
-											class="skill-fill" 
+										<div
+											class="skill-fill"
 											style="width: {skill.level}%; background: {category.color || '#6366f1'}"
 										></div>
 									</div>
@@ -249,37 +254,32 @@
 	<!-- Certifications Section -->
 	<section class="certifications-section">
 		<h2 class="section-title">Certifications</h2>
-		<p class="section-subtitle">Here are some of the active certifications which I hold across various different technologies:</p>
-		
+		<p class="section-subtitle">
+			Here are some of the active certifications which I hold across various different technologies:
+		</p>
+
 		{#if isLoadingCerts}
 			<div class="certifications-loading">
 				<p>Loading certifications...</p>
 			</div>
 		{:else if certifications.length > 0}
 			<div class="certifications-carousel">
-				<button 
-					class="carousel-nav prev" 
-					onclick={scrollPrev}
-					disabled={!canScrollPrev}
-				>
+				<button class="carousel-nav prev" onclick={scrollPrev} disabled={!canScrollPrev}>
 					<ChevronLeft size={24} />
 				</button>
-				
-				<div 
-					class="embla" 
-					use:emblaCarouselSvelte={{ options }}
-					onemblaInit={onInit}
-				>
+
+				<div class="embla" use:emblaCarouselSvelte={{ options, plugins: [] }} onemblaInit={onInit}>
 					<div class="embla__container">
 						{#each certifications as cert}
 							<div class="embla__slide">
 								<div class="certification-card">
 									{#if cert.imageUrl}
 										<div class="cert-badge">
-											<img 
-												src={getImageUrl(cert.imageUrl, cert.isExternal)} 
-												alt={cert.title} 
-												onerror={(e) => (e.currentTarget as HTMLImageElement).style.display = 'none'} 
+											<img
+												src={getImageUrl(cert.imageUrl, cert.isExternal)}
+												alt={cert.title}
+												onerror={(e) =>
+													((e.currentTarget as HTMLImageElement).style.display = 'none')}
 											/>
 										</div>
 									{/if}
@@ -305,12 +305,8 @@
 						{/each}
 					</div>
 				</div>
-				
-				<button 
-					class="carousel-nav next" 
-					onclick={scrollNext}
-					disabled={!canScrollNext}
-				>
+
+				<button class="carousel-nav next" onclick={scrollNext} disabled={!canScrollNext}>
 					<ChevronRight size={24} />
 				</button>
 			</div>

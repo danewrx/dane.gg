@@ -245,7 +245,11 @@ export async function createProjectCategory(name: string): Promise<ProjectCatego
 /**
  * Update a project category
  */
-export async function updateProjectCategory(id: string, name: string, displayOrder?: number): Promise<ProjectCategory> {
+export async function updateProjectCategory(
+	id: string,
+	name: string,
+	displayOrder?: number
+): Promise<ProjectCategory> {
 	try {
 		const response = await fetch(`${API_BASE}/admin/categories/${id}`, {
 			method: 'PUT',
@@ -292,7 +296,9 @@ export async function deleteProjectCategory(id: string): Promise<void> {
 /**
  * Update project display order
  */
-export async function updateProjectOrder(projectOrders: { id: string; displayOrder: number }[]): Promise<void> {
+export async function updateProjectOrder(
+	projectOrders: { id: string; displayOrder: number }[]
+): Promise<void> {
 	try {
 		const response = await fetch(`${API_BASE}/admin/order`, {
 			method: 'PUT',
@@ -316,7 +322,9 @@ export async function updateProjectOrder(projectOrders: { id: string; displayOrd
 /**
  * Update category display order
  */
-export async function updateCategoryOrder(categoryOrders: { id: string; displayOrder: number }[]): Promise<void> {
+export async function updateCategoryOrder(
+	categoryOrders: { id: string; displayOrder: number }[]
+): Promise<void> {
 	try {
 		const response = await fetch(`${API_BASE}/admin/categories/order`, {
 			method: 'PUT',
@@ -361,7 +369,11 @@ export async function getAllProjectTags(): Promise<ProjectTag[]> {
 /**
  * Create a new project tag
  */
-export async function createProjectTag(title: string, color: string, categoryId: string | null = null): Promise<ProjectTag> {
+export async function createProjectTag(
+	title: string,
+	color: string,
+	categoryId: string | null = null
+): Promise<ProjectTag> {
 	try {
 		const response = await fetch(`${API_BASE}/admin/tags`, {
 			method: 'POST',
@@ -388,7 +400,12 @@ export async function createProjectTag(title: string, color: string, categoryId:
 /**
  * Update a project tag
  */
-export async function updateProjectTag(id: string, title: string, color: string, categoryId: string | null = null): Promise<ProjectTag> {
+export async function updateProjectTag(
+	id: string,
+	title: string,
+	color: string,
+	categoryId: string | null = null
+): Promise<ProjectTag> {
 	try {
 		const response = await fetch(`${API_BASE}/admin/tags/${id}`, {
 			method: 'PUT',
@@ -452,4 +469,3 @@ export async function deleteProjectTag(id: string): Promise<void> {
 		throw error;
 	}
 }
-

@@ -8,7 +8,7 @@
 
 	// Filter navigation items based on user admin status
 	const allNavItems = $derived(
-		adminNavigation.filter(item => {
+		adminNavigation.filter((item) => {
 			if (item.id === 'users') {
 				return $user?.isAdmin ?? false;
 			}
@@ -16,12 +16,8 @@
 		})
 	);
 
-	const navItems = $derived(
-		allNavItems.filter(item => item.id !== 'settings')
-	);
-	const settingsItem = $derived(
-		allNavItems.find(item => item.id === 'settings')
-	);
+	const navItems = $derived(allNavItems.filter((item) => item.id !== 'settings'));
+	const settingsItem = $derived(allNavItems.find((item) => item.id === 'settings'));
 
 	// Check if a nav item is active
 	function isActive(path: string): boolean {
@@ -89,7 +85,10 @@
 		color: #ffffff;
 		overflow-y: auto;
 		z-index: 999;
-		transition: width 0.3s ease, background-color 0.2s ease, border-color 0.2s ease;
+		transition:
+			width 0.3s ease,
+			background-color 0.2s ease,
+			border-color 0.2s ease;
 		flex-shrink: 0;
 		display: flex;
 		flex-direction: column;
@@ -150,7 +149,9 @@
 		color: #ffffff;
 		text-align: left;
 		cursor: pointer;
-		transition: background-color 0.2s ease, color 0.2s ease;
+		transition:
+			background-color 0.2s ease,
+			color 0.2s ease;
 		font-size: 14px;
 		font-weight: 400;
 		white-space: nowrap;

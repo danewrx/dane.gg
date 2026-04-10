@@ -6,7 +6,8 @@ import * as schema from './schema';
 // Load environment variables from root .env file
 config({ path: '../../.env' });
 
-const connectionString = process.env.DATABASE_URL || 'postgresql://dane_gg:daneGGPassword!@localhost:5432/dane.gg';
+const connectionString =
+	process.env.DATABASE_URL || 'postgresql://dane_gg:daneGGPassword!@localhost:5432/dane.gg';
 
 // Create the connection
 const client = postgres(connectionString);

@@ -5,16 +5,18 @@ type BlogTag = typeof blogTags.$inferSelect;
 type Post = typeof posts.$inferSelect;
 
 export async function seedBlogPostsAndTagLinks(
-  blogTagSeeds: BlogTag[]
+	blogTagSeeds: BlogTag[]
 ): Promise<{ posts: Post[]; postTagLinkCount: number }> {
-  const blogTagId = (name: string) => blogTagSeeds.find((t) => t.name === name)?.id;
+	const blogTagId = (name: string) => blogTagSeeds.find((t) => t.name === name)?.id;
 
-  console.log('📰 Seeding blog posts...');
-  const postSeeds = await db.insert(posts).values([
-    {
-      title: 'Getting Started with SvelteKit',
-      slug: 'getting-started-with-sveltekit',
-      content: `# Getting Started with SvelteKit
+	console.log('📰 Seeding blog posts...');
+	const postSeeds = await db
+		.insert(posts)
+		.values([
+			{
+				title: 'Getting Started with SvelteKit',
+				slug: 'getting-started-with-sveltekit',
+				content: `# Getting Started with SvelteKit
 
 SvelteKit is the official Svelte framework for building web applications. It provides a powerful set of features for creating modern, performant web apps.
 
@@ -51,14 +53,14 @@ src/
 \`\`\`
 
 This is just the beginning of your SvelteKit journey. The framework offers much more to explore!`,
-      thumbnail: '/images/sveltekit-tutorial.jpg',
-      published: true,
-      publishedAt: new Date('2024-01-15T10:00:00Z')
-    },
-    {
-      title: 'Building RESTful APIs with Node.js and Express',
-      slug: 'building-restful-apis-nodejs-express',
-      content: `# Building RESTful APIs with Node.js and Express
+				thumbnail: '/images/sveltekit-tutorial.jpg',
+				published: true,
+				publishedAt: new Date('2024-01-15T10:00:00Z')
+			},
+			{
+				title: 'Building RESTful APIs with Node.js and Express',
+				slug: 'building-restful-apis-nodejs-express',
+				content: `# Building RESTful APIs with Node.js and Express
 
 Creating robust RESTful APIs is a fundamental skill for modern web developers. In this guide, we'll explore how to build APIs using Node.js and Express.
 
@@ -110,14 +112,14 @@ app.listen(PORT, () => {
 5. **Add logging and monitoring**
 
 Building APIs is an art that requires practice and attention to detail.`,
-      thumbnail: '/images/nodejs-api-tutorial.jpg',
-      published: true,
-      publishedAt: new Date('2024-01-10T14:30:00Z')
-    },
-    {
-      title: 'Database Design Patterns for Web Applications',
-      slug: 'database-design-patterns-web-applications',
-      content: `# Database Design Patterns for Web Applications
+				thumbnail: '/images/nodejs-api-tutorial.jpg',
+				published: true,
+				publishedAt: new Date('2024-01-10T14:30:00Z')
+			},
+			{
+				title: 'Database Design Patterns for Web Applications',
+				slug: 'database-design-patterns-web-applications',
+				content: `# Database Design Patterns for Web Applications
 
 Good database design is crucial for building scalable and maintainable web applications. Let's explore some essential patterns and best practices.
 
@@ -177,14 +179,14 @@ CREATE TABLE post_tags (
 - **Composite Indexes**: For multi-column queries
 
 Remember: Good database design is the foundation of a successful application!`,
-      thumbnail: '/images/database-design.jpg',
-      published: true,
-      publishedAt: new Date('2024-01-05T09:15:00Z')
-    },
-    {
-      title: 'Draft: Advanced TypeScript Techniques',
-      slug: 'advanced-typescript-techniques',
-      content: `# Advanced TypeScript Techniques
+				thumbnail: '/images/database-design.jpg',
+				published: true,
+				publishedAt: new Date('2024-01-05T09:15:00Z')
+			},
+			{
+				title: 'Draft: Advanced TypeScript Techniques',
+				slug: 'advanced-typescript-techniques',
+				content: `# Advanced TypeScript Techniques
 
 This is a draft post about advanced TypeScript techniques. It will be published soon!
 
@@ -197,27 +199,28 @@ This is a draft post about advanced TypeScript techniques. It will be published 
 - Utility types
 
 Stay tuned for the full article!`,
-      thumbnail: '/images/typescript-advanced.jpg',
-      published: false
-    }
-  ]).returning();
+				thumbnail: '/images/typescript-advanced.jpg',
+				published: false
+			}
+		])
+		.returning();
 
-  console.log('🔗 Linking posts with blog tags...');
-  const postTagLinks = [
-    { postId: postSeeds[0].id, tagId: blogTagId('Tutorial') },
-    { postId: postSeeds[0].id, tagId: blogTagId('Web Development') },
-    { postId: postSeeds[0].id, tagId: blogTagId('JavaScript') },
+	console.log('🔗 Linking posts with blog tags...');
+	const postTagLinks = [
+		{ postId: postSeeds[0].id, tagId: blogTagId('Tutorial') },
+		{ postId: postSeeds[0].id, tagId: blogTagId('Web Development') },
+		{ postId: postSeeds[0].id, tagId: blogTagId('JavaScript') },
 
-    { postId: postSeeds[1].id, tagId: blogTagId('Tutorial') },
-    { postId: postSeeds[1].id, tagId: blogTagId('Node.js') },
-    { postId: postSeeds[1].id, tagId: blogTagId('Programming') },
+		{ postId: postSeeds[1].id, tagId: blogTagId('Tutorial') },
+		{ postId: postSeeds[1].id, tagId: blogTagId('Node.js') },
+		{ postId: postSeeds[1].id, tagId: blogTagId('Programming') },
 
-    { postId: postSeeds[2].id, tagId: blogTagId('Database') },
-    { postId: postSeeds[2].id, tagId: blogTagId('Programming') },
-    { postId: postSeeds[2].id, tagId: blogTagId('Tips & Tricks') }
-  ].filter((link): link is { postId: string; tagId: string } => Boolean(link.tagId));
+		{ postId: postSeeds[2].id, tagId: blogTagId('Database') },
+		{ postId: postSeeds[2].id, tagId: blogTagId('Programming') },
+		{ postId: postSeeds[2].id, tagId: blogTagId('Tips & Tricks') }
+	].filter((link): link is { postId: string; tagId: string } => Boolean(link.tagId));
 
-  await db.insert(postTags).values(postTagLinks);
+	await db.insert(postTags).values(postTagLinks);
 
-  return { posts: postSeeds, postTagLinkCount: postTagLinks.length };
+	return { posts: postSeeds, postTagLinkCount: postTagLinks.length };
 }

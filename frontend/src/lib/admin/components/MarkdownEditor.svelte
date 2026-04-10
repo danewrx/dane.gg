@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { marked } from 'marked';
-	import { 
-		Bold, 
-		Italic, 
-		Strikethrough, 
+	import {
+		Bold,
+		Italic,
+		Strikethrough,
 		Underline,
-		Code, 
-		Link, 
-		Image, 
-		List, 
-		ListOrdered, 
-		Heading1, 
-		Heading2, 
+		Code,
+		Link,
+		Image,
+		List,
+		ListOrdered,
+		Heading1,
+		Heading2,
 		Heading3,
 		Quote,
 		Eye,
@@ -20,11 +20,20 @@
 	} from 'lucide-svelte';
 	import FileUpload, { type UploadedFile } from './ui/FileUpload.svelte';
 
-	type ToolType = 
-		| 'heading1' | 'heading2' | 'heading3'
-		| 'bold' | 'italic' | 'underline' | 'strikethrough' | 'code'
-		| 'link' | 'image'
-		| 'bulletList' | 'numberedList' | 'quote'
+	type ToolType =
+		| 'heading1'
+		| 'heading2'
+		| 'heading3'
+		| 'bold'
+		| 'italic'
+		| 'underline'
+		| 'strikethrough'
+		| 'code'
+		| 'link'
+		| 'image'
+		| 'bulletList'
+		| 'numberedList'
+		| 'quote'
 		| 'preview';
 
 	interface Props {
@@ -38,14 +47,22 @@
 
 	// Default tools
 	const DEFAULT_TOOLS: ToolType[] = [
-		'heading1', 'heading2', 'heading3',
-		'bold', 'italic', 'strikethrough', 'code',
-		'link', 'image',
-		'bulletList', 'numberedList', 'quote',
+		'heading1',
+		'heading2',
+		'heading3',
+		'bold',
+		'italic',
+		'strikethrough',
+		'code',
+		'link',
+		'image',
+		'bulletList',
+		'numberedList',
+		'quote',
 		'preview'
 	];
 
-	let { 
+	let {
 		value = $bindable(''),
 		onchange,
 		placeholder = 'Write your markdown here...',
@@ -56,13 +73,13 @@
 
 	// Check if tools are enabled
 	const hasTool = (tool: ToolType) => enabledTools.includes(tool);
-	const hasAnyTool = (tools: ToolType[]) => tools.some(tool => enabledTools.includes(tool));
+	const hasAnyTool = (tools: ToolType[]) => tools.some((tool) => enabledTools.includes(tool));
 
 	let showPreview = $state(false);
 	let showImageUploadModal = $state(false);
 	let imageAltText = $state('');
 	let imageInsertPosition = $state<{ start: number; end: number } | null>(null);
-	
+
 	$effect(() => {
 		if (!hasTool('preview')) {
 			showPreview = false;
@@ -75,16 +92,16 @@
 		if (!/<[a-z][\s\S]*>/i.test(html)) {
 			return html;
 		}
-		
+
 		let markdown = html;
-		
+
 		markdown = markdown.replace(/<strong>(.+?)<\/strong>/gi, '**$1**');
 		markdown = markdown.replace(/<b>(.+?)<\/b>/gi, '**$1**');
 		markdown = markdown.replace(/<em>(.+?)<\/em>/gi, '*$1*');
 		markdown = markdown.replace(/<i>(.+?)<\/i>/gi, '*$1*');
 		markdown = markdown.replace(/<s>(.+?)<\/s>/gi, '~~$1~~');
 		markdown = markdown.replace(/<strike>(.+?)<\/strike>/gi, '~~$1~~');
-		
+
 		return markdown;
 	}
 
@@ -129,8 +146,8 @@
 		numberedList: false,
 		quote: false
 	});
-	
-	const getEditorValue = () => outputFormat === 'html' ? internalMarkdown : value;
+
+	const getEditorValue = () => (outputFormat === 'html' ? internalMarkdown : value);
 
 	// Configure marked to not render images
 	const markedRenderer = new marked.Renderer();
@@ -162,17 +179,17 @@
 			if (/<[a-z][\s\S]*>/i.test(markdown)) {
 				return markdown;
 			}
-			
+
 			let html = markdown;
-			
+
 			html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 			html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
-			
+
 			html = html.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, '<em>$1</em>');
 			html = html.replace(/(?<!_)_([^_]+?)_(?!_)/g, '<em>$1</em>');
-			
+
 			html = html.replace(/~~(.+?)~~/g, '<s>$1</s>');
-			
+
 			return html;
 		} catch (error) {
 			console.error('Error converting to HTML:', error);
@@ -209,50 +226,63 @@
 		const start = textarea.selectionStart;
 		const end = textarea.selectionEnd;
 		const hasSelection = start !== end;
-		
+
 		const editorValue = getEditorValue();
-		
+
 		if (hasSelection) {
 			const selectedText = editorValue.substring(start, end);
-			
+
 			const lineStart = editorValue.lastIndexOf('\n', start - 1) + 1;
 			const lineEnd = editorValue.indexOf('\n', start);
-			const fullLine = editorValue.substring(lineStart, lineEnd === -1 ? editorValue.length : lineEnd);
-			
-			const hasBoldItalic = selectedText.startsWith('***') && selectedText.endsWith('***') && selectedText.length > 6;
-			
+			const fullLine = editorValue.substring(
+				lineStart,
+				lineEnd === -1 ? editorValue.length : lineEnd
+			);
+
+			const hasBoldItalic =
+				selectedText.startsWith('***') && selectedText.endsWith('***') && selectedText.length > 6;
+
 			if (hasBoldItalic) {
 				activeFormats.bold = true;
 				activeFormats.italic = true;
 			} else {
-				const hasBold = (selectedText.startsWith('**') && selectedText.endsWith('**') && selectedText.length > 4) ||
-				                (selectedText.startsWith('__') && selectedText.endsWith('__') && selectedText.length > 4);
+				const hasBold =
+					(selectedText.startsWith('**') &&
+						selectedText.endsWith('**') &&
+						selectedText.length > 4) ||
+					(selectedText.startsWith('__') && selectedText.endsWith('__') && selectedText.length > 4);
 				activeFormats.bold = hasBold;
-				
 
-				const hasItalic = (selectedText.startsWith('*') && selectedText.endsWith('*') && 
-				                   !selectedText.startsWith('**') && selectedText.length > 2) ||
-				                  (selectedText.startsWith('_') && selectedText.endsWith('_') && 
-				                   !selectedText.startsWith('__') && selectedText.length > 2);
+				const hasItalic =
+					(selectedText.startsWith('*') &&
+						selectedText.endsWith('*') &&
+						!selectedText.startsWith('**') &&
+						selectedText.length > 2) ||
+					(selectedText.startsWith('_') &&
+						selectedText.endsWith('_') &&
+						!selectedText.startsWith('__') &&
+						selectedText.length > 2);
 				activeFormats.italic = hasItalic;
 			}
-			
-			const hasStrikethrough = selectedText.startsWith('~~') && selectedText.endsWith('~~') && selectedText.length > 4;
+
+			const hasStrikethrough =
+				selectedText.startsWith('~~') && selectedText.endsWith('~~') && selectedText.length > 4;
 			activeFormats.strikethrough = hasStrikethrough;
-			
-			const hasUnderline = selectedText.startsWith('<u>') && selectedText.endsWith('</u>') && selectedText.length > 7;
+
+			const hasUnderline =
+				selectedText.startsWith('<u>') && selectedText.endsWith('</u>') && selectedText.length > 7;
 			activeFormats.underline = hasUnderline;
-			
-			const hasCode = selectedText.startsWith('`') && selectedText.endsWith('`') && selectedText.length > 2;
+
+			const hasCode =
+				selectedText.startsWith('`') && selectedText.endsWith('`') && selectedText.length > 2;
 			activeFormats.code = hasCode;
-			
 
 			const lineTextStart = start - lineStart;
 			const lineTextEnd = end - lineStart;
-			
+
 			// Check if selection includes the beginning of the line
 			const includesLineStart = lineTextStart === 0;
-			
+
 			if (includesLineStart) {
 				activeFormats.h1 = selectedText.startsWith('# ');
 				activeFormats.h2 = selectedText.startsWith('## ');
@@ -282,7 +312,6 @@
 		}
 	}
 
-
 	function handleKeyDown(e: KeyboardEvent) {
 		if (e.key === 'Enter') {
 			const target = e.target as HTMLTextAreaElement;
@@ -290,57 +319,63 @@
 			const editorValue = getEditorValue();
 			const textBeforeCursor = editorValue.substring(0, cursorPos);
 			const textAfterCursor = editorValue.substring(cursorPos);
-			
+
 			const lines = textBeforeCursor.split('\n');
 			const currentLine = lines[lines.length - 1];
-			
+
 			const bulletMatch = currentLine.match(/^(\s*)([-*])\s+(.*)$/);
 			if (bulletMatch) {
 				const [, indent, bullet, content] = bulletMatch;
-				
+
 				if (!content.trim()) {
 					e.preventDefault();
-					const newTextBefore = textBeforeCursor.substring(0, textBeforeCursor.lastIndexOf('\n') + 1);
+					const newTextBefore = textBeforeCursor.substring(
+						0,
+						textBeforeCursor.lastIndexOf('\n') + 1
+					);
 					handleValueChange(newTextBefore + textAfterCursor);
-					
+
 					setTimeout(() => {
 						target.setSelectionRange(newTextBefore.length, newTextBefore.length);
 					}, 0);
 					return;
 				}
-				
+
 				e.preventDefault();
 				const newLine = `\n${indent}${bullet} `;
 				handleValueChange(textBeforeCursor + newLine + textAfterCursor);
-				
+
 				setTimeout(() => {
 					const newPos = cursorPos + newLine.length;
 					target.setSelectionRange(newPos, newPos);
 				}, 0);
 				return;
 			}
-			
+
 			// Check for numbered list
 			const numberedMatch = currentLine.match(/^(\s*)(\d+)\.\s+(.*)$/);
 			if (numberedMatch) {
 				const [, indent, number, content] = numberedMatch;
-				
+
 				if (!content.trim()) {
 					e.preventDefault();
-					const newTextBefore = textBeforeCursor.substring(0, textBeforeCursor.lastIndexOf('\n') + 1);
+					const newTextBefore = textBeforeCursor.substring(
+						0,
+						textBeforeCursor.lastIndexOf('\n') + 1
+					);
 					handleValueChange(newTextBefore + textAfterCursor);
-					
+
 					setTimeout(() => {
 						target.setSelectionRange(newTextBefore.length, newTextBefore.length);
 					}, 0);
 					return;
 				}
-				
+
 				e.preventDefault();
 				const nextNumber = parseInt(number) + 1;
 				const newLine = `\n${indent}${nextNumber}. `;
 				handleValueChange(textBeforeCursor + newLine + textAfterCursor);
-				
+
 				setTimeout(() => {
 					const newPos = cursorPos + newLine.length;
 					target.setSelectionRange(newPos, newPos);
@@ -365,13 +400,14 @@
 	function insertText(before: string, after: string = '') {
 		const { start, end, text } = getSelection();
 		const editorValue = getEditorValue();
-		
+
 		if (text.startsWith('***') && text.endsWith('***') && text.length > 6) {
 			if (before === '**') {
 				const content = text.substring(3, text.length - 3);
-				const newValue = editorValue.substring(0, start) + '*' + content + '*' + editorValue.substring(end);
+				const newValue =
+					editorValue.substring(0, start) + '*' + content + '*' + editorValue.substring(end);
 				handleValueChange(newValue);
-				
+
 				setTimeout(() => {
 					textarea.focus();
 					const newStart = start;
@@ -382,9 +418,10 @@
 				return;
 			} else if (before === '*') {
 				const content = text.substring(3, text.length - 3);
-				const newValue = editorValue.substring(0, start) + '**' + content + '**' + editorValue.substring(end);
+				const newValue =
+					editorValue.substring(0, start) + '**' + content + '**' + editorValue.substring(end);
 				handleValueChange(newValue);
-				
+
 				setTimeout(() => {
 					textarea.focus();
 					const newStart = start;
@@ -395,15 +432,17 @@
 				return;
 			}
 		}
-		
-		if ((text.startsWith('**') && text.endsWith('**') && text.length > 4) ||
-		    (text.startsWith('__') && text.endsWith('__') && text.length > 4)) {
+
+		if (
+			(text.startsWith('**') && text.endsWith('**') && text.length > 4) ||
+			(text.startsWith('__') && text.endsWith('__') && text.length > 4)
+		) {
 			if (before === '**') {
 				const markerLength = text.startsWith('**') ? 2 : 2;
 				const content = text.substring(markerLength, text.length - markerLength);
 				const newValue = editorValue.substring(0, start) + content + editorValue.substring(end);
 				handleValueChange(newValue);
-				
+
 				setTimeout(() => {
 					textarea.focus();
 					const newStart = start;
@@ -414,9 +453,10 @@
 				return;
 			} else if (before === '*') {
 				const content = text.substring(2, text.length - 2);
-				const newValue = editorValue.substring(0, start) + '***' + content + '***' + editorValue.substring(end);
+				const newValue =
+					editorValue.substring(0, start) + '***' + content + '***' + editorValue.substring(end);
 				handleValueChange(newValue);
-				
+
 				setTimeout(() => {
 					textarea.focus();
 					const newStart = start;
@@ -427,15 +467,17 @@
 				return;
 			}
 		}
-		
+
 		// Check for italic
-		if ((text.startsWith('*') && text.endsWith('*') && !text.startsWith('**') && text.length > 2) ||
-		    (text.startsWith('_') && text.endsWith('_') && !text.startsWith('__') && text.length > 2)) {
+		if (
+			(text.startsWith('*') && text.endsWith('*') && !text.startsWith('**') && text.length > 2) ||
+			(text.startsWith('_') && text.endsWith('_') && !text.startsWith('__') && text.length > 2)
+		) {
 			if (before === '*') {
 				const content = text.substring(1, text.length - 1);
 				const newValue = editorValue.substring(0, start) + content + editorValue.substring(end);
 				handleValueChange(newValue);
-				
+
 				setTimeout(() => {
 					textarea.focus();
 					const newStart = start;
@@ -446,9 +488,10 @@
 				return;
 			} else if (before === '**') {
 				const content = text.substring(1, text.length - 1);
-				const newValue = editorValue.substring(0, start) + '***' + content + '***' + editorValue.substring(end);
+				const newValue =
+					editorValue.substring(0, start) + '***' + content + '***' + editorValue.substring(end);
 				handleValueChange(newValue);
-				
+
 				setTimeout(() => {
 					textarea.focus();
 					const newStart = start;
@@ -459,13 +502,13 @@
 				return;
 			}
 		}
-		
+
 		if (text.startsWith('~~') && text.endsWith('~~') && text.length > 4) {
 			if (before === '~~') {
 				const content = text.substring(2, text.length - 2);
 				const newValue = editorValue.substring(0, start) + content + editorValue.substring(end);
 				handleValueChange(newValue);
-				
+
 				setTimeout(() => {
 					textarea.focus();
 					const newStart = start;
@@ -476,13 +519,13 @@
 				return;
 			}
 		}
-		
+
 		if (text.startsWith('`') && text.endsWith('`') && text.length > 2) {
 			if (before === '`') {
 				const content = text.substring(1, text.length - 1);
 				const newValue = editorValue.substring(0, start) + content + editorValue.substring(end);
 				handleValueChange(newValue);
-				
+
 				setTimeout(() => {
 					textarea.focus();
 					const newStart = start;
@@ -493,12 +536,12 @@
 				return;
 			}
 		}
-		
+
 		const newText = before + text + after;
 		const currentValue = getEditorValue();
 		const newValue = currentValue.substring(0, start) + newText + currentValue.substring(end);
 		handleValueChange(newValue);
-		
+
 		setTimeout(() => {
 			textarea.focus();
 			const newStart = start;
@@ -511,14 +554,14 @@
 	function insertLine(prefix: string) {
 		const { start, end, text } = getSelection();
 		const editorValue = getEditorValue();
-		
+
 		const bulletRegex = /^(\s*)([-*])\s+/;
 		const numberedRegex = /^(\s*)\d+\.\s+/;
 		const quoteRegex = /^>\s+/;
-		
+
 		let hasPrefix = false;
 		let newText = '';
-		
+
 		if (prefix.includes('-') || prefix.includes('*')) {
 			hasPrefix = bulletRegex.test(text);
 			if (hasPrefix) {
@@ -535,11 +578,11 @@
 				newText = text.replace(quoteRegex, '');
 			}
 		}
-		
+
 		if (hasPrefix) {
 			const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
 			handleValueChange(newValue);
-			
+
 			setTimeout(() => {
 				textarea.focus();
 				const newStart = start;
@@ -551,7 +594,7 @@
 			newText = prefix + text;
 			const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
 			handleValueChange(newValue);
-			
+
 			setTimeout(() => {
 				textarea.focus();
 				const newStart = start;
@@ -566,15 +609,15 @@
 		const prefix = '#'.repeat(level) + ' ';
 		const { start, end, text } = getSelection();
 		const editorValue = getEditorValue();
-		
+
 		const headingRegex = /^(#{1,6})\s+/;
 		const match = text.match(headingRegex);
-		
+
 		if (match && match[1].length === level) {
 			const newText = text.replace(headingRegex, '');
 			const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
 			handleValueChange(newValue);
-			
+
 			setTimeout(() => {
 				textarea.focus();
 				const newStart = start;
@@ -587,7 +630,7 @@
 			const newText = prefix + content;
 			const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
 			handleValueChange(newValue);
-			
+
 			setTimeout(() => {
 				textarea.focus();
 				const newStart = start;
@@ -599,7 +642,7 @@
 			const newText = prefix + text;
 			const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
 			handleValueChange(newValue);
-			
+
 			setTimeout(() => {
 				textarea.focus();
 				const newStart = start;
@@ -617,7 +660,7 @@
 		const newText = `[${linkText}](url)`;
 		const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
 		handleValueChange(newValue);
-		
+
 		setTimeout(() => {
 			textarea.focus();
 			const urlStart = start + linkText.length + 3;
@@ -651,17 +694,17 @@
 		const { start, end } = imageInsertPosition;
 		const editorValue = getEditorValue();
 		const altText = imageAltText || uploadedFile.originalName || 'image';
-		
+
 		const imagePath = formatImagePath(uploadedFile.path, uploadedFile.isExternal || false);
-		
+
 		const newText = `![${altText}](${imagePath})`;
 		const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
 		handleValueChange(newValue);
-		
+
 		showImageUploadModal = false;
 		imageAltText = '';
 		imageInsertPosition = null;
-		
+
 		setTimeout(() => {
 			textarea.focus();
 			const newStart = start + newText.length;
@@ -679,12 +722,12 @@
 	function insertUnderline() {
 		const { start, end, text } = getSelection();
 		const editorValue = getEditorValue();
-		
+
 		if (text.startsWith('<u>') && text.endsWith('</u>')) {
 			const content = text.substring(3, text.length - 4);
 			const newValue = editorValue.substring(0, start) + content + editorValue.substring(end);
 			handleValueChange(newValue);
-			
+
 			setTimeout(() => {
 				textarea.focus();
 				const newStart = start;
@@ -696,7 +739,7 @@
 			const newText = `<u>${text}</u>`;
 			const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
 			handleValueChange(newValue);
-			
+
 			setTimeout(() => {
 				textarea.focus();
 				const newStart = start;
@@ -714,17 +757,35 @@
 		{#if hasAnyTool(['heading1', 'heading2', 'heading3'])}
 			<div class="toolbar-group">
 				{#if hasTool('heading1')}
-					<button type="button" onclick={() => insertHeading(1)} title="Heading 1" class="toolbar-btn" class:active={activeFormats.h1}>
+					<button
+						type="button"
+						onclick={() => insertHeading(1)}
+						title="Heading 1"
+						class="toolbar-btn"
+						class:active={activeFormats.h1}
+					>
 						<Heading1 size={18} />
 					</button>
 				{/if}
 				{#if hasTool('heading2')}
-					<button type="button" onclick={() => insertHeading(2)} title="Heading 2" class="toolbar-btn" class:active={activeFormats.h2}>
+					<button
+						type="button"
+						onclick={() => insertHeading(2)}
+						title="Heading 2"
+						class="toolbar-btn"
+						class:active={activeFormats.h2}
+					>
 						<Heading2 size={18} />
 					</button>
 				{/if}
 				{#if hasTool('heading3')}
-					<button type="button" onclick={() => insertHeading(3)} title="Heading 3" class="toolbar-btn" class:active={activeFormats.h3}>
+					<button
+						type="button"
+						onclick={() => insertHeading(3)}
+						title="Heading 3"
+						class="toolbar-btn"
+						class:active={activeFormats.h3}
+					>
 						<Heading3 size={18} />
 					</button>
 				{/if}
@@ -736,27 +797,57 @@
 		{#if hasAnyTool(['bold', 'italic', 'underline', 'strikethrough', 'code'])}
 			<div class="toolbar-group">
 				{#if hasTool('bold')}
-					<button type="button" onclick={() => insertText('**', '**')} title="Bold" class="toolbar-btn" class:active={activeFormats.bold}>
+					<button
+						type="button"
+						onclick={() => insertText('**', '**')}
+						title="Bold"
+						class="toolbar-btn"
+						class:active={activeFormats.bold}
+					>
 						<Bold size={18} />
 					</button>
 				{/if}
 				{#if hasTool('italic')}
-					<button type="button" onclick={() => insertText('*', '*')} title="Italic" class="toolbar-btn" class:active={activeFormats.italic}>
+					<button
+						type="button"
+						onclick={() => insertText('*', '*')}
+						title="Italic"
+						class="toolbar-btn"
+						class:active={activeFormats.italic}
+					>
 						<Italic size={18} />
 					</button>
 				{/if}
 				{#if hasTool('underline')}
-					<button type="button" onclick={insertUnderline} title="Underline" class="toolbar-btn" class:active={activeFormats.underline}>
+					<button
+						type="button"
+						onclick={insertUnderline}
+						title="Underline"
+						class="toolbar-btn"
+						class:active={activeFormats.underline}
+					>
 						<Underline size={18} />
 					</button>
 				{/if}
 				{#if hasTool('strikethrough')}
-					<button type="button" onclick={() => insertText('~~', '~~')} title="Strikethrough" class="toolbar-btn" class:active={activeFormats.strikethrough}>
+					<button
+						type="button"
+						onclick={() => insertText('~~', '~~')}
+						title="Strikethrough"
+						class="toolbar-btn"
+						class:active={activeFormats.strikethrough}
+					>
 						<Strikethrough size={18} />
 					</button>
 				{/if}
 				{#if hasTool('code') && outputFormat === 'markdown'}
-					<button type="button" onclick={() => insertText('`', '`')} title="Inline Code" class="toolbar-btn" class:active={activeFormats.code}>
+					<button
+						type="button"
+						onclick={() => insertText('`', '`')}
+						title="Inline Code"
+						class="toolbar-btn"
+						class:active={activeFormats.code}
+					>
 						<Code size={18} />
 					</button>
 				{/if}
@@ -785,17 +876,35 @@
 		{#if hasAnyTool(['bulletList', 'numberedList', 'quote'])}
 			<div class="toolbar-group">
 				{#if hasTool('bulletList')}
-					<button type="button" onclick={() => insertLine('- ')} title="Bullet List" class="toolbar-btn" class:active={activeFormats.bulletList}>
+					<button
+						type="button"
+						onclick={() => insertLine('- ')}
+						title="Bullet List"
+						class="toolbar-btn"
+						class:active={activeFormats.bulletList}
+					>
 						<List size={18} />
 					</button>
 				{/if}
 				{#if hasTool('numberedList')}
-					<button type="button" onclick={() => insertLine('1. ')} title="Numbered List" class="toolbar-btn" class:active={activeFormats.numberedList}>
+					<button
+						type="button"
+						onclick={() => insertLine('1. ')}
+						title="Numbered List"
+						class="toolbar-btn"
+						class:active={activeFormats.numberedList}
+					>
 						<ListOrdered size={18} />
 					</button>
 				{/if}
 				{#if hasTool('quote')}
-					<button type="button" onclick={() => insertLine('> ')} title="Quote" class="toolbar-btn" class:active={activeFormats.quote}>
+					<button
+						type="button"
+						onclick={() => insertLine('> ')}
+						title="Quote"
+						class="toolbar-btn"
+						class:active={activeFormats.quote}
+					>
 						<Quote size={18} />
 					</button>
 				{/if}
@@ -807,7 +916,12 @@
 		<div class="toolbar-spacer"></div>
 
 		{#if hasTool('preview')}
-			<button type="button" onclick={togglePreview} title={showPreview ? 'Hide Preview' : 'Show Preview'} class="toolbar-btn preview-toggle">
+			<button
+				type="button"
+				onclick={togglePreview}
+				title={showPreview ? 'Hide Preview' : 'Show Preview'}
+				class="toolbar-btn preview-toggle"
+			>
 				{#if showPreview}
 					<EyeOff size={18} />
 				{:else}
@@ -846,16 +960,16 @@
 
 <!-- Image Upload Modal -->
 {#if showImageUploadModal}
-	<div 
-		class="image-upload-modal-overlay" 
+	<div
+		class="image-upload-modal-overlay"
 		onclick={closeImageUploadModal}
 		onkeydown={(e) => e.key === 'Escape' && closeImageUploadModal()}
 		role="button"
 		tabindex="0"
 		aria-label="Close image upload modal"
 	>
-		<div 
-			class="image-upload-modal" 
+		<div
+			class="image-upload-modal"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 			role="dialog"
@@ -1280,4 +1394,3 @@
 		}
 	}
 </style>
-

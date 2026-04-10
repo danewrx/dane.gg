@@ -60,11 +60,11 @@
 		try {
 			loading = true;
 			error = '';
-			
+
 			const response = await fetch(`/api/stats/dashboard?timeRange=${selectedTimeRange}`, {
 				credentials: 'include'
 			});
-			
+
 			if (!response.ok) {
 				if (response.status === 401) {
 					// Don't redirect - server auth will handle it
@@ -73,12 +73,12 @@
 				}
 				throw new Error(`HTTP ${response.status}`);
 			}
-			
+
 			const data = await response.json();
 			console.log('API Response:', data);
-			
+
 			if (data.success) {
-                stats = {
+				stats = {
 					totalViews: data.data.overview.totalViews,
 					uniqueVisitors: data.data.overview.uniqueVisitors,
 					totalPagesIndexed: data.data.overview.totalPagesIndexed,
@@ -88,7 +88,7 @@
 				browsers = data.data.browsers || [];
 				operatingSystems = data.data.os || [];
 				trends = data.data.trends || [];
-			console.log('Stats page - Countries data:', countries);
+				console.log('Stats page - Countries data:', countries);
 			} else {
 				throw new Error(data.message || 'Failed to load stats');
 			}
@@ -119,8 +119,8 @@
 	<section class="header-section">
 		<div class="section-header">
 			<h1 class="page-title">Website Statistics</h1>
-			<select 
-				class="time-range-select" 
+			<select
+				class="time-range-select"
 				bind:value={selectedTimeRange}
 				onchange={handleTimeRangeChange}
 			>
@@ -162,23 +162,23 @@
 				<VisitorTrendsChart data={trends} title="Visitor Trends" />
 			</div>
 
-            <div class="dashboard-row">
-                <div class="panel-left">
-                    <div class="countries-wrapper">
-                        {#if countries.length > 0}
-                            <CountryPieChart data={countries} title="Visitor Countries" />
-                        {/if}
-                    </div>
-                </div>
-                <aside class="panel-right">
-                    <div class="browser-section">
-                        <BrowserList data={browsers} title="Top Browsers" />
-                    </div>
-                    <div class="os-section">
-                        <OperatingSystemList data={operatingSystems} title="Top Operating Systems" />
-                    </div>
-                </aside>
-            </div>
+			<div class="dashboard-row">
+				<div class="panel-left">
+					<div class="countries-wrapper">
+						{#if countries.length > 0}
+							<CountryPieChart data={countries} title="Visitor Countries" />
+						{/if}
+					</div>
+				</div>
+				<aside class="panel-right">
+					<div class="browser-section">
+						<BrowserList data={browsers} title="Top Browsers" />
+					</div>
+					<div class="os-section">
+						<OperatingSystemList data={operatingSystems} title="Top Operating Systems" />
+					</div>
+				</aside>
+			</div>
 		{/if}
 	</section>
 </div>
@@ -217,7 +217,9 @@
 		font-size: 14px;
 		cursor: pointer;
 		min-width: 150px;
-		transition: background 0.2s ease, border-color 0.2s ease;
+		transition:
+			background 0.2s ease,
+			border-color 0.2s ease;
 	}
 
 	.time-range-select:focus {
@@ -256,8 +258,12 @@
 	}
 
 	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
 
 	.loading-state p,
@@ -294,98 +300,98 @@
 		width: 100%;
 	}
 
-.dashboard-row {
-    margin-top: 32px;
-    display: flex;
-    gap: 20px;
-    width: 100%;
-    box-sizing: border-box;
-    align-items: stretch;
-}
+	.dashboard-row {
+		margin-top: 32px;
+		display: flex;
+		gap: 20px;
+		width: 100%;
+		box-sizing: border-box;
+		align-items: stretch;
+	}
 
-.panel-left { 
-    flex: 0 0 65%;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-}
+	.panel-left {
+		flex: 0 0 65%;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+	}
 
-.countries-wrapper {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-}
+	.countries-wrapper {
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+	}
 
-.panel-right { 
-    flex: 1;
-    min-width: 0;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
+	.panel-right {
+		flex: 1;
+		min-width: 0;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+	}
 
-.browser-section {
-    flex: 1 1 0;
-    min-height: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
+	.browser-section {
+		flex: 1 1 0;
+		min-height: 0;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+	}
 
-.os-section {
-    flex: 1 1 0;
-    min-height: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
+	.os-section {
+		flex: 1 1 0;
+		min-height: 0;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+	}
 
-@media (max-width: 1024px) {
-    .dashboard-row { 
-        flex-direction: column;
-        gap: 20px;
-    }
-    
-    .panel-left { 
-        flex: 1 1 auto;
-        width: 100%;
-    }
-    
-    .panel-right {
-        flex: 1 1 auto;
-        width: 100%;
-        overflow: visible;
-    }
-    
-    .countries-wrapper {
-        overflow: visible;
-        height: auto;
-    }
-    
-    .browser-section,
-    .os-section {
-        overflow: visible;
-        flex: 1 1 auto;
-        height: auto;
-    }
-}
+	@media (max-width: 1024px) {
+		.dashboard-row {
+			flex-direction: column;
+			gap: 20px;
+		}
 
-@media (max-width: 768px) {
-    .dashboard-row {
-        gap: 16px;
-    }
-}
+		.panel-left {
+			flex: 1 1 auto;
+			width: 100%;
+		}
 
-@media (max-width: 480px) {
-    .stats-page {
-        padding: 16px;
-    }
-    
-    .dashboard-row {
-        gap: 12px;
-    }
-}
+		.panel-right {
+			flex: 1 1 auto;
+			width: 100%;
+			overflow: visible;
+		}
+
+		.countries-wrapper {
+			overflow: visible;
+			height: auto;
+		}
+
+		.browser-section,
+		.os-section {
+			overflow: visible;
+			flex: 1 1 auto;
+			height: auto;
+		}
+	}
+
+	@media (max-width: 768px) {
+		.dashboard-row {
+			gap: 16px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.stats-page {
+			padding: 16px;
+		}
+
+		.dashboard-row {
+			gap: 12px;
+		}
+	}
 
 	.stat-card {
 		background: var(--bg-secondary, #282828);

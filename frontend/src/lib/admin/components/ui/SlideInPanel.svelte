@@ -6,13 +6,7 @@
 		close: void;
 	}>();
 
-	let { 
-		isOpen = false,
-		title = '',
-		icon = null,
-		showCloseButton = true,
-		children
-	} = $props();
+	let { isOpen = false, title = '', icon = null, showCloseButton = true, children } = $props();
 
 	let isClosing = $state(false);
 
@@ -43,16 +37,16 @@
 
 <!-- Panel Overlay -->
 {#if isOpen}
-	<div 
-		class="panel-overlay" 
+	<div
+		class="panel-overlay"
 		onclick={handleOverlayClick}
 		onkeydown={(e) => e.key === 'Enter' && handleOverlayClick(e)}
 		role="button"
 		tabindex="0"
 		aria-label="Close panel"
 	>
-		<div 
-			class="slide-panel" 
+		<div
+			class="slide-panel"
 			class:closing={isClosing}
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
@@ -76,7 +70,7 @@
 					</button>
 				</div>
 			{/if}
-			
+
 			<div class="panel-content">
 				{@render children?.()}
 			</div>
@@ -219,8 +213,8 @@
 		overflow-y: auto;
 		overflow-x: hidden;
 		-webkit-overflow-scrolling: touch;
-		padding: 24px max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px))
-			max(24px, env(safe-area-inset-left, 0px));
+		padding: 24px max(24px, env(safe-area-inset-right, 0px))
+			max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px));
 		width: 100%;
 		max-width: 100%;
 		box-sizing: border-box;
@@ -246,15 +240,15 @@
 		}
 
 		.panel-content {
-			padding: 16px max(16px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px))
-				max(16px, env(safe-area-inset-left, 0px));
+			padding: 16px max(16px, env(safe-area-inset-right, 0px))
+				max(20px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
 		}
 	}
 
 	@media (max-width: 360px) {
 		.panel-content {
-			padding: 14px max(12px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px))
-				max(12px, env(safe-area-inset-left, 0px));
+			padding: 14px max(12px, env(safe-area-inset-right, 0px))
+				max(16px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
 		}
 	}
 </style>

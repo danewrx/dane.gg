@@ -20,7 +20,7 @@ export interface SiteTheme {
 	description: string | null;
 	isActive: boolean;
 	isDefault: boolean;
-	
+
 	// Colors
 	primaryColor: string;
 	secondaryColor: string;
@@ -31,7 +31,7 @@ export interface SiteTheme {
 	textPrimary: string;
 	textSecondary: string;
 	textMuted: string;
-	
+
 	// Background
 	backgroundImage: string | null;
 	backgroundImageExternal: boolean;
@@ -39,7 +39,7 @@ export interface SiteTheme {
 	backgroundPosition: string;
 	backgroundSize: string;
 	backgroundAttachment: string;
-	
+
 	// Typography
 	fontFamily: string;
 	headingFontFamily: string;
@@ -48,7 +48,7 @@ export interface SiteTheme {
 	bodyFontUrl?: string | null;
 	/** Custom font file URL for headings */
 	headingFontUrl?: string | null;
-	
+
 	// Other
 	borderRadius: string;
 	widgetBorderRadius?: string;
@@ -68,7 +68,7 @@ export const DEFAULT_THEME: SiteTheme = {
 	description: 'Default site theme',
 	isActive: true,
 	isDefault: true,
-	
+
 	// Colors
 	primaryColor: '#ffffff',
 	secondaryColor: '#a1a1aa',
@@ -79,7 +79,7 @@ export const DEFAULT_THEME: SiteTheme = {
 	textPrimary: '#ffffff',
 	textSecondary: '#a1a1aa',
 	textMuted: '#71717a',
-	
+
 	// Background
 	backgroundImage: '/assets/img/backgrounds/1.png',
 	backgroundImageExternal: false,
@@ -87,12 +87,12 @@ export const DEFAULT_THEME: SiteTheme = {
 	backgroundPosition: 'center center',
 	backgroundSize: 'cover',
 	backgroundAttachment: 'fixed',
-	
+
 	// Typography
 	fontFamily: 'Inter',
 	headingFontFamily: 'Inter',
 	fontScale: '1',
-	
+
 	// Other
 	borderRadius: '0px',
 	widgetBorderRadius: '0px',
@@ -146,10 +146,7 @@ function applyActiveThemePayload(payload: {
 	if (payload.enforcement) {
 		themeEnforcement.set({
 			enforced: !!payload.enforcement.enforced,
-			themeId:
-				typeof payload.enforcement.themeId === 'string'
-					? payload.enforcement.themeId
-					: null
+			themeId: typeof payload.enforcement.themeId === 'string' ? payload.enforcement.themeId : null
 		});
 	}
 	if (payload.success && payload.data) {
@@ -255,12 +252,9 @@ function quoteCssString(s: string): string {
  * Theme fields as a stylesheet so {@link applyCustomCss} can override any variable
  */
 function buildThemeVarsStylesheet(theme: SiteTheme): string {
-	const widgetR =
-		theme.widgetBorderRadius?.trim() || theme.borderRadius?.trim() || '0px';
+	const widgetR = theme.widgetBorderRadius?.trim() || theme.borderRadius?.trim() || '0px';
 	const bodyFam = theme.fontFamily ? quoteCssString(theme.fontFamily) : '';
-	const headingFam = theme.headingFontFamily
-		? quoteCssString(theme.headingFontFamily)
-		: bodyFam;
+	const headingFam = theme.headingFontFamily ? quoteCssString(theme.headingFontFamily) : bodyFam;
 	const bodyFont = bodyFam ? `'${bodyFam}', sans-serif` : 'sans-serif';
 	const headingFont = headingFam ? `'${headingFam}', sans-serif` : bodyFont;
 
@@ -332,7 +326,7 @@ export function loadGoogleFonts(fonts: string[]): void {
 	if (!browser) return;
 
 	const systemFonts = ['system-ui', 'sans-serif', 'serif', 'monospace', 'cursive', 'fantasy'];
-	const fontsToLoad = fonts.filter(font => {
+	const fontsToLoad = fonts.filter((font) => {
 		const cleanFont = font.replace(/['"]/g, '').trim();
 		return !systemFonts.includes(cleanFont.toLowerCase()) && cleanFont.length > 0;
 	});
@@ -341,9 +335,9 @@ export function loadGoogleFonts(fonts: string[]): void {
 
 	const existingLink = document.querySelector('link[data-google-fonts]');
 	const fontQuery = fontsToLoad
-		.map(font => `family=${encodeURIComponent(font)}:wght@300;400;500;600;700`)
+		.map((font) => `family=${encodeURIComponent(font)}:wght@300;400;500;600;700`)
 		.join('&');
-	
+
 	const newHref = `https://fonts.googleapis.com/css2?${fontQuery}&display=swap`;
 
 	if (existingLink) {
@@ -374,7 +368,11 @@ function injectCustomFontFaces(theme: SiteTheme): void {
 		const family = theme.fontFamily.replace(/'/g, "\\'");
 		rules.push(`@font-face { font-family: '${family}'; src: url('${url}'); }`);
 	}
-	if (theme.headingFontUrl && theme.headingFontFamily && theme.headingFontFamily !== theme.fontFamily) {
+	if (
+		theme.headingFontUrl &&
+		theme.headingFontFamily &&
+		theme.headingFontFamily !== theme.fontFamily
+	) {
 		const url = theme.headingFontUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 		const family = theme.headingFontFamily.replace(/'/g, "\\'");
 		rules.push(`@font-face { font-family: '${family}'; src: url('${url}'); }`);
@@ -433,7 +431,11 @@ if (browser) {
 		applyThemeStyles(theme);
 		const fontsToLoad: string[] = [];
 		if (!theme.bodyFontUrl && theme.fontFamily) fontsToLoad.push(theme.fontFamily);
-		if (!theme.headingFontUrl && theme.headingFontFamily && theme.headingFontFamily !== theme.fontFamily) {
+		if (
+			!theme.headingFontUrl &&
+			theme.headingFontFamily &&
+			theme.headingFontFamily !== theme.fontFamily
+		) {
 			fontsToLoad.push(theme.headingFontFamily);
 		}
 		loadGoogleFonts(fontsToLoad);

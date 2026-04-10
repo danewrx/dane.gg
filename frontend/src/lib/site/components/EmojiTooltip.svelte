@@ -3,7 +3,8 @@
 	import { browser } from '$app/environment';
 
 	// The container element to attach mouse events to
-	let { container = $bindable<HTMLElement | null>(null) }: { container?: HTMLElement | null } = $props();
+	let { container = $bindable<HTMLElement | null>(null) }: { container?: HTMLElement | null } =
+		$props();
 
 	// Global tooltip element
 	let tooltipElement: HTMLElement | null = null;
@@ -93,10 +94,13 @@
 			tooltipEmoji.innerHTML = `<img src="${(emojiContent as HTMLImageElement).src}" style="width: 36px; height: 36px; object-fit: contain; image-rendering: -webkit-optimize-contrast;">`;
 		} else {
 			tooltipEmoji.textContent = emojiContent.textContent;
-			tooltipEmoji.style.cssText = 'font-size: calc(28 * 1em / 14); line-height: 1; text-align: center;';
+			tooltipEmoji.style.cssText =
+				'font-size: calc(28 * 1em / 14); line-height: 1; text-align: center;';
 		}
 		tooltipName.textContent = nameContent.textContent;
-		const textMuted = getComputedStyle(document.documentElement).getPropertyValue('--theme-text-muted').trim() || '#888';
+		const textMuted =
+			getComputedStyle(document.documentElement).getPropertyValue('--theme-text-muted').trim() ||
+			'#888';
 		tooltipName.style.cssText = `font-size: calc(11 * 1em / 14); color: ${textMuted}; font-family: "Courier New", monospace; text-align: center; white-space: nowrap;`;
 
 		tooltipElement.style.display = 'flex';
@@ -158,4 +162,3 @@
 		destroyTooltip();
 	});
 </script>
-

@@ -25,7 +25,8 @@ const DEFAULT_CONFIG: SiteConfig = {
 	enforced_web_neko_type: 'white',
 	enforce_web_neko: false,
 	site_title: 'dane.gg - Software Engineer & Designer',
-	site_description: 'Hi, I\'m Dane! I\'m a software engineer & freelance designer from Manchester, UK.'
+	site_description:
+		"Hi, I'm Dane! I'm a software engineer & freelance designer from Manchester, UK."
 };
 
 // Store for site configuration
@@ -36,7 +37,10 @@ export const configError = writable<string | null>(null);
 // Derived stores for specific config values
 export const defaultWeatherType = derived(siteConfig, ($config) => $config.default_weather_type);
 export const defaultWeatherSpeed = derived(siteConfig, ($config) => $config.default_weather_speed);
-export const enforceWeatherEffects = derived(siteConfig, ($config) => $config.enforce_weather_effects);
+export const enforceWeatherEffects = derived(
+	siteConfig,
+	($config) => $config.enforce_weather_effects
+);
 export const siteTitle = derived(siteConfig, ($config) => $config.site_title);
 export const siteDescription = derived(siteConfig, ($config) => $config.site_description);
 
@@ -51,13 +55,13 @@ export async function loadSiteConfig(): Promise<void> {
 
 	try {
 		const response = await fetch('/api/config');
-		
+
 		if (!response.ok) {
 			throw new Error(`Failed to fetch site configuration: ${response.statusText}`);
 		}
 
 		const data = await response.json();
-		
+
 		if (data.success) {
 			siteConfig.set({ ...DEFAULT_CONFIG, ...data.data });
 		} else {
@@ -66,7 +70,7 @@ export async function loadSiteConfig(): Promise<void> {
 	} catch (error) {
 		console.error('Error loading site configuration:', error);
 		configError.set(error instanceof Error ? error.message : 'Unknown error');
-		
+
 		// Fall back to default configuration
 		siteConfig.set(DEFAULT_CONFIG);
 	} finally {
@@ -82,13 +86,13 @@ export async function getConfigValue(key: string): Promise<any> {
 
 	try {
 		const response = await fetch(`/api/config/${key}`);
-		
+
 		if (!response.ok) {
 			throw new Error(`Failed to fetch config value: ${response.statusText}`);
 		}
 
 		const data = await response.json();
-		
+
 		if (data.success) {
 			return data.data.value;
 		} else {
@@ -103,7 +107,11 @@ export async function getConfigValue(key: string): Promise<any> {
 /**
  * Update a configuration value (admin only)
  */
-export async function updateConfigValue(key: string, value: any, dataType: string = 'string'): Promise<boolean> {
+export async function updateConfigValue(
+	key: string,
+	value: any,
+	dataType: string = 'string'
+): Promise<boolean> {
 	if (!browser) return false;
 
 	try {
@@ -120,7 +128,7 @@ export async function updateConfigValue(key: string, value: any, dataType: strin
 		}
 
 		const data = await response.json();
-		
+
 		if (data.success) {
 			// Reload the entire configuration to keep it in sync
 			await loadSiteConfig();

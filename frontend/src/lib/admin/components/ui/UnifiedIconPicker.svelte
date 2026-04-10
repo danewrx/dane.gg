@@ -1,6 +1,10 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { getIconCategories, searchIcons, type IconOption } from '$lib/admin/services/iconLibraryService';
+	import {
+		getIconCategories,
+		searchIcons,
+		type IconOption
+	} from '$lib/admin/services/iconLibraryService';
 	import { Search, X } from 'lucide-svelte';
 	import * as LucideIcons from 'lucide-svelte';
 	import type { ComponentType } from 'svelte';
@@ -17,9 +21,9 @@
 		onOpenChange?: (open: boolean) => void;
 	}
 
-	let { 
-		selectedIcon = null, 
-		onIconSelect = () => {}, 
+	let {
+		selectedIcon = null,
+		onIconSelect = () => {},
 		placeholder = 'Choose from icon library...',
 		showPreview = true,
 		previewLabel = 'Preview',
@@ -30,24 +34,24 @@
 	}: Props = $props();
 
 	let isOpenInternal = $state(false);
-	let isOpen = $derived.by(() => triggerless ? open : isOpenInternal);
+	let isOpen = $derived.by(() => (triggerless ? open : isOpenInternal));
 	let customSvgUrl = $state('');
 	let customText = $state('');
 	let showCustomInputs = $state(false);
 	let customInputType = $state<'svg' | 'text' | null>(null);
-	
+
 	$effect(() => {
 		if (triggerless) {
 			isOpenInternal = open;
 		}
 	});
-	
+
 	// Watch for custom icon selection
 	let isSelectingCustom = $state(false);
-	
+
 	$effect(() => {
 		if (isSelectingCustom) return;
-		
+
 		if (selectedIcon && !showCustomInputs) {
 			if (selectedIcon.type === 'svg-url' && selectedIcon.svgUrl) {
 				showCustomInputs = true;
@@ -91,10 +95,11 @@
 		if (searchQuery.trim()) {
 			filteredIcons = await searchIcons(searchQuery);
 		} else {
-			const categories = selectedCategory === 'all' 
-				? iconCategories 
-				: iconCategories.filter(cat => cat.name === selectedCategory);
-			filteredIcons = categories.flatMap(category => category.icons);
+			const categories =
+				selectedCategory === 'all'
+					? iconCategories
+					: iconCategories.filter((cat) => cat.name === selectedCategory);
+			filteredIcons = categories.flatMap((category) => category.icons);
 		}
 	}
 
@@ -110,10 +115,10 @@
 			event.preventDefault();
 			event.stopPropagation();
 		}
-		
+
 		if (icon.type === 'svg-url' || icon.type === 'custom-text') {
 			isSelectingCustom = true;
-			
+
 			selectedIcon = icon;
 			showCustomInputs = true;
 			customInputType = icon.type === 'svg-url' ? 'svg' : 'text';
@@ -122,11 +127,10 @@
 			} else {
 				customText = icon.text || '';
 			}
-			
+
 			setTimeout(() => {
 				isSelectingCustom = false;
 			}, 0);
-			
 		} else {
 			isSelectingCustom = false;
 			selectedIcon = icon;
@@ -134,20 +138,20 @@
 			closeDropdown(event);
 		}
 	}
-	
+
 	function saveCustomIcon(event?: Event) {
 		if (event) {
 			event.preventDefault();
 			event.stopPropagation();
 		}
-		
+
 		if (!selectedIcon) return;
-		
+
 		if (customInputType === 'svg' && customSvgUrl.trim()) {
 			const customIcon: IconOption = {
 				...selectedIcon,
 				svgUrl: customSvgUrl.trim(),
-				name: customSvgUrl.trim() 
+				name: customSvgUrl.trim()
 			};
 			onIconSelect(customIcon);
 			showCustomInputs = false;
@@ -165,14 +169,15 @@
 			closeDropdown(event);
 		}
 	}
-	
+
 	function cancelCustomInput(event?: Event) {
 		if (event) {
 			event.preventDefault();
 			event.stopPropagation();
 		}
-		
-		const wasCustom = selectedIcon && (selectedIcon.type === 'svg-url' || selectedIcon.type === 'custom-text');
+
+		const wasCustom =
+			selectedIcon && (selectedIcon.type === 'svg-url' || selectedIcon.type === 'custom-text');
 		if (wasCustom) {
 			selectedIcon = null;
 			onIconSelect(null);
@@ -218,9 +223,15 @@
 		searchQuery = '';
 	}
 
-	function getIconRenderInfo(icon: IconOption | null): { type: 'lucide' | 'iconify' | 'svg' | 'text' | null; component?: ComponentType; icon?: string; url?: string; text?: string } {
+	function getIconRenderInfo(icon: IconOption | null): {
+		type: 'lucide' | 'iconify' | 'svg' | 'text' | null;
+		component?: ComponentType;
+		icon?: string;
+		url?: string;
+		text?: string;
+	} {
 		if (!icon) return { type: null };
-		
+
 		if (icon.type === 'lucide' && icon.lucideComponent) {
 			return { type: 'lucide', component: icon.lucideComponent as ComponentType };
 		} else if (icon.type === 'coreui-brand' && icon.iconSet && icon.iconName) {
@@ -230,7 +241,7 @@
 		} else if (icon.type === 'custom-text' && icon.text) {
 			return { type: 'text', text: icon.text };
 		}
-		
+
 		return { type: null };
 	}
 </script>
@@ -263,11 +274,7 @@
 	{/if}
 
 	<div class="picker-container">
-		<button 
-			class="picker-trigger" 
-			onclick={(e) => toggleDropdown(e)}
-			type="button"
-		>
+		<button class="picker-trigger" onclick={(e) => toggleDropdown(e)} type="button">
 			{#if selectedIcon}
 				{@const iconInfo = getIconRenderInfo(selectedIcon)}
 				<div class="selected-icon">
@@ -285,26 +292,54 @@
 					{/if}
 					<div class="icon-name-group">
 						<span class="icon-name">{selectedIcon.displayName}</span>
-						<span class="icon-pack-small">{selectedIcon.type === 'coreui-brand' ? 'CoreUI' : selectedIcon.type === 'lucide' ? 'Lucide' : selectedIcon.type === 'svg-url' ? 'Custom SVG' : 'Custom Text'}</span>
+						<span class="icon-pack-small"
+							>{selectedIcon.type === 'coreui-brand'
+								? 'CoreUI'
+								: selectedIcon.type === 'lucide'
+									? 'Lucide'
+									: selectedIcon.type === 'svg-url'
+										? 'Custom SVG'
+										: 'Custom Text'}</span
+						>
 					</div>
 				</div>
 			{:else}
 				<span class="placeholder">{placeholder}</span>
 			{/if}
-			<div class="dropdown-arrow" class:open={isOpen}>
-				▼
-			</div>
+			<div class="dropdown-arrow" class:open={isOpen}>▼</div>
 		</button>
 
 		{#if isOpen}
-			<div class="dropdown-overlay" onclick={(e) => { e.preventDefault(); e.stopPropagation(); if (!showCustomInputs) closeDropdown(e); }} role="button" tabindex="0" onkeydown={(e) => { e.preventDefault(); e.stopPropagation(); if (e.key === 'Escape') closeDropdown(e); }}></div>
-			<form class="dropdown" class:show-custom-inputs={showCustomInputs} onclick={(e) => { e.preventDefault(); e.stopPropagation(); }} onsubmit={(e) => { e.preventDefault(); e.stopPropagation(); return false; }}>
+			<div
+				class="dropdown-overlay"
+				onclick={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					if (!showCustomInputs) closeDropdown(e);
+				}}
+				role="button"
+				tabindex="0"
+				onkeydown={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					if (e.key === 'Escape') closeDropdown(e);
+				}}
+			></div>
+			<form
+				class="dropdown"
+				class:show-custom-inputs={showCustomInputs}
+				onsubmit={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					return false;
+				}}
+			>
 				<div class="dropdown-header">
 					<div class="search-container">
-						<Search size={16} class="search-icon" />
-						<input 
-							type="text" 
-							placeholder="Search icons..." 
+						<span class="search-icon" aria-hidden="true"><Search size={16} /></span>
+						<input
+							type="text"
+							placeholder="Search icons..."
 							bind:value={searchQuery}
 							class="search-input"
 						/>
@@ -315,19 +350,23 @@
 				</div>
 
 				<div class="category-tabs">
-					<button 
-						class="category-tab" 
+					<button
+						class="category-tab"
 						class:active={selectedCategory === 'all'}
-						onclick={() => selectedCategory = 'all'}
+						onclick={() => (selectedCategory = 'all')}
 					>
 						All
 					</button>
 					{#each iconCategories as category}
-						<button 
+						<button
 							type="button"
-							class="category-tab" 
+							class="category-tab"
 							class:active={selectedCategory === category.name}
-							onclick={(e) => { e.preventDefault(); e.stopPropagation(); selectedCategory = category.name; }}
+							onclick={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								selectedCategory = category.name;
+							}}
 						>
 							{category.displayName}
 						</button>
@@ -341,11 +380,15 @@
 					</div>
 				{:else}
 					<div class="icons-grid">
-						<button 
+						<button
 							type="button"
-							class="icon-option" 
+							class="icon-option"
 							class:selected={selectedIcon === null}
-							onclick={(e) => { e.stopPropagation(); onIconSelect(null); isOpen = false; }}
+							onclick={(e) => {
+								e.stopPropagation();
+								onIconSelect(null);
+								isOpen = false;
+							}}
 							title="None (Default)"
 						>
 							<div class="no-icon">—</div>
@@ -354,9 +397,9 @@
 						</button>
 						{#each filteredIcons as icon}
 							{@const iconInfo = getIconRenderInfo(icon)}
-							<button 
+							<button
 								type="button"
-								class="icon-option" 
+								class="icon-option"
 								class:selected={selectedIcon?.name === icon.name}
 								onclick={(e) => selectIcon(icon, e)}
 								title={icon.displayName}
@@ -378,7 +421,15 @@
 									<Icon icon="lucide:external-link" width="24" height="24" />
 								{/if}
 								<span class="icon-label" title={icon.displayName}>{icon.displayName}</span>
-								<span class="icon-pack">{icon.type === 'coreui-brand' ? 'CoreUI' : icon.type === 'lucide' ? 'Lucide' : icon.type === 'svg-url' ? 'Custom SVG' : 'Custom Text'}</span>
+								<span class="icon-pack"
+									>{icon.type === 'coreui-brand'
+										? 'CoreUI'
+										: icon.type === 'lucide'
+											? 'Lucide'
+											: icon.type === 'svg-url'
+												? 'Custom SVG'
+												: 'Custom Text'}</span
+								>
 							</button>
 						{/each}
 					</div>
@@ -389,20 +440,25 @@
 						</div>
 					{/if}
 				{/if}
-				
+
 				{#if showCustomInputs && customInputType}
 					<div class="custom-input-section">
 						<div class="custom-input-header">
 							<h4>{customInputType === 'svg' ? 'Enter SVG URL' : 'Enter Custom Text'}</h4>
-							<button type="button" class="cancel-custom-button" onclick={(e) => cancelCustomInput(e)}>
+							<button
+								type="button"
+								class="cancel-custom-button"
+								onclick={(e) => cancelCustomInput(e)}
+							>
 								<X size={16} />
 							</button>
 						</div>
 						{#if customInputType === 'svg'}
 							<div class="custom-input-group">
-								<label>SVG URL</label>
-								<input 
-									type="url" 
+								<label for="unified-icon-picker-svg-url">SVG URL</label>
+								<input
+									id="unified-icon-picker-svg-url"
+									type="url"
 									bind:value={customSvgUrl}
 									placeholder="https://example.com/icon.svg"
 									class="custom-input"
@@ -411,9 +467,10 @@
 							</div>
 						{:else}
 							<div class="custom-input-group">
-								<label>Custom Text</label>
-								<input 
-									type="text" 
+								<label for="unified-icon-picker-custom-text">Custom Text</label>
+								<input
+									id="unified-icon-picker-custom-text"
+									type="text"
 									bind:value={customText}
 									placeholder="e.g., Custom, Logo, etc."
 									maxlength="20"
@@ -423,7 +480,12 @@
 							</div>
 						{/if}
 						<div class="custom-input-actions">
-							<button type="button" class="save-custom-button" onclick={(e) => saveCustomIcon(e)} disabled={customInputType === 'svg' ? !customSvgUrl.trim() : !customText.trim()}>
+							<button
+								type="button"
+								class="save-custom-button"
+								onclick={(e) => saveCustomIcon(e)}
+								disabled={customInputType === 'svg' ? !customSvgUrl.trim() : !customText.trim()}
+							>
 								Save
 							</button>
 							<button type="button" class="cancel-button" onclick={(e) => cancelCustomInput(e)}>
@@ -779,8 +841,12 @@
 	}
 
 	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
 
 	.no-results {
@@ -928,22 +994,21 @@
 			width: 98%;
 			height: 85vh;
 		}
-		
+
 		.icons-grid {
 			gap: 6px;
 			padding: 12px;
 		}
-		
+
 		.icon-option {
 			padding: 8px 6px;
 			width: 100px;
 			min-width: 100px;
 			max-width: 100px;
 		}
-		
+
 		.icon-label {
 			font-size: 10px;
 		}
 	}
 </style>
-

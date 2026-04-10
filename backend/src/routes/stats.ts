@@ -10,27 +10,27 @@ const router = Router();
  * Get public statistics (total visits and unique visitors)
  */
 router.get('/public', generalLimiter, async (req: Request, res: Response) => {
-  try {
-    const [totalViews, uniqueVisitors] = await Promise.all([
-      StatsService.getTotalSiteViews('all'),
-      StatsService.getUniqueVisitors('all')
-    ]);
-    
-    res.json({
-      success: true,
-      data: {
-        totalVisits: totalViews,
-        uniqueVisitors
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching public stats:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      message: 'Failed to fetch public statistics'
-    });
-  }
+	try {
+		const [totalViews, uniqueVisitors] = await Promise.all([
+			StatsService.getTotalSiteViews('all'),
+			StatsService.getUniqueVisitors('all')
+		]);
+
+		res.json({
+			success: true,
+			data: {
+				totalVisits: totalViews,
+				uniqueVisitors
+			}
+		});
+	} catch (error) {
+		console.error('Error fetching public stats:', error);
+		res.status(500).json({
+			success: false,
+			error: 'Internal server error',
+			message: 'Failed to fetch public statistics'
+		});
+	}
 });
 
 /**
@@ -38,29 +38,29 @@ router.get('/public', generalLimiter, async (req: Request, res: Response) => {
  * Get overview statistics
  */
 router.get('/overview', requireSession, async (req: Request, res: Response) => {
-  try {
-    const timeRange = (req.query.timeRange as string) || '24h';
-    
-    const [totalViews, uniqueVisitors] = await Promise.all([
-      StatsService.getTotalSiteViews(timeRange),
-      StatsService.getUniqueVisitors(timeRange)
-    ]);
-    
-    res.json({
-      success: true,
-      data: {
-        totalViews,
-        uniqueVisitors,
-        timeRange
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching overview stats:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to fetch overview statistics'
-    });
-  }
+	try {
+		const timeRange = (req.query.timeRange as string) || '24h';
+
+		const [totalViews, uniqueVisitors] = await Promise.all([
+			StatsService.getTotalSiteViews(timeRange),
+			StatsService.getUniqueVisitors(timeRange)
+		]);
+
+		res.json({
+			success: true,
+			data: {
+				totalViews,
+				uniqueVisitors,
+				timeRange
+			}
+		});
+	} catch (error) {
+		console.error('Error fetching overview stats:', error);
+		res.status(500).json({
+			error: 'Internal server error',
+			message: 'Failed to fetch overview statistics'
+		});
+	}
 });
 
 /**
@@ -68,25 +68,25 @@ router.get('/overview', requireSession, async (req: Request, res: Response) => {
  * Get page views by page
  */
 router.get('/page-views', requireSession, async (req: Request, res: Response) => {
-  try {
-    const timeRange = (req.query.timeRange as string) || '24h';
-    const limit = parseInt((req.query.limit as string) || '10');
-    
-    const pageViews = await StatsService.getPageViewsByPage(timeRange, limit);
-    
-    res.json({
-      success: true,
-      data: pageViews,
-      timeRange,
-      limit
-    });
-  } catch (error) {
-    console.error('Error fetching page views stats:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to fetch page views statistics'
-    });
-  }
+	try {
+		const timeRange = (req.query.timeRange as string) || '24h';
+		const limit = parseInt((req.query.limit as string) || '10');
+
+		const pageViews = await StatsService.getPageViewsByPage(timeRange, limit);
+
+		res.json({
+			success: true,
+			data: pageViews,
+			timeRange,
+			limit
+		});
+	} catch (error) {
+		console.error('Error fetching page views stats:', error);
+		res.status(500).json({
+			error: 'Internal server error',
+			message: 'Failed to fetch page views statistics'
+		});
+	}
 });
 
 /**
@@ -94,25 +94,25 @@ router.get('/page-views', requireSession, async (req: Request, res: Response) =>
  * Get visitor countries
  */
 router.get('/visitors/countries', requireSession, async (req: Request, res: Response) => {
-  try {
-    const timeRange = (req.query.timeRange as string) || '24h';
-    const limit = parseInt((req.query.limit as string) || '10');
-    
-    const countries = await StatsService.getVisitorCountries(timeRange, limit);
-    
-    res.json({
-      success: true,
-      data: countries,
-      timeRange,
-      limit
-    });
-  } catch (error) {
-    console.error('Error fetching visitor countries:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to fetch visitor countries statistics'
-    });
-  }
+	try {
+		const timeRange = (req.query.timeRange as string) || '24h';
+		const limit = parseInt((req.query.limit as string) || '10');
+
+		const countries = await StatsService.getVisitorCountries(timeRange, limit);
+
+		res.json({
+			success: true,
+			data: countries,
+			timeRange,
+			limit
+		});
+	} catch (error) {
+		console.error('Error fetching visitor countries:', error);
+		res.status(500).json({
+			error: 'Internal server error',
+			message: 'Failed to fetch visitor countries statistics'
+		});
+	}
 });
 
 /**
@@ -120,25 +120,25 @@ router.get('/visitors/countries', requireSession, async (req: Request, res: Resp
  * Get visitor browsers
  */
 router.get('/visitors/browsers', requireSession, async (req: Request, res: Response) => {
-  try {
-    const timeRange = (req.query.timeRange as string) || '24h';
-    const limit = parseInt((req.query.limit as string) || '10');
-    
-    const browsers = await StatsService.getVisitorBrowsers(timeRange, limit);
-    
-    res.json({
-      success: true,
-      data: browsers,
-      timeRange,
-      limit
-    });
-  } catch (error) {
-    console.error('Error fetching visitor browsers:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to fetch visitor browsers statistics'
-    });
-  }
+	try {
+		const timeRange = (req.query.timeRange as string) || '24h';
+		const limit = parseInt((req.query.limit as string) || '10');
+
+		const browsers = await StatsService.getVisitorBrowsers(timeRange, limit);
+
+		res.json({
+			success: true,
+			data: browsers,
+			timeRange,
+			limit
+		});
+	} catch (error) {
+		console.error('Error fetching visitor browsers:', error);
+		res.status(500).json({
+			error: 'Internal server error',
+			message: 'Failed to fetch visitor browsers statistics'
+		});
+	}
 });
 
 /**
@@ -146,25 +146,25 @@ router.get('/visitors/browsers', requireSession, async (req: Request, res: Respo
  * Get visitor operating systems
  */
 router.get('/visitors/os', requireSession, async (req: Request, res: Response) => {
-  try {
-    const timeRange = (req.query.timeRange as string) || '24h';
-    const limit = parseInt((req.query.limit as string) || '10');
-    
-    const os = await StatsService.getVisitorOS(timeRange, limit);
-    
-    res.json({
-      success: true,
-      data: os,
-      timeRange,
-      limit
-    });
-  } catch (error) {
-    console.error('Error fetching visitor OS:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to fetch visitor OS statistics'
-    });
-  }
+	try {
+		const timeRange = (req.query.timeRange as string) || '24h';
+		const limit = parseInt((req.query.limit as string) || '10');
+
+		const os = await StatsService.getVisitorOS(timeRange, limit);
+
+		res.json({
+			success: true,
+			data: os,
+			timeRange,
+			limit
+		});
+	} catch (error) {
+		console.error('Error fetching visitor OS:', error);
+		res.status(500).json({
+			error: 'Internal server error',
+			message: 'Failed to fetch visitor OS statistics'
+		});
+	}
 });
 
 /**
@@ -172,25 +172,25 @@ router.get('/visitors/os', requireSession, async (req: Request, res: Response) =
  * Get visitor devices
  */
 router.get('/visitors/devices', requireSession, async (req: Request, res: Response) => {
-  try {
-    const timeRange = (req.query.timeRange as string) || '24h';
-    const limit = parseInt((req.query.limit as string) || '10');
-    
-    const devices = await StatsService.getVisitorDevices(timeRange, limit);
-    
-    res.json({
-      success: true,
-      data: devices,
-      timeRange,
-      limit
-    });
-  } catch (error) {
-    console.error('Error fetching visitor devices:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to fetch visitor devices statistics'
-    });
-  }
+	try {
+		const timeRange = (req.query.timeRange as string) || '24h';
+		const limit = parseInt((req.query.limit as string) || '10');
+
+		const devices = await StatsService.getVisitorDevices(timeRange, limit);
+
+		res.json({
+			success: true,
+			data: devices,
+			timeRange,
+			limit
+		});
+	} catch (error) {
+		console.error('Error fetching visitor devices:', error);
+		res.status(500).json({
+			error: 'Internal server error',
+			message: 'Failed to fetch visitor devices statistics'
+		});
+	}
 });
 
 /**
@@ -198,25 +198,25 @@ router.get('/visitors/devices', requireSession, async (req: Request, res: Respon
  * Get raw request logs
  */
 router.get('/request-logs', requireSession, async (req: Request, res: Response) => {
-  try {
-    const timeRange = (req.query.timeRange as string) || '24h';
-    const limit = parseInt((req.query.limit as string) || '100');
-    
-    const logs = await StatsService.getRequestLogs(timeRange, limit);
-    
-    res.json({
-      success: true,
-      data: logs,
-      timeRange,
-      limit
-    });
-  } catch (error) {
-    console.error('Error fetching request logs:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to fetch request logs'
-    });
-  }
+	try {
+		const timeRange = (req.query.timeRange as string) || '24h';
+		const limit = parseInt((req.query.limit as string) || '100');
+
+		const logs = await StatsService.getRequestLogs(timeRange, limit);
+
+		res.json({
+			success: true,
+			data: logs,
+			timeRange,
+			limit
+		});
+	} catch (error) {
+		console.error('Error fetching request logs:', error);
+		res.status(500).json({
+			error: 'Internal server error',
+			message: 'Failed to fetch request logs'
+		});
+	}
 });
 
 /**
@@ -224,60 +224,58 @@ router.get('/request-logs', requireSession, async (req: Request, res: Response) 
  * Get all dashboard data in one request
  */
 router.get('/dashboard', requireSession, async (req: Request, res: Response) => {
-  try {
-    const timeRange = (req.query.timeRange as string) || '24h';
-    
-    const [
-      totalViews,
-      uniqueVisitors,
-      totalPagesIndexed,
-      totalDaysSinceTracking,
-      pageViews,
-      countries,
-      browsers,
-      os,
-      devices,
-      trends
-    ] = await Promise.all([
-      StatsService.getTotalSiteViews(timeRange),
-      StatsService.getUniqueVisitors(timeRange),
-      StatsService.getTotalPagesIndexed(timeRange),
-      StatsService.getTotalDaysSinceTracking(),
-      StatsService.getPageViewsByPage(timeRange, 10),
-      StatsService.getVisitorCountries(timeRange, 10),
-      StatsService.getVisitorBrowsers(timeRange, 10),
-      StatsService.getVisitorOS(timeRange, 10),
-      StatsService.getVisitorDevices(timeRange, 10),
-      StatsService.getVisitorTrends(timeRange)
-    ]);
-    
-    res.json({
-      success: true,
-      data: {
-        overview: {
-          totalViews,
-          uniqueVisitors,
-          totalPagesIndexed,
-          totalDaysSinceTracking,
-          timeRange
-        },
-        pageViews,
-        countries,
-        browsers,
-        os,
-        devices,
-        trends
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to fetch dashboard statistics'
-    });
-  }
+	try {
+		const timeRange = (req.query.timeRange as string) || '24h';
+
+		const [
+			totalViews,
+			uniqueVisitors,
+			totalPagesIndexed,
+			totalDaysSinceTracking,
+			pageViews,
+			countries,
+			browsers,
+			os,
+			devices,
+			trends
+		] = await Promise.all([
+			StatsService.getTotalSiteViews(timeRange),
+			StatsService.getUniqueVisitors(timeRange),
+			StatsService.getTotalPagesIndexed(timeRange),
+			StatsService.getTotalDaysSinceTracking(),
+			StatsService.getPageViewsByPage(timeRange, 10),
+			StatsService.getVisitorCountries(timeRange, 10),
+			StatsService.getVisitorBrowsers(timeRange, 10),
+			StatsService.getVisitorOS(timeRange, 10),
+			StatsService.getVisitorDevices(timeRange, 10),
+			StatsService.getVisitorTrends(timeRange)
+		]);
+
+		res.json({
+			success: true,
+			data: {
+				overview: {
+					totalViews,
+					uniqueVisitors,
+					totalPagesIndexed,
+					totalDaysSinceTracking,
+					timeRange
+				},
+				pageViews,
+				countries,
+				browsers,
+				os,
+				devices,
+				trends
+			}
+		});
+	} catch (error) {
+		console.error('Error fetching dashboard stats:', error);
+		res.status(500).json({
+			error: 'Internal server error',
+			message: 'Failed to fetch dashboard statistics'
+		});
+	}
 });
 
 export default router;
-
-

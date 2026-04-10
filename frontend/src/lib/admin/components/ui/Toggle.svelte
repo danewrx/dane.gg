@@ -7,7 +7,7 @@
 		disabled?: boolean;
 	}
 
-	let { 
+	let {
 		checked = $bindable(false),
 		onchange,
 		label,
@@ -49,13 +49,7 @@
 </script>
 
 <label class="toggle-wrapper {size}" class:disabled>
-	<input
-		type="checkbox"
-		bind:checked
-		onchange={handleChange}
-		{disabled}
-		class="toggle-input"
-	/>
+	<input type="checkbox" bind:checked onchange={handleChange} {disabled} class="toggle-input" />
 	<span class="toggle-body" role="none" onmousedown={preserveScrollOnInteraction}>
 		<span class="toggle-slider"></span>
 		{#if label}
@@ -174,4 +168,3 @@
 		font-size: 15px;
 	}
 </style>
-

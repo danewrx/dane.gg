@@ -15,7 +15,7 @@
 	}
 
 	const POSTS_PER_BATCH = 8;
-	
+
 	let allPosts = $state<BlogPost[]>([]);
 	let visiblePosts = $state<BlogPost[]>([]);
 	let loading = $state(true);
@@ -40,14 +40,14 @@
 			loading = true;
 			error = '';
 			const response = await fetch('/api/blog');
-			
+
 			if (!response.ok) {
 				throw new Error('Failed to load blog posts');
 			}
 
 			const result = await response.json();
 			allPosts = result.data || [];
-			
+
 			// Load initial batch
 			visiblePosts = allPosts.slice(0, POSTS_PER_BATCH);
 			hasMore = visiblePosts.length < allPosts.length;
@@ -63,18 +63,18 @@
 		if (loadingMore || !hasMore) return;
 
 		loadingMore = true;
-		
+
 		setTimeout(() => {
 			const currentCount = visiblePosts.length;
 			const nextBatch = allPosts.slice(currentCount, currentCount + POSTS_PER_BATCH);
-			
+
 			if (nextBatch.length > 0) {
 				visiblePosts = [...visiblePosts, ...nextBatch];
 				hasMore = visiblePosts.length < allPosts.length;
 			} else {
 				hasMore = false;
 			}
-			
+
 			loadingMore = false;
 		}, 300);
 	}
@@ -125,7 +125,7 @@
 			.replace(/\*(.+?)\*/g, '$1')
 			.replace(/\[(.+?)\]\(.+?\)/g, '$1')
 			.replace(/`(.+?)`/g, '$1')
-			.replace(/\n/g, ' ')   
+			.replace(/\n/g, ' ')
 			.trim();
 
 		if (plainText.length <= maxLength) return plainText;
@@ -149,7 +149,10 @@
 
 <svelte:head>
 	<title>Blog - dane.gg</title>
-	<meta name="description" content="Read my latest blog posts about software development, design, and technology." />
+	<meta
+		name="description"
+		content="Read my latest blog posts about software development, design, and technology."
+	/>
 </svelte:head>
 
 <div class="blog-page">
@@ -192,14 +195,12 @@
 								{/each}
 							</div>
 						{/if}
-						<button class="read-more" onclick={() => viewPost(post.slug)}>
-							Read more →
-						</button>
+						<button class="read-more" onclick={() => viewPost(post.slug)}> Read more → </button>
 					</div>
 				</article>
 			{/each}
 		</div>
-		
+
 		{#if hasMore || loadingMore}
 			<div class="load-more-trigger" bind:this={loadMoreTrigger}>
 				{#if loadingMore}
@@ -241,8 +242,12 @@
 	}
 
 	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
 
 	.loading p,

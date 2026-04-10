@@ -56,7 +56,7 @@
 			loading = true;
 			error = '';
 			const response = await fetch(`/api/blog/${slug}`);
-			
+
 			if (!response.ok) {
 				if (response.status === 404) {
 					error = 'Blog post not found';
@@ -79,7 +79,7 @@
 	async function loadNavigation() {
 		try {
 			const response = await fetch(`/api/blog/${slug}/navigation`);
-			
+
 			if (response.ok) {
 				const result = await response.json();
 				navigation = result.data;
@@ -163,7 +163,7 @@
 				</div>
 			{/if}
 			<h1 class="post-title">{post.title}</h1>
-			
+
 			<div class="post-meta">
 				<span class="meta-item">
 					<time>{formatDate(post.publishedAt)}</time>
@@ -262,8 +262,12 @@
 	}
 
 	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
 
 	.loading p {
@@ -355,12 +359,24 @@
 		line-height: 1.3;
 	}
 
-	.post-content :global(h1) { font-size: 2em; }
-	.post-content :global(h2) { font-size: 1.6em; }
-	.post-content :global(h3) { font-size: 1.3em; }
-	.post-content :global(h4) { font-size: 1.15em; }
-	.post-content :global(h5) { font-size: 1.05em; }
-	.post-content :global(h6) { font-size: 1em; }
+	.post-content :global(h1) {
+		font-size: 2em;
+	}
+	.post-content :global(h2) {
+		font-size: 1.6em;
+	}
+	.post-content :global(h3) {
+		font-size: 1.3em;
+	}
+	.post-content :global(h4) {
+		font-size: 1.15em;
+	}
+	.post-content :global(h5) {
+		font-size: 1.05em;
+	}
+	.post-content :global(h6) {
+		font-size: 1em;
+	}
 
 	.post-content :global(a) {
 		color: var(--theme-accent, #6366f1);
@@ -557,4 +573,3 @@
 		}
 	}
 </style>
-

@@ -26,11 +26,7 @@
 
 <header class="header">
 	<div class="ascii-container">
-		<button 
-			class="ascii-link" 
-			onclick={() => handleNavigation('/')}
-			aria-label="Go to homepage"
-		>
+		<button class="ascii-link" onclick={() => handleNavigation('/')} aria-label="Go to homepage">
 			<div class="ascii-box">
 				<pre>
 　　　　 ／＞　 フ 
@@ -53,14 +49,14 @@
 			</div>
 		</button>
 	</div>
-	
+
 	<nav class="nav">
 		<div class="nav-container">
 			<ul id="dane-neko-nav-home" class="nav-list">
 				{#each navigation as item}
 					<li class="nav-item">
-						<button 
-							class="nav-link" 
+						<button
+							class="nav-link"
 							class:active={isActive(item.path)}
 							onclick={() => handleNavigation(item.path)}
 						>
@@ -129,7 +125,11 @@
 	.ascii-box pre:first-child {
 		margin: 0;
 		padding: 0 15px 0 0;
-		font-size: clamp(calc(8px * var(--theme-font-scale, 1)), 1vw, calc(16px * var(--theme-font-scale, 1)));
+		font-size: clamp(
+			calc(8px * var(--theme-font-scale, 1)),
+			1vw,
+			calc(16px * var(--theme-font-scale, 1))
+		);
 		line-height: 1;
 		animation: softColorCycle 10s ease-in-out infinite;
 		display: inline-block;
@@ -142,7 +142,11 @@
 	.ascii-box pre:last-child {
 		margin: 0;
 		padding: 0;
-		font-size: clamp(calc(8px * var(--theme-font-scale, 1)), 1vw, calc(16px * var(--theme-font-scale, 1)));
+		font-size: clamp(
+			calc(8px * var(--theme-font-scale, 1)),
+			1vw,
+			calc(16px * var(--theme-font-scale, 1))
+		);
 		line-height: 1;
 		animation: softColorCycle 10s ease-in-out infinite;
 		display: inline-block;
@@ -153,11 +157,21 @@
 	}
 
 	@keyframes softColorCycle {
-		0% { color: var(--theme-text-primary, #ffd5d5); }
-		25% { color: var(--theme-accent, #c6e4ff); }
-		50% { color: var(--theme-secondary, #d7c8ff); }
-		75% { color: var(--theme-accent, #c6e4ff); }
-		100% { color: var(--theme-text-primary, #ffd5d5); }
+		0% {
+			color: var(--theme-text-primary, #ffd5d5);
+		}
+		25% {
+			color: var(--theme-accent, #c6e4ff);
+		}
+		50% {
+			color: var(--theme-secondary, #d7c8ff);
+		}
+		75% {
+			color: var(--theme-accent, #c6e4ff);
+		}
+		100% {
+			color: var(--theme-text-primary, #ffd5d5);
+		}
 	}
 
 	.nav {
@@ -236,7 +250,11 @@
 
 		.ascii-box pre:first-child,
 		.ascii-box pre:last-child {
-			font-size: clamp(calc(6px * var(--theme-font-scale, 1)), 2vw, calc(12px * var(--theme-font-scale, 1)));
+			font-size: clamp(
+				calc(6px * var(--theme-font-scale, 1)),
+				2vw,
+				calc(12px * var(--theme-font-scale, 1))
+			);
 		}
 
 		.nav-container {

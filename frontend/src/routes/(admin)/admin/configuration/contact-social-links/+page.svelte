@@ -38,8 +38,8 @@
 			const data = await response.json();
 
 			if (data.success) {
-				allSocialLinks = data.data.sort((a: SocialLink, b: SocialLink) => 
-					a.displayOrder - b.displayOrder
+				allSocialLinks = data.data.sort(
+					(a: SocialLink, b: SocialLink) => a.displayOrder - b.displayOrder
 				);
 			}
 		} catch (error) {
@@ -87,7 +87,7 @@
 
 	function toggleLinkSelection(linkId: string) {
 		if (selectedLinkIds.includes(linkId)) {
-			selectedLinkIds = selectedLinkIds.filter(id => id !== linkId);
+			selectedLinkIds = selectedLinkIds.filter((id) => id !== linkId);
 		} else {
 			selectedLinkIds = [...selectedLinkIds, linkId];
 		}
@@ -212,7 +212,7 @@
 		const reorderedIds = [...selectedLinkIds];
 		const [draggedId] = reorderedIds.splice(draggedIndex, 1);
 		reorderedIds.splice(index, 0, draggedId);
-		
+
 		selectedLinkIds = reorderedIds;
 
 		draggedIndex = null;
@@ -226,13 +226,13 @@
 
 	let selectedLinks = $derived(
 		selectedLinkIds
-			.map(id => allSocialLinks.find(link => link.id === id))
+			.map((id) => allSocialLinks.find((link) => link.id === id))
 			.filter((link): link is SocialLink => link !== undefined)
 	);
 
 	let unselectedLinks = $derived(
 		allSocialLinks
-			.filter(link => !selectedLinkIds.includes(link.id))
+			.filter((link) => !selectedLinkIds.includes(link.id))
 			.sort((a, b) => a.displayOrder - b.displayOrder)
 	);
 </script>
@@ -243,7 +243,10 @@
 
 <div class="contact-social-links-settings">
 	<div class="settings-description">
-		<p>Select which social links should be displayed on the contact page and customize the header text for the social links section.</p>
+		<p>
+			Select which social links should be displayed on the contact page and customize the header
+			text for the social links section.
+		</p>
 	</div>
 
 	{#if isLoading}
@@ -254,17 +257,18 @@
 	{:else}
 		<div class="form-section">
 			<div class="form-group">
-				<label>Header</label>
 				{#if isEditingHeader}
+					<label for="contact-social-links-header-input">Header</label>
 					<div class="header-edit-container">
-						<input 
-							type="text" 
+						<input
+							id="contact-social-links-header-input"
+							type="text"
 							bind:value={tempHeaderText}
 							placeholder="e.g., If you want to contact me through social media, please do so via the following channels. I am most active here and will likely respond the quickest:"
 							class="header-input"
 						/>
 						<div class="header-edit-actions">
-							<button 
+							<button
 								type="button"
 								class="icon-button save-icon-button"
 								onclick={saveHeader}
@@ -272,7 +276,7 @@
 							>
 								<Check size={16} />
 							</button>
-							<button 
+							<button
 								type="button"
 								class="icon-button cancel-icon-button"
 								onclick={cancelEditingHeader}
@@ -282,8 +286,11 @@
 							</button>
 						</div>
 					</div>
-					<p class="field-hint">This text will appear above the social links on the contact page.</p>
+					<p class="field-hint">
+						This text will appear above the social links on the contact page.
+					</p>
 				{:else}
+					<span class="field-label-static">Header</span>
 					<div class="header-view-container">
 						<div class="header-view-text">
 							{#if socialHeader}
@@ -292,7 +299,7 @@
 								<span class="empty-text">No header text set. Click edit to add one.</span>
 							{/if}
 						</div>
-						<button 
+						<button
 							type="button"
 							class="icon-button edit-icon-button"
 							onclick={startEditingHeader}
@@ -301,7 +308,9 @@
 							<Edit2 size={16} />
 						</button>
 					</div>
-					<p class="field-hint">This text will appear above the social links on the contact page.</p>
+					<p class="field-hint">
+						This text will appear above the social links on the contact page.
+					</p>
 				{/if}
 			</div>
 		</div>
@@ -309,18 +318,21 @@
 		<!-- Selected Links Section -->
 		<div class="form-section">
 			<div class="form-group">
-				<label>Selected Social Links</label>
-				<p class="field-hint">These links will be displayed on the contact page. Uncheck to remove them from the selection.</p>
-				
+				<span class="field-label-static">Selected Social Links</span>
+				<p class="field-hint">
+					These links will be displayed on the contact page. Uncheck to remove them from the
+					selection.
+				</p>
+
 				{#if selectedLinks.length === 0}
 					<div class="empty-state">
-						<Link2 size={48} class="empty-icon" />
+						<span class="empty-icon" aria-hidden="true"><Link2 size={48} /></span>
 						<p>No links selected. Select links from the available links section below.</p>
 					</div>
 				{:else}
 					<div class="links-list">
 						{#each selectedLinks as link, index (link.id)}
-							<div 
+							<div
 								class="link-item selected"
 								class:dragging={draggedIndex === index}
 								class:drag-over={dragOverIndex === index}
@@ -337,7 +349,7 @@
 									<GripVertical size={20} />
 								</div>
 								<label class="link-checkbox">
-									<input 
+									<input
 										type="checkbox"
 										checked={true}
 										onchange={() => toggleLinkSelection(link.id)}
@@ -348,15 +360,11 @@
 											{#if link.iconType === 'custom-text' && link.iconText}
 												<span class="text-icon">{link.iconText}</span>
 											{:else if link.iconType === 'svg-url' && link.svgUrl}
-												<img 
-													src={link.svgUrl} 
-													alt={link.name}
-													class="svg-icon"
-												/>
+												<img src={link.svgUrl} alt={link.name} class="svg-icon" />
 											{:else if link.iconType === 'coreui-brand' && link.iconName}
-												<Icon 
-													icon={`cib:${link.iconName.replace('cb-', '')}`} 
-													width="20" 
+												<Icon
+													icon={`cib:${link.iconName.replace('cb-', '')}`}
+													width="20"
 													height="20"
 												/>
 											{:else}
@@ -382,17 +390,24 @@
 		<!-- Available Links Section -->
 		<div class="form-section">
 			<div class="form-group">
-				<label>Available Social Links</label>
-				<p class="field-hint">Check the social links you want to add to the contact page. Links are displayed in their configured display order.</p>
-				
+				<span class="field-label-static">Available Social Links</span>
+				<p class="field-hint">
+					Check the social links you want to add to the contact page. Links are displayed in their
+					configured display order.
+				</p>
+
 				{#if allSocialLinks.length === 0}
 					<div class="empty-state">
-						<Link2 size={48} class="empty-icon" />
-						<p>No social links available. Add social links in the <a href="/admin/configuration/social-links">Social Links</a> settings first.</p>
+						<span class="empty-icon" aria-hidden="true"><Link2 size={48} /></span>
+						<p>
+							No social links available. Add social links in the <a
+								href="/admin/configuration/social-links">Social Links</a
+							> settings first.
+						</p>
 					</div>
 				{:else if unselectedLinks.length === 0}
 					<div class="empty-state">
-						<Link2 size={48} class="empty-icon" />
+						<span class="empty-icon" aria-hidden="true"><Link2 size={48} /></span>
 						<p>All available links are already selected.</p>
 					</div>
 				{:else}
@@ -400,7 +415,7 @@
 						{#each unselectedLinks as link (link.id)}
 							<div class="link-item">
 								<label class="link-checkbox">
-									<input 
+									<input
 										type="checkbox"
 										checked={false}
 										onchange={() => toggleLinkSelection(link.id)}
@@ -411,15 +426,11 @@
 											{#if link.iconType === 'custom-text' && link.iconText}
 												<span class="text-icon">{link.iconText}</span>
 											{:else if link.iconType === 'svg-url' && link.svgUrl}
-												<img 
-													src={link.svgUrl} 
-													alt={link.name}
-													class="svg-icon"
-												/>
+												<img src={link.svgUrl} alt={link.name} class="svg-icon" />
 											{:else if link.iconType === 'coreui-brand' && link.iconName}
-												<Icon 
-													icon={`cib:${link.iconName.replace('cb-', '')}`} 
-													width="20" 
+												<Icon
+													icon={`cib:${link.iconName.replace('cb-', '')}`}
+													width="20"
 													height="20"
 												/>
 											{:else}
@@ -443,12 +454,7 @@
 		</div>
 
 		<div class="form-actions">
-			<button 
-				type="button"
-				class="save-button" 
-				onclick={saveConfig}
-				disabled={isSaving}
-			>
+			<button type="button" class="save-button" onclick={saveConfig} disabled={isSaving}>
 				{#if isSaving}
 					<Loader2 size={16} class="spin" />
 					Saving...
@@ -504,6 +510,14 @@
 	}
 
 	.form-group > label {
+		display: block;
+		font-size: 14px;
+		font-weight: 500;
+		color: var(--text-primary, #ffffff);
+		margin-bottom: 8px;
+	}
+
+	.field-label-static {
 		display: block;
 		font-size: 14px;
 		font-weight: 500;
@@ -629,9 +643,15 @@
 	}
 
 	.empty-icon {
-		color: var(--text-secondary, #a1a1aa);
+		display: block;
 		margin-bottom: 16px;
 		opacity: 0.5;
+		color: var(--text-secondary, #a1a1aa);
+	}
+
+	.empty-icon :global(svg) {
+		display: block;
+		margin: 0 auto;
 	}
 
 	.empty-state p {
@@ -717,7 +737,7 @@
 	}
 
 	.link-checkbox .checkbox-input,
-	.link-checkbox input[type="checkbox"] {
+	.link-checkbox input[type='checkbox'] {
 		flex-shrink: 0;
 		width: 18px;
 		height: 18px;
@@ -860,7 +880,11 @@
 	}
 
 	@keyframes spin {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>

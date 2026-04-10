@@ -25,18 +25,25 @@
 	let pickerElement: HTMLDivElement | null = $state(null);
 	let overlayElement: HTMLDivElement | null = $state(null);
 
-	function generateEmojiCategories(): Array<{ name: string; emojis: Array<{ emoji: string; name: string }> }> {
+	function generateEmojiCategories(): Array<{
+		name: string;
+		emojis: Array<{ emoji: string; name: string }>;
+	}> {
 		if (!browser) return [];
-		
+
 		const categories = getEmojiCategories();
-		
-		return categories.map((cat: { name: string; emojis: Array<{ emoji: string; name: string }> }) => ({
-			name: cat.name,
-			emojis: cat.emojis
-		}));
+
+		return categories.map(
+			(cat: { name: string; emojis: Array<{ emoji: string; name: string }> }) => ({
+				name: cat.name,
+				emojis: cat.emojis
+			})
+		);
 	}
 
-	let emojiCategories = $state<Array<{ name: string; emojis: Array<{ emoji: string; name: string }> }>>([]);
+	let emojiCategories = $state<
+		Array<{ name: string; emojis: Array<{ emoji: string; name: string }> }>
+	>([]);
 	let recentEmojis = $state<Array<{ emoji: string; name: string }>>([]);
 
 	let selectedCategory = $state('All');
@@ -44,7 +51,7 @@
 	// Load custom emojis from API
 	async function loadCustomEmojis() {
 		if (!browser || isLoadingCustom) return;
-		
+
 		try {
 			isLoadingCustom = true;
 			const response = await fetch('/api/emojis');
@@ -59,7 +66,12 @@
 		}
 	}
 
-	function selectEmoji(emojiData: { emoji: string; name: string } | string, isCustom = false, imageUrl?: string, emojiName?: string) {
+	function selectEmoji(
+		emojiData: { emoji: string; name: string } | string,
+		isCustom = false,
+		imageUrl?: string,
+		emojiName?: string
+	) {
 		if (isCustom && imageUrl && emojiName) {
 			// Track custom emoji usage
 			trackEmojiUsage(`:${emojiName}:`, emojiName);
@@ -90,7 +102,7 @@
 			const pickerRect = pickerElement.getBoundingClientRect();
 			const clickX = event.clientX;
 			const clickY = event.clientY;
-			
+
 			if (
 				clickX >= pickerRect.left &&
 				clickX <= pickerRect.right &&
@@ -102,14 +114,14 @@
 				return;
 			}
 		}
-		
+
 		const path = event.composedPath();
 		if (pickerElement && path.includes(pickerElement)) {
 			event.stopPropagation();
 			event.preventDefault();
 			return;
 		}
-		
+
 		closePicker();
 	}
 
@@ -136,7 +148,7 @@
 	// Function to position picker relative to trigger button
 	function positionPicker() {
 		if (!browser || !pickerElement || !isOpen) return;
-		
+
 		let button: HTMLElement | null = null;
 		if (triggerButtonRef) {
 			button = triggerButtonRef as HTMLElement;
@@ -144,16 +156,16 @@
 			// Fallback: try to find button by class
 			button = document.querySelector('.emoji-btn, .emoji-button') as HTMLElement;
 		}
-		
+
 		if (button) {
 			const rect = button.getBoundingClientRect();
 			const pickerWidth = pickerElement.offsetWidth || 360;
 			const pickerHeight = pickerElement.offsetHeight || 320;
 			const spaceAbove = rect.top;
 			const spaceBelow = window.innerHeight - rect.bottom;
-			
+
 			let leftPos = rect.right - pickerWidth;
-			
+
 			// Ensure picker stays within viewport
 			if (leftPos < 10) {
 				leftPos = 10;
@@ -161,7 +173,7 @@
 			if (leftPos + pickerWidth > window.innerWidth - 10) {
 				leftPos = window.innerWidth - pickerWidth - 10;
 			}
-			
+
 			// Position above or below button
 			if (spaceAbove >= pickerHeight + 10) {
 				pickerElement.style.top = 'auto';
@@ -196,22 +208,22 @@
 			if (overlayElement && overlayElement.parentNode !== document.body) {
 				document.body.appendChild(overlayElement);
 			}
-			
+
 			// Position after a short delay to ensure dimensions are calculated
 			setTimeout(() => {
 				positionPicker();
 			}, 10);
-			
+
 			// Update position on resize/scroll
 			const handleResize = () => {
 				if (isOpen && pickerElement) {
 					positionPicker();
 				}
 			};
-			
+
 			window.addEventListener('resize', handleResize);
 			window.addEventListener('scroll', handleResize, true);
-			
+
 			return () => {
 				window.removeEventListener('resize', handleResize);
 				window.removeEventListener('scroll', handleResize, true);
@@ -230,7 +242,13 @@
 		if (browser) {
 			emojiCategories = generateEmojiCategories();
 			recentEmojis = getRecentEmojis();
-			console.log('Admin emoji categories loaded:', emojiCategories.length, 'categories with', emojiCategories.reduce((sum, cat) => sum + cat.emojis.length, 0), 'total emojis');
+			console.log(
+				'Admin emoji categories loaded:',
+				emojiCategories.length,
+				'categories with',
+				emojiCategories.reduce((sum, cat) => sum + cat.emojis.length, 0),
+				'total emojis'
+			);
 		}
 		if (!hasLoadedEmojis) {
 			loadCustomEmojis().then(() => {
@@ -238,13 +256,13 @@
 			});
 		}
 	});
-	
+
 	$effect(() => {
 		if (isOpen && browser) {
 			recentEmojis = getRecentEmojis();
 		}
 	});
-	
+
 	onDestroy(() => {
 		if (pickerElement && pickerElement.parentNode === document.body) {
 			document.body.removeChild(pickerElement);
@@ -256,9 +274,9 @@
 </script>
 
 {#if isOpen}
-	<div 
-		class="emoji-picker-overlay" 
-		bind:this={overlayElement} 
+	<div
+		class="emoji-picker-overlay"
+		bind:this={overlayElement}
 		onclick={(e) => {
 			if (pickerElement) {
 				const pickerRect = pickerElement.getBoundingClientRect();
@@ -273,25 +291,41 @@
 					return;
 				}
 			}
-			
+
 			if (pickerElement && e.composedPath().includes(pickerElement)) {
 				e.stopPropagation();
 				e.preventDefault();
 				return;
 			}
-			
+
 			handleOverlayClick(e);
 		}}
-		role="button" 
-		tabindex="-1"
+		role="button"
+		tabindex="0"
+		onkeydown={(e) => {
+			if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				closePicker(e);
+			}
+		}}
 	></div>
-	<div class="emoji-picker" bind:this={pickerElement} onclick={(e) => {
-		e.stopPropagation();
-		e.preventDefault();
-	}} onmousedown={(e) => {
-		e.stopPropagation();
-		e.preventDefault();
-	}}>
+	<div
+		class="emoji-picker"
+		bind:this={pickerElement}
+		role="dialog"
+		aria-modal="true"
+		aria-label="Emoji picker"
+		tabindex="-1"
+		onclick={(e) => {
+			e.stopPropagation();
+			e.preventDefault();
+		}}
+		onkeydown={(e) => e.stopPropagation()}
+		onmousedown={(e) => {
+			e.stopPropagation();
+			e.preventDefault();
+		}}
+	>
 		<div class="picker-header">
 			<div class="picker-title">Emoji Picker</div>
 			<button class="close-button" type="button" onclick={closePicker} title="Close">
@@ -300,7 +334,7 @@
 		</div>
 
 		<!-- Category Tabs -->
-		<div class="picker-tabs" onclick={(e) => e.stopPropagation()} onmousedown={(e) => e.stopPropagation()}>
+		<div class="picker-tabs" role="toolbar" aria-label="Emoji categories">
 			<button
 				class="picker-tab"
 				class:active={selectedCategory === 'All'}
@@ -369,20 +403,22 @@
 							<div class="category-heading">Recently Used</div>
 							<div class="picker-grid">
 								{#each recentEmojis as emojiData}
-									{@const isCustomEmoji = emojiData.emoji.startsWith(':') && emojiData.emoji.endsWith(':')}
-									{@const customEmoji = isCustomEmoji ? customEmojis.find(c => c.name === emojiData.name) : null}
+									{@const isCustomEmoji =
+										emojiData.emoji.startsWith(':') && emojiData.emoji.endsWith(':')}
+									{@const customEmoji = isCustomEmoji
+										? customEmojis.find((c) => c.name === emojiData.name)
+										: null}
 									<button
 										class="emoji-button"
-										onclick={() => isCustomEmoji && customEmoji ? selectEmoji('', true, customEmoji.imageUrl, customEmoji.name) : selectEmoji(emojiData)}
+										onclick={() =>
+											isCustomEmoji && customEmoji
+												? selectEmoji('', true, customEmoji.imageUrl, customEmoji.name)
+												: selectEmoji(emojiData)}
 										type="button"
 										title={`:${emojiData.name}:`}
 									>
 										{#if isCustomEmoji && customEmoji}
-											<img 
-												src={customEmoji.imageUrl} 
-												alt={customEmoji.name}
-												loading="lazy"
-											/>
+											<img src={customEmoji.imageUrl} alt={customEmoji.name} loading="lazy" />
 										{:else}
 											{emojiData.emoji}
 										{/if}
@@ -400,11 +436,7 @@
 										type="button"
 										title={`:${customEmoji.name}:`}
 									>
-										<img 
-											src={customEmoji.imageUrl} 
-											alt={customEmoji.name}
-											loading="lazy"
-										/>
+										<img src={customEmoji.imageUrl} alt={customEmoji.name} loading="lazy" />
 									</button>
 								{/each}
 							</div>
@@ -428,20 +460,22 @@
 				{:else if selectedCategory === 'Recently Used'}
 					<div class="picker-grid">
 						{#each recentEmojis as emojiData}
-							{@const isCustomEmoji = emojiData.emoji.startsWith(':') && emojiData.emoji.endsWith(':')}
-							{@const customEmoji = isCustomEmoji ? customEmojis.find(c => c.name === emojiData.name) : null}
+							{@const isCustomEmoji =
+								emojiData.emoji.startsWith(':') && emojiData.emoji.endsWith(':')}
+							{@const customEmoji = isCustomEmoji
+								? customEmojis.find((c) => c.name === emojiData.name)
+								: null}
 							<button
 								class="emoji-button"
-								onclick={() => isCustomEmoji && customEmoji ? selectEmoji('', true, customEmoji.imageUrl, customEmoji.name) : selectEmoji(emojiData)}
+								onclick={() =>
+									isCustomEmoji && customEmoji
+										? selectEmoji('', true, customEmoji.imageUrl, customEmoji.name)
+										: selectEmoji(emojiData)}
 								type="button"
 								title={`:${emojiData.name}:`}
 							>
 								{#if isCustomEmoji && customEmoji}
-									<img 
-										src={customEmoji.imageUrl} 
-										alt={customEmoji.name}
-										loading="lazy"
-									/>
+									<img src={customEmoji.imageUrl} alt={customEmoji.name} loading="lazy" />
 								{:else}
 									{emojiData.emoji}
 								{/if}
@@ -457,17 +491,13 @@
 								type="button"
 								title={`:${customEmoji.name}:`}
 							>
-								<img 
-									src={customEmoji.imageUrl} 
-									alt={customEmoji.name}
-									loading="lazy"
-								/>
+								<img src={customEmoji.imageUrl} alt={customEmoji.name} loading="lazy" />
 							</button>
 						{/each}
 					</div>
 				{:else}
 					<div class="picker-grid">
-						{#each emojiCategories.find(c => c.name === selectedCategory)?.emojis || [] as emojiData}
+						{#each emojiCategories.find((c) => c.name === selectedCategory)?.emojis || [] as emojiData}
 							<button
 								class="emoji-button"
 								onclick={() => selectEmoji(emojiData)}
@@ -495,13 +525,9 @@
 		background: transparent;
 		pointer-events: auto;
 	}
-	
+
 	.emoji-picker-overlay:has(+ .emoji-picker) {
 		pointer-events: auto;
-	}
-	
-	.emoji-picker ~ .emoji-picker-overlay {
-		pointer-events: none;
 	}
 
 	.emoji-picker {
@@ -518,7 +544,9 @@
 		background: #2d2d2d;
 		border: 1px solid #404040;
 		border-radius: 8px;
-		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+		box-shadow:
+			0 4px 6px -1px rgba(0, 0, 0, 0.1),
+			0 2px 4px -1px rgba(0, 0, 0, 0.06);
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 		box-sizing: border-box;
 	}
@@ -809,4 +837,3 @@
 		}
 	}
 </style>
-

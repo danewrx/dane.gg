@@ -84,38 +84,40 @@
 	let messagesContainer = $state<HTMLDivElement | null>(null);
 	let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 	let isDestroyed = $state(false);
-	
+
 	// Lazy loading state
 	let isLoadingMore = $state(false);
 	let hasMoreMessages = $state(true);
 	let nextCursor = $state<string | null>(null);
 	let isInitialLoad = $state(true);
-	
+
 	// Emoji picker state
 	let showEmojiPicker = $state(false);
 	let isOpeningEmojiPicker = $state(false);
 	let emojiButtonRef: HTMLButtonElement | null = $state(null);
 	let messageInputDiv: HTMLDivElement | null = null;
-	
+
 	// Autocomplete state
 	let emojiAutocompleteOpen = $state(false);
-	let emojiAutocompleteMatches = $state<Array<{ name: string; emoji: string; isCustom: boolean; imageUrl?: string }>>([]);
+	let emojiAutocompleteMatches = $state<
+		Array<{ name: string; emoji: string; isCustom: boolean; imageUrl?: string }>
+	>([]);
 	let emojiAutocompleteIndex = $state(0);
 	let emojiAutocompleteQuery = $state('');
-	
+
 	// Extract text content from contenteditable, converting emoji images back to :name:
 	function getInputText(): string {
 		if (!messageInputDiv) return inputValue;
-		
+
 		let text = '';
 		const walker = document.createTreeWalker(
 			messageInputDiv,
 			NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
 			null
 		);
-		
+
 		let node;
-		while (node = walker.nextNode()) {
+		while ((node = walker.nextNode())) {
 			if (node.nodeType === Node.TEXT_NODE) {
 				text += node.textContent || '';
 			} else if (node.nodeType === Node.ELEMENT_NODE) {
@@ -126,37 +128,37 @@
 				}
 			}
 		}
-		
+
 		return text;
 	}
-	
+
 	function getCaretPosition(): number {
 		if (!messageInputDiv) return 0;
-		
+
 		const selection = window.getSelection();
 		if (!selection || selection.rangeCount === 0) return 0;
-		
+
 		const range = selection.getRangeAt(0);
 		const preCaretRange = range.cloneRange();
 		preCaretRange.selectNodeContents(messageInputDiv);
 		preCaretRange.setEnd(range.endContainer, range.endOffset);
-		
+
 		let position = 0;
 		const walker = document.createTreeWalker(
 			messageInputDiv,
 			NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
 			null
 		);
-		
+
 		let node;
-		while (node = walker.nextNode()) {
+		while ((node = walker.nextNode())) {
 			if (node === range.endContainer) {
 				if (node.nodeType === Node.TEXT_NODE) {
 					position += range.endOffset;
 				}
 				break;
 			}
-			
+
 			if (node.nodeType === Node.TEXT_NODE) {
 				position += (node.textContent || '').length;
 			} else if (node.nodeType === Node.ELEMENT_NODE) {
@@ -167,27 +169,27 @@
 				}
 			}
 		}
-		
+
 		return position;
 	}
-	
+
 	function setCaretPosition(position: number) {
 		if (!messageInputDiv) return;
-		
+
 		const selection = window.getSelection();
 		if (!selection) return;
-		
+
 		const range = document.createRange();
 		let currentPos = 0;
-		
+
 		const walker = document.createTreeWalker(
 			messageInputDiv,
 			NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
 			null
 		);
-		
+
 		let node;
-		while (node = walker.nextNode()) {
+		while ((node = walker.nextNode())) {
 			if (node.nodeType === Node.TEXT_NODE) {
 				const text = node.textContent || '';
 				if (currentPos + text.length >= position) {
@@ -209,36 +211,41 @@
 				}
 			}
 		}
-		
+
 		selection.removeAllRanges();
 		selection.addRange(range);
 	}
-	
+
 	function isEmptyContentEditable(element: HTMLElement): boolean {
 		if (!element) return true;
 		const text = element.textContent?.trim() || '';
 		const images = element.querySelectorAll('img.emoji-inline');
 		return text === '' && images.length === 0;
 	}
-	
+
 	function handleInputFocus() {
 		if (messageInputDiv) {
 			messageInputDiv.classList.remove('show-placeholder');
 		}
 	}
-	
+
 	function handleInputBlur(event: FocusEvent) {
 		if (showEmojiPicker || isOpeningEmojiPicker) {
 			return;
 		}
-		
+
 		const relatedTarget = event.relatedTarget as HTMLElement;
 		if (relatedTarget) {
-			if (relatedTarget.closest('.emoji-button') || relatedTarget.closest('.emoji-picker') || relatedTarget.closest('.admin-emoji-picker') || relatedTarget.closest('.emoji-btn')) {
+			if (
+				relatedTarget.closest('.emoji-button') ||
+				relatedTarget.closest('.emoji-picker') ||
+				relatedTarget.closest('.admin-emoji-picker') ||
+				relatedTarget.closest('.emoji-btn')
+			) {
 				return;
 			}
 		}
-		
+
 		if (messageInputDiv && isEmptyContentEditable(messageInputDiv)) {
 			messageInputDiv.classList.add('show-placeholder');
 		}
@@ -247,11 +254,11 @@
 	// Format timestamp
 	function formatTimestamp(timestamp: string): string {
 		if (!browser) return '';
-		
+
 		try {
 			const date = new Date(timestamp);
 			const now = new Date();
-			const isToday = 
+			const isToday =
 				date.getDate() === now.getDate() &&
 				date.getMonth() === now.getMonth() &&
 				date.getFullYear() === now.getFullYear();
@@ -275,7 +282,7 @@
 	// Get WebSocket URL
 	function getWebSocketUrl(): string {
 		if (!browser || typeof window === 'undefined') return '';
-		
+
 		try {
 			const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 			const host = window.location.host;
@@ -289,30 +296,30 @@
 	// Load messages from API with pagination
 	async function loadMessages(before?: string): Promise<void> {
 		if (!browser || isLoadingMore) return;
-		
+
 		isLoadingMore = true;
-		
+
 		try {
 			const params = new URLSearchParams({ limit: '50' });
 			if (before) {
 				params.set('before', before);
 			}
-			
+
 			const response = await fetch(`/api/chat/messages?${params}`, {
 				credentials: 'include'
 			});
-			
+
 			if (response.ok) {
 				const result = await response.json();
 				if (result.success) {
 					const newMessages = result.data.messages as ChatMessage[];
 					hasMoreMessages = result.data.hasMore;
 					nextCursor = result.data.nextCursor;
-					
+
 					if (before) {
 						const scrollHeight = messagesContainer?.scrollHeight || 0;
 						messages = [...newMessages, ...messages];
-						
+
 						requestAnimationFrame(() => {
 							if (messagesContainer) {
 								const newScrollHeight = messagesContainer.scrollHeight;
@@ -332,12 +339,12 @@
 			isLoadingMore = false;
 		}
 	}
-	
+
 	// Handle scroll for lazy loading
 	function handleScroll(event: Event) {
 		const target = event.target as HTMLDivElement;
 		if (!target || isLoadingMore || !hasMoreMessages) return;
-		
+
 		// Load more when scrolled at top (within 100px)
 		if (target.scrollTop < 100 && nextCursor) {
 			loadMessages(nextCursor);
@@ -379,7 +386,12 @@
 				try {
 					const data: WebSocketMessage = JSON.parse(event.data);
 
-					if (data.type === 'message' && data.data && !Array.isArray(data.data) && 'timestamp' in data.data) {
+					if (
+						data.type === 'message' &&
+						data.data &&
+						!Array.isArray(data.data) &&
+						'timestamp' in data.data
+					) {
 						const msg = data.data as ChatMessage;
 						messages = [...messages, msg];
 						scrollToBottom();
@@ -387,7 +399,7 @@
 						// Ignore WebSocket history
 					} else if (data.type === 'system' && data.message) {
 						const now = new Date();
-						
+
 						let messageType: 'connected' | 'nickname' | 'disconnected' | 'other' = 'other';
 						const msgLower = data.message.toLowerCase();
 						if (msgLower.includes('connected to chat')) {
@@ -397,7 +409,7 @@
 						} else if (msgLower.includes('disconnected')) {
 							messageType = 'disconnected';
 						}
-						
+
 						const systemMsg: SystemMessage = {
 							timestamp: now.toISOString(),
 							formatted: data.message,
@@ -410,7 +422,7 @@
 						userCount = data.count;
 					} else if (data.type === 'delete' && data.messageId) {
 						// Remove deleted message from the list
-						messages = messages.filter(msg => {
+						messages = messages.filter((msg) => {
 							if ('isSystem' in msg) return true; // Keep system messages
 							return (msg as ChatMessage).id !== data.messageId;
 						});
@@ -473,7 +485,7 @@
 		if (!message) {
 			return;
 		}
-		
+
 		ws.send(message);
 		inputValue = '';
 		if (messageInputDiv) {
@@ -484,7 +496,6 @@
 
 	// Handle Enter key
 	function handleKeyDown(event: KeyboardEvent) {
-
 		if (emojiAutocompleteOpen && emojiAutocompleteMatches.length > 0) {
 			if (event.key === 'ArrowDown') {
 				event.preventDefault();
@@ -492,9 +503,10 @@
 				return;
 			} else if (event.key === 'ArrowUp') {
 				event.preventDefault();
-				emojiAutocompleteIndex = emojiAutocompleteIndex === 0 
-					? emojiAutocompleteMatches.length - 1 
-					: emojiAutocompleteIndex - 1;
+				emojiAutocompleteIndex =
+					emojiAutocompleteIndex === 0
+						? emojiAutocompleteMatches.length - 1
+						: emojiAutocompleteIndex - 1;
 				return;
 			} else if (event.key === 'Enter' || event.key === 'Tab') {
 				event.preventDefault();
@@ -505,47 +517,53 @@
 				return;
 			}
 		}
-		
+
 		if (event.key === 'Enter' && !event.shiftKey) {
 			event.preventDefault();
 			sendMessage();
 		}
 	}
-	
-	function insertAutocompleteEmoji(emoji: { name: string; emoji: string; isCustom: boolean; imageUrl?: string }) {
+
+	function insertAutocompleteEmoji(emoji: {
+		name: string;
+		emoji: string;
+		isCustom: boolean;
+		imageUrl?: string;
+	}) {
 		if (!messageInputDiv) return;
-		
+
 		const text = getInputText();
 		const cursorPos = getCaretPosition();
 		const beforeCursor = text.substring(0, cursorPos);
-		
+
 		const match = beforeCursor.match(/:([a-zA-Z0-9_-]*)$/);
 		if (!match) return;
-		
+
 		if (emoji.isCustom && emoji.imageUrl) {
 			trackEmojiUsage(`:${emoji.name}:`, emoji.name);
 		} else {
 			trackEmojiUsage(emoji.emoji, emoji.name);
 		}
-		
+
 		const selection = window.getSelection();
 		if (selection && selection.rangeCount > 0) {
 			const range = selection.getRangeAt(0);
-			
+
 			if (!messageInputDiv.contains(range.commonAncestorContainer)) {
 				range.selectNodeContents(messageInputDiv);
 				range.collapse(false);
 			}
-			
+
 			range.setStart(range.startContainer, Math.max(0, range.startOffset - match[0].length));
 			range.deleteContents();
-			
+
 			if (emoji.isCustom && emoji.imageUrl) {
 				const img = document.createElement('img');
 				img.src = emoji.imageUrl;
 				img.alt = `:${emoji.name}:`;
 				img.className = 'emoji-inline';
-				img.style.cssText = 'width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;';
+				img.style.cssText =
+					'width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;';
 				range.insertNode(img);
 				range.setStartAfter(img);
 			} else {
@@ -553,14 +571,14 @@
 				range.insertNode(textNode);
 				range.setStartAfter(textNode);
 			}
-			
+
 			range.collapse(true);
 			selection.removeAllRanges();
 			selection.addRange(range);
-			
+
 			messageInputDiv.normalize();
 			const divs = messageInputDiv.querySelectorAll('div');
-			divs.forEach(div => {
+			divs.forEach((div) => {
 				const parent = div.parentNode;
 				if (parent) {
 					while (div.firstChild) {
@@ -570,25 +588,27 @@
 				}
 			});
 			messageInputDiv.normalize();
-			
+
 			inputValue = getInputText();
 			messageInputDiv.focus();
 		}
-		
+
 		emojiAutocompleteOpen = false;
 	}
-	
+
 	// Handle emoji selection
-	function handleEmojiSelect(event: CustomEvent<{ emoji: string; isCustom?: boolean; imageUrl?: string }>) {
+	function handleEmojiSelect(
+		event: CustomEvent<{ emoji: string; isCustom?: boolean; imageUrl?: string }>
+	) {
 		if (!messageInputDiv) return;
-		
+
 		const { emoji: emojiText, isCustom, imageUrl } = event.detail;
-		
+
 		let emojiToInsert = emojiText;
 		if (emojiText.startsWith(':') && emojiText.endsWith(':')) {
 			const emojiName = emojiText.slice(1, -1);
-			
-			const emoji = allEmojis.find(e => e.name.toLowerCase() === emojiName.toLowerCase());
+
+			const emoji = allEmojis.find((e) => e.name.toLowerCase() === emojiName.toLowerCase());
 			if (emoji) {
 				if (emoji.isCustom && emoji.imageUrl) {
 					// Custom emoji
@@ -603,45 +623,50 @@
 				}
 			}
 		}
-		
+
 		messageInputDiv.focus();
-		
+
 		const selection = window.getSelection();
 		let range: Range;
-		
+
 		if (!selection || selection.rangeCount === 0) {
 			range = document.createRange();
 			range.selectNodeContents(messageInputDiv);
 			range.collapse(false);
 		} else {
 			range = selection.getRangeAt(0);
-			
+
 			if (!messageInputDiv.contains(range.commonAncestorContainer)) {
 				range.selectNodeContents(messageInputDiv);
 				range.collapse(false);
 			}
 		}
-		
+
 		range.deleteContents();
-		
+
 		let insertContainer = range.commonAncestorContainer;
 		if (insertContainer.nodeType === Node.TEXT_NODE) {
 			insertContainer = insertContainer.parentNode as Node;
 		}
-		
-		if (insertContainer && (insertContainer as HTMLElement).nodeName === 'DIV' && insertContainer !== messageInputDiv) {
+
+		if (
+			insertContainer &&
+			(insertContainer as HTMLElement).nodeName === 'DIV' &&
+			insertContainer !== messageInputDiv
+		) {
 			const startContainer = range.startContainer;
 			if (startContainer.nodeType === Node.TEXT_NODE) {
 				range.setStart(startContainer, range.startOffset);
 			}
 		}
-		
+
 		if (isCustom && imageUrl) {
 			const img = document.createElement('img');
 			img.src = imageUrl;
 			img.alt = emojiText;
 			img.className = 'emoji-inline';
-			img.style.cssText = 'width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;';
+			img.style.cssText =
+				'width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;';
 			range.insertNode(img);
 			range.setStartAfter(img);
 		} else {
@@ -649,15 +674,15 @@
 			range.insertNode(textNode);
 			range.setStartAfter(textNode);
 		}
-		
+
 		range.collapse(true);
 		selection?.removeAllRanges();
 		selection?.addRange(range);
-		
+
 		messageInputDiv.normalize();
-		
+
 		const divs = messageInputDiv.querySelectorAll('div');
-		divs.forEach(div => {
+		divs.forEach((div) => {
 			const parent = div.parentNode;
 			if (parent) {
 				while (div.firstChild) {
@@ -666,23 +691,23 @@
 				parent.removeChild(div);
 			}
 		});
-		
+
 		messageInputDiv.normalize();
-		
+
 		inputValue = getInputText();
-		
+
 		messageInputDiv.focus();
-		
+
 		showEmojiPicker = false;
 	}
-	
+
 	function handleInputChange() {
 		if (!messageInputDiv) return;
-		
+
 		const text = getInputText();
 		const cursorPos = getCaretPosition();
 		inputValue = text;
-		
+
 		if (document.activeElement !== messageInputDiv) {
 			if (isEmptyContentEditable(messageInputDiv)) {
 				messageInputDiv.classList.add('show-placeholder');
@@ -692,17 +717,17 @@
 		} else {
 			messageInputDiv.classList.remove('show-placeholder');
 		}
-		
+
 		const beforeCursor = text.substring(0, cursorPos);
 		const afterCursor = text.substring(cursorPos);
-		
+
 		const incompleteMatch = beforeCursor.match(/:([a-zA-Z0-9_-]*)$/);
 		const completeMatch = beforeCursor.match(/:([a-zA-Z0-9_-]+):$/);
-		
+
 		if (completeMatch && completeMatch[1].length > 0 && allEmojis.length > 0) {
 			const emojiName = completeMatch[1].toLowerCase();
-			let emoji = allEmojis.find(e => e.name.toLowerCase() === emojiName);
-			
+			let emoji = allEmojis.find((e) => e.name.toLowerCase() === emojiName);
+
 			if (!emoji) {
 				const emojiChar = getEmojiFromName(emojiName);
 				if (emojiChar) {
@@ -713,7 +738,7 @@
 					};
 				}
 			}
-			
+
 			if (emoji) {
 				// Track emoji usage
 				if (emoji.isCustom && emoji.imageUrl) {
@@ -721,33 +746,34 @@
 				} else {
 					trackEmojiUsage(emoji.emoji, emoji.name);
 				}
-				
+
 				const start = cursorPos - completeMatch[0].length;
-				
+
 				const selection = window.getSelection();
 				if (selection && selection.rangeCount > 0) {
 					const range = selection.getRangeAt(0);
 					const textNode = range.startContainer;
-					
+
 					if (textNode.nodeType === Node.TEXT_NODE && textNode.parentNode === messageInputDiv) {
 						const nodeText = textNode.textContent || '';
 						const beforePattern = nodeText.substring(0, start);
 						const afterPattern = nodeText.substring(start + completeMatch[0].length);
-						
+
 						if (emoji.isCustom && emoji.imageUrl) {
 							const img = document.createElement('img');
 							img.src = emoji.imageUrl;
 							img.alt = `:${emoji.name}:`;
 							img.className = 'emoji-inline';
-							img.style.cssText = 'width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;';
-							
+							img.style.cssText =
+								'width: 1.375em; height: 1.375em; max-width: 22px; max-height: 22px; vertical-align: -0.2em; display: inline-block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;';
+
 							const beforeNode = document.createTextNode(beforePattern);
 							const afterNode = document.createTextNode(afterPattern + afterCursor);
-							
+
 							textNode.parentNode?.replaceChild(beforeNode, textNode);
 							beforeNode.parentNode?.insertBefore(img, beforeNode.nextSibling);
 							img.parentNode?.insertBefore(afterNode, img.nextSibling);
-							
+
 							setTimeout(() => {
 								const newRange = document.createRange();
 								newRange.setStartAfter(img);
@@ -759,14 +785,14 @@
 							}, 0);
 						} else {
 							textNode.textContent = beforePattern + emoji.emoji + afterPattern + afterCursor;
-							
+
 							setTimeout(() => {
 								const newPos = start + emoji.emoji.length;
 								setCaretPosition(newPos);
 								messageInputDiv?.focus();
 							}, 0);
 						}
-						
+
 						inputValue = getInputText();
 						emojiAutocompleteOpen = false;
 					}
@@ -777,11 +803,11 @@
 			if (completeMatch && completeMatch[1].length > 0) {
 				const query = completeMatch[1].toLowerCase();
 				emojiAutocompleteQuery = query;
-				
+
 				const exactMatches: typeof allEmojis = [];
 				const startsWithMatches: typeof allEmojis = [];
 				const containsMatches: typeof allEmojis = [];
-				
+
 				for (const emoji of allEmojis) {
 					const name = emoji.name.toLowerCase();
 					if (name === query) {
@@ -792,9 +818,9 @@
 						containsMatches.push(emoji);
 					}
 				}
-				
+
 				const matches = [...exactMatches, ...startsWithMatches, ...containsMatches].slice(0, 8);
-				
+
 				if (matches.length > 0) {
 					emojiAutocompleteMatches = matches;
 					emojiAutocompleteIndex = 0;
@@ -805,25 +831,26 @@
 				return;
 			}
 		}
-		
+
 		const match = incompleteMatch;
-		
+
 		if (match && match[1] !== undefined && allEmojis.length > 0) {
 			if (match[1].length === 0) {
 				const recentEmojis = getRecentEmojis();
 				if (recentEmojis.length > 0) {
 					const recentEmojiData: typeof allEmojis = [];
 					for (const recent of recentEmojis) {
-						const found = allEmojis.find(e => 
-							e.emoji === recent.emoji || 
-							e.name.toLowerCase() === recent.name.toLowerCase() ||
-							(e.isCustom && `:${e.name}:` === recent.emoji)
+						const found = allEmojis.find(
+							(e) =>
+								e.emoji === recent.emoji ||
+								e.name.toLowerCase() === recent.name.toLowerCase() ||
+								(e.isCustom && `:${e.name}:` === recent.emoji)
 						);
 						if (found) {
 							recentEmojiData.push(found);
 						}
 					}
-					
+
 					if (recentEmojiData.length > 0) {
 						emojiAutocompleteMatches = recentEmojiData.slice(0, 8);
 						emojiAutocompleteIndex = 0;
@@ -831,10 +858,14 @@
 						return;
 					}
 				}
-				
-				const popularEmojis = allEmojis.filter(e => 
-					['smile', 'joy', 'heart', 'thumbsup', 'fire', 'star', 'ok_hand', 'wave'].includes(e.name.toLowerCase())
-				).slice(0, 8);
+
+				const popularEmojis = allEmojis
+					.filter((e) =>
+						['smile', 'joy', 'heart', 'thumbsup', 'fire', 'star', 'ok_hand', 'wave'].includes(
+							e.name.toLowerCase()
+						)
+					)
+					.slice(0, 8);
 				if (popularEmojis.length > 0) {
 					emojiAutocompleteMatches = popularEmojis;
 					emojiAutocompleteIndex = 0;
@@ -844,19 +875,19 @@
 				emojiAutocompleteOpen = false;
 				return;
 			}
-			
+
 			const query = match[1].toLowerCase();
 			if (!/^[a-z0-9_-]*$/.test(query)) {
 				emojiAutocompleteOpen = false;
 				return;
 			}
-			
+
 			emojiAutocompleteQuery = query;
-			
+
 			const exactMatches: typeof allEmojis = [];
 			const startsWithMatches: typeof allEmojis = [];
 			const containsMatches: typeof allEmojis = [];
-			
+
 			for (const emoji of allEmojis) {
 				const name = emoji.name.toLowerCase();
 				if (name === query) {
@@ -867,9 +898,9 @@
 					containsMatches.push(emoji);
 				}
 			}
-			
+
 			const matches = [...exactMatches, ...startsWithMatches, ...containsMatches].slice(0, 8);
-			
+
 			if (matches.length > 0) {
 				emojiAutocompleteMatches = matches;
 				emojiAutocompleteIndex = 0;
@@ -881,7 +912,7 @@
 			emojiAutocompleteOpen = false;
 		}
 	}
-	
+
 	function toggleEmojiPicker(event?: Event) {
 		if (event) {
 			event.stopPropagation();
@@ -892,7 +923,7 @@
 			isOpeningEmojiPicker = false;
 		}, 100);
 	}
-	
+
 	// Close emoji picker when clicking outside
 	$effect(() => {
 		if (showEmojiPicker && browser) {
@@ -900,8 +931,8 @@
 				const target = event.target as HTMLElement;
 
 				if (
-					target.closest('.emoji-picker') || 
-					target.closest('.admin-emoji-picker') || 
+					target.closest('.emoji-picker') ||
+					target.closest('.admin-emoji-picker') ||
 					target.closest('.emoji-btn') ||
 					target.closest('.picker-tabs') ||
 					target.closest('.picker-tab')
@@ -910,16 +941,21 @@
 				}
 				showEmojiPicker = false;
 			};
-			
+
 			document.addEventListener('click', handleClickOutside);
 			return () => {
 				document.removeEventListener('click', handleClickOutside);
 			};
 		}
 	});
-	
+
 	$effect(() => {
-		if (!showEmojiPicker && messageInputDiv && isEmptyContentEditable(messageInputDiv) && document.activeElement !== messageInputDiv) {
+		if (
+			!showEmojiPicker &&
+			messageInputDiv &&
+			isEmptyContentEditable(messageInputDiv) &&
+			document.activeElement !== messageInputDiv
+		) {
 			messageInputDiv.classList.add('show-placeholder');
 		}
 	});
@@ -931,10 +967,10 @@
 			.replace(/>/g, '&gt;')
 			.replace(/"/g, '&quot;')
 			.replace(/'/g, '&#039;');
-		
+
 		html = html.replace(/:([a-zA-Z0-9_-]+):/g, (match, name) => {
-			let emoji = allEmojis.find(e => e.name.toLowerCase() === name.toLowerCase());
-			
+			let emoji = allEmojis.find((e) => e.name.toLowerCase() === name.toLowerCase());
+
 			if (!emoji) {
 				const emojiChar = getEmojiFromName(name);
 				if (emojiChar) {
@@ -945,7 +981,7 @@
 					};
 				}
 			}
-			
+
 			if (emoji) {
 				if (emoji.isCustom && emoji.imageUrl) {
 					const imageUrl = emoji.imageUrl.trim();
@@ -963,43 +999,44 @@
 			}
 			return match;
 		});
-		
+
 		const emojiCharMap = new Map<string, string>();
 		for (const emoji of allEmojis) {
 			if (!emoji.isCustom && emoji.emoji) {
 				emojiCharMap.set(emoji.emoji, emoji.name);
 			}
 		}
-		
-		const emojiRegex = /(?:\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(?:\p{Emoji_Modifier}|\u200D\p{Emoji_Presentation}|\u200D\p{Emoji}\uFE0F)*/gu;
-		
+
+		const emojiRegex =
+			/(?:\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(?:\p{Emoji_Modifier}|\u200D\p{Emoji_Presentation}|\u200D\p{Emoji}\uFE0F)*/gu;
+
 		const marker = '\x00EMOJI_WRAPPED\x00';
 		let markerIndex = 0;
 		const wrappedEmojis: string[] = [];
-		
+
 		html = html.replace(/<span class="emoji-hover">[\s\S]*?<\/span><\/span><\/span>/g, (match) => {
 			wrappedEmojis.push(match);
 			return `${marker}${markerIndex++}${marker}`;
 		});
-		
+
 		html = html.replace(emojiRegex, (emojiChar) => {
 			if (emojiChar === '\uFE0F' || emojiChar === '\u200D') {
 				return emojiChar;
 			}
-			
+
 			let name = emojiCharMap.get(emojiChar);
 			if (!name) {
 				name = getNameFromEmoji(emojiChar) || 'emoji';
 			}
-			
+
 			const escapedName = name.replace(/"/g, '&quot;');
 			return `<span class="emoji-hover"><span class="emoji-char">${emojiChar}</span><span class="emoji-tooltip-popup"><span class="tooltip-emoji-char">${emojiChar}</span><span class="tooltip-name">:${escapedName}:</span></span></span>`;
 		});
-		
+
 		html = html.replace(new RegExp(`${marker}(\\d+)${marker}`, 'g'), (_, index) => {
 			return wrappedEmojis[parseInt(index, 10)] || '';
 		});
-		
+
 		return html;
 	}
 
@@ -1051,7 +1088,7 @@
 
 	// Update messageCount when messages change
 	$effect(() => {
-		messageCount = messages.filter(m => !('isSystem' in m)).length;
+		messageCount = messages.filter((m) => !('isSystem' in m)).length;
 	});
 
 	onMount(async () => {
@@ -1063,12 +1100,12 @@
 
 	onDestroy(() => {
 		isDestroyed = true;
-		
+
 		if (reconnectTimeout) {
 			clearTimeout(reconnectTimeout);
 			reconnectTimeout = null;
 		}
-		
+
 		if (ws) {
 			isConnected = false;
 			connectionStatus = 'disconnected';
@@ -1119,7 +1156,12 @@
 			{:else}
 				{#each messages as msg, i (i)}
 					{#if 'isSystem' in msg && msg.isSystem}
-						<div class="message system-message" class:connected={msg.messageType === 'connected'} class:nickname={msg.messageType === 'nickname'} class:disconnected={msg.messageType === 'disconnected'}>
+						<div
+							class="message system-message"
+							class:connected={msg.messageType === 'connected'}
+							class:nickname={msg.messageType === 'nickname'}
+							class:disconnected={msg.messageType === 'disconnected'}
+						>
 							<span class="message-time">{formatTimestamp(msg.timestamp)}</span>
 							<span class="message-content system">{msg.formatted}</span>
 						</div>
@@ -1128,20 +1170,32 @@
 						<div class="message">
 							<span class="message-time">{formatTimestamp(chatMsg.timestamp)}</span>
 							<span class="message-nickname" style={chatMsg.color ? `color: ${chatMsg.color}` : ''}>
-								{chatMsg.nickname}{#if chatMsg.source === 'discord'}<span class="discord-badge" title="From Discord">
+								{chatMsg.nickname}{#if chatMsg.source === 'discord'}<span
+										class="discord-badge"
+										title="From Discord"
+									>
 										<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-											<path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418z" class="badge-icon"/>
+											<path
+												d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418z"
+												class="badge-icon"
+											/>
 										</svg>
-									</span>{:else if chatMsg.source === 'admin'}<span class="crown-badge" title="Admin">
+									</span>{:else if chatMsg.source === 'admin'}<span
+										class="crown-badge"
+										title="Admin"
+									>
 										<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-											<path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v2h14v-2z" class="badge-icon"/>
+											<path
+												d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v2h14v-2z"
+												class="badge-icon"
+											/>
 										</svg>
 									</span>{/if}
 							</span>
 							<span class="message-content">{@html renderEmojiMessage(chatMsg.message)}</span>
 							{#if chatMsg.id}
-								<button 
-									class="delete-btn" 
+								<button
+									class="delete-btn"
 									onclick={() => requestDeleteMessage(chatMsg.id)}
 									title="Delete message"
 								>
@@ -1155,7 +1209,7 @@
 		</div>
 
 		<div class="input-container">
-			<button 
+			<button
 				class="emoji-btn"
 				bind:this={emojiButtonRef}
 				onclick={(e) => toggleEmojiPicker(e)}
@@ -1171,7 +1225,7 @@
 						class="message-input show-placeholder"
 						contenteditable={isConnected}
 						bind:this={messageInputDiv}
-						data-placeholder={isConnected ? "Type a message..." : "Connecting..."}
+						data-placeholder={isConnected ? 'Type a message...' : 'Connecting...'}
 						onkeydown={handleKeyDown}
 						oninput={handleInputChange}
 						onfocus={handleInputFocus}
@@ -1190,12 +1244,8 @@
 								onclick={() => insertAutocompleteEmoji(match)}
 								type="button"
 							>
-							{#if match.isCustom && match.imageUrl}
-								<img 
-									src={match.imageUrl} 
-									alt={match.name}
-									class="autocomplete-emoji-img"
-								/>
+								{#if match.isCustom && match.imageUrl}
+									<img src={match.imageUrl} alt={match.name} class="autocomplete-emoji-img" />
 								{:else}
 									<span class="autocomplete-emoji">{match.emoji}</span>
 								{/if}
@@ -1205,7 +1255,7 @@
 					</div>
 				{/if}
 			</div>
-			<button 
+			<button
 				class="send-btn"
 				onclick={sendMessage}
 				disabled={!isConnected || !getInputText().trim()}
@@ -1213,9 +1263,9 @@
 				<Send size={18} />
 			</button>
 		</div>
-		
+
 		{#if showEmojiPicker}
-			<AdminEmojiPicker 
+			<AdminEmojiPicker
 				bind:isOpen={showEmojiPicker}
 				triggerButton={emojiButtonRef}
 				reloadTrigger={emojiPickerReloadTrigger}
@@ -1508,7 +1558,9 @@
 		border-radius: 4px;
 		color: #6b7280;
 		cursor: pointer;
-		transition: background 0.2s, color 0.2s;
+		transition:
+			background 0.2s,
+			color 0.2s;
 		margin-left: auto;
 		flex-shrink: 0;
 	}
@@ -1532,13 +1584,13 @@
 		align-items: center;
 		position: relative;
 	}
-	
+
 	.input-wrapper {
 		position: relative;
 		flex: 1;
 		min-width: 0;
 	}
-	
+
 	.input-wrapper > .input-container {
 		position: relative;
 		flex: 1;
@@ -1548,7 +1600,7 @@
 		border: none;
 		background: transparent;
 	}
-	
+
 	.emoji-autocomplete {
 		position: absolute;
 		bottom: calc(100% + 4px);
@@ -1562,13 +1614,13 @@
 		min-width: 200px;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 	}
-	
+
 	:global(html:not(.dark)) .emoji-autocomplete {
 		background: #ffffff;
 		border-color: #e5e7eb;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 	}
-	
+
 	.autocomplete-item {
 		display: flex;
 		align-items: center;
@@ -1584,42 +1636,42 @@
 		font-size: 14px;
 		transition: background-color 0.2s;
 	}
-	
+
 	:global(html:not(.dark)) .autocomplete-item {
 		border-bottom-color: #e5e7eb;
 		color: #1f2937;
 	}
-	
+
 	.autocomplete-item:last-child {
 		border-bottom: none;
 	}
-	
+
 	.autocomplete-item:hover,
 	.autocomplete-item.active {
 		background: #3a3a3a;
 	}
-	
+
 	:global(html:not(.dark)) .autocomplete-item:hover,
 	:global(html:not(.dark)) .autocomplete-item.active {
 		background: #f3f4f6;
 	}
-	
+
 	.autocomplete-emoji {
 		font-size: 18px;
 		line-height: 1;
 	}
-	
+
 	.autocomplete-emoji-img {
 		width: 18px;
 		height: 18px;
 		object-fit: contain;
 	}
-	
+
 	.autocomplete-name {
 		font-size: 12px;
 		color: #a1a1aa;
 	}
-	
+
 	:global(html:not(.dark)) .autocomplete-name {
 		color: #6b7280;
 	}
@@ -1694,7 +1746,7 @@
 		border-color: var(--accent-color, #3b82f6);
 	}
 
-	.message-input:not([contenteditable="true"]) {
+	.message-input:not([contenteditable='true']) {
 		opacity: 0.5;
 		cursor: not-allowed;
 	}
@@ -1704,7 +1756,7 @@
 		color: #6b7280;
 		pointer-events: none;
 	}
-	
+
 	.message-input:not(.show-placeholder):before {
 		content: '';
 	}
@@ -1837,4 +1889,3 @@
 		}
 	}
 </style>
-

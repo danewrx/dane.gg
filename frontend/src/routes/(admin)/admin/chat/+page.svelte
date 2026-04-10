@@ -1,7 +1,20 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
-	import { MessageSquare, Users, RefreshCw, Pencil, Check, X, Loader2, Upload, Image as ImageIcon, Trash, Play, Square } from 'lucide-svelte';
+	import {
+		MessageSquare,
+		Users,
+		RefreshCw,
+		Pencil,
+		Check,
+		X,
+		Loader2,
+		Upload,
+		Image as ImageIcon,
+		Trash,
+		Play,
+		Square
+	} from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import AdminChat from '$lib/admin/components/AdminChat.svelte';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
@@ -14,7 +27,9 @@
 	} from '$lib/shared/utils/chatNotificationSounds';
 
 	function isBuiltinNotificationSound(s: { id: string; name: string }): boolean {
-		return s.id === DEFAULT_CHAT_NOTIFICATION_SOUND_ID || s.name === DEFAULT_CHAT_NOTIFICATION_SOUND_NAME;
+		return (
+			s.id === DEFAULT_CHAT_NOTIFICATION_SOUND_ID || s.name === DEFAULT_CHAT_NOTIFICATION_SOUND_NAME
+		);
 	}
 
 	function mergeAdminNotificationSounds(
@@ -31,7 +46,7 @@
 	}
 
 	let adminChatComponent: AdminChat | null = null;
-	
+
 	// Chat state (bound from AdminChat)
 	let isConnected = $state(false);
 	let connectionStatus = $state<'connecting' | 'connected' | 'disconnected'>('disconnected');
@@ -39,13 +54,15 @@
 	let messageCount = $state(0);
 	let adminNickname = $state('Admin');
 	let adminColor = $state('#f5b700');
-	let allEmojis = $state<Array<{ name: string; emoji: string; isCustom: boolean; imageUrl?: string }>>([]);
+	let allEmojis = $state<
+		Array<{ name: string; emoji: string; isCustom: boolean; imageUrl?: string }>
+	>([]);
 	let emojiPickerReloadTrigger = $state(0);
 	let isEditingNickname = $state(false);
 	let nicknameInput = $state('');
 	let isSavingNickname = $state(false);
 	let isSavingColor = $state(false);
-	
+
 	// Emoji upload state
 	let showEmojiUpload = $state(false);
 	let emojiFile: File | null = $state(null);
@@ -77,31 +94,35 @@
 		if (newColor !== adminColor && adminChatComponent) {
 			isSavingColor = true;
 			adminChatComponent.setAdminColor(newColor);
-			setTimeout(() => { isSavingColor = false; }, 300);
+			setTimeout(() => {
+				isSavingColor = false;
+			}, 300);
 		}
 	}
-	
+
 	function startEditingNickname() {
 		nicknameInput = adminNickname;
 		isEditingNickname = true;
 	}
-	
+
 	function cancelEditingNickname() {
 		isEditingNickname = false;
 		nicknameInput = '';
 	}
-	
+
 	function saveNicknameHandler() {
 		const newNickname = nicknameInput.trim();
 		if (newNickname && newNickname !== adminNickname && adminChatComponent) {
 			isSavingNickname = true;
 			adminChatComponent.setAdminNickname(newNickname);
-			setTimeout(() => { isSavingNickname = false; }, 300);
+			setTimeout(() => {
+				isSavingNickname = false;
+			}, 300);
 		}
 		isEditingNickname = false;
 		nicknameInput = '';
 	}
-	
+
 	function handleNicknameKeyDown(e: KeyboardEvent) {
 		if (e.key === 'Enter') {
 			saveNicknameHandler();
@@ -119,13 +140,13 @@
 	// Load custom emojis
 	async function loadCustomEmojis() {
 		if (!browser) return;
-		
+
 		try {
 			isLoadingEmojis = true;
 			const response = await fetch('/api/emojis', {
 				credentials: 'include'
 			});
-			
+
 			if (response.ok) {
 				const data = await response.json();
 				customEmojis = data.data || [];
@@ -135,24 +156,23 @@
 		} finally {
 			isLoadingEmojis = false;
 		}
-		
+
 		loadAllEmojis();
 	}
-	
+
 	function loadAllEmojis() {
 		if (!browser) return;
-		
 
 		const defaultEmojis = getAllDefaultEmojis();
-		
+
 		// Add custom emojis
-		const customEmojiList = customEmojis.map(e => ({
+		const customEmojiList = customEmojis.map((e) => ({
 			name: e.name,
 			emoji: `:${e.name}:`,
 			isCustom: true,
 			imageUrl: e.imageUrl
 		}));
-		
+
 		allEmojis = [...defaultEmojis, ...customEmojiList];
 	}
 
@@ -162,21 +182,21 @@
 		if (input.files && input.files[0]) {
 			const file = input.files[0];
 			const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-			
+
 			if (!allowedTypes.includes(file.type)) {
 				toast.error('Invalid file type', {
 					description: 'Only JPG, PNG, and GIF files are allowed'
 				});
 				return;
 			}
-			
+
 			if (file.size > 2 * 1024 * 1024) {
 				toast.error('File too large', {
 					description: 'Emoji files must be less than 2MB'
 				});
 				return;
 			}
-			
+
 			emojiFile = file;
 			const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
 			emojiName = nameWithoutExt.toLowerCase().replace(/[^a-z0-9_-]/g, '_');
@@ -225,7 +245,7 @@
 			emojiFile = null;
 			emojiName = '';
 			showEmojiUpload = false;
-			
+
 			await loadCustomEmojis();
 		} catch (error) {
 			console.error('Error uploading emoji:', error);
@@ -486,7 +506,11 @@
 				Site Chat
 			</h1>
 			<div class="header-actions">
-				<div class="connection-status" class:connected={isConnected} class:connecting={connectionStatus === 'connecting'}>
+				<div
+					class="connection-status"
+					class:connected={isConnected}
+					class:connecting={connectionStatus === 'connecting'}
+				>
 					<span class="status-dot"></span>
 					<span class="status-text">
 						{#if connectionStatus === 'connecting'}
@@ -550,14 +574,24 @@
 								disabled={isSavingNickname}
 							/>
 							<div class="edit-actions">
-								<button class="edit-btn save" onclick={saveNicknameHandler} title="Save" disabled={isSavingNickname}>
+								<button
+									class="edit-btn save"
+									onclick={saveNicknameHandler}
+									title="Save"
+									disabled={isSavingNickname}
+								>
 									{#if isSavingNickname}
 										<Loader2 size={14} class="spin" />
 									{:else}
 										<Check size={14} />
 									{/if}
 								</button>
-								<button class="edit-btn cancel" onclick={cancelEditingNickname} title="Cancel" disabled={isSavingNickname}>
+								<button
+									class="edit-btn cancel"
+									onclick={cancelEditingNickname}
+									title="Cancel"
+									disabled={isSavingNickname}
+								>
 									<X size={14} />
 								</button>
 							</div>
@@ -571,12 +605,12 @@
 							</button>
 						</div>
 					{/if}
-					
+
 					<div class="color-picker-row">
 						<span class="identity-label">Name color</span>
 						<div class="color-picker-wrapper">
-							<input 
-								type="color" 
+							<input
+								type="color"
 								class="color-picker"
 								value={adminColor}
 								onchange={handleColorChange}
@@ -595,9 +629,9 @@
 			<div class="emojis-section">
 				<div class="emojis-header">
 					<h3>Custom Emojis</h3>
-					<button 
+					<button
 						class="add-emoji-btn"
-						onclick={() => showEmojiUpload = !showEmojiUpload}
+						onclick={() => (showEmojiUpload = !showEmojiUpload)}
 						title="Upload emoji"
 					>
 						<Upload size={16} />
@@ -632,7 +666,7 @@
 								<span class="form-hint">Use :{emojiName || 'name'}: in chat</span>
 							</div>
 							<div class="upload-form-actions">
-								<button 
+								<button
 									class="upload-btn"
 									onclick={uploadEmoji}
 									disabled={!emojiFile || !emojiName.trim() || isUploadingEmoji}
@@ -645,9 +679,13 @@
 										Upload
 									{/if}
 								</button>
-								<button 
+								<button
 									class="cancel-btn"
-									onclick={() => { showEmojiUpload = false; emojiFile = null; emojiName = ''; }}
+									onclick={() => {
+										showEmojiUpload = false;
+										emojiFile = null;
+										emojiName = '';
+									}}
 									disabled={isUploadingEmoji}
 								>
 									Cancel
@@ -655,7 +693,7 @@
 							</div>
 						</div>
 					{/if}
-					
+
 					{#if isLoadingEmojis}
 						<div class="emojis-loading">
 							<Loader2 size={16} class="spin" />
@@ -671,11 +709,7 @@
 						<div class="emojis-grid">
 							{#each customEmojis as emoji}
 								<div class="emoji-item">
-									<img 
-										src={emoji.imageUrl} 
-										alt={`:${emoji.name}:`}
-										class="emoji-preview"
-									/>
+									<img src={emoji.imageUrl} alt={`:${emoji.name}:`} class="emoji-preview" />
 									<div class="emoji-info">
 										<span class="emoji-name">:{emoji.name}:</span>
 									</div>
@@ -708,8 +742,8 @@
 				</div>
 				<div class="emojis-content">
 					<p class="sounds-intro">
-						Short clips (512KB max) for the public chat widget. Visitors choose a sound in the site settings
-						panel.
+						Short clips (512KB max) for the public chat widget. Visitors choose a sound in the site
+						settings panel.
 					</p>
 					{#if showSoundUpload}
 						<div class="emoji-upload-form">
@@ -737,7 +771,8 @@
 									disabled={isUploadingSound}
 								/>
 								<span class="form-hint"
-									>Shown in the visitor dropdown. The file is stored under a unique name on the server.</span
+									>Shown in the visitor dropdown. The file is stored under a unique name on the
+									server.</span
 								>
 							</div>
 							<div class="upload-form-actions">
@@ -939,8 +974,13 @@
 	}
 
 	@keyframes pulse {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.5; }
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.5;
+		}
 	}
 
 	.status-text {
@@ -1059,7 +1099,9 @@
 		border-radius: 4px;
 		color: #6b7280;
 		cursor: pointer;
-		transition: background 0.2s, color 0.2s;
+		transition:
+			background 0.2s,
+			color 0.2s;
 		margin-left: auto;
 	}
 
@@ -1214,8 +1256,12 @@
 	}
 
 	@keyframes spin {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.emojis-section {
@@ -1316,8 +1362,8 @@
 		color: #6b7280;
 	}
 
-	.upload-form-group input[type="file"],
-	.upload-form-group input[type="text"] {
+	.upload-form-group input[type='file'],
+	.upload-form-group input[type='text'] {
 		padding: 8px 12px;
 		background: #1a1a1a;
 		border: 1px solid #404040;
@@ -1327,8 +1373,8 @@
 		font-family: inherit;
 	}
 
-	:global(html:not(.dark)) .upload-form-group input[type="file"],
-	:global(html:not(.dark)) .upload-form-group input[type="text"] {
+	:global(html:not(.dark)) .upload-form-group input[type='file'],
+	:global(html:not(.dark)) .upload-form-group input[type='text'] {
 		background: #ffffff;
 		border-color: #e5e7eb;
 		color: #1f2937;
@@ -1576,7 +1622,10 @@
 		color: #ef4444;
 		cursor: pointer;
 		opacity: 0;
-		transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+		transition:
+			opacity 0.15s ease,
+			border-color 0.15s ease,
+			background 0.15s ease;
 	}
 
 	.sound-tile:hover .sound-tile-delete,
@@ -1612,7 +1661,10 @@
 		border-radius: 6px;
 		color: #e4e4e7;
 		cursor: pointer;
-		transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+		transition:
+			border-color 0.15s ease,
+			color 0.15s ease,
+			background 0.15s ease;
 	}
 
 	.sound-play-btn:hover {

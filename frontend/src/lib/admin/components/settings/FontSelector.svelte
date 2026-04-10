@@ -5,9 +5,7 @@
 </script>
 
 <div class="font-selector" class:className>
-	<label class="font-label" for="font-select">
-		Font
-	</label>
+	<label class="font-label" for="font-select"> Font </label>
 	<select
 		id="font-select"
 		class="font-select"
@@ -79,7 +77,11 @@
 	}
 
 	.font-select:hover {
-		background-color: color-mix(in srgb, var(--theme-background, #0a0a0a) 90%, var(--theme-accent, #90ee90) 10%);
+		background-color: color-mix(
+			in srgb,
+			var(--theme-background, #0a0a0a) 90%,
+			var(--theme-accent, #90ee90) 10%
+		);
 	}
 
 	.font-select:active {

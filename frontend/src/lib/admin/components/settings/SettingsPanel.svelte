@@ -13,7 +13,7 @@
 	function handleClose() {
 		onClose?.();
 	}
-	
+
 	function openThemeWindow() {
 		themeWindowOpen = true;
 	}
@@ -24,8 +24,8 @@
 
 <!-- Settings Panel -->
 {#if isOpen}
-	<div 
-		class="settings-backdrop" 
+	<div
+		class="settings-backdrop"
 		onclick={handleClose}
 		onkeydown={(e) => e.key === 'Escape' && handleClose()}
 		role="button"
@@ -107,7 +107,7 @@
 		border: 2px solid var(--theme-border, #ffffff);
 		border-right: none;
 		border-radius: 0;
-		box-shadow: 
+		box-shadow:
 			-4px 0 12px rgba(0, 0, 0, 0.5),
 			0 0 30px var(--theme-accent, #90ee90);
 		z-index: 1001;
@@ -131,21 +131,21 @@
 		min-width: 0;
 		-webkit-overflow-scrolling: touch;
 	}
-	
+
 	/* Scrollbar styling */
 	.settings-content::-webkit-scrollbar {
 		width: 8px;
 	}
-	
+
 	.settings-content::-webkit-scrollbar-track {
 		background: var(--theme-background, #0a0a0a);
 	}
-	
+
 	.settings-content::-webkit-scrollbar-thumb {
 		background: var(--theme-border, #ffffff);
 		border: 1px solid var(--theme-background, #0a0a0a);
 	}
-	
+
 	.settings-content::-webkit-scrollbar-thumb:hover {
 		background: var(--theme-accent, #90ee90);
 	}
@@ -185,17 +185,17 @@
 		transition: all 0.2s ease;
 		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
 	}
-	
+
 	.theme-button:hover {
 		background: var(--theme-accent, #90ee90);
 		border-color: var(--theme-accent, #90ee90);
 		color: var(--theme-background, #0a0a0a);
-		box-shadow: 
+		box-shadow:
 			0 0 15px var(--theme-accent, #90ee90),
 			0 0 30px var(--theme-accent, #90ee90);
 		transform: translateY(-2px);
 	}
-	
+
 	.theme-button:active {
 		transform: translateY(0);
 	}
@@ -228,8 +228,12 @@
 
 	/* Animations */
 	@keyframes fadeIn {
-		from { opacity: 0; }
-		to { opacity: 1; }
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
 	}
 
 	/* Responsive design */

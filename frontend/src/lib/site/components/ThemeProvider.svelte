@@ -62,8 +62,8 @@
 </script>
 
 <!-- Background layer -->
-<div 
-	class="theme-background" 
+<div
+	class="theme-background"
 	class:loading
 	style="
 		--bg-url: {getBgUrlCss()};

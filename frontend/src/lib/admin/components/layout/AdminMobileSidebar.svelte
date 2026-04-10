@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { 
-		Settings, 
-		Home, 
-		Users, 
-		BarChart3, 
-		FileText, 
+	import {
+		Settings,
+		Home,
+		Users,
+		BarChart3,
+		FileText,
 		Mail,
 		HelpCircle,
 		Heart,
@@ -20,13 +20,8 @@
 	// Use the dynamic items passed from the app bar
 	const allNavItems = $derived(items || []);
 
-	const navItems = $derived(
-		allNavItems.filter(item => item.id !== 'settings')
-	);
-	const settingsItem = $derived(
-		allNavItems.find(item => item.id === 'settings')
-	);
-	
+	const navItems = $derived(allNavItems.filter((item) => item.id !== 'settings'));
+	const settingsItem = $derived(allNavItems.find((item) => item.id === 'settings'));
 
 	let isClosing = $state(false);
 	let startX = $state(0);
@@ -58,7 +53,7 @@
 	// Touch event handlers
 	function handleTouchStart(event: TouchEvent) {
 		if (!isOpen) return;
-		
+
 		startX = event.touches[0].clientX;
 		isDragging = true;
 		// Don't prevent default to avoid passive event warning
@@ -66,24 +61,24 @@
 
 	function handleTouchMove(event: TouchEvent) {
 		if (!isDragging || !isOpen) return;
-		
+
 		currentX = event.touches[0].clientX;
 		const deltaX = startX - currentX; // Inverted for left-side dragging
-		
+
 		// Only allow dragging to the left (closing)
 		if (deltaX > 0) {
 			dragProgress = Math.min(deltaX / 200, 1); // 200px to fully close
 		}
-		
+
 		// Don't prevent default to avoid passive event warning
 	}
 
 	function handleTouchEnd(event: TouchEvent) {
 		if (!isDragging) return;
-		
+
 		isDragging = false;
 		const deltaX = startX - currentX; // Inverted for left-side dragging
-		
+
 		// If dragged more than 100px, close the sidebar
 		if (deltaX > 100) {
 			closeSidebar();
@@ -96,7 +91,7 @@
 	// Mouse event handlers for desktop testing
 	function handleMouseDown(event: MouseEvent) {
 		if (!isOpen) return;
-		
+
 		startX = event.clientX;
 		isDragging = true;
 		event.preventDefault();
@@ -104,23 +99,23 @@
 
 	function handleMouseMove(event: MouseEvent) {
 		if (!isDragging || !isOpen) return;
-		
+
 		currentX = event.clientX;
 		const deltaX = startX - currentX; // Inverted for left-side dragging
-		
+
 		if (deltaX > 0) {
 			dragProgress = Math.min(deltaX / 200, 1);
 		}
-		
+
 		event.preventDefault();
 	}
 
 	function handleMouseUp(event: MouseEvent) {
 		if (!isDragging) return;
-		
+
 		isDragging = false;
 		const deltaX = startX - currentX; // Inverted for left-side dragging
-		
+
 		if (deltaX > 100) {
 			closeSidebar();
 		} else {
@@ -155,7 +150,7 @@
 
 <!-- Backdrop -->
 {#if isOpen || isDragging}
-	<div 
+	<div
 		class="sidebar-backdrop"
 		class:closing={isClosing}
 		style:opacity={backdropOpacity()}
@@ -174,7 +169,7 @@
 {/if}
 
 <!-- Sidebar -->
-<aside 
+<aside
 	class="mobile-sidebar"
 	class:open={isOpen}
 	class:closing={isClosing}
@@ -183,7 +178,7 @@
 	role="navigation"
 	aria-label="Mobile navigation menu"
 >
-	<div 
+	<div
 		class="sidebar-header"
 		role="button"
 		tabindex="0"
@@ -197,15 +192,11 @@
 		style="touch-action: none;"
 	>
 		<h2 class="sidebar-title">Menu ({navItems.length} items)</h2>
-		<button 
-			class="close-button"
-			onclick={closeSidebar}
-			aria-label="Close menu"
-		>
+		<button class="close-button" onclick={closeSidebar} aria-label="Close menu">
 			<X size={24} />
 		</button>
 	</div>
-	
+
 	<nav class="sidebar-nav">
 		<ul class="nav-list">
 			{#if navItems.length > 0}
@@ -280,11 +271,13 @@
 		display: flex;
 		flex-direction: column;
 		transform: translateX(-100%);
-		transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+		transition:
+			transform 0.2s ease,
+			background-color 0.2s ease,
+			border-color 0.2s ease;
 		overflow: hidden;
 	}
 
-	
 	:global(html:not(.dark)) .mobile-sidebar {
 		background: #ffffff;
 		border-right-color: #e5e7eb;
@@ -312,7 +305,6 @@
 		transition: border-color 0.2s ease;
 	}
 
-	
 	:global(html:not(.dark)) .sidebar-header {
 		border-bottom-color: #e5e7eb;
 	}
@@ -325,7 +317,6 @@
 		transition: color 0.2s ease;
 	}
 
-	
 	:global(html:not(.dark)) .sidebar-title {
 		color: #1f2937;
 	}
@@ -339,11 +330,12 @@
 		border: none;
 		padding: 8px;
 		cursor: pointer;
-		transition: background-color 0.2s ease, color 0.2s ease;
+		transition:
+			background-color 0.2s ease,
+			color 0.2s ease;
 		border-radius: 4px;
 	}
 
-	
 	:global(html:not(.dark)) .close-button {
 		color: #1f2937;
 	}
@@ -352,7 +344,6 @@
 		background: #2a2a2a;
 	}
 
-	
 	:global(html:not(.dark)) .close-button:hover {
 		background: #f3f4f6;
 	}
@@ -406,12 +397,13 @@
 		color: #ffffff;
 		text-align: left;
 		cursor: pointer;
-		transition: background-color 0.2s ease, color 0.2s ease;
+		transition:
+			background-color 0.2s ease,
+			color 0.2s ease;
 		font-size: 16px;
 		font-weight: 400;
 	}
 
-	
 	:global(html:not(.dark)) .nav-link {
 		color: #1f2937;
 	}
@@ -420,7 +412,6 @@
 		background: #2a2a2a;
 	}
 
-	
 	:global(html:not(.dark)) .nav-link:hover {
 		background: #f3f4f6;
 	}
@@ -467,7 +458,7 @@
 		.mobile-sidebar {
 			display: none;
 		}
-		
+
 		.sidebar-backdrop {
 			display: none;
 		}

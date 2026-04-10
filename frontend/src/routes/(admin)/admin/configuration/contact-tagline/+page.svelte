@@ -18,7 +18,7 @@
 			const response = await fetch('/api/contact/settings/tagline', {
 				credentials: 'include'
 			});
-			
+
 			if (response.ok) {
 				const result = await response.json();
 				if (result.success && result.data?.value) {
@@ -38,7 +38,7 @@
 	async function saveTagline() {
 		try {
 			isSaving = true;
-			
+
 			const response = await fetch('/api/contact/settings/tagline', {
 				method: 'PUT',
 				headers: {
@@ -49,11 +49,11 @@
 					value: tagline
 				})
 			});
-			
+
 			const result = await response.json();
-			
+
 			if (result.success) {
-			toast.success('Contact tagline saved successfully');
+				toast.success('Contact tagline saved successfully');
 			} else {
 				throw new Error(result.error || 'Failed to save contact tagline');
 			}
@@ -68,7 +68,10 @@
 
 <div class="contact-tagline-settings">
 	<div class="settings-description">
-		<p>Edit the tagline/introductory message that appears at the top of the contact page. You can use markdown formatting and inline HTML for styling.</p>
+		<p>
+			Edit the tagline/introductory message that appears at the top of the contact page. You can use
+			markdown formatting and inline HTML for styling.
+		</p>
 	</div>
 
 	{#if isLoading}
@@ -89,12 +92,7 @@
 		</div>
 
 		<div class="form-actions">
-			<button 
-				type="button"
-				class="save-button" 
-				onclick={saveTagline}
-				disabled={isSaving}
-			>
+			<button type="button" class="save-button" onclick={saveTagline} disabled={isSaving}>
 				{#if isSaving}
 					<Loader2 size={16} class="spin" />
 					Saving...
@@ -184,7 +182,11 @@
 	}
 
 	@keyframes spin {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>

@@ -48,28 +48,28 @@
 			overallStatus = 'UNKNOWN';
 			return;
 		}
-		
+
 		// DOWN
-		if (monitors.some(m => m.status === 'down')) {
+		if (monitors.some((m) => m.status === 'down')) {
 			overallStatus = 'DOWN';
 			return;
 		}
 		// MAINTENCANCE
-		if (monitors.some(m => m.status === 'maintenance')) {
+		if (monitors.some((m) => m.status === 'maintenance')) {
 			overallStatus = 'MAINTENANCE';
 			return;
 		}
 		// PENDING
-		if (monitors.some(m => m.status === 'pending')) {
+		if (monitors.some((m) => m.status === 'pending')) {
 			overallStatus = 'PENDING';
 			return;
 		}
 		// OKAY
-		if (monitors.every(m => m.status === 'up')) {
+		if (monitors.every((m) => m.status === 'up')) {
 			overallStatus = 'OK';
 			return;
 		}
-		
+
 		overallStatus = 'UNKNOWN';
 	});
 
@@ -116,7 +116,7 @@
 
 	onMount(() => {
 		loadStatus();
-		
+
 		updateInterval = setInterval(() => {
 			loadStatus();
 		}, UPDATE_INTERVAL);
@@ -265,7 +265,8 @@
 	}
 
 	@keyframes spin {
-		to { transform: rotate(360deg); }
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>
-

@@ -26,19 +26,25 @@
 	let originalParent: Node | null = $state(null);
 	let originalNextSibling: Node | null = $state(null);
 
-
-	function generateEmojiCategories(): Array<{ name: string; emojis: Array<{ emoji: string; name: string }> }> {
+	function generateEmojiCategories(): Array<{
+		name: string;
+		emojis: Array<{ emoji: string; name: string }>;
+	}> {
 		if (!browser) return [];
-		
+
 		const categories = getEmojiCategories();
-		
-		return categories.map((cat: { name: string; emojis: Array<{ emoji: string; name: string }> }) => ({
-			name: cat.name,
-			emojis: cat.emojis
-		}));
+
+		return categories.map(
+			(cat: { name: string; emojis: Array<{ emoji: string; name: string }> }) => ({
+				name: cat.name,
+				emojis: cat.emojis
+			})
+		);
 	}
 
-	let emojiCategories = $state<Array<{ name: string; emojis: Array<{ emoji: string; name: string }> }>>([]);
+	let emojiCategories = $state<
+		Array<{ name: string; emojis: Array<{ emoji: string; name: string }> }>
+	>([]);
 	let recentEmojis = $state<Array<{ emoji: string; name: string }>>([]);
 
 	let selectedCategory = $state('All');
@@ -46,7 +52,7 @@
 	// Load custom emojis from API
 	async function loadCustomEmojis() {
 		if (!browser || isLoadingCustom) return;
-		
+
 		try {
 			isLoadingCustom = true;
 			const response = await fetch('/api/emojis');
@@ -61,7 +67,12 @@
 		}
 	}
 
-	function selectEmoji(emojiData: { emoji: string; name: string } | string, isCustom = false, imageUrl?: string, emojiName?: string) {
+	function selectEmoji(
+		emojiData: { emoji: string; name: string } | string,
+		isCustom = false,
+		imageUrl?: string,
+		emojiName?: string
+	) {
 		if (isCustom && imageUrl && emojiName) {
 			// Track custom emoji usage
 			trackEmojiUsage(`:${emojiName}:`, emojiName);
@@ -117,7 +128,7 @@
 	// Function to position picker
 	function positionPicker() {
 		if (!browser || !pickerElement || !isOpen) return;
-		
+
 		let button = document.querySelector('.emoji-button') as HTMLElement;
 		if (!button && originalParent) {
 			button = (originalParent as Element).querySelector('.emoji-button') as HTMLElement;
@@ -129,7 +140,7 @@
 				button = chatContainer.querySelector('.emoji-button') as HTMLElement;
 			}
 		}
-		
+
 		if (button) {
 			const rect = button.getBoundingClientRect();
 			void pickerElement.offsetHeight;
@@ -137,17 +148,17 @@
 			const pickerHeight = pickerElement.offsetHeight || 320;
 			const spaceAbove = rect.top;
 			const spaceBelow = window.innerHeight - rect.bottom;
-			
+
 			let leftPos = rect.right - pickerWidth;
-			
+
 			if (leftPos < 10) {
 				leftPos = 10;
 			}
-			
+
 			if (leftPos + pickerWidth > window.innerWidth - 10) {
 				leftPos = window.innerWidth - pickerWidth - 10;
 			}
-			
+
 			if (spaceAbove >= pickerHeight + 10) {
 				pickerElement.style.top = 'auto';
 				pickerElement.style.bottom = `${window.innerHeight - rect.top + 4}px`;
@@ -161,7 +172,6 @@
 				pickerElement.style.right = 'auto';
 				pickerElement.style.transform = 'none';
 			} else {
-
 				pickerElement.style.top = '50%';
 				pickerElement.style.bottom = 'auto';
 				pickerElement.style.left = `${Math.max(10, Math.min(leftPos, window.innerWidth - pickerWidth - 10))}px`;
@@ -179,9 +189,9 @@
 					positionPicker();
 				}
 			};
-			
+
 			window.addEventListener('resize', handleResize);
-			
+
 			return () => {
 				window.removeEventListener('resize', handleResize);
 			};
@@ -199,7 +209,13 @@
 		if (browser) {
 			emojiCategories = generateEmojiCategories();
 			recentEmojis = getRecentEmojis();
-			console.log('Emoji categories loaded:', emojiCategories.length, 'categories with', emojiCategories.reduce((sum, cat) => sum + cat.emojis.length, 0), 'total emojis');
+			console.log(
+				'Emoji categories loaded:',
+				emojiCategories.length,
+				'categories with',
+				emojiCategories.reduce((sum, cat) => sum + cat.emojis.length, 0),
+				'total emojis'
+			);
 		}
 		if (!hasLoadedEmojis) {
 			loadCustomEmojis().then(() => {
@@ -207,13 +223,13 @@
 			});
 		}
 	});
-	
+
 	$effect(() => {
 		if (isOpen && browser) {
 			recentEmojis = getRecentEmojis();
 		}
 	});
-	
+
 	onDestroy(() => {
 		if (pickerElement && originalParent) {
 			if (pickerElement.parentNode === document.body) {
@@ -226,26 +242,30 @@
 			}
 		}
 	});
-	
+
 	$effect(() => {
 		if (isOpen && browser) {
 			setTimeout(() => {
 				if (!pickerElement || !overlayElement) return;
-				
-				if (!originalParent && pickerElement.parentNode && pickerElement.parentNode !== document.body) {
+
+				if (
+					!originalParent &&
+					pickerElement.parentNode &&
+					pickerElement.parentNode !== document.body
+				) {
 					originalParent = pickerElement.parentNode;
 					originalNextSibling = pickerElement.nextSibling;
 				}
-				
+
 				// Move both overlay and picker to body
 				if (overlayElement.parentNode !== document.body) {
 					document.body.appendChild(overlayElement);
 				}
-				
+
 				if (pickerElement.parentNode !== document.body) {
 					document.body.appendChild(pickerElement);
 				}
-				
+
 				positionPicker();
 			}, 10);
 		} else if (!isOpen && pickerElement && overlayElement) {
@@ -266,13 +286,36 @@
 </script>
 
 {#if isOpen}
-	<div class="emoji-picker-overlay" bind:this={overlayElement} onclick={handleOverlayClick} role="button" tabindex="-1"></div>
-	<div class="emoji-picker" bind:this={pickerElement} onclick={(e) => e.stopPropagation()}>
+	<div
+		class="emoji-picker-overlay"
+		bind:this={overlayElement}
+		onclick={handleOverlayClick}
+		role="button"
+		tabindex="0"
+		onkeydown={(e) => {
+			if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				closePicker(e);
+			}
+		}}
+	></div>
+	<div
+		class="emoji-picker"
+		bind:this={pickerElement}
+		role="dialog"
+		aria-modal="true"
+		aria-label="Character map"
+		tabindex="-1"
+		onclick={(e) => e.stopPropagation()}
+		onkeydown={(e) => e.stopPropagation()}
+	>
 		<div class="win95-titlebar">
 			<div class="titlebar-icon">☺</div>
 			<div class="titlebar-text">Character Map</div>
 			<div class="titlebar-buttons">
-				<button class="titlebar-button close" type="button" onclick={closePicker} title="Close">×</button>
+				<button class="titlebar-button close" type="button" onclick={closePicker} title="Close"
+					>×</button
+				>
 			</div>
 		</div>
 
@@ -289,7 +332,7 @@
 			<button
 				class="win95-tab"
 				class:active={selectedCategory === 'All'}
-				onclick={() => selectedCategory = 'All'}
+				onclick={() => (selectedCategory = 'All')}
 				type="button"
 			>
 				All
@@ -298,7 +341,7 @@
 				<button
 					class="win95-tab"
 					class:active={selectedCategory === 'Recently Used'}
-					onclick={() => selectedCategory = 'Recently Used'}
+					onclick={() => (selectedCategory = 'Recently Used')}
 					type="button"
 				>
 					Recently Used
@@ -308,7 +351,7 @@
 				<button
 					class="win95-tab"
 					class:active={selectedCategory === category.name}
-					onclick={() => selectedCategory = category.name}
+					onclick={() => (selectedCategory = category.name)}
 					type="button"
 				>
 					{category.name}
@@ -318,7 +361,7 @@
 				<button
 					class="win95-tab"
 					class:active={selectedCategory === 'Custom'}
-					onclick={() => selectedCategory = 'Custom'}
+					onclick={() => (selectedCategory = 'Custom')}
 					type="button"
 				>
 					Custom
@@ -334,20 +377,22 @@
 							<div class="category-heading">Recently Used</div>
 							<div class="win95-grid">
 								{#each recentEmojis as emojiData}
-									{@const isCustomEmoji = emojiData.emoji.startsWith(':') && emojiData.emoji.endsWith(':')}
-									{@const customEmoji = isCustomEmoji ? customEmojis.find(c => c.name === emojiData.name) : null}
+									{@const isCustomEmoji =
+										emojiData.emoji.startsWith(':') && emojiData.emoji.endsWith(':')}
+									{@const customEmoji = isCustomEmoji
+										? customEmojis.find((c) => c.name === emojiData.name)
+										: null}
 									<button
 										class="win95-char-button"
-										onclick={() => isCustomEmoji && customEmoji ? selectEmoji('', true, customEmoji.imageUrl, customEmoji.name) : selectEmoji(emojiData)}
+										onclick={() =>
+											isCustomEmoji && customEmoji
+												? selectEmoji('', true, customEmoji.imageUrl, customEmoji.name)
+												: selectEmoji(emojiData)}
 										type="button"
 										title={`:${emojiData.name}:`}
 									>
 										{#if isCustomEmoji && customEmoji}
-											<img 
-												src={customEmoji.imageUrl} 
-												alt={customEmoji.name}
-												loading="lazy"
-											/>
+											<img src={customEmoji.imageUrl} alt={customEmoji.name} loading="lazy" />
 										{:else}
 											{emojiData.emoji}
 										{/if}
@@ -365,11 +410,7 @@
 										type="button"
 										title={`:${customEmoji.name}:`}
 									>
-										<img 
-											src={customEmoji.imageUrl} 
-											alt={customEmoji.name}
-											loading="lazy"
-										/>
+										<img src={customEmoji.imageUrl} alt={customEmoji.name} loading="lazy" />
 									</button>
 								{/each}
 							</div>
@@ -393,20 +434,22 @@
 				{:else if selectedCategory === 'Recently Used'}
 					<div class="win95-grid">
 						{#each recentEmojis as emojiData}
-							{@const isCustomEmoji = emojiData.emoji.startsWith(':') && emojiData.emoji.endsWith(':')}
-							{@const customEmoji = isCustomEmoji ? customEmojis.find(c => c.name === emojiData.name) : null}
+							{@const isCustomEmoji =
+								emojiData.emoji.startsWith(':') && emojiData.emoji.endsWith(':')}
+							{@const customEmoji = isCustomEmoji
+								? customEmojis.find((c) => c.name === emojiData.name)
+								: null}
 							<button
 								class="win95-char-button"
-								onclick={() => isCustomEmoji && customEmoji ? selectEmoji('', true, customEmoji.imageUrl, customEmoji.name) : selectEmoji(emojiData)}
+								onclick={() =>
+									isCustomEmoji && customEmoji
+										? selectEmoji('', true, customEmoji.imageUrl, customEmoji.name)
+										: selectEmoji(emojiData)}
 								type="button"
 								title={`:${emojiData.name}:`}
 							>
 								{#if isCustomEmoji && customEmoji}
-									<img 
-										src={customEmoji.imageUrl} 
-										alt={customEmoji.name}
-										loading="lazy"
-									/>
+									<img src={customEmoji.imageUrl} alt={customEmoji.name} loading="lazy" />
 								{:else}
 									{emojiData.emoji}
 								{/if}
@@ -422,17 +465,13 @@
 								type="button"
 								title={`:${customEmoji.name}:`}
 							>
-								<img 
-									src={customEmoji.imageUrl} 
-									alt={customEmoji.name}
-									loading="lazy"
-								/>
+								<img src={customEmoji.imageUrl} alt={customEmoji.name} loading="lazy" />
 							</button>
 						{/each}
 					</div>
 				{:else}
 					<div class="win95-grid">
-						{#each emojiCategories.find(c => c.name === selectedCategory)?.emojis || [] as emojiData}
+						{#each emojiCategories.find((c) => c.name === selectedCategory)?.emojis || [] as emojiData}
 							<button
 								class="win95-char-button"
 								onclick={() => selectEmoji(emojiData)}
@@ -492,11 +531,11 @@
 		font-size: calc(12 * 1em / 14);
 		border: 2px outset var(--theme-border, #4a4a4a);
 		background: var(--theme-surface, #2a2a2a);
-		box-shadow: 
-			inset -1px -1px 0 rgba(0,0,0,0.5),
-			inset 1px 1px 0 rgba(255,255,255,0.1),
-			inset -2px -2px 0 rgba(0,0,0,0.3),
-			inset 2px 2px 0 rgba(255,255,255,0.05);
+		box-shadow:
+			inset -1px -1px 0 rgba(0, 0, 0, 0.5),
+			inset 1px 1px 0 rgba(255, 255, 255, 0.1),
+			inset -2px -2px 0 rgba(0, 0, 0, 0.3),
+			inset 2px 2px 0 rgba(255, 255, 255, 0.05);
 		box-sizing: border-box;
 	}
 
@@ -568,7 +607,7 @@
 		align-items: center;
 		justify-content: center;
 		font-family: 'MS Sans Serif', sans-serif;
-		box-shadow: 
+		box-shadow:
 			inset -1px -1px 0 #000000,
 			inset 1px 1px 0 #666666;
 	}
@@ -579,7 +618,7 @@
 	}
 
 	.titlebar-button:active:not(:disabled) {
-		box-shadow: 
+		box-shadow:
 			inset 1px 1px 0 #000000,
 			inset -1px -1px 0 #666666;
 	}
@@ -592,29 +631,6 @@
 	.titlebar-button.close {
 		font-weight: bold;
 		font-size: calc(12 * 1em / 14);
-	}
-
-	.win95-menubar {
-		display: flex;
-		height: 22px;
-		background: #3a3a3a;
-		border-top: 1px solid #1a1a1a;
-		border-bottom: 1px solid #555555;
-		padding: 0 3px;
-		gap: 0;
-	}
-
-	.menu-item {
-		padding: 3px 10px;
-		cursor: default;
-		color: #e0e0e0;
-		font-size: calc(12 * 1em / 14);
-		user-select: none;
-	}
-
-	.menu-item:hover {
-		background: #1a3a5a;
-		color: #ffffff;
 	}
 
 	.win95-tabs {
@@ -641,7 +657,7 @@
 	.win95-tabs::-webkit-scrollbar-thumb {
 		background: #3a3a3a;
 		border: 1px outset #3a3a3a;
-		box-shadow: 
+		box-shadow:
 			inset -1px -1px 0 #000000,
 			inset 1px 1px 0 #666666;
 	}
@@ -655,7 +671,7 @@
 		cursor: pointer;
 		white-space: nowrap;
 		font-family: inherit;
-		box-shadow: 
+		box-shadow:
 			inset -1px -1px 0 #000000,
 			inset 1px 1px 0 #666666;
 	}
@@ -669,7 +685,7 @@
 		background: #2a2a2a;
 		border: 1px inset #2a2a2a;
 		color: #ffffff;
-		box-shadow: 
+		box-shadow:
 			inset 1px 1px 0 #000000,
 			inset -1px -1px 0 #666666;
 	}
@@ -703,7 +719,7 @@
 	.win95-grid-container::-webkit-scrollbar-thumb {
 		background: #3a3a3a;
 		border: 1px outset #3a3a3a;
-		box-shadow: 
+		box-shadow:
 			inset -1px -1px 0 #000000,
 			inset 1px 1px 0 #666666;
 	}
@@ -759,7 +775,7 @@
 		align-items: center;
 		justify-content: center;
 		color: #e0e0e0;
-		box-shadow: 
+		box-shadow:
 			inset -1px -1px 0 #000000,
 			inset 1px 1px 0 #555555;
 	}
@@ -778,7 +794,7 @@
 	}
 
 	.win95-char-button:active {
-		box-shadow: 
+		box-shadow:
 			inset 1px 1px 0 #000000,
 			inset -1px -1px 0 #555555;
 	}
@@ -818,4 +834,3 @@
 		background: #2a2a2a;
 	}
 </style>
-

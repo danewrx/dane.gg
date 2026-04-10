@@ -175,7 +175,9 @@ export async function getAllBlogTags(): Promise<BlogTag[]> {
 /**
  * Get blog posts that use a specific tag (admin)
  */
-export async function getPostsUsingBlogTag(tagId: string): Promise<{ id: string; title: string }[]> {
+export async function getPostsUsingBlogTag(
+	tagId: string
+): Promise<{ id: string; title: string }[]> {
 	try {
 		const response = await fetch(`${API_BASE}/admin/tags/${tagId}/posts`, {
 			credentials: 'include'
@@ -204,4 +206,3 @@ export function generateSlug(title: string): string {
 		.replace(/\s+/g, '-')
 		.replace(/-+/g, '-');
 }
-

@@ -13,17 +13,17 @@
 		if (/<[a-z][\s\S]*>/i.test(text)) {
 			return text;
 		}
-		
+
 		let html = text;
-		
+
 		html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 		html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
-		
+
 		html = html.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, '<em>$1</em>');
 		html = html.replace(/(?<!_)_([^_]+?)_(?!_)/g, '<em>$1</em>');
-		
+
 		html = html.replace(/~~(.+?)~~/g, '<s>$1</s>');
-		
+
 		return html;
 	}
 
@@ -38,37 +38,37 @@
 
 		const containerWidth = bannerContainer.offsetWidth;
 		const contentWidth = bannerContent.offsetWidth;
-		
+
 		// Calculate total distance to travel
 		const totalDistance = containerWidth + contentWidth;
-		
+
 		// Calculate duration based on speed (px/s)
 		const speed = Number(config.speed) || 50;
 		const duration = (totalDistance / speed) * 1000; // Convert to milliseconds
-		
+
 		let startTime: number | null = null;
-		
+
 		function animate(currentTime: number) {
 			if (!startTime) startTime = currentTime;
 			const elapsed = currentTime - startTime;
 			const progress = (elapsed % duration) / duration;
-			
+
 			// Move from right (100%) to left (-contentWidth)
-			const position = containerWidth - (progress * totalDistance);
-			
+			const position = containerWidth - progress * totalDistance;
+
 			if (bannerContent) {
 				bannerContent.style.transform = `translateX(${position}px)`;
 			}
-			
+
 			animationId = requestAnimationFrame(animate);
 		}
-		
+
 		animationId = requestAnimationFrame(animate);
 	}
 
 	onMount(() => {
 		startAnimation();
-		
+
 		return () => {
 			if (animationId) {
 				cancelAnimationFrame(animationId);

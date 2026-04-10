@@ -1,8 +1,26 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Plus, Edit, Trash2, Shield, User as UserIcon, X, Check, Eye, EyeOff, Key, Lock, UserCircle } from 'lucide-svelte';
+	import {
+		Plus,
+		Edit,
+		Trash2,
+		Shield,
+		User as UserIcon,
+		X,
+		Check,
+		Eye,
+		EyeOff,
+		Key,
+		Lock,
+		UserCircle
+	} from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
-	import { userManagementService, type User, type CreateUserData, type UpdateUserData } from '$lib/admin/services/userManagement';
+	import {
+		userManagementService,
+		type User,
+		type CreateUserData,
+		type UpdateUserData
+	} from '$lib/admin/services/userManagement';
 	import { user } from '$lib/admin/stores/auth';
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
@@ -137,15 +155,15 @@
 
 		try {
 			isSubmitting = true;
-			
+
 			if (resetPasswordInEdit && editForm.password) {
 				await userManagementService.resetPassword(selectedUser.id, editForm.password);
 			}
-			
+
 			if (reset2FAInEdit) {
 				await userManagementService.reset2FA(selectedUser.id);
 			}
-			
+
 			// Update user data
 			const updateData: UpdateUserData = {
 				username: editForm.username,
@@ -154,9 +172,9 @@
 			if (editForm.password && !resetPasswordInEdit) {
 				updateData.password = editForm.password;
 			}
-			
+
 			await userManagementService.updateUser(selectedUser.id, updateData);
-			
+
 			toast.success('User updated', {
 				description: `User "${editForm.username}" has been updated successfully`
 			});
@@ -196,10 +214,12 @@
 
 		try {
 			isSubmitting = true;
-			const userToDelete = users.find(u => u.id === deletingUserId);
+			const userToDelete = users.find((u) => u.id === deletingUserId);
 			await userManagementService.deleteUser(deletingUserId);
 			toast.success('User deleted', {
-				description: userToDelete ? `User "${userToDelete.username}" has been deleted` : 'The user has been deleted'
+				description: userToDelete
+					? `User "${userToDelete.username}" has been deleted`
+					: 'The user has been deleted'
 			});
 			cancelDelete();
 			await loadUsers();
@@ -212,7 +232,6 @@
 			isSubmitting = false;
 		}
 	}
-
 
 	function formatDate(dateString: string): string {
 		const date = new Date(dateString);
@@ -315,7 +334,9 @@
 										class="action-button delete"
 										onclick={() => confirmDelete(userItem)}
 										disabled={userItem.id === $user?.id}
-										title={userItem.id === $user?.id ? 'Cannot delete your own account' : 'Delete user'}
+										title={userItem.id === $user?.id
+											? 'Cannot delete your own account'
+											: 'Delete user'}
 									>
 										<Trash2 size={16} />
 									</button>
@@ -331,15 +352,33 @@
 
 <!-- Add User Modal -->
 {#if showAddModal}
-	<div class="modal-overlay" onclick={closeAddModal}>
-		<div class="modal" onclick={(e) => e.stopPropagation()}>
+	<div
+		class="modal-overlay"
+		onclick={closeAddModal}
+		role="button"
+		tabindex="0"
+		onkeydown={(e) => {
+			if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				closeAddModal();
+			}
+		}}
+	>
+		<div
+			class="modal"
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+		>
 			<div class="modal-header">
 				<div class="modal-header-content">
 					<div class="modal-header-icon">
 						<UserIcon size={24} />
 					</div>
 					<div>
-				<h2>Add New User</h2>
+						<h2>Add New User</h2>
 						<p class="modal-subtitle">Create a new user account</p>
 					</div>
 				</div>
@@ -347,35 +386,41 @@
 					<X size={20} />
 				</button>
 			</div>
-			<form class="modal-form" onsubmit={(e) => { e.preventDefault(); handleAddUser(); }}>
+			<form
+				class="modal-form"
+				onsubmit={(e) => {
+					e.preventDefault();
+					handleAddUser();
+				}}
+			>
 				<div class="form-content">
-				<div class="form-group">
+					<div class="form-group">
 						<label for="add-username">Username</label>
-					<input
-						id="add-username"
-						type="text"
-						bind:value={addForm.username}
-						placeholder="Enter username"
-						required
-						disabled={isSubmitting}
-					/>
-				</div>
-				<div class="form-group">
+						<input
+							id="add-username"
+							type="text"
+							bind:value={addForm.username}
+							placeholder="Enter username"
+							required
+							disabled={isSubmitting}
+						/>
+					</div>
+					<div class="form-group">
 						<label for="add-password">Password</label>
 						<div class="password-input-group">
-					<input
-						id="add-password"
+							<input
+								id="add-password"
 								type={showPassword ? 'text' : 'password'}
-						bind:value={addForm.password}
+								bind:value={addForm.password}
 								placeholder="Enter password (min 6 characters)"
-						required
-						disabled={isSubmitting}
-					/>
+								required
+								disabled={isSubmitting}
+							/>
 							<button
 								type="button"
 								class="password-toggle"
-								onclick={() => showPassword = !showPassword}
-							disabled={isSubmitting}
+								onclick={() => (showPassword = !showPassword)}
+								disabled={isSubmitting}
 							>
 								{#if showPassword}
 									<EyeOff size={16} />
@@ -394,7 +439,12 @@
 					</div>
 				</div>
 				<div class="modal-actions">
-					<button type="button" class="cancel-button" onclick={closeAddModal} disabled={isSubmitting}>
+					<button
+						type="button"
+						class="cancel-button"
+						onclick={closeAddModal}
+						disabled={isSubmitting}
+					>
 						Cancel
 					</button>
 					<button type="submit" class="save-button" disabled={isSubmitting}>
@@ -408,15 +458,39 @@
 
 <!-- Edit User Modal -->
 {#if showEditModal && selectedUser}
-	<div class="modal-overlay" onclick={closeEditModal}>
-		<div class="modal" onclick={(e) => e.stopPropagation()}>
+	<div
+		class="modal-overlay"
+		onclick={closeEditModal}
+		role="button"
+		tabindex="0"
+		onkeydown={(e) => {
+			if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				closeEditModal();
+			}
+		}}
+	>
+		<div
+			class="modal"
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+		>
 			<div class="modal-header">
 				<h2>Edit User</h2>
 				<button class="close-button" onclick={closeEditModal}>
 					<X size={20} />
 				</button>
 			</div>
-			<form class="modal-form" onsubmit={(e) => { e.preventDefault(); handleEditUser(); }}>
+			<form
+				class="modal-form"
+				onsubmit={(e) => {
+					e.preventDefault();
+					handleEditUser();
+				}}
+			>
 				<!-- User Summary Header -->
 				<div class="user-summary">
 					<div class="user-avatar">
@@ -466,7 +540,7 @@
 						<button
 							type="button"
 							class="change-password-button"
-							onclick={() => resetPasswordInEdit = !resetPasswordInEdit}
+							onclick={() => (resetPasswordInEdit = !resetPasswordInEdit)}
 							disabled={isSubmitting}
 							class:active={resetPasswordInEdit}
 						>
@@ -492,7 +566,7 @@
 									<button
 										type="button"
 										class="password-toggle"
-										onclick={() => showPassword = !showPassword}
+										onclick={() => (showPassword = !showPassword)}
 										disabled={isSubmitting}
 									>
 										{#if showPassword}
@@ -517,7 +591,7 @@
 									<button
 										type="button"
 										class="password-toggle"
-										onclick={() => showConfirmPassword = !showConfirmPassword}
+										onclick={() => (showConfirmPassword = !showConfirmPassword)}
 										disabled={isSubmitting}
 									>
 										{#if showConfirmPassword}
@@ -535,14 +609,16 @@
 					<div class="totp-section">
 						<div class="totp-info">
 							<span class="totp-status-text">
-								{selectedUser.totpEnabled ? '2FA is enabled for this user' : '2FA is not enabled for this user'}
+								{selectedUser.totpEnabled
+									? '2FA is enabled for this user'
+									: '2FA is not enabled for this user'}
 							</span>
 						</div>
 						{#if selectedUser.totpEnabled}
 							<button
 								type="button"
 								class="reset-2fa-button"
-								onclick={() => reset2FAInEdit = true}
+								onclick={() => (reset2FAInEdit = true)}
 								disabled={isSubmitting || reset2FAInEdit}
 							>
 								RESET 2FA
@@ -558,7 +634,12 @@
 				</div>
 
 				<div class="modal-actions">
-					<button type="button" class="cancel-button" onclick={closeEditModal} disabled={isSubmitting}>
+					<button
+						type="button"
+						class="cancel-button"
+						onclick={closeEditModal}
+						disabled={isSubmitting}
+					>
 						Cancel
 					</button>
 					<button type="submit" class="save-button" disabled={isSubmitting}>
@@ -582,7 +663,6 @@
 	onConfirm={handleDelete}
 	onCancel={cancelDelete}
 />
-
 
 <style>
 	.users-page {
@@ -656,7 +736,9 @@
 	}
 
 	@keyframes spin {
-		to { transform: rotate(360deg); }
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.empty-state {
@@ -881,10 +963,6 @@
 		box-sizing: border-box;
 	}
 
-	.modal-small {
-		max-width: 400px;
-	}
-
 	.modal-header {
 		display: flex;
 		align-items: flex-start;
@@ -943,26 +1021,6 @@
 	.close-button:hover {
 		background: var(--bg-tertiary, #3a3a3a);
 		color: var(--text-primary, #ffffff);
-	}
-
-	.modal-content {
-		padding: 24px;
-	}
-
-	.modal-content p {
-		margin: 0 0 12px 0;
-		color: var(--text-primary, #ffffff);
-		font-size: 14px;
-		line-height: 1.5;
-	}
-
-	.modal-content p:last-child {
-		margin-bottom: 0;
-	}
-
-	.warning-text {
-		color: #ef4444 !important;
-		font-size: 13px !important;
 	}
 
 	.modal-form {
@@ -1058,8 +1116,8 @@
 		color: var(--text-primary, #ffffff);
 	}
 
-	.form-group input[type="text"],
-	.form-group input[type="password"] {
+	.form-group input[type='text'],
+	.form-group input[type='password'] {
 		width: 100%;
 		padding: 10px 12px;
 		background: var(--bg-primary, #1a1a1a);
@@ -1295,8 +1353,7 @@
 	}
 
 	.cancel-button,
-	.save-button,
-	.delete-button {
+	.save-button {
 		padding: 10px 20px;
 		border: none;
 		border-radius: 6px;
@@ -1324,18 +1381,8 @@
 		background: var(--accent-color-dark, #4f46e5);
 	}
 
-	.delete-button {
-		background: #ef4444;
-		color: #ffffff;
-	}
-
-	.delete-button:hover:not(:disabled) {
-		background: #dc2626;
-	}
-
 	.cancel-button:disabled,
-	.save-button:disabled,
-	.delete-button:disabled {
+	.save-button:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
 	}
@@ -1446,4 +1493,3 @@
 		}
 	}
 </style>
-

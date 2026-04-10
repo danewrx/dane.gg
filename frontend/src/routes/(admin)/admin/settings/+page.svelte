@@ -2,7 +2,21 @@
 	import { mode, setMode, userPrefersMode } from 'mode-watcher';
 	import Tabs from '$lib/admin/components/ui/Tabs.svelte';
 	import AccentColorPicker from '$lib/admin/components/ui/AccentColorPicker.svelte';
-	import { Monitor, Sun, Moon, Plus, Trash2, Key, X, Copy, Check, RefreshCw, Eye, EyeOff, AlertTriangle } from 'lucide-svelte';
+	import {
+		Monitor,
+		Sun,
+		Moon,
+		Plus,
+		Trash2,
+		Key,
+		X,
+		Copy,
+		Check,
+		RefreshCw,
+		Eye,
+		EyeOff,
+		AlertTriangle
+	} from 'lucide-svelte';
 	import { authService } from '$lib/admin/services/auth';
 	import { themeService } from '$lib/admin/services/theme';
 	import { accentColorService } from '$lib/admin/services/accentColor';
@@ -75,7 +89,7 @@
 				setMode(dbTheme as 'light' | 'dark' | 'system');
 
 				// Load accent color from user data or API
-				const dbAccentColor = $user.accentColor || await settingsService.getAccentColor();
+				const dbAccentColor = $user.accentColor || (await settingsService.getAccentColor());
 				currentAccentColor = dbAccentColor;
 			} catch (error) {
 				console.error('Failed to load settings from database:', error);
@@ -85,11 +99,11 @@
 			// Fallback for non-authenticated users
 			loadFromLocalStorage();
 		}
-		
+
 		isInitialized = true;
-		
+
 		await loadApiKeys();
-		
+
 		setTimeout(() => {
 			toast.success('Settings loaded successfully!', {
 				description: 'Your preferences are ready to customize'
@@ -157,16 +171,16 @@
 			}
 
 			const data = await response.json();
-			
+
 			newlyCreatedKey = data.key;
 			showNewKeyModal = true;
 			copiedKey = false;
-			
+
 			closeAddModal();
 			await loadApiKeys();
-			
+
 			toast.success('API key created', {
-				description: 'Make sure to copy the key - you won\'t be able to see it again!'
+				description: "Make sure to copy the key - you won't be able to see it again!"
 			});
 		} catch (err) {
 			console.error('Error creating API key:', err);
@@ -180,12 +194,12 @@
 
 	async function copyKeyToClipboard() {
 		if (!newlyCreatedKey) return;
-		
+
 		try {
 			await navigator.clipboard.writeText(newlyCreatedKey);
 			copiedKey = true;
 			toast.success('Copied to clipboard');
-			
+
 			setTimeout(() => {
 				copiedKey = false;
 			}, 3000);
@@ -331,10 +345,14 @@
 
 	function getPermissionLabel(permission: string): string {
 		switch (permission) {
-			case 'full': return 'Full Access';
-			case 'read': return 'Read Only';
-			case 'chat': return 'Chat Only';
-			default: return permission;
+			case 'full':
+				return 'Full Access';
+			case 'read':
+				return 'Read Only';
+			case 'chat':
+				return 'Chat Only';
+			default:
+				return permission;
 		}
 	}
 
@@ -348,8 +366,7 @@
 	}
 
 	// Debug current mode
-	$effect(() => {
-	});
+	$effect(() => {});
 
 	async function handleThemeChange(tabId: string, value: string) {
 		currentTheme = value;
@@ -357,9 +374,10 @@
 		// Use theme service to set and save theme
 		try {
 			await themeService.setTheme(value);
-			
+
 			// Show success toast
-			const themeName = value === 'system' ? 'Auto' : value.charAt(0).toUpperCase() + value.slice(1);
+			const themeName =
+				value === 'system' ? 'Auto' : value.charAt(0).toUpperCase() + value.slice(1);
 			toast.success(`Theme changed to ${themeName}`, {
 				description: 'Your preference has been saved to your account'
 			});
@@ -367,7 +385,7 @@
 			console.error('Failed to set theme:', error);
 			// Fallback to local mode setting
 			setMode(value as 'light' | 'dark' | 'system');
-			
+
 			// Show error toast
 			toast.error('Failed to save theme preference');
 		}
@@ -380,14 +398,14 @@
 		// Use accent color service to set and save color
 		try {
 			await accentColorService.setAccentColor(color);
-			
+
 			// Show success toast
 			toast.success(`Accent color updated`, {
 				description: `New color ${color.toUpperCase()} applied across the interface`
 			});
 		} catch (error) {
 			console.error('Failed to set accent color:', error);
-			
+
 			// Show error toast
 			toast.error('Failed to save accent color preference');
 		}
@@ -457,7 +475,7 @@
 					<h3 class="setting-title">Theme</h3>
 					<p class="setting-description">Choose your preferred color scheme</p>
 				</div>
-				
+
 				<div class="setting-control setting-control--tabs">
 					<Tabs
 						tabs={themeTabs}
@@ -476,9 +494,9 @@
 					<h3 class="setting-title">Accent Color</h3>
 					<p class="setting-description">Choose a color that reflects your style</p>
 				</div>
-				
+
 				<div class="setting-control accent-color-control">
-					<AccentColorPicker 
+					<AccentColorPicker
 						currentColor={currentAccentColor}
 						disabled={!isInitialized}
 						on:colorChange={handleAccentColorChange}
@@ -512,14 +530,51 @@
 							<div class="preview-button primary">Primary Button</div>
 							<div class="preview-button secondary">Secondary Button</div>
 						</div>
-						
+
 						<!-- Test toast buttons - showcasing Sonner features -->
 						<div style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
-							<button onclick={() => toast.success('Settings saved!', { description: 'Your changes have been applied' })} style="padding: 4px 8px; font-size: 0.75rem; border: 1px solid #22c55e; background: #22c55e; color: white; border-radius: 4px;">Success</button>
-							<button onclick={() => toast.error('Save failed!', { description: 'Please check your connection' })} style="padding: 4px 8px; font-size: 0.75rem; border: 1px solid #ef4444; background: #ef4444; color: white; border-radius: 4px;">Error</button>
-							<button onclick={() => toast.warning('Unsaved changes', { description: 'You have unsaved changes' })} style="padding: 4px 8px; font-size: 0.75rem; border: 1px solid #f59e0b; background: #f59e0b; color: white; border-radius: 4px;">Warning</button>
-							<button onclick={() => toast('Export complete', { action: { label: 'Download', onClick: () => toast.success('Download started!') }, cancel: { label: 'Cancel', onClick: () => toast.info('Cancelled') } })} style="padding: 4px 8px; font-size: 0.75rem; border: 1px solid #8b5cf6; background: #8b5cf6; color: white; border-radius: 4px;">Action</button>
-							<button onclick={() => toast.promise(new Promise(resolve => setTimeout(resolve, 2000)), { loading: 'Saving...', success: 'Saved!', error: 'Failed!' })} style="padding: 4px 8px; font-size: 0.75rem; border: 1px solid #6366f1; background: #6366f1; color: white; border-radius: 4px;">Promise</button>
+							<button
+								onclick={() =>
+									toast.success('Settings saved!', {
+										description: 'Your changes have been applied'
+									})}
+								style="padding: 4px 8px; font-size: 0.75rem; border: 1px solid #22c55e; background: #22c55e; color: white; border-radius: 4px;"
+								>Success</button
+							>
+							<button
+								onclick={() =>
+									toast.error('Save failed!', { description: 'Please check your connection' })}
+								style="padding: 4px 8px; font-size: 0.75rem; border: 1px solid #ef4444; background: #ef4444; color: white; border-radius: 4px;"
+								>Error</button
+							>
+							<button
+								onclick={() =>
+									toast.warning('Unsaved changes', { description: 'You have unsaved changes' })}
+								style="padding: 4px 8px; font-size: 0.75rem; border: 1px solid #f59e0b; background: #f59e0b; color: white; border-radius: 4px;"
+								>Warning</button
+							>
+							<button
+								onclick={() =>
+									toast('Export complete', {
+										action: {
+											label: 'Download',
+											onClick: () => toast.success('Download started!')
+										},
+										cancel: { label: 'Cancel', onClick: () => toast.info('Cancelled') }
+									})}
+								style="padding: 4px 8px; font-size: 0.75rem; border: 1px solid #8b5cf6; background: #8b5cf6; color: white; border-radius: 4px;"
+								>Action</button
+							>
+							<button
+								onclick={() =>
+									toast.promise(new Promise((resolve) => setTimeout(resolve, 2000)), {
+										loading: 'Saving...',
+										success: 'Saved!',
+										error: 'Failed!'
+									})}
+								style="padding: 4px 8px; font-size: 0.75rem; border: 1px solid #6366f1; background: #6366f1; color: white; border-radius: 4px;"
+								>Promise</button
+							>
 						</div>
 					</div>
 				</div>
@@ -551,7 +606,9 @@
 						<code>Authorization: Bearer dk_your_key_here</code>
 						<code>X-Api-Key: dk_your_key_here</code>
 					</div>
-					<p class="info-note">API keys provide the same access as an admin session. Keep them secure!</p>
+					<p class="info-note">
+						API keys provide the same access as an admin session. Keep them secure!
+					</p>
 				</div>
 			</div>
 
@@ -655,15 +712,39 @@
 
 <!-- Add API Key Modal -->
 {#if showAddModal}
-	<div class="modal-overlay" onclick={closeAddModal}>
-		<div class="modal" onclick={(e) => e.stopPropagation()}>
+	<div
+		class="modal-overlay"
+		onclick={closeAddModal}
+		role="button"
+		tabindex="0"
+		onkeydown={(e) => {
+			if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				closeAddModal();
+			}
+		}}
+	>
+		<div
+			class="modal"
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+		>
 			<div class="modal-header">
 				<h2>Create API Key</h2>
 				<button class="close-button" onclick={closeAddModal}>
 					<X size={20} />
 				</button>
 			</div>
-			<form class="modal-form" onsubmit={(e) => { e.preventDefault(); handleCreateKey(); }}>
+			<form
+				class="modal-form"
+				onsubmit={(e) => {
+					e.preventDefault();
+					handleCreateKey();
+				}}
+			>
 				<div class="form-content">
 					<div class="form-group">
 						<label for="key-name">Name *</label>
@@ -697,7 +778,9 @@
 							{:else if addForm.permissions === 'read'}
 								<span class="permission-hint">GET requests only - Read-only access to data</span>
 							{:else if addForm.permissions === 'chat'}
-								<span class="permission-hint">WebSocket chat access - Send and receive chat messages</span>
+								<span class="permission-hint"
+									>WebSocket chat access - Send and receive chat messages</span
+								>
 							{/if}
 						</div>
 					</div>
@@ -715,7 +798,12 @@
 				</div>
 
 				<div class="modal-actions">
-					<button type="button" class="cancel-button" onclick={closeAddModal} disabled={isSubmitting}>
+					<button
+						type="button"
+						class="cancel-button"
+						onclick={closeAddModal}
+						disabled={isSubmitting}
+					>
 						Cancel
 					</button>
 					<button type="submit" class="save-button" disabled={isSubmitting}>
@@ -730,7 +818,7 @@
 <!-- New Key Display Modal -->
 {#if showNewKeyModal && newlyCreatedKey}
 	<div class="modal-overlay">
-		<div class="modal modal-key-display" onclick={(e) => e.stopPropagation()}>
+		<div class="modal modal-key-display" role="dialog" aria-modal="true">
 			<div class="modal-header">
 				<h2>API Key Created</h2>
 			</div>
@@ -739,14 +827,10 @@
 					<AlertTriangle size={20} />
 					<span>Copy this key now! You won't be able to see it again.</span>
 				</div>
-				
+
 				<div class="key-display">
 					<code class="full-key">{newlyCreatedKey}</code>
-					<button 
-						class="copy-button" 
-						onclick={copyKeyToClipboard}
-						class:copied={copiedKey}
-					>
+					<button class="copy-button" onclick={copyKeyToClipboard} class:copied={copiedKey}>
 						{#if copiedKey}
 							<Check size={18} />
 							Copied!
@@ -758,12 +842,8 @@
 				</div>
 			</div>
 			<div class="modal-actions">
-				<button 
-					class="save-button" 
-					onclick={closeNewKeyModal}
-					class:confirm-copy={!copiedKey}
-				>
-					{copiedKey ? 'Done' : 'I\'ve saved the key'}
+				<button class="save-button" onclick={closeNewKeyModal} class:confirm-copy={!copiedKey}>
+					{copiedKey ? 'Done' : "I've saved the key"}
 				</button>
 			</div>
 		</div>
@@ -825,7 +905,6 @@
 		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	}
 
-	
 	:global(html:not(.dark)) .section-header {
 		border-bottom-color: rgba(0, 0, 0, 0.1);
 	}
@@ -837,7 +916,6 @@
 		margin: 0 0 8px 0;
 	}
 
-	
 	:global(html:not(.dark)) .section-title {
 		color: #1f2937;
 	}
@@ -848,7 +926,6 @@
 		margin: 0;
 	}
 
-	
 	:global(html:not(.dark)) .section-description {
 		color: #6b7280;
 	}
@@ -873,7 +950,6 @@
 		margin: 0 0 6px 0;
 	}
 
-	
 	:global(html:not(.dark)) .setting-title {
 		color: #1f2937;
 	}
@@ -885,7 +961,6 @@
 		line-height: 1.5;
 	}
 
-	
 	:global(html:not(.dark)) .setting-description {
 		color: #6b7280;
 	}
@@ -932,7 +1007,6 @@
 		overflow: hidden;
 	}
 
-	
 	:global(html:not(.dark)) .preview-card {
 		background: rgba(0, 0, 0, 0.03);
 		border-color: rgba(0, 0, 0, 0.1);
@@ -947,7 +1021,6 @@
 		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	}
 
-	
 	:global(html:not(.dark)) .preview-header {
 		background: rgba(0, 0, 0, 0.05);
 		border-bottom-color: rgba(0, 0, 0, 0.1);
@@ -959,7 +1032,6 @@
 		color: #ffffff;
 	}
 
-	
 	:global(html:not(.dark)) .preview-title {
 		color: #1f2937;
 	}
@@ -972,7 +1044,6 @@
 		color: #9ca3af;
 	}
 
-	
 	:global(html:not(.dark)) .preview-mode {
 		color: #6b7280;
 	}
@@ -988,7 +1059,6 @@
 		line-height: 1.5;
 	}
 
-	
 	:global(html:not(.dark)) .preview-text {
 		color: #374151;
 	}
@@ -1022,7 +1092,6 @@
 		color: #ffffff;
 	}
 
-	
 	:global(html:not(.dark)) .preview-button.secondary {
 		background: rgba(0, 0, 0, 0.1);
 		border-color: rgba(0, 0, 0, 0.2);
@@ -1150,7 +1219,9 @@
 	}
 
 	@keyframes spin {
-		to { transform: rotate(360deg); }
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.empty-state {
@@ -1356,10 +1427,6 @@
 		box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
 	}
 
-	.modal-small {
-		max-width: 400px;
-	}
-
 	.modal-key-display {
 		max-width: 600px;
 	}
@@ -1397,22 +1464,6 @@
 	.close-button:hover {
 		background: var(--bg-tertiary, #3a3a3a);
 		color: var(--text-primary, #ffffff);
-	}
-
-	.modal-content {
-		padding: 24px;
-	}
-
-	.modal-content p {
-		margin: 0 0 12px 0;
-		color: var(--text-primary, #ffffff);
-		font-size: 14px;
-		line-height: 1.5;
-	}
-
-	.warning-text {
-		color: #ef4444 !important;
-		font-size: 13px !important;
 	}
 
 	.modal-form {
@@ -1468,8 +1519,7 @@
 	}
 
 	.cancel-button,
-	.save-button,
-	.delete-button {
+	.save-button {
 		padding: 10px 20px;
 		border: none;
 		border-radius: 6px;
@@ -1503,15 +1553,6 @@
 
 	.save-button.confirm-copy:hover:not(:disabled) {
 		background: #d97706;
-	}
-
-	.delete-button {
-		background: #ef4444;
-		color: #ffffff;
-	}
-
-	.delete-button:hover:not(:disabled) {
-		background: #dc2626;
 	}
 
 	.key-display-content {

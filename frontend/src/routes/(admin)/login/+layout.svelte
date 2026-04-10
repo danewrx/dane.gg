@@ -5,13 +5,13 @@
 
 	// Detect device theme preference
 	let deviceTheme: 'light' | 'dark' = 'dark';
-	
+
 	if (browser) {
 		// Check if user prefers light mode
 		if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
 			deviceTheme = 'light';
 		}
-		
+
 		// Listen for theme changes
 		window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
 			deviceTheme = e.matches ? 'light' : 'dark';
@@ -22,7 +22,7 @@
 <slot />
 
 <!-- Toast notifications -->
-<Toaster 
+<Toaster
 	position="top-right"
 	richColors
 	closeButton
@@ -47,7 +47,7 @@
 	:global(html) {
 		background: #1a1a1a;
 	}
-	
+
 	:global(body) {
 		background: #1a1a1a;
 		margin: 0;
@@ -60,7 +60,7 @@
 		:global(html) {
 			background: #f8fafc !important;
 		}
-		
+
 		:global(body) {
 			background: #f8fafc !important;
 		}
@@ -75,17 +75,29 @@
 	}
 
 	:global(.toast-success-custom) {
-		background: linear-gradient(135deg, rgba(34, 197, 94, 0.95) 0%, rgba(22, 163, 74, 0.95) 100%) !important;
+		background: linear-gradient(
+			135deg,
+			rgba(34, 197, 94, 0.95) 0%,
+			rgba(22, 163, 74, 0.95) 100%
+		) !important;
 		color: white !important;
 	}
 
 	:global(.toast-error-custom) {
-		background: linear-gradient(135deg, rgba(239, 68, 68, 0.95) 0%, rgba(220, 38, 38, 0.95) 100%) !important;
+		background: linear-gradient(
+			135deg,
+			rgba(239, 68, 68, 0.95) 0%,
+			rgba(220, 38, 38, 0.95) 100%
+		) !important;
 		color: white !important;
 	}
 
 	:global(.toast-info-custom) {
-		background: linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(37, 99, 235, 0.95) 100%) !important;
+		background: linear-gradient(
+			135deg,
+			rgba(59, 130, 246, 0.95) 0%,
+			rgba(37, 99, 235, 0.95) 100%
+		) !important;
 		color: white !important;
 	}
 

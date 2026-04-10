@@ -1,7 +1,18 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { Mail, Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Edit2, Check, X } from 'lucide-svelte';
+	import {
+		Mail,
+		Plus,
+		Edit,
+		Trash2,
+		Eye,
+		EyeOff,
+		GripVertical,
+		Edit2,
+		Check,
+		X
+	} from 'lucide-svelte';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
 	interface ContactEmail {
@@ -80,17 +91,17 @@
 			if (currentEditingEmail) {
 				// Update existing email
 				response = await fetch(`/api/contact/emails/${currentEditingEmail.id}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				credentials: 'include',
-				body: JSON.stringify({
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					credentials: 'include',
+					body: JSON.stringify({
 						description: formData.description,
 						email: formData.email,
 						isActive: formData.isActive
-				})
-			});
+					})
+				});
 			} else {
 				// Create new email
 				response = await fetch('/api/contact/emails', {
@@ -110,7 +121,9 @@
 			const data = await response.json();
 
 			if (data.success) {
-				toast.success(editingEmail ? 'Contact email updated successfully' : 'Contact email created successfully');
+				toast.success(
+					editingEmail ? 'Contact email updated successfully' : 'Contact email created successfully'
+				);
 				resetForm();
 				await loadContactEmails();
 			} else {
@@ -183,7 +196,7 @@
 
 	async function toggleActive(id: string) {
 		try {
-			const email = contactEmails.find(e => e.id === id);
+			const email = contactEmails.find((e) => e.id === id);
 			if (!email) return;
 
 			const response = await fetch(`/api/contact/emails/${id}`, {
@@ -348,21 +361,25 @@
 
 <div class="contact-emails-page">
 	<div class="settings-description">
-		<p>Manage email addresses displayed on the contact page and customize the header text for the email addresses section.</p>
-			</div>
+		<p>
+			Manage email addresses displayed on the contact page and customize the header text for the
+			email addresses section.
+		</p>
+	</div>
 
 	<div class="form-group header-form-group">
-		<label>Header</label>
 		{#if isEditingHeader}
+			<label for="contact-emails-header-input">Header</label>
 			<div class="header-edit-container">
-				<input 
-					type="text" 
+				<input
+					id="contact-emails-header-input"
+					type="text"
 					bind:value={tempHeaderText}
 					placeholder="e.g., Email"
 					class="header-input"
 				/>
 				<div class="header-edit-actions">
-			<button 
+					<button
 						type="button"
 						class="icon-button save-icon-button"
 						onclick={saveHeader}
@@ -370,18 +387,19 @@
 					>
 						<Check size={16} />
 					</button>
-					<button 
+					<button
 						type="button"
 						class="icon-button cancel-icon-button"
 						onclick={cancelEditingHeader}
 						title="Cancel"
-			>
+					>
 						<X size={16} />
-			</button>
-		</div>
+					</button>
+				</div>
 			</div>
 			<p class="field-hint">This text will appear above the email addresses on the contact page.</p>
 		{:else}
+			<span class="field-label-static">Header</span>
 			<div class="header-view-container">
 				<div class="header-view-text">
 					{#if emailsHeader}
@@ -390,7 +408,7 @@
 						<span class="empty-text">No header text set. Click edit to add one.</span>
 					{/if}
 				</div>
-				<button 
+				<button
 					type="button"
 					class="icon-button edit-icon-button"
 					onclick={startEditingHeader}
@@ -409,118 +427,119 @@
 			<p>Loading contact emails...</p>
 		</div>
 	{:else}
-		<div class="emails-list">
+		<div class="emails-list" role="list">
 			{#if contactEmails.length > 0}
-			{#each contactEmails as email, index (email.id)}
-				<div 
-					class="email-item"
-					class:dragging={draggedIndex === index}
-					class:drag-over={dragOverIndex === index}
-					class:not-draggable={editingEmail !== null || showAddForm}
-					draggable={editingEmail === null && !showAddForm}
-					ondragstart={() => handleDragStart(index)}
-					ondragover={(e) => handleDragOver(e, index)}
-					ondragleave={handleDragLeave}
-					ondrop={(e) => handleDrop(e, index)}
-					ondragend={handleDragEnd}
-				>
-					{#if editingEmail === null && !showAddForm}
-						<div class="drag-handle" title="Drag to reorder">
-						<GripVertical size={20} />
-					</div>
-					{/if}
-					<div class="email-info">
-						<div class="email-details">
-							<h3 class="email-address">{email.email}</h3>
-							<p class="email-description">{email.description}</p>
-							<div class="email-meta">
-								<span class="display-order">Order: {email.displayOrder}</span>
+				{#each contactEmails as email, index (email.id)}
+					<div
+						class="email-item"
+						role="listitem"
+						aria-label={`Reorder contact email: ${email.email}`}
+						class:dragging={draggedIndex === index}
+						class:drag-over={dragOverIndex === index}
+						class:not-draggable={editingEmail !== null || showAddForm}
+						draggable={editingEmail === null && !showAddForm}
+						ondragstart={() => handleDragStart(index)}
+						ondragover={(e) => handleDragOver(e, index)}
+						ondragleave={handleDragLeave}
+						ondrop={(e) => handleDrop(e, index)}
+						ondragend={handleDragEnd}
+					>
+						{#if editingEmail === null && !showAddForm}
+							<div class="drag-handle" title="Drag to reorder">
+								<GripVertical size={20} />
+							</div>
+						{/if}
+						<div class="email-info">
+							<div class="email-details">
+								<h3 class="email-address">{email.email}</h3>
+								<p class="email-description">{email.description}</p>
+								<div class="email-meta">
+									<span class="display-order">Order: {email.displayOrder}</span>
+								</div>
 							</div>
 						</div>
+						<div class="email-actions">
+							<button
+								class="action-button"
+								onclick={() => toggleActive(email.id)}
+								title={email.isActive ? 'Hide email' : 'Show email'}
+							>
+								{#if email.isActive}
+									<Eye size={16} />
+								{:else}
+									<EyeOff size={16} />
+								{/if}
+							</button>
+							<button class="action-button" onclick={() => editEmail(email)} title="Edit email">
+								<Edit size={16} />
+							</button>
+							<button
+								class="action-button danger"
+								onclick={() => requestDeleteEmail(email.id)}
+								title="Delete email"
+							>
+								<Trash2 size={16} />
+							</button>
+						</div>
 					</div>
-					<div class="email-actions">
-						<button 
-							class="action-button" 
-							onclick={() => toggleActive(email.id)}
-							title={email.isActive ? 'Hide email' : 'Show email'}
-						>
-							{#if email.isActive}
-								<Eye size={16} />
-							{:else}
-								<EyeOff size={16} />
-							{/if}
-						</button>
-						<button 
-							class="action-button" 
-							onclick={() => editEmail(email)}
-							title="Edit email"
-						>
-							<Edit size={16} />
-						</button>
-						<button 
-							class="action-button danger" 
-							onclick={() => requestDeleteEmail(email.id)}
-							title="Delete email"
-						>
-							<Trash2 size={16} />
-						</button>
-					</div>
-				</div>
-			{/each}
-	{/if}
+				{/each}
+			{/if}
 
-	{#if showAddForm}
+			{#if showAddForm}
 				<div class="new-email-form">
 					<h3>{editingEmail ? 'Edit Email' : 'New Email'}</h3>
-					<form onsubmit={(e) => { e.preventDefault(); saveEmail(); }}>
-					<div class="form-group">
-						<label for="description">Description *</label>
-						<textarea 
-							id="description"
+					<form
+						onsubmit={(e) => {
+							e.preventDefault();
+							saveEmail();
+						}}
+					>
+						<div class="form-group">
+							<label for="description">Description *</label>
+							<textarea
+								id="description"
 								class="edit-input"
-							bind:value={formData.description}
-							placeholder="e.g., If you would like to reach out to me for most things:"
-							required
-							rows="3"
-						></textarea>
-					</div>
+								bind:value={formData.description}
+								placeholder="e.g., If you would like to reach out to me for most things:"
+								required
+								rows="3"
+							></textarea>
+						</div>
 
-					<div class="form-group">
-						<label for="email">Email Address *</label>
-						<input 
-							type="email" 
-							id="email"
+						<div class="form-group">
+							<label for="email">Email Address *</label>
+							<input
+								type="email"
+								id="email"
 								class="edit-input"
-							bind:value={formData.email}
-							placeholder="me@dane.gg"
-							required
-						/>
-					</div>
-
-					<div class="form-group">
-						<label class="checkbox-label">
-							<input 
-								type="checkbox" 
-								bind:checked={formData.isActive}
+								bind:value={formData.email}
+								placeholder="me@dane.gg"
+								required
 							/>
-								<span>Active (visible on website)</span>
-						</label>
-					</div>
+						</div>
 
-					<div class="form-actions">
+						<div class="form-group">
+							<label class="checkbox-label">
+								<input type="checkbox" bind:checked={formData.isActive} />
+								<span>Active (visible on website)</span>
+							</label>
+						</div>
+
+						<div class="form-actions">
 							<button type="submit" class="save-btn" disabled={isSaving}>
-							{isSaving ? 'Saving...' : (editingEmail ? 'Update Email' : 'Add Email')}
-						</button>
-							<button type="button" class="cancel-btn" onclick={resetForm}>
-								Cancel
-						</button>
-					</div>
-				</form>
-			</div>
+								{isSaving ? 'Saving...' : editingEmail ? 'Update Email' : 'Add Email'}
+							</button>
+							<button type="button" class="cancel-btn" onclick={resetForm}> Cancel </button>
+						</div>
+					</form>
+				</div>
 			{:else}
-				<button 
-					class="add-email-btn" 
-					onclick={() => { resetForm(); showAddForm = true; }}
+				<button
+					class="add-email-btn"
+					onclick={() => {
+						resetForm();
+						showAddForm = true;
+					}}
 					disabled={isSaving || editingEmail !== null}
 				>
 					<Plus size={18} />
@@ -552,7 +571,6 @@
 		line-height: 1.5;
 	}
 
-
 	.loading {
 		display: flex;
 		flex-direction: column;
@@ -573,8 +591,12 @@
 	}
 
 	@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
 
 	.emails-list {
@@ -740,6 +762,14 @@
 		margin-bottom: 8px;
 	}
 
+	.field-label-static {
+		display: block;
+		color: var(--text-primary, #ffffff);
+		font-size: 14px;
+		font-weight: 500;
+		margin-bottom: 8px;
+	}
+
 	.edit-input {
 		width: 100%;
 		padding: 12px;
@@ -798,7 +828,7 @@
 		cursor: pointer;
 	}
 
-	.checkbox-label input[type="checkbox"] {
+	.checkbox-label input[type='checkbox'] {
 		width: auto;
 		cursor: pointer;
 	}
@@ -917,7 +947,6 @@
 	.header-form-group {
 		margin-bottom: 24px;
 	}
-
 
 	.header-view-container {
 		display: flex;

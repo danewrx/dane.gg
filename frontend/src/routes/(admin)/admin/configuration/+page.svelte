@@ -15,4 +15,3 @@
 <!-- The layout will show the settings cards and handle the panel display -->
 
 <!-- All styles are now handled by the layout -->
-

@@ -26,18 +26,18 @@ export async function getBanner(): Promise<BannerConfig | null> {
 	try {
 		const response = await fetch(API_BASE);
 		const result = await response.json();
-		
+
 		if (!result.success || !result.data) {
 			return null;
 		}
-		
+
 		const configs = result.data;
-		
+
 		// Check if banner is enabled
 		if (!configs[BANNER_KEYS.ENABLED]) {
 			return null;
 		}
-		
+
 		return {
 			text: configs[BANNER_KEYS.TEXT] || '',
 			enabled: configs[BANNER_KEYS.ENABLED] || false,
@@ -60,13 +60,13 @@ export async function getBannerConfig(): Promise<BannerConfig> {
 		const response = await fetch(API_BASE, {
 			credentials: 'include'
 		});
-		
+
 		if (!response.ok) {
 			throw new Error('Failed to load banner configuration');
 		}
-		
+
 		const result = await response.json();
-		
+
 		if (!result.success || !result.data) {
 			// Return defaults if no config exists
 			return {
@@ -78,9 +78,9 @@ export async function getBannerConfig(): Promise<BannerConfig> {
 				transparentBackground: false
 			};
 		}
-		
+
 		const configs = result.data;
-		
+
 		return {
 			text: configs[BANNER_KEYS.TEXT] || '',
 			enabled: configs[BANNER_KEYS.ENABLED] || false,
@@ -109,7 +109,7 @@ export async function saveBannerConfig(config: BannerConfig): Promise<BannerConf
 			{ key: BANNER_KEYS.SPEED, value: config.speed, dataType: 'number' },
 			{ key: BANNER_KEYS.TRANSPARENT_BG, value: config.transparentBackground, dataType: 'boolean' }
 		];
-		
+
 		await Promise.all(
 			updates.map(async ({ key, value, dataType }) => {
 				const response = await fetch(`${API_BASE}/${key}`, {
@@ -120,17 +120,16 @@ export async function saveBannerConfig(config: BannerConfig): Promise<BannerConf
 					credentials: 'include',
 					body: JSON.stringify({ value, dataType })
 				});
-				
+
 				if (!response.ok) {
 					throw new Error(`Failed to save ${key}`);
 				}
 			})
 		);
-		
+
 		return config;
 	} catch (error) {
 		console.error('Error saving banner config:', error);
 		throw error;
 	}
 }
-

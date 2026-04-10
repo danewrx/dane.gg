@@ -23,11 +23,11 @@
 	let tags = $state<ProjectTag[]>([]);
 	let categories = $state<ProjectCategory[]>([]);
 	let loading = $state(true);
-	
+
 	// Create a map of category IDs to their displayOrder for quick lookup
 	let categoryOrderMap = $derived.by(() => {
 		const map = new Map<string, number>();
-		categories.forEach(cat => {
+		categories.forEach((cat) => {
 			map.set(cat.id, cat.displayOrder);
 		});
 		return map;
@@ -64,17 +64,22 @@
 				if (result.data && Array.isArray(result.data)) {
 					result.data.forEach((group: { category: any; tags: ProjectTag[] }) => {
 						// Ensure each tag has the category info with displayOrder from the group
-						group.tags.forEach(tag => {
+						group.tags.forEach((tag) => {
 							allTags.push({
 								...tag,
 								// Use group.category if tag.category doesn't have displayOrder, or merge them
-								category: tag.category ? {
-									...tag.category,
-									displayOrder: (tag.category as any).displayOrder ?? group.category?.displayOrder
-								} : group.category ? {
-									...group.category,
-									displayOrder: group.category.displayOrder
-								} : null
+								category: tag.category
+									? {
+											...tag.category,
+											displayOrder:
+												(tag.category as any).displayOrder ?? group.category?.displayOrder
+										}
+									: group.category
+										? {
+												...group.category,
+												displayOrder: group.category.displayOrder
+											}
+										: null
 							});
 						});
 					});
@@ -96,64 +101,76 @@
 		if (categories.length === 0) {
 			return [];
 		}
-		
-		const groups: Record<string, { category: { name: string; id: string; displayOrder: number } | null; tags: ProjectTag[] }> = {};
-		tags.forEach(tag => {
+
+		const groups: Record<
+			string,
+			{ category: { name: string; id: string; displayOrder: number } | null; tags: ProjectTag[] }
+		> = {};
+		tags.forEach((tag) => {
 			const categoryId = tag.category?.id || 'uncategorized';
 			const categoryName = tag.category?.name || 'Uncategorized';
-			
+
 			if (!groups[categoryId]) {
 				// Always use categoryOrderMap as the authoritative source
 				let categoryDisplayOrder: number = 999; // Default for uncategorized
-				
+
 				if (categoryId !== 'uncategorized') {
 					if (categoryOrderMap.has(categoryId)) {
 						// Use the displayOrder from the categories list (authoritative)
 						categoryDisplayOrder = categoryOrderMap.get(categoryId)!;
 					} else {
 						// Category ID not found in map - try to find it in categories list
-						const foundCategory = categories.find(c => c.id === categoryId);
+						const foundCategory = categories.find((c) => c.id === categoryId);
 						if (foundCategory) {
 							categoryDisplayOrder = foundCategory.displayOrder;
 						} else {
 							// Category not found at all - use fallback from tag or default
-							categoryDisplayOrder = (tag.category as any)?.displayOrder ?? tag.category?.displayOrder ?? 999;
-							console.warn(`Category ID ${categoryId} (${tag.category?.name}) not found in categoryOrderMap or categories list`);
+							categoryDisplayOrder =
+								(tag.category as any)?.displayOrder ?? tag.category?.displayOrder ?? 999;
+							console.warn(
+								`Category ID ${categoryId} (${tag.category?.name}) not found in categoryOrderMap or categories list`
+							);
 						}
 					}
 				}
-				
+
 				groups[categoryId] = {
-					category: tag.category ? { 
-						name: tag.category.name, 
-						id: tag.category.id,
-						displayOrder: categoryDisplayOrder
-					} : null,
+					category: tag.category
+						? {
+								name: tag.category.name,
+								id: tag.category.id,
+								displayOrder: categoryDisplayOrder
+							}
+						: null,
 					tags: []
 				};
 			}
 			groups[categoryId].tags.push(tag);
 		});
-		
+
 		const groupsArray = Object.values(groups);
-		
+
 		// Sort by category displayOrder, with uncategorized last
 		groupsArray.sort((a, b) => {
 			if (a.category && b.category) {
 				// Both have categories - sort by displayOrder
 				const aOrder = a.category.displayOrder;
 				const bOrder = b.category.displayOrder;
-				
+
 				// Debug log for troubleshooting
 				if (aOrder === undefined || bOrder === undefined || aOrder === 999 || bOrder === 999) {
 					console.warn('Potential sorting issue:', {
 						a: { name: a.category.name, id: a.category.id, displayOrder: aOrder },
 						b: { name: b.category.name, id: b.category.id, displayOrder: bOrder },
 						categoryOrderMap: Array.from(categoryOrderMap.entries()),
-						categories: categories.map(c => ({ name: c.name, id: c.id, displayOrder: c.displayOrder }))
+						categories: categories.map((c) => ({
+							name: c.name,
+							id: c.id,
+							displayOrder: c.displayOrder
+						}))
 					});
 				}
-				
+
 				if (aOrder !== bOrder) {
 					return aOrder - bOrder;
 				}
@@ -165,7 +182,7 @@
 			if (a.category && !b.category) return -1;
 			return 0;
 		});
-		
+
 		return groupsArray;
 	});
 
@@ -220,9 +237,15 @@
 
 		try {
 			isSaving = true;
-			const categoryId = formData.categoryId && formData.categoryId.trim() ? formData.categoryId.trim() : null;
+			const categoryId =
+				formData.categoryId && formData.categoryId.trim() ? formData.categoryId.trim() : null;
 			if (editingTag) {
-				await updateProjectTag(editingTag.id, formData.title.trim(), formData.color.trim(), categoryId);
+				await updateProjectTag(
+					editingTag.id,
+					formData.title.trim(),
+					formData.color.trim(),
+					categoryId
+				);
 				toast.success('Tag updated', {
 					description: `"${formData.title.trim()}" has been updated`
 				});
@@ -246,14 +269,14 @@
 	}
 
 	async function handleDeleteClick(id: string) {
-		const tag = tags.find(t => t.id === id);
+		const tag = tags.find((t) => t.id === id);
 		if (!tag) return;
 
 		// Check if tag is used by projects
 		try {
 			loadingProjects = true;
 			const projects = await getProjectsUsingTag(id);
-			
+
 			if (projects.length > 0) {
 				// Show confirmation dialog with affected projects
 				tagToDelete = tag;
@@ -274,7 +297,7 @@
 	}
 
 	async function confirmDelete(id: string) {
-		const tag = tags.find(t => t.id === id);
+		const tag = tags.find((t) => t.id === id);
 		if (!tag) return;
 
 		try {
@@ -369,8 +392,26 @@
 	{/if}
 
 	{#if showAddForm}
-		<div class="modal-overlay" onclick={cancelEdit}>
-			<div class="modal" onclick={(e) => e.stopPropagation()}>
+		<div
+			class="modal-overlay"
+			onclick={cancelEdit}
+			role="button"
+			tabindex="0"
+			onkeydown={(e) => {
+				if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					cancelEdit();
+				}
+			}}
+		>
+			<div
+				class="modal"
+				role="dialog"
+				aria-modal="true"
+				tabindex="-1"
+				onclick={(e) => e.stopPropagation()}
+				onkeydown={(e) => e.stopPropagation()}
+			>
 				<div class="modal-header">
 					<h3>{editingTag ? 'Edit Tag' : 'Add Tag'}</h3>
 					<button class="close-button" onclick={cancelEdit} type="button">
@@ -398,12 +439,7 @@
 					<div class="form-group">
 						<label for="tag-color">Color *</label>
 						<div class="color-input-group">
-							<input
-								type="color"
-								id="tag-color"
-								bind:value={formData.color}
-								class="color-picker"
-							/>
+							<input type="color" id="tag-color" bind:value={formData.color} class="color-picker" />
 							<input
 								type="text"
 								bind:value={formData.color}
@@ -427,8 +463,13 @@
 					<button class="cancel-button" onclick={cancelEdit} type="button" disabled={isSaving}>
 						Cancel
 					</button>
-					<button class="save-button" onclick={saveTag} type="button" disabled={isSaving || !formData.title.trim()}>
-						{isSaving ? 'Saving...' : (editingTag ? 'Update' : 'Create')}
+					<button
+						class="save-button"
+						onclick={saveTag}
+						type="button"
+						disabled={isSaving || !formData.title.trim()}
+					>
+						{isSaving ? 'Saving...' : editingTag ? 'Update' : 'Create'}
 					</button>
 				</div>
 			</div>
@@ -452,7 +493,9 @@
 {#snippet tagDeleteBody()}
 	{#if tagToDelete}
 		<p class="delete-warning">
-			Deleting this tag will remove it from the following project{projectsUsingTag.length > 1 ? 's' : ''}:
+			Deleting this tag will remove it from the following project{projectsUsingTag.length > 1
+				? 's'
+				: ''}:
 		</p>
 		<ul class="affected-projects-list">
 			{#each projectsUsingTag as project}
@@ -843,4 +886,3 @@
 		cursor: not-allowed;
 	}
 </style>
-

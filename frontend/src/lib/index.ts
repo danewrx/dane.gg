@@ -13,7 +13,7 @@ export { user } from './admin/stores/auth';
 export { adminNavigation } from './admin/config/navigation';
 export { default as Logo } from './admin/components/Logo.svelte';
 
-// Site exports  
+// Site exports
 export { default as Header } from './site/components/layout/Header.svelte';
 export { default as LoadingSpinner } from './site/components/ui/LoadingSpinner.svelte';
 

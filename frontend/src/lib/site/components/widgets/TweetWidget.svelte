@@ -27,23 +27,23 @@
 		}
 
 		fetchTweetData();
-		
+
 		const pollInterval = setInterval(() => {
 			if (isPageVisible) {
 				fetchTweetData();
 			}
 		}, 30000);
-		
+
 		function handleVisibilityChange() {
 			isPageVisible = !document.hidden;
-			
+
 			if (isPageVisible) {
 				fetchTweetData();
 			}
 		}
 
 		document.addEventListener('visibilitychange', handleVisibilityChange);
-		
+
 		return () => {
 			clearInterval(pollInterval);
 			document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -53,22 +53,24 @@
 	async function fetchTweetData() {
 		try {
 			error = null;
-			
+
 			const response = await fetch('/api/widgets/latest-tweet');
-			
+
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
-			
+
 			const data = await response.json();
 			hasReceivedApiResponse = true;
-			
+
 			if (data.tweetId) {
 				// Check if new tweet
 				if (lastTweetId !== data.tweetId) {
 					lastTweetId = data.tweetId;
 					tweetData = data;
-					console.log(`[TweetWidget] New tweet detected: @${data.authorUsername} - ${data.content?.substring(0, 50)}...`);
+					console.log(
+						`[TweetWidget] New tweet detected: @${data.authorUsername} - ${data.content?.substring(0, 50)}...`
+					);
 				} else if (tweetData && tweetData.tweetId === data.tweetId) {
 					if (tweetData.lastUpdate !== data.lastUpdate) {
 						tweetData = data;
@@ -107,7 +109,6 @@
 					};
 				}
 			}
-			
 		} catch (err) {
 			console.error('Error fetching tweet data:', err);
 			error = err instanceof Error ? err.message : 'Failed to fetch tweet data';
@@ -162,84 +163,84 @@
 	}
 </script>
 
-	<div class="tweet-widget">
-		{#if tweetData && tweetData.tweetId}
-			<div class="tweet-info">
-				<div class="tweet-header">
-					<div class="author-info">
-						<div class="profile-image">
-							{#if tweetData.authorProfileImage}
-								<img src={tweetData.authorProfileImage} alt="{tweetData.authorName}" />
+<div class="tweet-widget">
+	{#if tweetData && tweetData.tweetId}
+		<div class="tweet-info">
+			<div class="tweet-header">
+				<div class="author-info">
+					<div class="profile-image">
+						{#if tweetData.authorProfileImage}
+							<img src={tweetData.authorProfileImage} alt={tweetData.authorName} />
+						{:else}
+							<div class="no-image">
+								{tweetData.authorName?.toLowerCase() || 'dane'}
+							</div>
+						{/if}
+					</div>
+					<div class="author-details">
+						<div class="author-header">
+							<a
+								href={tweetData.authorProfileUrl || `https://x.com/${tweetData.authorUsername}`}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="author-name"
+							>
+								{tweetData.authorName}
+							</a>
+							<span class="author-username">
+								@<span class="username-text">{tweetData.authorUsername}</span>
+							</span>
+							<span class="time-separator">•</span>
+							<span class="tweet-time">
+								{#if tweetData.createdAt}
+									{formatTimeAgo(new Date(tweetData.createdAt))}
+								{/if}
+							</span>
+						</div>
+						<div class="tweet-content">
+							{#if tweetData.tweetUrl}
+								<a
+									href={tweetData.tweetUrl}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="tweet-text"
+								>
+									{tweetData.content}
+								</a>
 							{:else}
-								<div class="no-image">
-									{tweetData.authorName?.toLowerCase() || 'dane'}
+								<div class="tweet-text">
+									{tweetData.content}
 								</div>
 							{/if}
-						</div>
-						<div class="author-details">
-							<div class="author-header">
-								<a 
-									href={tweetData.authorProfileUrl || `https://x.com/${tweetData.authorUsername}`} 
-									target="_blank" 
-									rel="noopener noreferrer"
-									class="author-name"
-								>
-									{tweetData.authorName}
-								</a>
-								<span class="author-username">
-									@<span class="username-text">{tweetData.authorUsername}</span>
-								</span>
-								<span class="time-separator">•</span>
-								<span class="tweet-time">
-									{#if tweetData.createdAt}
-										{formatTimeAgo(new Date(tweetData.createdAt))}
-									{/if}
-								</span>
-							</div>
-							<div class="tweet-content">
-								{#if tweetData.tweetUrl}
-									<a 
-										href={tweetData.tweetUrl} 
-										target="_blank" 
-										rel="noopener noreferrer"
-										class="tweet-text"
-									>
-										{tweetData.content}
-									</a>
-								{:else}
-									<div class="tweet-text">
-										{tweetData.content}
-									</div>
-								{/if}
-							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		{:else if !hasReceivedApiResponse}
-			<div class="default-placeholder">
-				<div class="profile-image">
-					<div class="no-image">dane</div>
-				</div>
-				<div class="tweet-details">
-					<div class="tweet-title">No recent tweets</div>
-					<div class="tweet-subtitle">Twitter unavailable</div>
-					<div class="tweet-status">Check back later</div>
-				</div>
+		</div>
+	{:else if !hasReceivedApiResponse}
+		<div class="default-placeholder">
+			<div class="profile-image">
+				<div class="no-image">dane</div>
 			</div>
-		{:else}
-			<div class="default-placeholder">
-				<div class="profile-image">
-					<div class="no-image">dane</div>
-				</div>
-				<div class="tweet-details">
-					<div class="tweet-title">No recent tweets</div>
-					<div class="tweet-subtitle">No tweet data available</div>
-					<div class="tweet-status">Check back later</div>
-				</div>
+			<div class="tweet-details">
+				<div class="tweet-title">No recent tweets</div>
+				<div class="tweet-subtitle">Twitter unavailable</div>
+				<div class="tweet-status">Check back later</div>
 			</div>
-		{/if}
-	</div>
+		</div>
+	{:else}
+		<div class="default-placeholder">
+			<div class="profile-image">
+				<div class="no-image">dane</div>
+			</div>
+			<div class="tweet-details">
+				<div class="tweet-title">No recent tweets</div>
+				<div class="tweet-subtitle">No tweet data available</div>
+				<div class="tweet-status">Check back later</div>
+			</div>
+		</div>
+	{/if}
+</div>
 
 <style>
 	:global(*) {
