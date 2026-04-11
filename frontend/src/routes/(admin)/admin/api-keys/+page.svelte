@@ -51,7 +51,8 @@
 	const permissionTabs = [
 		{ id: 'full', label: 'Full Access', value: 'full' },
 		{ id: 'read', label: 'Read Only', value: 'read' },
-		{ id: 'chat', label: 'Chat Only', value: 'chat' }
+		{ id: 'chat', label: 'Chat Only', value: 'chat' },
+		{ id: 'webhooks', label: 'Webhooks Only', value: 'webhooks' }
 	];
 
 	function handlePermissionChange(tabId: string, value: string) {
@@ -304,6 +305,8 @@
 				return 'Read Only';
 			case 'chat':
 				return 'Chat Only';
+			case 'webhooks':
+				return 'Webhooks Only';
 			default:
 				return permission;
 		}
@@ -418,9 +421,13 @@
 								<code class="key-prefix">{key.keyPrefix}...</code>
 							</td>
 							<td>
-								<span class="permission-badge" class:full={key.permissions === 'full'}>
-									{getPermissionLabel(key.permissions)}
-								</span>
+								<span
+										class="permission-badge"
+										class:full={key.permissions === 'full'}
+										class:webhooks={key.permissions === 'webhooks'}
+									>
+											{getPermissionLabel(key.permissions)}
+										</span>
 							</td>
 							<td>
 								{#if isExpired(key.expiresAt)}
@@ -543,12 +550,20 @@
 						</div>
 						<div class="permission-descriptions">
 							{#if addForm.permissions === 'full'}
-								<span class="permission-hint">All API endpoints - Full administrative access</span>
+								<span class="permission-hint">All API endpoints — full administrative access</span>
 							{:else if addForm.permissions === 'read'}
-								<span class="permission-hint">GET requests only - Read-only access to data</span>
+								<span class="permission-hint"
+									>GET/HEAD/OPTIONS only on the HTTP API. No writes, no chat WebSocket.</span
+								>
 							{:else if addForm.permissions === 'chat'}
 								<span class="permission-hint"
-									>WebSocket chat access - Send and receive chat messages</span
+									>Chat WebSocket (admin bridge) plus GET/HEAD/OPTIONS on /api/chat, /api/emojis, and
+									/api/chat-notification-sounds only.</span
+								>
+							{:else if addForm.permissions === 'webhooks'}
+								<span class="permission-hint"
+									>POST (or OPTIONS) on /webhooks/* only — e.g. Discord presence. No other HTTP routes or
+									chat WebSocket.</span
 								>
 							{/if}
 						</div>
@@ -872,6 +887,11 @@
 	.permission-badge.full {
 		background: var(--accent-color-light, rgba(99, 102, 241, 0.2));
 		color: var(--accent-color, #6366f1);
+	}
+
+	.permission-badge.webhooks {
+		background: rgba(14, 165, 233, 0.2);
+		color: #0ea5e9;
 	}
 
 	.status-badge {

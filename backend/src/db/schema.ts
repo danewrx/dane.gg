@@ -255,7 +255,7 @@ export const apiKeys = websiteSchema.table('api_keys', {
 	name: varchar('name', { length: 100 }).notNull(),
 	keyHash: varchar('key_hash', { length: 255 }).notNull(), // SHA-256 hash of the key
 	keyPrefix: varchar('key_prefix', { length: 12 }).notNull().unique(),
-	permissions: varchar('permissions', { length: 50 }).notNull().default('full'), // 'full', 'read', 'chat' etc.
+	permissions: varchar('permissions', { length: 50 }).notNull().default('full'), // 'full', 'read', 'chat', 'webhooks'
 	isActive: boolean('is_active').default(true),
 	lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
 	expiresAt: timestamp('expires_at', { withTimezone: true }),

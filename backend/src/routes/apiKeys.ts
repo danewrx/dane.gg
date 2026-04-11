@@ -63,9 +63,11 @@ router.post('/', requireSession, requireAdmin, async (req: Request, res: Respons
 			return res.status(400).json({ error: 'Name must be 100 characters or less' });
 		}
 
-		const validPermissions = ['full', 'read', 'chat'];
+		const validPermissions = ['full', 'read', 'chat', 'webhooks'];
 		if (!validPermissions.includes(permissions)) {
-			return res.status(400).json({ error: 'Invalid permissions. Must be: full, read, or chat' });
+			return res.status(400).json({
+				error: 'Invalid permissions. Must be: full, read, chat, or webhooks'
+			});
 		}
 
 		const { key, prefix, hash } = generateApiKey();

@@ -6,6 +6,104 @@ import { eq } from 'drizzle-orm';
 import { apiKeyValidationLimiter } from './rateLimiting';
 import crypto from 'crypto';
 
+/** HTTP paths a `chat`-scoped API key may access (GET/HEAD/OPTIONS only). */
+const CHAT_SCOPED_PATH_PREFIXES = ['/api/chat', '/api/emojis', '/api/chat-notification-sounds'];
+
+function requestPathname(req: Request): string {
+	try {
+		return new URL(req.originalUrl || req.url || '/', 'http://localhost').pathname;
+	} catch {
+		return (req.baseUrl || '') + (req.path || '') || '/';
+	}
+}
+
+/**
+ * Restrict what API keys may do over HTTP. Session/JWT users are unaffected.
+ * Call after `req.user` is set from an API key.
+ */
+export function enforceApiKeyHttpScope(req: Request, res: Response, next: NextFunction): void {
+	if (!req.user?.isApiKey || !req.user.apiKeyPermissions) {
+		next();
+		return;
+	}
+
+	const perm = req.user.apiKeyPermissions;
+	if (perm === 'full') {
+		next();
+		return;
+	}
+
+	const method = req.method.toUpperCase();
+	const path = requestPathname(req);
+	const safeReadMethod = method === 'GET' || method === 'HEAD' || method === 'OPTIONS';
+
+	const forbidden = (message: string) => {
+		res.status(403).json({
+			error: 'Forbidden',
+			message
+		});
+	};
+
+	switch (perm) {
+		case 'read':
+			if (!safeReadMethod) {
+				forbidden('Read-only API keys may only use GET, HEAD, or OPTIONS');
+				return;
+			}
+			if (path.startsWith('/webhooks')) {
+				forbidden('Read-only API keys cannot access /webhooks routes');
+				return;
+			}
+			next();
+			return;
+
+		case 'chat':
+			if (!safeReadMethod) {
+				forbidden('Chat API keys may only use GET, HEAD, or OPTIONS on the HTTP API');
+				return;
+			}
+			if (path.startsWith('/webhooks')) {
+				forbidden('Chat API keys cannot access /webhooks routes');
+				return;
+			}
+			if (
+				!CHAT_SCOPED_PATH_PREFIXES.some(
+					(prefix) => path === prefix || path.startsWith(prefix + '/')
+				)
+			) {
+				forbidden(
+					'Chat API keys may only access /api/chat, /api/emojis, and /api/chat-notification-sounds'
+				);
+				return;
+			}
+			next();
+			return;
+
+		case 'webhooks':
+			if (!path.startsWith('/webhooks')) {
+				forbidden('Webhooks API keys may only call paths under /webhooks');
+				return;
+			}
+			if (method !== 'POST' && method !== 'OPTIONS') {
+				forbidden('Webhooks API keys may only use POST (or OPTIONS) on /webhooks routes');
+				return;
+			}
+			next();
+			return;
+
+		default:
+			forbidden('Unknown API key permission scope');
+	}
+}
+
+function continueAfterSessionOrApiKey(req: Request, res: Response, next: NextFunction): void {
+	if (req.user?.isApiKey) {
+		enforceApiKeyHttpScope(req, res, next);
+		return;
+	}
+	next();
+}
+
 /**
  * Hash an API key using SHA-256
  */
@@ -32,7 +130,13 @@ function constantTimeCompare(a: string, b: string): boolean {
  */
 async function validateApiKey(
 	key: string
-): Promise<{ id: string; username: string; isAdmin: boolean; isApiKey: true } | null> {
+): Promise<{
+	id: string;
+	username: string;
+	isAdmin: boolean;
+	isApiKey: true;
+	apiKeyPermissions: string;
+} | null> {
 	try {
 		// Extract prefix from key
 		const prefix = key.substring(0, 11); // dk_ + 8 chars
@@ -86,7 +190,8 @@ async function validateApiKey(
 			id: apiKey.id,
 			username: `api:${apiKey.name}`,
 			isAdmin: apiKey.permissions === 'full',
-			isApiKey: true
+			isApiKey: true,
+			apiKeyPermissions: apiKey.permissions
 		};
 	} catch (error) {
 		console.error('Error validating API key:', error);
@@ -173,6 +278,39 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 /**
+ * After requireAuth / requireSession: allow site admins (session) or API keys with `full` or `webhooks` permission.
+ * Keys scoped to `webhooks` only cannot use other routes; use this on webhook HTTP endpoints.
+ */
+export function requireWebhookAccess(req: Request, res: Response, next: NextFunction) {
+	if (!req.user) {
+		return res.status(401).json({
+			error: 'Access denied',
+			message: 'Authentication required'
+		});
+	}
+
+	if (req.user.isApiKey) {
+		const p = req.user.apiKeyPermissions;
+		if (p === 'full' || p === 'webhooks') {
+			return next();
+		}
+		return res.status(403).json({
+			error: 'Access denied',
+			message: 'API key must have Full Access or Webhooks Only permission for this endpoint'
+		});
+	}
+
+	if (req.user.isAdmin) {
+		return next();
+	}
+
+	return res.status(403).json({
+		error: 'Access denied',
+		message: 'Admin privileges required'
+	});
+}
+
+/**
  * Middleware to check session-based authentication
  * Checks for session user data first, then API key
  */
@@ -180,7 +318,8 @@ export async function requireSession(req: Request, res: Response, next: NextFunc
 	// Check session
 	if (req.session?.user) {
 		req.user = req.session.user;
-		return next();
+		continueAfterSessionOrApiKey(req, res, next);
+		return;
 	}
 
 	// Fall back to API key auth
@@ -205,12 +344,14 @@ export async function requireSession(req: Request, res: Response, next: NextFunc
 				const user = await validateApiKey(apiKey);
 				if (user) {
 					req.user = user;
-					return next();
+					enforceApiKeyHttpScope(req, res, next);
+					return resolve();
 				}
-				return res.status(403).json({
+				res.status(403).json({
 					error: 'Access denied',
 					message: 'Invalid or expired API key'
 				});
+				resolve();
 			});
 		});
 	}
@@ -252,14 +393,16 @@ export async function apiKeyAuth(req: Request, res: Response, next: NextFunction
 
 				const user = await validateApiKey(apiKey!);
 				if (!user) {
-					return res.status(403).json({
+					res.status(403).json({
 						error: 'Access denied',
 						message: 'Invalid or expired API key'
 					});
+					return resolve();
 				}
 
 				req.user = user;
-				next();
+				enforceApiKeyHttpScope(req, res, next);
+				resolve();
 			});
 		});
 	} catch (error) {
@@ -290,7 +433,8 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 	// Fall back to session auth
 	if (req.session?.user) {
 		req.user = req.session.user;
-		return next();
+		continueAfterSessionOrApiKey(req, res, next);
+		return;
 	}
 
 	return res.status(401).json({

@@ -1,27 +1,13 @@
 import { Router } from 'express';
 import { DiscordStatusService } from '../services/discordStatusService';
+import { requireAuth, requireWebhookAccess } from '../middleware/auth';
 
 const router = Router();
 
 /**
- * Middleware to validate webhook authentication
+ * POST /webhooks/discord-status/update
  */
-function validateWebhookAuth(req: any, res: any, next: any) {
-	const authHeader = req.headers.authorization;
-	const expectedToken = process.env.WEBHOOK_AUTH_TOKEN;
-	const expectedAuth = `Bearer ${expectedToken}`;
-
-	if (!authHeader || authHeader !== expectedAuth) {
-		return res.status(401).json({ error: 'Unauthorized' });
-	}
-	next();
-}
-
-/**
- * POST /api/webhooks/discord-status/update
- * Webhook endpoint to update Discord status
- */
-router.post('/discord-status/update', validateWebhookAuth, async (req, res) => {
+router.post('/discord-status/update', requireAuth, requireWebhookAccess, async (req, res) => {
 	try {
 		const { status } = req.body;
 

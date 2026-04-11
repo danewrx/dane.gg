@@ -43,6 +43,7 @@
 	>
 		{#each tabs as tab (tab.id)}
 			<button
+				type="button"
 				class="tab"
 				class:active={activeTab === tab.id}
 				class:disabled={tab.disabled}

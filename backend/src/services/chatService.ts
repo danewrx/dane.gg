@@ -8,6 +8,9 @@ import signature from 'cookie-signature';
 import crypto from 'crypto';
 import { adminSessions } from './adminSessions';
 
+/** Site config key; when false, Discord bot bridge commands are rejected (missing key = enabled). */
+export const DISCORD_CHAT_INTEGRATION_CONFIG_KEY = 'discord_chat_integration_enabled';
+
 type MessageSource = 'web' | 'discord' | 'admin';
 
 interface ChatMessage {
@@ -222,6 +225,10 @@ export class ChatService {
 			}
 
 			if (apiKey.expiresAt && new Date(apiKey.expiresAt) < new Date()) {
+				return false;
+			}
+
+			if (apiKey.permissions !== 'full' && apiKey.permissions !== 'chat') {
 				return false;
 			}
 
@@ -451,6 +458,17 @@ export class ChatService {
 	}
 
 	/**
+	 * Discord ↔ site chat integration enabled (admin toggle / site_config).
+	 * Defaults to true when key is unset.
+	 */
+	private async isDiscordChatIntegrationEnabled(): Promise<boolean> {
+		const { ConfigService } = await import('./config');
+		const v = await ConfigService.get(DISCORD_CHAT_INTEGRATION_CONFIG_KEY);
+		if (v === null || v === undefined) return true;
+		return Boolean(v);
+	}
+
+	/**
 	 * Handle chat commands
 	 */
 	private async handleCommand(ws: WebSocket, message: string): Promise<void> {
@@ -568,6 +586,14 @@ export class ChatService {
 				this.sendToClient(ws, { type: 'error', message: 'Unauthorized' });
 				return;
 			}
+			if (!(await this.isDiscordChatIntegrationEnabled())) {
+				this.sendToClient(ws, {
+					type: 'error',
+					message:
+						'Discord chat integration is disabled in admin settings. Enable it on Admin → Chat to relay messages.'
+				});
+				return;
+			}
 			const jsonStr = message.substring(9).trim();
 			await this.handleDiscordMessage(ws, jsonStr);
 			return;
@@ -599,6 +625,14 @@ export class ChatService {
 					type: 'error',
 					message:
 						'Unauthorized: Connection not authenticated as admin. Please reconnect with API key.'
+				});
+				return;
+			}
+			if (!(await this.isDiscordChatIntegrationEnabled())) {
+				this.sendToClient(ws, {
+					type: 'error',
+					message:
+						'Discord chat integration is disabled in admin settings. Enable it on Admin → Chat to sync message IDs.'
 				});
 				return;
 			}
@@ -960,7 +994,7 @@ export class ChatService {
 			console.log(`🗑️ Message deleted: ${messageId}`);
 
 			// If message has Discord message ID, notify Discord bot to delete it
-			if (discordMessageId) {
+			if (discordMessageId && (await this.isDiscordChatIntegrationEnabled())) {
 				this.notifyDiscordBotDelete(discordMessageId);
 			}
 

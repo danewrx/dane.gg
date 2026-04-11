@@ -21,6 +21,10 @@ declare global {
 				isAdmin: boolean;
 				themePreference?: string;
 				accentColor?: string;
+				/** Set when authenticated via site API key (`dk_…`) */
+				isApiKey?: true;
+				/** DB `permissions` value for API keys: full | read | chat | webhooks */
+				apiKeyPermissions?: string;
 			};
 		}
 	}

@@ -18,6 +18,7 @@
 	import { toast } from 'svelte-sonner';
 	import AdminChat from '$lib/admin/components/AdminChat.svelte';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
+	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
 	import { getAllDefaultEmojis } from '$lib/shared/utils/emojiData';
 	import {
 		DEFAULT_CHAT_NOTIFICATION_SOUND_ID,
@@ -87,6 +88,11 @@
 	let pendingEmojiDelete = $state<{ id: string; name: string } | null>(null);
 	let showDeleteSoundDialog = $state(false);
 	let pendingSoundDelete = $state<{ id: string; label: string } | null>(null);
+
+	const DISCORD_CHAT_INTEGRATION_KEY = 'discord_chat_integration_enabled';
+	let discordChatIntegrationEnabled = $state(true);
+	let discordChatIntegrationLoaded = $state(false);
+	let isSavingDiscordChatIntegration = $state(false);
 
 	function handleColorChange(e: Event) {
 		const target = e.target as HTMLInputElement;
@@ -463,9 +469,64 @@
 		if (browser) stopSoundPreview();
 	});
 
+	async function loadDiscordChatIntegrationSetting() {
+		if (!browser) return;
+		try {
+			const response = await fetch(`/api/config/${DISCORD_CHAT_INTEGRATION_KEY}`, {
+				credentials: 'include'
+			});
+			if (response.status === 404) {
+				discordChatIntegrationEnabled = true;
+				return;
+			}
+			if (!response.ok) return;
+			const body = await response.json();
+			const v = body.data?.value;
+			discordChatIntegrationEnabled = v !== false && v !== 'false';
+		} catch (e) {
+			console.error('Failed to load Discord chat integration setting:', e);
+		} finally {
+			discordChatIntegrationLoaded = true;
+		}
+	}
+
+	async function saveDiscordChatIntegration(next: boolean) {
+		if (!browser || isSavingDiscordChatIntegration) return;
+		isSavingDiscordChatIntegration = true;
+		try {
+			const response = await fetch(`/api/config/${DISCORD_CHAT_INTEGRATION_KEY}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ value: next, dataType: 'boolean' })
+			});
+			if (!response.ok) {
+				const err = await response.json().catch(() => ({}));
+				throw new Error(err.error || 'Failed to save');
+			}
+			discordChatIntegrationEnabled = next;
+			toast.success(next ? 'Discord chat integration on' : 'Discord chat integration off', {
+				description: next
+					? 'The site will accept Discord relay commands from your bot.'
+					: 'The site will reject /discord and related bot commands until you turn this back on.'
+			});
+		} catch (e) {
+			discordChatIntegrationEnabled = !next;
+			toast.error('Could not update Discord integration', {
+				description: e instanceof Error ? e.message : 'Try again'
+			});
+		} finally {
+			isSavingDiscordChatIntegration = false;
+		}
+	}
+
 	onMount(async () => {
 		if (browser) {
-			await Promise.all([loadCustomEmojis(), loadNotificationSounds()]);
+			await Promise.all([
+				loadCustomEmojis(),
+				loadNotificationSounds(),
+				loadDiscordChatIntegrationSetting()
+			]);
 		}
 	});
 </script>
@@ -622,6 +683,31 @@
 							{/if}
 						</div>
 					</div>
+				</div>
+			</div>
+
+			<!-- Discord bridge -->
+			<div class="discord-integration-section">
+				<div class="discord-integration-header">
+					<h3>Discord</h3>
+				</div>
+				<p class="discord-integration-help">
+					When off, the chat server rejects <code>/discord</code> and <code>/set_discord_message_id</code>
+					and will not ask the bot to delete mirrored Discord messages. Your bot can optionally read the
+					same flag via the public config API to avoid sending commands.
+				</p>
+				<div class="discord-integration-row">
+					<Toggle
+						bind:checked={discordChatIntegrationEnabled}
+						disabled={!discordChatIntegrationLoaded || isSavingDiscordChatIntegration}
+						label="Discord chat integration"
+						onchange={(c) => void saveDiscordChatIntegration(c)}
+					/>
+					{#if isSavingDiscordChatIntegration}
+						<span class="discord-integration-spinner">
+							<Loader2 size={16} class="spin" />
+						</span>
+					{/if}
 				</div>
 			</div>
 
@@ -1262,6 +1348,75 @@
 		to {
 			transform: rotate(360deg);
 		}
+	}
+
+	.discord-integration-section {
+		background: #2d2d2d;
+		border: 1px solid #404040;
+		border-radius: 8px;
+		overflow: hidden;
+		margin-top: 16px;
+	}
+
+	:global(html:not(.dark)) .discord-integration-section {
+		background: #ffffff;
+		border-color: #e5e7eb;
+	}
+
+	.discord-integration-header {
+		padding: 16px;
+		border-bottom: 1px solid #404040;
+	}
+
+	:global(html:not(.dark)) .discord-integration-header {
+		border-bottom-color: #e5e7eb;
+	}
+
+	.discord-integration-header h3 {
+		margin: 0;
+		font-size: 16px;
+		font-weight: 600;
+		color: #ffffff;
+	}
+
+	:global(html:not(.dark)) .discord-integration-header h3 {
+		color: #1f2937;
+	}
+
+	.discord-integration-help {
+		margin: 0;
+		padding: 12px 16px 0;
+		font-size: 12px;
+		line-height: 1.45;
+		color: #a1a1aa;
+	}
+
+	:global(html:not(.dark)) .discord-integration-help {
+		color: #6b7280;
+	}
+
+	.discord-integration-help code {
+		font-size: 11px;
+		padding: 1px 4px;
+		border-radius: 4px;
+		background: #1a1a1a;
+		color: #e4e4e7;
+	}
+
+	:global(html:not(.dark)) .discord-integration-help code {
+		background: #f3f4f6;
+		color: #374151;
+	}
+
+	.discord-integration-row {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 16px;
+	}
+
+	.discord-integration-spinner {
+		color: var(--accent-color, #3b82f6);
 	}
 
 	.emojis-section {

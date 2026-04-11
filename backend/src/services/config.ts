@@ -64,7 +64,7 @@ export class ConfigService {
 				value = ENV_FALLBACKS[key as keyof SiteConfig];
 
 				if (value === undefined) {
-					const silentKeys = ['uptime_kuma_selected_monitors'];
+					const silentKeys = ['uptime_kuma_selected_monitors', 'discord_chat_integration_enabled'];
 					if (!silentKeys.includes(key)) {
 						console.warn(
 							`Configuration key '${key}' not found in database or environment variables`
