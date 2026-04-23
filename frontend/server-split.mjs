@@ -2,7 +2,7 @@ import http from 'node:http';
 import { handler } from './build/handler.js';
 import httpProxy from 'http-proxy';
 
-const port = Number(process.env.PORT || 3000);
+const port = Number(process.env.FRONTEND_PORT || process.env.PORT || 3000);
 const host = process.env.HOST || '0.0.0.0';
 const backend = (process.env.BACKEND_INTERNAL_URL || 'http://backend:3001').replace(/\/$/, '');
 

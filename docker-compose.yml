@@ -1,7 +1,7 @@
 # dane.gg — production (frontend + backend + PostgreSQL)
 #
-# Browser: http://localhost:${PORT:-3000}
-# Optional direct API: http://localhost:${BACKEND_PUBLISH_PORT:-3001}
+# Browser: http://localhost:${FRONTEND_PORT:-3000}
+# Optional direct API: http://localhost:${BACKEND_HOST_PORT:-3001}
 #
 #   cp .env.example.prod .env
 #   docker compose up -d --build
@@ -16,12 +16,12 @@ services:
     container_name: danegg-frontend
     restart: unless-stopped
     ports:
-      - "${PORT:-3000}:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     environment:
       NODE_ENV: production
       HOST: 0.0.0.0
-      PORT: 3000
-      ORIGIN: ${ORIGIN:-http://localhost:3000}
+      FRONTEND_PORT: 3000
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:3000}
       BACKEND_INTERNAL_URL: http://backend:3001
       VITE_API_URL: http://backend:3001/api
     networks:
@@ -36,14 +36,13 @@ services:
     container_name: danegg-backend
     restart: unless-stopped
     ports:
-      - "${BACKEND_PUBLISH_PORT:-3001}:3001"
+      - "${BACKEND_HOST_PORT:-3001}:3001"
     env_file: .env
     environment:
       NODE_ENV: production
-      PORT: 3001
       BACKEND_PORT: 3001
       HOST: 0.0.0.0
-      ORIGIN: ${ORIGIN:-http://localhost:3000}
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:3000}
       DB_MIGRATE: ${DB_MIGRATE:-true}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     volumes:

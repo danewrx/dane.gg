@@ -19,7 +19,7 @@ const app = express();
 app.set('trust proxy', 1);
 
 const server = createServer(app);
-const PORT = process.env.BACKEND_PORT || process.env.PORT || 3001;
+const backendPort = process.env.BACKEND_PORT || process.env.PORT || '3001';
 
 // Middleware
 app.use(express.json());
@@ -57,8 +57,9 @@ app.use((req, res, next) => {
 		'http://127.0.0.1:3000',
 		'http://127.0.0.1:4173'
 	];
-	if (process.env.ORIGIN) {
-		allowedOrigins.push(process.env.ORIGIN);
+	const publicOrigin = process.env.PUBLIC_ORIGIN || process.env.ORIGIN;
+	if (publicOrigin) {
+		allowedOrigins.push(publicOrigin);
 	}
 
 	if (allowedOrigins.includes(origin || '')) {
@@ -259,10 +260,10 @@ const HOST = process.env.HOST || '0.0.0.0';
 
 // Always start the server
 server
-	.listen(Number(PORT), HOST, async () => {
+	.listen(Number(backendPort), HOST, async () => {
 		if (isStandalone) {
-			console.log(`🚀 Express API running at http://${HOST}:${PORT}`);
-			console.log(`📚 Health endpoint: http://${HOST}:${PORT}/api/health`);
+			console.log(`🚀 Express API running at http://${HOST}:${backendPort}`);
+			console.log(`📚 Health endpoint: http://${HOST}:${backendPort}/api/health`);
 		}
 
 		// Initialize default admin after server starts
@@ -276,7 +277,7 @@ server
 		console.error('❌ Failed to start server:', error);
 		if (error.code === 'EADDRINUSE') {
 			console.error(
-				`Port ${PORT} is already in use. Please stop the other process or change the PORT environment variable.`
+				`Port ${backendPort} is already in use. Please stop the other process or change BACKEND_PORT (or PORT).`
 			);
 		}
 		process.exit(1);
@@ -285,8 +286,8 @@ server
 // Log if server is listening (check after a short delay)
 setTimeout(() => {
 	if (server.listening) {
-		console.log(`✅ Server is listening on port ${PORT}`);
+		console.log(`✅ Server is listening on port ${backendPort}`);
 	} else {
-		console.error(`❌ Server is NOT listening on port ${PORT}`);
+		console.error(`❌ Server is NOT listening on port ${backendPort}`);
 	}
 }, 1000);

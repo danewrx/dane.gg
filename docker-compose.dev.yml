@@ -37,4 +37,5 @@ volumes:
 
 networks:
   danegg-network:
+    name: danegg-dev
     driver: bridge
