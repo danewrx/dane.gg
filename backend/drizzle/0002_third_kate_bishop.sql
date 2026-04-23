@@ -1,1 +1,0 @@
-ALTER TABLE "website"."users" ADD COLUMN "theme_preference" varchar(10) DEFAULT 'system';

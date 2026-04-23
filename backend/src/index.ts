@@ -1,13 +1,18 @@
+import { existsSync } from 'node:fs';
 import express from 'express';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import { config } from 'dotenv';
 import { createServer } from 'http';
-import path from 'path';
+import path, { resolve } from 'node:path';
 import { createDefaultAdmin } from './utils/createDefaultAdmin';
 
-// Load environment variables from root .env file
-config({ path: '../.env' });
+for (const envPath of [resolve(process.cwd(), '.env'), resolve(process.cwd(), '../.env')]) {
+	if (existsSync(envPath)) {
+		config({ path: envPath });
+		break;
+	}
+}
 
 const app = express();
 
@@ -32,7 +37,7 @@ app.use(
 		resave: false,
 		saveUninitialized: false,
 		cookie: {
-			secure: process.env.NODE_ENV === 'production',
+			secure: process.env.COOKIE_SECURE === 'true',
 			httpOnly: true,
 			maxAge: 24 * 60 * 60 * 1000, // 1 day
 			sameSite: 'strict'
@@ -52,6 +57,9 @@ app.use((req, res, next) => {
 		'http://127.0.0.1:3000',
 		'http://127.0.0.1:4173'
 	];
+	if (process.env.ORIGIN) {
+		allowedOrigins.push(process.env.ORIGIN);
+	}
 
 	if (allowedOrigins.includes(origin || '')) {
 		res.header('Access-Control-Allow-Origin', origin);
@@ -247,12 +255,14 @@ async function initializeApp() {
 	}
 }
 
+const HOST = process.env.HOST || '0.0.0.0';
+
 // Always start the server
 server
-	.listen(PORT, async () => {
+	.listen(Number(PORT), HOST, async () => {
 		if (isStandalone) {
-			console.log(`🚀 Express API running at http://localhost:${PORT}`);
-			console.log(`📚 Health endpoint: http://localhost:${PORT}/api/health`);
+			console.log(`🚀 Express API running at http://${HOST}:${PORT}`);
+			console.log(`📚 Health endpoint: http://${HOST}:${PORT}/api/health`);
 		}
 
 		// Initialize default admin after server starts

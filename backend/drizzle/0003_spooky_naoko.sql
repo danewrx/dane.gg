@@ -1,1 +1,0 @@
-ALTER TABLE "website"."uptime_kuma_monitors" ADD COLUMN "custom_name" varchar(255);

@@ -20,7 +20,7 @@ export async function ensureChatNotificationSoundsDisplayName(): Promise<void> {
 	} catch (error) {
 		console.error('❌ Could not ensure chat_notification_sounds.display_name:', error);
 		console.error(
-			'   Apply manually: backend/drizzle/0031_chat_notification_sound_display_name.sql'
+			'   Ensure the database schema is current (run backend migrations or drizzle-kit push).'
 		);
 	}
 }

@@ -1,0 +1,85 @@
+# dane.gg — production (frontend + backend + PostgreSQL)
+#
+# Browser: http://localhost:${PORT:-3000}
+# Optional direct API: http://localhost:${BACKEND_PUBLISH_PORT:-3001}
+#
+#   cp .env.example.prod .env
+#   docker compose up -d --build
+#
+# Migrations run in the backend container when DB_MIGRATE=true (default).
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: danegg-frontend
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      ORIGIN: ${ORIGIN:-http://localhost:3000}
+      BACKEND_INTERNAL_URL: http://backend:3001
+      VITE_API_URL: http://backend:3001/api
+    networks:
+      - danegg-network
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: danegg-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PUBLISH_PORT:-3001}:3001"
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      BACKEND_PORT: 3001
+      HOST: 0.0.0.0
+      ORIGIN: ${ORIGIN:-http://localhost:3000}
+      DB_MIGRATE: ${DB_MIGRATE:-true}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    volumes:
+      - uploads:/app/static/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - danegg-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: danegg-postgres-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - danegg-network
+
+volumes:
+  postgres_data_prod:
+  uploads:
+
+networks:
+  danegg-network:
+    name: danegg-prod
+    driver: bridge

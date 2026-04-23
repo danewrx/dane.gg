@@ -87,10 +87,10 @@ The application includes example `users` and `posts` tables. You can modify the 
 
 ## Environment Variables
 
-Copy `env.example` to `.env` and configure:
+Copy `.env.example.dev` to `.env` for local development (or `.env.example.prod` for Docker production — see `docker-compose.yml`):
 
 ```bash
-cp env.example .env
+cp .env.example.dev .env
 ```
 
 Key variables:

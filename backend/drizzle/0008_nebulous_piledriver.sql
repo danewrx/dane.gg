@@ -1,1 +1,0 @@
-DROP TABLE "website"."chat_moderation_rules" CASCADE;

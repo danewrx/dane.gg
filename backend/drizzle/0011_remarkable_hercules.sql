@@ -1,1 +1,0 @@
-ALTER TABLE "website"."messages" ADD COLUMN "discord_message_id" varchar(100);

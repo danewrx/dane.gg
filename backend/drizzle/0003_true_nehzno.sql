@@ -1,1 +1,0 @@
-ALTER TABLE "website"."users" ADD COLUMN "accent_color" varchar(7) DEFAULT '#000000';

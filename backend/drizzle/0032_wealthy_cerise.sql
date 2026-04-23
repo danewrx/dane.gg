@@ -1,1 +1,0 @@
-ALTER TABLE "website"."chat_notification_sounds" ADD COLUMN "display_name" varchar(120) NOT NULL;
