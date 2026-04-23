@@ -27,7 +27,8 @@ services:
     networks:
       - danegg-network
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
   backend:
     build:
@@ -52,6 +53,15 @@ services:
         condition: service_healthy
     networks:
       - danegg-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://localhost:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   postgres:
     image: postgres:15-alpine

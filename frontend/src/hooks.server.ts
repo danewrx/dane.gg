@@ -26,7 +26,7 @@ async function resolveWebNekoPageVars(event: {
 	let enforce = false;
 	let enforcedType = type;
 	try {
-		const configUrl = new URL('/api/config', event.url.origin).toString();
+		const configUrl = `${API_BASE_URL}/config`;
 		const r = await event.fetch(configUrl);
 		if (r.ok) {
 			const j = await r.json();
