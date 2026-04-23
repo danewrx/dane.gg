@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
 
@@ -31,7 +33,7 @@
 				socialLinks = data.data;
 			}
 		} catch (error) {
-			console.error('Error loading social links:', error);
+			logger.error('Error loading social links:', error);
 		} finally {
 			isLoading = false;
 		}

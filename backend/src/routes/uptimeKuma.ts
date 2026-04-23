@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router } from 'express';
 import { UptimeKumaService } from '../services/uptimeKumaService';
 import { ConfigService } from '../services/config';
@@ -12,12 +13,12 @@ function initializeUptimeKuma() {
 
 		if (baseUrl) {
 			UptimeKumaService.initialize(baseUrl, apiKey || undefined);
-			console.log('✅ Uptime Kuma service initialized');
+			logger.info('Uptime Kuma service initialized');
 		} else {
-			console.warn('⚠️  UPTIME_KUMA_URL environment variable not set.');
+			logger.warn('UPTIME_KUMA_URL environment variable not set.');
 		}
 	} catch (error) {
-		console.error('Error initializing Uptime Kuma service:', error);
+		logger.error('Error initializing Uptime Kuma service:', error);
 	}
 }
 
@@ -47,7 +48,7 @@ router.get('/monitors', requireSession, async (req, res) => {
 			data: monitors
 		});
 	} catch (error: any) {
-		console.error('Error fetching monitors:', error);
+		logger.error('Error fetching monitors:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch monitors',
@@ -91,7 +92,7 @@ router.get('/status', async (req, res) => {
 			data: monitors
 		});
 	} catch (error: any) {
-		console.error('Error fetching monitor status:', error);
+		logger.error('Error fetching monitor status:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch monitor status',
@@ -118,7 +119,7 @@ router.get('/selected', requireSession, async (req, res) => {
 			data: selectedMonitorIds
 		});
 	} catch (error: any) {
-		console.error('Error fetching selected monitors:', error);
+		logger.error('Error fetching selected monitors:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch selected monitors'
@@ -161,16 +162,16 @@ router.put('/selected', requireSession, async (req, res) => {
 				}
 
 				await UptimeKumaService.saveMonitorsToCache(monitors);
-				console.log(`[Uptime Kuma] Updated cache with ${monitors.length} selected monitors`);
+				logger.info(`[Uptime Kuma] Updated cache with ${monitors.length} selected monitors`);
 			} catch (error: any) {
-				console.error('[Uptime Kuma] Error updating cache with selected monitors:', error.message);
+				logger.error('[Uptime Kuma] Error updating cache with selected monitors:', error.message);
 			}
 		} else if (validIds.length === 0) {
 			try {
 				await UptimeKumaService.clearCache();
-				console.log('[Uptime Kuma] Cleared cache (no monitors selected)');
+				logger.info('[Uptime Kuma] Cleared cache (no monitors selected)');
 			} catch (error: any) {
-				console.error('[Uptime Kuma] Error clearing cache:', error.message);
+				logger.error('[Uptime Kuma] Error clearing cache:', error.message);
 			}
 		}
 
@@ -180,7 +181,7 @@ router.put('/selected', requireSession, async (req, res) => {
 			message: 'Selected monitors updated successfully'
 		});
 	} catch (error: any) {
-		console.error('Error updating selected monitors:', error);
+		logger.error('Error updating selected monitors:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update selected monitors',
@@ -214,7 +215,7 @@ router.put('/custom-names', requireSession, async (req, res) => {
 			message: 'Custom names updated successfully'
 		});
 	} catch (error: any) {
-		console.error('Error updating custom names:', error);
+		logger.error('Error updating custom names:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update custom names',
@@ -233,7 +234,7 @@ router.put('/config', requireSession, async (req, res) => {
 				'Uptime Kuma URL and API key must be set via environment variables (UPTIME_KUMA_URL and UPTIME_KUMA_API_KEY). Please update your environment configuration and restart the server.'
 		});
 	} catch (error: any) {
-		console.error('Error updating Uptime Kuma config:', error);
+		logger.error('Error updating Uptime Kuma config:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update configuration',
@@ -257,7 +258,7 @@ router.get('/config', requireSession, async (req, res) => {
 			}
 		});
 	} catch (error: any) {
-		console.error('Error fetching Uptime Kuma config:', error);
+		logger.error('Error fetching Uptime Kuma config:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch configuration'
@@ -289,7 +290,7 @@ router.get('/test-connection', requireSession, async (req, res) => {
 			data: result
 		});
 	} catch (error: any) {
-		console.error('Error testing connection:', error);
+		logger.error('Error testing connection:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to test connection',

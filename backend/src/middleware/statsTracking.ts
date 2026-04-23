@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Request, Response, NextFunction } from 'express';
 import { StatsService } from '../services/statsService';
 
@@ -91,7 +92,7 @@ export async function trackStats(req: Request, res: Response, next: NextFunction
 			responseTime,
 			contentLength: res.get('Content-Length') ? parseInt(res.get('Content-Length')!) : undefined
 		}).catch((error) => {
-			console.error('Error tracking visitor data:', error);
+			logger.error('Error tracking visitor data:', error);
 		});
 
 		return originalEnd.call(this, chunk, encoding, cb);

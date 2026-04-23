@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router } from 'express';
 import { db } from '../db';
 import { skillCategories, skills } from '../db/schema';
@@ -23,7 +24,7 @@ router.get('/', async (req, res) => {
 			data: categories
 		});
 	} catch (error) {
-		console.error('Error fetching skills:', error);
+		logger.error('Error fetching skills:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch skills'
@@ -43,7 +44,7 @@ router.get('/categories', requireAuth, async (req, res) => {
 			data: categories
 		});
 	} catch (error) {
-		console.error('Error fetching skill categories:', error);
+		logger.error('Error fetching skill categories:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch skill categories'
@@ -80,7 +81,7 @@ router.post('/categories', requireAuth, async (req, res) => {
 			data: newCategory
 		});
 	} catch (error: any) {
-		console.error('Error creating skill category:', error);
+		logger.error('Error creating skill category:', error);
 		if (error.code === '23505') {
 			return res.status(400).json({
 				success: false,
@@ -122,7 +123,7 @@ router.put('/categories/order', requireAuth, async (req, res) => {
 			message: 'Category order updated successfully'
 		});
 	} catch (error) {
-		console.error('Error updating category order:', error);
+		logger.error('Error updating category order:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update category order'
@@ -162,7 +163,7 @@ router.put('/categories/:id', requireAuth, async (req, res) => {
 			data: updatedCategory
 		});
 	} catch (error: any) {
-		console.error('Error updating skill category:', error);
+		logger.error('Error updating skill category:', error);
 		if (error.code === '23505') {
 			return res.status(400).json({
 				success: false,
@@ -198,7 +199,7 @@ router.delete('/categories/:id', requireAuth, async (req, res) => {
 			message: 'Category deleted successfully'
 		});
 	} catch (error) {
-		console.error('Error deleting skill category:', error);
+		logger.error('Error deleting skill category:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to delete skill category'
@@ -222,7 +223,7 @@ router.get('/categories/:categoryId/skills', requireAuth, async (req, res) => {
 			data: categorySkills
 		});
 	} catch (error) {
-		console.error('Error fetching skills:', error);
+		logger.error('Error fetching skills:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch skills'
@@ -276,7 +277,7 @@ router.post('/skills', requireAuth, async (req, res) => {
 			data: newSkill
 		});
 	} catch (error) {
-		console.error('Error creating skill:', error);
+		logger.error('Error creating skill:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to create skill'
@@ -311,7 +312,7 @@ router.put('/skills/order', requireAuth, async (req, res) => {
 			message: 'Skills order updated successfully'
 		});
 	} catch (error) {
-		console.error('Error updating skills order:', error);
+		logger.error('Error updating skills order:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update skills order'
@@ -352,7 +353,7 @@ router.put('/skills/:id', requireAuth, async (req, res) => {
 			data: updatedSkill
 		});
 	} catch (error) {
-		console.error('Error updating skill:', error);
+		logger.error('Error updating skill:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update skill'
@@ -379,7 +380,7 @@ router.delete('/skills/:id', requireAuth, async (req, res) => {
 			message: 'Skill deleted successfully'
 		});
 	} catch (error) {
-		console.error('Error deleting skill:', error);
+		logger.error('Error deleting skill:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to delete skill'

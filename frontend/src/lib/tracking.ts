@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 class TrackingService {
 	private static instance: TrackingService;
 	private visitorId: string | null = null;
@@ -43,7 +44,7 @@ class TrackingService {
 	private shouldTrackPath(path: string): boolean {
 		// Skip tracking for admin pages + api routes
 		if (path.startsWith('/admin') || path.startsWith('/login') || path.startsWith('/logout')) {
-			console.log('TrackingService: Path excluded (admin):', path);
+			logger.info('TrackingService: Path excluded (admin):', path);
 			return false;
 		}
 
@@ -57,7 +58,7 @@ class TrackingService {
 			path.startsWith('/widgets/') ||
 			path.startsWith('/webhooks/')
 		) {
-			console.log('TrackingService: Path excluded (API):', path);
+			logger.info('TrackingService: Path excluded (API):', path);
 			return false;
 		}
 
@@ -70,24 +71,24 @@ class TrackingService {
 			path.startsWith('/assets/') ||
 			path.startsWith('/static/')
 		) {
-			console.log('TrackingService: Path excluded (system):', path);
+			logger.info('TrackingService: Path excluded (system):', path);
 			return false;
 		}
 
-		console.log('TrackingService: Path allowed:', path);
+		logger.info('TrackingService: Path allowed:', path);
 		return true;
 	}
 
 	async trackPageView(path: string): Promise<void> {
-		console.log('TrackingService: trackPageView called for path:', path);
+		logger.info('TrackingService: trackPageView called for path:', path);
 
 		// Check paths to be tracked
 		if (!this.shouldTrackPath(path)) {
-			console.log('TrackingService: Path excluded by shouldTrackPath:', path);
+			logger.info('TrackingService: Path excluded by shouldTrackPath:', path);
 			return;
 		}
 
-		console.log('TrackingService: Sending fetch request for path:', path);
+		logger.info('TrackingService: Sending fetch request for path:', path);
 
 		try {
 			const response = await fetch('/api/track', {
@@ -109,16 +110,16 @@ class TrackingService {
 
 			if (!response.ok) {
 				const errorData = await response.json();
-				console.error(
+				logger.error(
 					'TrackingService: Failed to track page view (response not ok):',
 					response.status,
 					errorData
 				);
 			} else {
-				console.log('TrackingService: Page view tracsked successfully for path:', path);
+				logger.info('TrackingService: Page view tracsked successfully for path:', path);
 			}
 		} catch (error) {
-			console.error('TrackingService: Failed to track page view (fetch error):', error);
+			logger.error('TrackingService: Failed to track page view (fetch error):', error);
 		}
 	}
 }

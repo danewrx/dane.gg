@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import {
 		Plus,
@@ -79,7 +81,7 @@
 			const data = await response.json();
 			apiKeys = data.keys || [];
 		} catch (err) {
-			console.error('Error loading API keys:', err);
+			logger.error('Error loading API keys:', err);
 			toast.error('Failed to load API keys', {
 				description: err instanceof Error ? err.message : 'Please try refreshing the page'
 			});
@@ -137,7 +139,7 @@
 				description: "Make sure to copy the key - you won't be able to see it again!"
 			});
 		} catch (err) {
-			console.error('Error creating API key:', err);
+			logger.error('Error creating API key:', err);
 			toast.error('Failed to create API key', {
 				description: err instanceof Error ? err.message : 'Please try again'
 			});
@@ -197,7 +199,7 @@
 			await loadApiKeys();
 			toast.success(key.isActive ? 'API key deactivated' : 'API key activated');
 		} catch (err) {
-			console.error('Error toggling API key:', err);
+			logger.error('Error toggling API key:', err);
 			toast.error('Failed to update API key');
 		}
 	}
@@ -235,7 +237,7 @@
 			await loadApiKeys();
 			toast.success('API key regenerated');
 		} catch (err) {
-			console.error('Error regenerating API key:', err);
+			logger.error('Error regenerating API key:', err);
 			toast.error('Failed to regenerate API key');
 		} finally {
 			isSubmitting = false;
@@ -273,7 +275,7 @@
 			cancelDelete();
 			await loadApiKeys();
 		} catch (err) {
-			console.error('Error deleting API key:', err);
+			logger.error('Error deleting API key:', err);
 			toast.error('Failed to delete API key');
 		} finally {
 			isSubmitting = false;

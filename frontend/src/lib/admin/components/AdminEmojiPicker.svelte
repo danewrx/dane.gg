@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { X } from 'lucide-svelte';
 	import { browser } from '$app/environment';
@@ -60,7 +62,7 @@
 				customEmojis = data.data || [];
 			}
 		} catch (error) {
-			console.error('Failed to load custom emojis:', error);
+			logger.error('Failed to load custom emojis:', error);
 		} finally {
 			isLoadingCustom = false;
 		}
@@ -93,7 +95,7 @@
 		if (event) {
 			event.stopPropagation();
 		}
-		console.log('closePicker called', { event, stack: new Error().stack });
+		logger.info('closePicker called', { event, stack: new Error().stack });
 		isOpen = false;
 	}
 
@@ -242,7 +244,7 @@
 		if (browser) {
 			emojiCategories = generateEmojiCategories();
 			recentEmojis = getRecentEmojis();
-			console.log(
+			logger.info(
 				'Admin emoji categories loaded:',
 				emojiCategories.length,
 				'categories with',

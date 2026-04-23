@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import * as OTPAuth from 'otpauth';
 import * as QRCode from 'qrcode';
 import bcrypt from 'bcryptjs';
@@ -97,7 +98,7 @@ export class TotpService {
 
 			return true;
 		} catch (error) {
-			console.error('Error enabling TOTP:', error);
+			logger.error('Error enabling TOTP:', error);
 			return false;
 		}
 	}
@@ -123,7 +124,7 @@ export class TotpService {
 
 			return true;
 		} catch (error) {
-			console.error('Error disabling TOTP:', error);
+			logger.error('Error disabling TOTP:', error);
 			return false;
 		}
 	}
@@ -149,7 +150,7 @@ export class TotpService {
 
 			return this.verifyToken(user[0].totpSecret, token);
 		} catch (error) {
-			console.error('Error verifying TOTP for user:', error);
+			logger.error('Error verifying TOTP for user:', error);
 			return false;
 		}
 	}
@@ -184,7 +185,7 @@ export class TotpService {
 
 			return false;
 		} catch (error) {
-			console.error('Error verifying backup code:', error);
+			logger.error('Error verifying backup code:', error);
 			return false;
 		}
 	}
@@ -216,7 +217,7 @@ export class TotpService {
 				backupCodesCount: backupCodesResult.length
 			};
 		} catch (error) {
-			console.error('Error getting TOTP status:', error);
+			logger.error('Error getting TOTP status:', error);
 			return {
 				enabled: false,
 				backupCodesCount: 0
@@ -265,7 +266,7 @@ export class TotpService {
 
 			return backupCodes;
 		} catch (error) {
-			console.error('Error regenerating backup codes:', error);
+			logger.error('Error regenerating backup codes:', error);
 			return null;
 		}
 	}
@@ -290,7 +291,7 @@ export class TotpService {
 
 			return delta !== null;
 		} catch (error) {
-			console.error('Error verifying TOTP token:', error);
+			logger.error('Error verifying TOTP token:', error);
 			return false;
 		}
 	}

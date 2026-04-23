@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 
 	let totalVisits = $state<number | null>(null);
@@ -32,7 +34,7 @@
 				error = true;
 			}
 		} catch (err) {
-			console.error('Error loading site stats:', err);
+			logger.error('Error loading site stats:', err);
 			error = true;
 		} finally {
 			loading = false;

@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router, Request, Response } from 'express';
 import { requireSession } from '../middleware/auth';
 import { NotificationService } from '../services/notificationService';
@@ -67,7 +68,7 @@ router.post('/send', requireSession, async (req: Request, res: Response) => {
 			});
 		}
 	} catch (error: any) {
-		console.error('Error sending notification:', error);
+		logger.error('Error sending notification:', error);
 		res.status(500).json({
 			error: 'Internal server error'
 		});
@@ -91,7 +92,7 @@ router.get('/status', requireSession, async (req: Request, res: Response) => {
 			timestamp: new Date().toISOString()
 		});
 	} catch (error: any) {
-		console.error('Error checking notification status:', error);
+		logger.error('Error checking notification status:', error);
 		res.status(500).json({
 			error: 'Internal server error'
 		});

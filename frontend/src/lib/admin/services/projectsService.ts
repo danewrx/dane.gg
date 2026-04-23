@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 export interface ProjectTag {
 	id: string;
 	title: string;
@@ -95,7 +96,7 @@ export async function getAllProjects(): Promise<Project[]> {
 		const result = await response.json();
 		return result.data || [];
 	} catch (error) {
-		console.error('Error fetching projects:', error);
+		logger.error('Error fetching projects:', error);
 		throw error;
 	}
 }
@@ -116,7 +117,7 @@ export async function getProject(id: string): Promise<Project> {
 		const result = await response.json();
 		return result.data;
 	} catch (error) {
-		console.error('Error fetching project:', error);
+		logger.error('Error fetching project:', error);
 		throw error;
 	}
 }
@@ -143,7 +144,7 @@ export async function createProject(project: CreateProject): Promise<Project> {
 		const result = await response.json();
 		return result.data;
 	} catch (error) {
-		console.error('Error creating project:', error);
+		logger.error('Error creating project:', error);
 		throw error;
 	}
 }
@@ -170,7 +171,7 @@ export async function updateProject(id: string, project: UpdateProject): Promise
 		const result = await response.json();
 		return result.data;
 	} catch (error) {
-		console.error('Error updating project:', error);
+		logger.error('Error updating project:', error);
 		throw error;
 	}
 }
@@ -189,7 +190,7 @@ export async function deleteProject(id: string): Promise<void> {
 			throw new Error('Failed to delete project');
 		}
 	} catch (error) {
-		console.error('Error deleting project:', error);
+		logger.error('Error deleting project:', error);
 		throw error;
 	}
 }
@@ -210,7 +211,7 @@ export async function getAllProjectCategories(): Promise<ProjectCategory[]> {
 		const result = await response.json();
 		return result.data || [];
 	} catch (error) {
-		console.error('Error fetching project categories:', error);
+		logger.error('Error fetching project categories:', error);
 		throw error;
 	}
 }
@@ -237,7 +238,7 @@ export async function createProjectCategory(name: string): Promise<ProjectCatego
 		const result = await response.json();
 		return result.data;
 	} catch (error) {
-		console.error('Error creating project category:', error);
+		logger.error('Error creating project category:', error);
 		throw error;
 	}
 }
@@ -268,7 +269,7 @@ export async function updateProjectCategory(
 		const result = await response.json();
 		return result.data;
 	} catch (error) {
-		console.error('Error updating project category:', error);
+		logger.error('Error updating project category:', error);
 		throw error;
 	}
 }
@@ -288,7 +289,7 @@ export async function deleteProjectCategory(id: string): Promise<void> {
 			throw new Error(error.error || 'Failed to delete category');
 		}
 	} catch (error) {
-		console.error('Error deleting project category:', error);
+		logger.error('Error deleting project category:', error);
 		throw error;
 	}
 }
@@ -314,7 +315,7 @@ export async function updateProjectOrder(
 			throw new Error(error.error || 'Failed to update project order');
 		}
 	} catch (error) {
-		console.error('Error updating project order:', error);
+		logger.error('Error updating project order:', error);
 		throw error;
 	}
 }
@@ -340,7 +341,7 @@ export async function updateCategoryOrder(
 			throw new Error(error.error || 'Failed to update category order');
 		}
 	} catch (error) {
-		console.error('Error updating category order:', error);
+		logger.error('Error updating category order:', error);
 		throw error;
 	}
 }
@@ -361,7 +362,7 @@ export async function getAllProjectTags(): Promise<ProjectTag[]> {
 		const result = await response.json();
 		return result.data || [];
 	} catch (error) {
-		console.error('Error fetching project tags:', error);
+		logger.error('Error fetching project tags:', error);
 		throw error;
 	}
 }
@@ -392,7 +393,7 @@ export async function createProjectTag(
 		const result = await response.json();
 		return result.data;
 	} catch (error) {
-		console.error('Error creating project tag:', error);
+		logger.error('Error creating project tag:', error);
 		throw error;
 	}
 }
@@ -424,7 +425,7 @@ export async function updateProjectTag(
 		const result = await response.json();
 		return result.data;
 	} catch (error) {
-		console.error('Error updating project tag:', error);
+		logger.error('Error updating project tag:', error);
 		throw error;
 	}
 }
@@ -445,7 +446,7 @@ export async function getProjectsUsingTag(tagId: string): Promise<{ id: string; 
 		const result = await response.json();
 		return result.data || [];
 	} catch (error) {
-		console.error('Error fetching projects using tag:', error);
+		logger.error('Error fetching projects using tag:', error);
 		throw error;
 	}
 }
@@ -465,7 +466,7 @@ export async function deleteProjectTag(id: string): Promise<void> {
 			throw new Error(error.error || 'Failed to delete tag');
 		}
 	} catch (error) {
-		console.error('Error deleting project tag:', error);
+		logger.error('Error deleting project tag:', error);
 		throw error;
 	}
 }

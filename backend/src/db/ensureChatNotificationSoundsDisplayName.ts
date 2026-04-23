@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { sql } from 'drizzle-orm';
 import { db } from './index';
 
@@ -18,8 +19,8 @@ export async function ensureChatNotificationSoundsDisplayName(): Promise<void> {
 			WHERE name = 'default';
 		`);
 	} catch (error) {
-		console.error('❌ Could not ensure chat_notification_sounds.display_name:', error);
-		console.error(
+		logger.error('Could not ensure chat_notification_sounds.display_name:', error);
+		logger.error(
 			'   Ensure the database schema is current (run backend migrations or drizzle-kit push).'
 		);
 	}

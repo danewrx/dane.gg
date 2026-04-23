@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 import { writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import {
@@ -62,8 +63,8 @@ if (browser) {
 					type: config.default_weather_type,
 					speed: config.default_weather_speed
 				});
-				console.log(
-					'🔒 Using enforced weather settings:',
+				logger.info(
+					'Using enforced weather settings:',
 					config.default_weather_type,
 					config.default_weather_speed
 				);
@@ -72,7 +73,7 @@ if (browser) {
 				const savedWeather = localStorage.getItem('weatherType') as WeatherType;
 				const savedSpeed = localStorage.getItem('weatherSpeed');
 
-				console.log('🔄 Restoring weather settings from localStorage:', {
+				logger.info('Restoring weather settings from localStorage:', {
 					savedWeather,
 					savedSpeed
 				});
@@ -86,21 +87,21 @@ if (browser) {
 					(savedWeather === 'none' || savedWeather === 'rain' || savedWeather === 'snow')
 				) {
 					weatherType = savedWeather;
-					console.log('✅ Using saved weather type:', weatherType);
+					logger.info('Using saved weather type:', weatherType);
 				} else {
-					console.log('📋 Using database default weather type:', weatherType);
+					logger.info('Using database default weather type:', weatherType);
 				}
 
 				if (savedSpeed) {
 					const speed = parseFloat(savedSpeed);
 					if (speed >= 0.5 && speed <= 3.0) {
 						weatherSpeed = speed;
-						console.log('✅ Using saved weather speed:', weatherSpeed);
+						logger.info('Using saved weather speed:', weatherSpeed);
 					} else {
-						console.log('📋 Using database default weather speed:', weatherSpeed);
+						logger.info('Using database default weather speed:', weatherSpeed);
 					}
 				} else {
-					console.log('📋 Using database default weather speed:', weatherSpeed);
+					logger.info('Using database default weather speed:', weatherSpeed);
 				}
 
 				weatherSettings.set({
@@ -134,11 +135,11 @@ if (browser) {
 		if (!isEnforced && userChangedSettings && settings) {
 			localStorage.setItem('weatherType', settings.type);
 			localStorage.setItem('weatherSpeed', settings.speed.toString());
-			console.log('💾 Saved weather settings to localStorage:', settings);
+			logger.info('Saved weather settings to localStorage:', settings);
 		} else if (isEnforced) {
-			console.log('🚫 Weather settings not saved - enforcement is ON');
+			logger.info('Weather settings not saved - enforcement is ON');
 		} else if (!userChangedSettings) {
-			console.log('🚫 Weather settings not saved - system initialization');
+			logger.info('Weather settings not saved - system initialization');
 		}
 	});
 }

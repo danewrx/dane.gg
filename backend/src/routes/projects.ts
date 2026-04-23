@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router } from 'express';
 import { db } from '../db';
 import { projects, projectCategories, tags, projectTags } from '../db/schema';
@@ -136,7 +137,7 @@ router.get('/', generalLimiter, async (req, res) => {
 			data: sortedCategories
 		});
 	} catch (error) {
-		console.error('Error fetching projects:', error);
+		logger.error('Error fetching projects:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch projects'
@@ -212,7 +213,7 @@ router.get('/admin/all', requireSession, async (req, res) => {
 			data: projectsWithTags
 		});
 	} catch (error) {
-		console.error('Error fetching all projects:', error);
+		logger.error('Error fetching all projects:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch projects'
@@ -283,7 +284,7 @@ router.get('/admin/:id', requireSession, async (req, res) => {
 			}
 		});
 	} catch (error) {
-		console.error('Error fetching project:', error);
+		logger.error('Error fetching project:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch project'
@@ -443,7 +444,7 @@ router.post('/admin', requireSession, async (req, res) => {
 			}
 		});
 	} catch (error) {
-		console.error('Error creating project:', error);
+		logger.error('Error creating project:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to create project'
@@ -479,7 +480,7 @@ router.put('/admin/order', requireSession, async (req, res) => {
 			message: 'Project order updated successfully'
 		});
 	} catch (error) {
-		console.error('Error updating project order:', error);
+		logger.error('Error updating project order:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update project order'
@@ -643,7 +644,7 @@ router.put('/admin/:id', requireSession, async (req, res) => {
 			}
 		});
 	} catch (error) {
-		console.error('Error updating project:', error);
+		logger.error('Error updating project:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update project'
@@ -672,7 +673,7 @@ router.delete('/admin/:id', requireSession, async (req, res) => {
 			data: deletedProject
 		});
 	} catch (error) {
-		console.error('Error deleting project:', error);
+		logger.error('Error deleting project:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to delete project'
@@ -784,7 +785,7 @@ router.get('/category/:categoryId', generalLimiter, async (req, res) => {
 			}
 		});
 	} catch (error) {
-		console.error('Error fetching projects by category:', error);
+		logger.error('Error fetching projects by category:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch projects'
@@ -807,7 +808,7 @@ router.get('/categories', generalLimiter, async (req, res) => {
 			data: categories
 		});
 	} catch (error) {
-		console.error('Error fetching project categories:', error);
+		logger.error('Error fetching project categories:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch project categories'
@@ -830,7 +831,7 @@ router.get('/admin/categories/all', requireSession, async (req, res) => {
 			data: categories
 		});
 	} catch (error) {
-		console.error('Error fetching project categories:', error);
+		logger.error('Error fetching project categories:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch project categories'
@@ -884,7 +885,7 @@ router.post('/admin/categories', requireSession, async (req, res) => {
 			data: newCategory
 		});
 	} catch (error) {
-		console.error('Error creating project category:', error);
+		logger.error('Error creating project category:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to create project category'
@@ -921,7 +922,7 @@ router.put('/admin/categories/order', requireSession, async (req, res) => {
 			message: 'Category order updated successfully'
 		});
 	} catch (error) {
-		console.error('Error updating category order:', error);
+		logger.error('Error updating category order:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update category order'
@@ -988,7 +989,7 @@ router.put('/admin/categories/:id', requireSession, async (req, res) => {
 			data: updatedCategory
 		});
 	} catch (error) {
-		console.error('Error updating project category:', error);
+		logger.error('Error updating project category:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update project category'
@@ -1034,7 +1035,7 @@ router.delete('/admin/categories/:id', requireSession, async (req, res) => {
 			data: deletedCategory
 		});
 	} catch (error) {
-		console.error('Error deleting project category:', error);
+		logger.error('Error deleting project category:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to delete project category'
@@ -1123,7 +1124,7 @@ router.get('/admin/tags/all', requireSession, async (req, res) => {
 			});
 		}
 	} catch (error) {
-		console.error('Error fetching project tags:', error);
+		logger.error('Error fetching project tags:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch project tags'
@@ -1199,7 +1200,7 @@ router.post('/admin/tags', requireSession, async (req, res) => {
 			data: newTag
 		});
 	} catch (error) {
-		console.error('Error creating project tag:', error);
+		logger.error('Error creating project tag:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to create project tag'
@@ -1300,7 +1301,7 @@ router.put('/admin/tags/:id', requireSession, async (req, res) => {
 			data: updatedTag
 		});
 	} catch (error) {
-		console.error('Error updating project tag:', error);
+		logger.error('Error updating project tag:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update project tag'
@@ -1330,7 +1331,7 @@ router.get('/admin/tags/:id/projects', requireSession, async (req, res) => {
 			data: projectsUsingTag
 		});
 	} catch (error) {
-		console.error('Error fetching projects using tag:', error);
+		logger.error('Error fetching projects using tag:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch projects using tag'
@@ -1357,7 +1358,7 @@ router.delete('/admin/tags/:id', requireSession, async (req, res) => {
 			data: deletedTag
 		});
 	} catch (error) {
-		console.error('Error deleting project tag:', error);
+		logger.error('Error deleting project tag:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to delete project tag'

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { Save, X, Settings, ChevronDown } from 'lucide-svelte';
 	import Icon from '@iconify/svelte';
@@ -184,7 +186,7 @@
 		try {
 			categories = await getAllProjectCategories();
 		} catch (err) {
-			console.error('Error loading categories:', err);
+			logger.error('Error loading categories:', err);
 			toast.error('Failed to load categories');
 		}
 	}
@@ -224,7 +226,7 @@
 				availableTags = allTags;
 			}
 		} catch (err) {
-			console.error('Error loading tags:', err);
+			logger.error('Error loading tags:', err);
 		}
 	}
 
@@ -274,7 +276,7 @@
 		repoIconOption = await iconNameToOption(project.repoIcon || null);
 		tagIds = project.tags.map((t) => t.id);
 		} catch (err) {
-			console.error('Error loading project:', err);
+			logger.error('Error loading project:', err);
 			toast.error('Failed to load project');
 		} finally {
 			loading = false;
@@ -352,10 +354,10 @@
 					credentials: 'include'
 				});
 				if (!response.ok) {
-					console.error('Failed to delete uploaded file');
+					logger.error('Failed to delete uploaded file');
 				}
 			} catch (error) {
-				console.error('Error deleting uploaded file:', error);
+				logger.error('Error deleting uploaded file:', error);
 			}
 		}
 		imageUrl = '';
@@ -438,7 +440,7 @@
 			dispatch('save');
 			dispatch('close');
 		} catch (err: any) {
-			console.error('Error saving project:', err);
+			logger.error('Error saving project:', err);
 			toast.error('Failed to save project', {
 				description: err.message || 'Please try again'
 			});
@@ -588,7 +590,7 @@
 									src={getImageUrl(imageUrl)}
 									alt="Preview"
 									onerror={(e) => {
-										console.error('Failed to load image:', imageUrl);
+										logger.error('Failed to load image:', imageUrl);
 										(e.target as HTMLImageElement).style.display = 'none';
 									}}
 								/>

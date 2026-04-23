@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router } from 'express';
 import { DiscordStatusService } from '../services/discordStatusService';
 import { requireAuth, requireWebhookAccess } from '../middleware/auth';
@@ -31,7 +32,7 @@ router.post('/discord-status/update', requireAuth, requireWebhookAccess, async (
 			res.status(500).json({ error: 'Failed to update Discord status' });
 		}
 	} catch (error) {
-		console.error('Discord status webhook error:', error);
+		logger.error('Discord status webhook error:', error);
 		res.status(500).json({ error: 'Internal server error' });
 	}
 });

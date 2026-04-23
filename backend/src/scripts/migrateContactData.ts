@@ -5,6 +5,7 @@
  * npx tsx src/scripts/migrateContactData.ts
  */
 
+import { logger } from '../utils/logger';
 import { db } from '../db';
 import { siteConfig, contactEmails, contactPageSettings } from '../db/schema';
 import { eq } from 'drizzle-orm';
@@ -18,10 +19,10 @@ interface OldContactEmail {
 }
 
 async function migrateContactData() {
-	console.log('🚀 Starting contact data migration...\n');
+	logger.info('Starting contact data migration...\n');
 
 	try {
-		console.log('📧 Migrating contact emails...');
+		logger.info('Migrating contact emails...');
 		const emailsConfig = await db
 			.select()
 			.from(siteConfig)
@@ -47,21 +48,21 @@ async function migrateContactData() {
 							displayOrder: email.displayOrder || 0,
 							isActive: email.isActive ?? true
 						});
-						console.log(`  ✓ Migrated email: ${email.email}`);
+						logger.info(`Migrated email: ${email.email}`);
 					} else {
-						console.log(`  ⏭ Email already exists: ${email.email}`);
+						logger.info(`Email already exists: ${email.email}`);
 					}
 				}
-				console.log(`  ✅ Migrated ${emails.length} contact emails\n`);
+				logger.info(`Migrated ${emails.length} contact emails\n`);
 			} catch (e) {
-				console.error('  ❌ Error parsing contact_emails JSON:', e);
+				logger.error('Error parsing contact_emails JSON:', e);
 			}
 		} else {
-			console.log('  ℹ No contact_emails found in site_config\n');
+			logger.info('No contact_emails found in site_config\n');
 		}
 
 		// 2. Migrate contact_emails_header
-		console.log('📝 Migrating emails header...');
+		logger.info('Migrating emails header...');
 		const emailsHeaderConfig = await db
 			.select()
 			.from(siteConfig)
@@ -70,13 +71,13 @@ async function migrateContactData() {
 
 		if (emailsHeaderConfig.length > 0 && emailsHeaderConfig[0].value) {
 			await migrateSettingToContactPage('emails_header', emailsHeaderConfig[0].value);
-			console.log(`  ✅ Migrated emails header\n`);
+			logger.info(`Migrated emails header\n`);
 		} else {
-			console.log('  ℹ No contact_emails_header found in site_config\n');
+			logger.info('No contact_emails_header found in site_config\n');
 		}
 
 		// 3. Migrate contact_social_links
-		console.log('🔗 Migrating social links selection...');
+		logger.info('Migrating social links selection...');
 		const socialLinksConfig = await db
 			.select()
 			.from(siteConfig)
@@ -85,13 +86,13 @@ async function migrateContactData() {
 
 		if (socialLinksConfig.length > 0 && socialLinksConfig[0].value) {
 			await migrateSettingToContactPage('social_links', socialLinksConfig[0].value);
-			console.log(`  ✅ Migrated social links selection\n`);
+			logger.info(`Migrated social links selection\n`);
 		} else {
-			console.log('  ℹ No contact_social_links found in site_config\n');
+			logger.info('No contact_social_links found in site_config\n');
 		}
 
 		// 4. Migrate contact_social_header
-		console.log('📝 Migrating social header...');
+		logger.info('Migrating social header...');
 		const socialHeaderConfig = await db
 			.select()
 			.from(siteConfig)
@@ -100,13 +101,13 @@ async function migrateContactData() {
 
 		if (socialHeaderConfig.length > 0 && socialHeaderConfig[0].value) {
 			await migrateSettingToContactPage('social_header', socialHeaderConfig[0].value);
-			console.log(`  ✅ Migrated social header\n`);
+			logger.info(`Migrated social header\n`);
 		} else {
-			console.log('  ℹ No contact_social_header found in site_config\n');
+			logger.info('No contact_social_header found in site_config\n');
 		}
 
 		// 5. Migrate contact_tagline
-		console.log('💬 Migrating contact tagline...');
+		logger.info('Migrating contact tagline...');
 		const taglineConfig = await db
 			.select()
 			.from(siteConfig)
@@ -115,25 +116,23 @@ async function migrateContactData() {
 
 		if (taglineConfig.length > 0 && taglineConfig[0].value) {
 			await migrateSettingToContactPage('tagline', taglineConfig[0].value);
-			console.log(`  ✅ Migrated contact tagline\n`);
+			logger.info(`Migrated contact tagline\n`);
 		} else {
-			console.log('  ℹ No contact_tagline found in site_config\n');
+			logger.info('No contact_tagline found in site_config\n');
 		}
 
-		console.log('✨ Migration complete!\n');
-		console.log('📋 Next steps:');
-		console.log('   1. Verify the data in the new tables');
-		console.log('   2. Test the contact page and admin pages');
-		console.log(
-			'   3. Once confirmed working, you can optionally delete the old keys from site_config:\n'
-		);
-		console.log('      - contact_emails');
-		console.log('      - contact_emails_header');
-		console.log('      - contact_social_links');
-		console.log('      - contact_social_header');
-		console.log('      - contact_tagline\n');
+		logger.info('Migration complete!\n');
+		logger.info('Next steps:');
+		logger.info('   1. Verify the data in the new tables');
+		logger.info('   2. Test the contact page and admin pages');
+		logger.info('   3. Once confirmed working, you can optionally delete the old keys from site_config:\n');
+		logger.info('      - contact_emails');
+		logger.info('      - contact_emails_header');
+		logger.info('      - contact_social_links');
+		logger.info('      - contact_social_header');
+		logger.info('      - contact_tagline\n');
 	} catch (error) {
-		console.error('❌ Migration failed:', error);
+		logger.error('Migration failed:', error);
 		process.exit(1);
 	}
 }
@@ -166,6 +165,6 @@ migrateContactData()
 		process.exit(0);
 	})
 	.catch((error) => {
-		console.error('Migration error:', error);
+		logger.error('Migration error:', error);
 		process.exit(1);
 	});

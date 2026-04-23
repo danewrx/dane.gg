@@ -1,8 +1,9 @@
+import { logger } from '../../utils/logger';
 import { db } from '../index';
 import { blogTags } from '../schema';
 
 export async function seedBlogTags() {
-	console.log('📝 Seeding blog tags...');
+	logger.info('Seeding blog tags...');
 	return db
 		.insert(blogTags)
 		.values([

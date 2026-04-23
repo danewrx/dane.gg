@@ -1,8 +1,9 @@
+import { logger } from '../../utils/logger';
 import { db } from '../index';
 import { siteConfig } from '../schema';
 
 export async function seedSiteConfig() {
-	console.log('⚙️ Seeding site configuration...');
+	logger.info('Seeding site configuration...');
 	await db.insert(siteConfig).values([
 		{
 			key: 'default_weather_type',

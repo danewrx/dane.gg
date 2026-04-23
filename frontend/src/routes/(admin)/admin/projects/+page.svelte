@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { Plus, Edit, Trash2, Eye, EyeOff, FolderKanban, FolderTree, Tag } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
@@ -72,7 +74,7 @@
 			loading = true;
 			projects = await getAllProjects();
 		} catch (err) {
-			console.error('Error loading projects:', err);
+			logger.error('Error loading projects:', err);
 			toast.error('Failed to load projects', {
 				description: 'Please try refreshing the page'
 			});
@@ -128,7 +130,7 @@
 					: 'The project has been deleted'
 			});
 		} catch (err) {
-			console.error('Error deleting project:', err);
+			logger.error('Error deleting project:', err);
 			toast.error('Failed to delete project', {
 				description: 'Please try again'
 			});
@@ -223,7 +225,7 @@
 				description: 'The project order has been saved'
 			});
 		} catch (err) {
-			console.error('Error updating project order:', err);
+			logger.error('Error updating project order:', err);
 			toast.error('Failed to update project order', {
 				description: 'Please try again'
 			});

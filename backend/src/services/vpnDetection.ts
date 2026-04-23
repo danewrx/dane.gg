@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 /**
  * Hybrid VPN detection service using community-maintained lists
  * Combines multiple free, open-source data sources for accurate detection
@@ -27,11 +28,11 @@ export class VPNDetectionService {
 	static async initialize(): Promise<void> {
 		if (this.isInitialized) return;
 
-		console.log('🔍 Initializing VPN detection service...');
+		logger.info('Initializing VPN detection service...');
 		await this.updateCommunityLists();
 		this.isInitialized = true;
-		console.log(
-			`✅ VPN detection initialized with ${this.communityLists.size} known VPN/proxy IPs`
+		logger.info(
+			`VPN detection initialized with ${this.communityLists.size} known VPN/proxy IPs`
 		);
 	}
 
@@ -210,7 +211,7 @@ export class VPNDetectionService {
 	 * Update community lists from all sources
 	 */
 	private static async updateCommunityLists(): Promise<void> {
-		console.log('🔄 Updating VPN detection lists...');
+		logger.info('Updating VPN detection lists...');
 
 		const allIPs: string[] = [];
 		let successCount = 0;
@@ -224,7 +225,7 @@ export class VPNDetectionService {
 				});
 
 				if (!response.ok) {
-					console.warn(`⚠️ Failed to fetch ${source}: ${response.status}`);
+					logger.warn(`Failed to fetch ${source}: ${response.status}`);
 					continue;
 				}
 
@@ -252,9 +253,9 @@ export class VPNDetectionService {
 
 				allIPs.push(...ips);
 				successCount++;
-				console.log(`✅ Loaded ${ips.length} IPs from ${source}`);
+				logger.info(`Loaded ${ips.length} IPs from ${source}`);
 			} catch (error) {
-				console.warn(`⚠️ Error fetching ${source}:`, error);
+				logger.warn(`Error fetching ${source}:`, error);
 			}
 		}
 
@@ -263,8 +264,8 @@ export class VPNDetectionService {
 		allIPs.forEach((ip) => this.communityLists.add(ip));
 		this.lastUpdate = Date.now();
 
-		console.log(
-			`✅ Updated VPN lists: ${successCount}/${this.sources.length} sources, ${this.communityLists.size} total IPs`
+		logger.info(
+			`Updated VPN lists: ${successCount}/${this.sources.length} sources, ${this.communityLists.size} total IPs`
 		);
 	}
 

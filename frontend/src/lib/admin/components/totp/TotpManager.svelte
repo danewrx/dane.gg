@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { TotpService, type TotpStatus } from '../../services/totp';
@@ -23,7 +25,7 @@
 	$: if (typeof window !== 'undefined' && totpStatus !== null) {
 		// Small delay to ensure DOM has updated
 		setTimeout(() => {
-			console.log('TotpManager: Dispatching totpStatusChanged event:', {
+			logger.info('TotpManager: Dispatching totpStatusChanged event:', {
 				enabled: totpStatus?.enabled
 			});
 			window.dispatchEvent(
@@ -33,7 +35,7 @@
 			);
 
 			if ((window as any).updateAccountTotpButtons) {
-				console.log('TotpManager: Calling global update function from reactive');
+				logger.info('TotpManager: Calling global update function from reactive');
 				setTimeout(() => {
 					(window as any).updateAccountTotpButtons();
 				}, 100);
@@ -83,7 +85,7 @@
 
 		// Force immediate update after setup completion
 		if (typeof window !== 'undefined') {
-			console.log('TotpManager: Setup complete, dispatching immediate update');
+			logger.info('TotpManager: Setup complete, dispatching immediate update');
 			window.dispatchEvent(
 				new CustomEvent('totpStatusChanged', {
 					detail: { enabled: totpStatus?.enabled }
@@ -91,7 +93,7 @@
 			);
 
 			if ((window as any).updateAccountTotpButtons) {
-				console.log('TotpManager: Calling global update function');
+				logger.info('TotpManager: Calling global update function');
 				setTimeout(() => {
 					(window as any).updateAccountTotpButtons();
 				}, 100);

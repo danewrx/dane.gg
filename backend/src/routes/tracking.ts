@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router, Request, Response } from 'express';
 import { StatsService } from '../services/statsService';
 
@@ -52,7 +53,7 @@ router.post('/', async (req: Request, res: Response) => {
 			message: 'Page view tracked successfully'
 		});
 	} catch (error) {
-		console.error('Error tracking page view:', error);
+		logger.error('Error tracking page view:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to track page view'

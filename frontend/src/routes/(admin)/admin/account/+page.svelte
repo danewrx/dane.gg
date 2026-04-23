@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { user } from '$lib/admin/stores/auth';
 	import { accountService } from '$lib/admin/services/account';
 	import { toast } from 'svelte-sonner';
@@ -72,7 +74,7 @@
 			const backupText = document.querySelector('.totp-manager-container .backup-info');
 			const hasBackupCodes = backupText?.textContent?.includes('unused backup codes');
 
-			console.log('Updating TOTP button state:', {
+			logger.info('Updating TOTP button state:', {
 				enableButton: !!enableButton,
 				disableButton: !!disableButton,
 				regenerateButton: !!regenerateButton,
@@ -87,7 +89,7 @@
 				totpButtonText = 'Enable 2FA';
 				totpButtonClass = 'section-action-button';
 				showRegenerateButton = false;
-				console.log('Set to Enable 2FA');
+				logger.info('Set to Enable 2FA');
 			} else if (
 				(disableButton && regenerateButton) ||
 				isEnabled ||
@@ -98,7 +100,7 @@
 				totpButtonText = 'Disable 2FA';
 				totpButtonClass = 'section-action-button disable';
 				showRegenerateButton = true;
-				console.log('Set to Disable 2FA');
+				logger.info('Set to Disable 2FA');
 			}
 		}
 	}
@@ -111,17 +113,17 @@
 	// Reactive update of TOTP button state based on totpStatus
 	$effect(() => {
 		if (totpStatus) {
-			console.log('Account page: TOTP status reactive update:', totpStatus);
+			logger.info('Account page: TOTP status reactive update:', totpStatus);
 			if (totpStatus.enabled) {
 				totpButtonText = 'Disable 2FA';
 				totpButtonClass = 'section-action-button disable';
 				showRegenerateButton = true;
-				console.log('Account page: Reactive: Set to Disable 2FA');
+				logger.info('Account page: Reactive: Set to Disable 2FA');
 			} else {
 				totpButtonText = 'Enable 2FA';
 				totpButtonClass = 'section-action-button';
 				showRegenerateButton = false;
-				console.log('Account page: Reactive: Set to Enable 2FA');
+				logger.info('Account page: Reactive: Set to Enable 2FA');
 			}
 		}
 	});
@@ -177,7 +179,7 @@
 
 		// Listen for TOTP status changes from TotpManager
 		const handleTotpStatusChange = (event: any) => {
-			console.log('Account page: TOTP status changed:', event.detail);
+			logger.info('Account page: TOTP status changed:', event.detail);
 			totpStatus = event.detail;
 			// Update immediately and also after a short delay to ensure DOM is updated
 			updateTotpButtonState();
@@ -296,7 +298,7 @@
 			usernameForm.currentPassword = '';
 			isEditingUsername = false;
 		} catch (error) {
-			console.error('Username update failed:', error);
+			logger.error('Username update failed:', error);
 			toast.error('Failed to update username', {
 				description: getErrorMessage(error, 'Please try again')
 			});
@@ -354,7 +356,7 @@
 			};
 			isEditingPassword = false;
 		} catch (error) {
-			console.error('Password update failed:', error);
+			logger.error('Password update failed:', error);
 			toast.error('Failed to update password', {
 				description: getErrorMessage(error, 'Please try again')
 			});

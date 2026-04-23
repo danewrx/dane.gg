@@ -3,6 +3,7 @@
  *
  * Order matters: see each module’s imports / FK usage. `clear.ts` must stay aligned with FK graph.
  */
+import { logger } from '../utils/logger';
 import { setupWebsiteSchema } from './seeds/setup-schema';
 import { clearAllSeedData } from './seeds/clear';
 import { seedFonts } from './seeds/fonts';
@@ -18,7 +19,7 @@ import { seedThemes } from './seeds/themes';
 import { seedVisitorStats } from './seeds/visitor-stats';
 
 export async function seed() {
-	console.log('🌱 Starting database seed...');
+	logger.info('Starting database seed...');
 
 	try {
 		await setupWebsiteSchema();
@@ -40,22 +41,22 @@ export async function seed() {
 		const themeSeeds = await seedThemes();
 		const visitorCount = await seedVisitorStats();
 
-		console.log('✅ Database seeded successfully!');
-		console.log(`📊 Seeded data:`);
-		console.log(`   - ${categories.length} project categories`);
-		console.log(`   - ${portfolioTags.length} tags`);
-		console.log(`   - ${blogTagSeeds.length} blog tags`);
-		console.log(`   - ${projectSeeds.length} projects`);
-		console.log(`   - ${postSeeds.length} blog posts`);
-		console.log(`   - ${projectTagLinkCount} project-tag relationships`);
-		console.log(`   - ${postTagLinkCount} post-tag relationships`);
-		console.log(`   - 5 site configuration settings`);
-		console.log(`   - ${contactEmailSeeds.length} contact emails`);
-		console.log(`   - 4 contact page settings`);
-		console.log(`   - ${themeSeeds.length} themes`);
-		console.log(`   - ${visitorCount} visitor statistics records`);
+		logger.info('Database seeded successfully!');
+		logger.info(`Seeded data:`);
+		logger.info(`   - ${categories.length} project categories`);
+		logger.info(`   - ${portfolioTags.length} tags`);
+		logger.info(`   - ${blogTagSeeds.length} blog tags`);
+		logger.info(`   - ${projectSeeds.length} projects`);
+		logger.info(`   - ${postSeeds.length} blog posts`);
+		logger.info(`   - ${projectTagLinkCount} project-tag relationships`);
+		logger.info(`   - ${postTagLinkCount} post-tag relationships`);
+		logger.info(`   - 5 site configuration settings`);
+		logger.info(`   - ${contactEmailSeeds.length} contact emails`);
+		logger.info(`   - 4 contact page settings`);
+		logger.info(`   - ${themeSeeds.length} themes`);
+		logger.info(`   - ${visitorCount} visitor statistics records`);
 	} catch (error) {
-		console.error('❌ Error seeding database:', error);
+		logger.error('Error seeding database:', error);
 		throw error;
 	}
 }
@@ -63,11 +64,11 @@ export async function seed() {
 if (import.meta.main) {
 	seed()
 		.then(() => {
-			console.log('🎉 Seed completed successfully!');
+			logger.info('Seed completed successfully!');
 			process.exit(0);
 		})
 		.catch((error) => {
-			console.error('💥 Seed failed:', error);
+			logger.error('Seed failed:', error);
 			process.exit(1);
 		});
 }

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount, untrack } from 'svelte';
 	import { Save, X, Settings, ChevronDown } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
@@ -210,7 +212,7 @@
 		try {
 			availableTags = await getAllBlogTags();
 		} catch (err) {
-			console.error('Error loading tags:', err);
+			logger.error('Error loading tags:', err);
 		}
 	}
 
@@ -270,7 +272,7 @@
 				}
 			} catch (e) {
 				// Ignore localStorage errors
-				console.warn('Could not check localStorage for autosave:', e);
+				logger.warn('Could not check localStorage for autosave:', e);
 				lastLocalSaveAt = null;
 			}
 
@@ -323,7 +325,7 @@
 				}, 100);
 			}, 300);
 		} catch (err) {
-			console.error('Error loading post:', err);
+			logger.error('Error loading post:', err);
 			toast.error('Failed to load post', {
 				description: 'Please try again'
 			});
@@ -383,7 +385,7 @@
 				description: 'Your last autosave has been restored and saved to the database'
 			});
 		} catch (err: any) {
-			console.error('Error restoring autosave:', err);
+			logger.error('Error restoring autosave:', err);
 			toast.error('Failed to restore autosave', {
 				description: err.message || 'Please try again'
 			});
@@ -400,7 +402,7 @@
 				lastLocalSaveAt = null;
 			} catch (e) {
 				// Ignore localStorage errors
-				console.warn('Could not clear localStorage autosave:', e);
+				logger.warn('Could not clear localStorage autosave:', e);
 			}
 		}
 		showRestorePrompt = false;
@@ -455,7 +457,7 @@
 					}
 				}, 3000);
 			} catch (e) {
-				console.warn('Could not save to localStorage:', e);
+				logger.warn('Could not save to localStorage:', e);
 				autosaveStatus = 'error';
 				// Reset error status after 5 seconds
 				setTimeout(() => {
@@ -465,7 +467,7 @@
 				}, 5000);
 			}
 		} catch (err: any) {
-			console.error('Error autosaving:', err);
+			logger.error('Error autosaving:', err);
 			autosaveStatus = 'error';
 			// Reset error status after 5 seconds
 			setTimeout(() => {
@@ -663,7 +665,7 @@
 			dispatch('save');
 			dispatch('close');
 		} catch (err: any) {
-			console.error('Error saving post:', err);
+			logger.error('Error saving post:', err);
 			toast.error('Failed to save post', {
 				description: err.message || 'Please try again'
 			});
@@ -700,10 +702,10 @@
 				});
 
 				if (!response.ok) {
-					console.error('Failed to delete uploaded file');
+					logger.error('Failed to delete uploaded file');
 				}
 			} catch (error) {
-				console.error('Error deleting uploaded file:', error);
+				logger.error('Error deleting uploaded file:', error);
 			}
 		}
 
@@ -890,7 +892,7 @@
 									src={getThumbnailUrl(thumbnail)}
 									alt="Thumbnail preview"
 									onerror={(e) => {
-										console.error('Failed to load thumbnail:', thumbnail);
+										logger.error('Failed to load thumbnail:', thumbnail);
 										(e.target as HTMLImageElement).style.display = 'none';
 									}}
 								/>

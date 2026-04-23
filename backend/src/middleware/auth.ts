@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken } from '../utils/jwt';
 import { db } from '../db';
@@ -183,7 +184,7 @@ async function validateApiKey(
 		db.update(apiKeys)
 			.set({ lastUsedAt: new Date() })
 			.where(eq(apiKeys.id, apiKey.id))
-			.catch((err) => console.error('Failed to update API key last used:', err));
+			.catch((err) => logger.error('Failed to update API key last used:', err));
 
 		// Return a user-like object
 		return {
@@ -194,7 +195,7 @@ async function validateApiKey(
 			apiKeyPermissions: apiKey.permissions
 		};
 	} catch (error) {
-		console.error('Error validating API key:', error);
+		logger.error('Error validating API key:', error);
 		return null;
 	}
 }
@@ -247,7 +248,7 @@ export async function authenticateToken(req: Request, res: Response, next: NextF
 		};
 		next();
 	} catch (error) {
-		console.error('Auth middleware error:', error);
+		logger.error('Auth middleware error:', error);
 		return res.status(500).json({
 			error: 'Internal server error',
 			message: 'Authentication failed'
@@ -406,7 +407,7 @@ export async function apiKeyAuth(req: Request, res: Response, next: NextFunction
 			});
 		});
 	} catch (error) {
-		console.error('API key auth error:', error);
+		logger.error('API key auth error:', error);
 		return res.status(500).json({
 			error: 'Internal server error',
 			message: 'Authentication failed'
@@ -479,7 +480,7 @@ export async function optionalAuth(req: Request, res: Response, next: NextFuncti
 			}
 		}
 	} catch (error) {
-		console.error('Optional auth error:', error);
+		logger.error('Optional auth error:', error);
 	}
 
 	next();

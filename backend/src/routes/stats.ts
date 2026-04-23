@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router, Request, Response } from 'express';
 import { StatsService } from '../services/statsService';
 import { requireSession } from '../middleware/auth';
@@ -24,7 +25,7 @@ router.get('/public', generalLimiter, async (req: Request, res: Response) => {
 			}
 		});
 	} catch (error) {
-		console.error('Error fetching public stats:', error);
+		logger.error('Error fetching public stats:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Internal server error',
@@ -55,7 +56,7 @@ router.get('/overview', requireSession, async (req: Request, res: Response) => {
 			}
 		});
 	} catch (error) {
-		console.error('Error fetching overview stats:', error);
+		logger.error('Error fetching overview stats:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to fetch overview statistics'
@@ -81,7 +82,7 @@ router.get('/page-views', requireSession, async (req: Request, res: Response) =>
 			limit
 		});
 	} catch (error) {
-		console.error('Error fetching page views stats:', error);
+		logger.error('Error fetching page views stats:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to fetch page views statistics'
@@ -107,7 +108,7 @@ router.get('/visitors/countries', requireSession, async (req: Request, res: Resp
 			limit
 		});
 	} catch (error) {
-		console.error('Error fetching visitor countries:', error);
+		logger.error('Error fetching visitor countries:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to fetch visitor countries statistics'
@@ -133,7 +134,7 @@ router.get('/visitors/browsers', requireSession, async (req: Request, res: Respo
 			limit
 		});
 	} catch (error) {
-		console.error('Error fetching visitor browsers:', error);
+		logger.error('Error fetching visitor browsers:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to fetch visitor browsers statistics'
@@ -159,7 +160,7 @@ router.get('/visitors/os', requireSession, async (req: Request, res: Response) =
 			limit
 		});
 	} catch (error) {
-		console.error('Error fetching visitor OS:', error);
+		logger.error('Error fetching visitor OS:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to fetch visitor OS statistics'
@@ -185,7 +186,7 @@ router.get('/visitors/devices', requireSession, async (req: Request, res: Respon
 			limit
 		});
 	} catch (error) {
-		console.error('Error fetching visitor devices:', error);
+		logger.error('Error fetching visitor devices:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to fetch visitor devices statistics'
@@ -213,7 +214,7 @@ router.get('/request-logs', requireSession, async (req: Request, res: Response) 
 			timeRange
 		});
 	} catch (error) {
-		console.error('Error fetching request logs:', error);
+		logger.error('Error fetching request logs:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to fetch request logs'
@@ -272,7 +273,7 @@ router.get('/dashboard', requireSession, async (req: Request, res: Response) => 
 			}
 		});
 	} catch (error) {
-		console.error('Error fetching dashboard stats:', error);
+		logger.error('Error fetching dashboard stats:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to fetch dashboard statistics'

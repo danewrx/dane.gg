@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface ThemeResponse {
@@ -41,7 +42,7 @@ class SettingsService {
 
 			if (!response.ok) {
 				const errorText = await response.text();
-				console.error(`Settings API request failed: ${endpoint}`, response.status, errorText);
+				logger.error(`Settings API request failed: ${endpoint}`, response.status, errorText);
 
 				// Try to parse the error response to extract user-friendly message
 				let errorMessage = `Request failed with status ${response.status}`;
@@ -66,7 +67,7 @@ class SettingsService {
 			const data = await response.json();
 			return data;
 		} catch (error) {
-			console.error(`Settings API request failed: ${endpoint}`, error);
+			logger.error(`Settings API request failed: ${endpoint}`, error);
 			throw error;
 		}
 	}
@@ -85,7 +86,7 @@ class SettingsService {
 
 			return response.themePreference || 'system';
 		} catch (error) {
-			console.error('Get theme preference failed:', error);
+			logger.error('Get theme preference failed:', error);
 			return 'system';
 		}
 	}
@@ -99,7 +100,7 @@ class SettingsService {
 
 			return response;
 		} catch (error) {
-			console.error('Set theme preference failed:', error);
+			logger.error('Set theme preference failed:', error);
 			throw error;
 		}
 	}
@@ -113,7 +114,7 @@ class SettingsService {
 
 			return response.accentColor || '#3b82f6';
 		} catch (error) {
-			console.error('Get accent color failed:', error);
+			logger.error('Get accent color failed:', error);
 			return '#3b82f6';
 		}
 	}
@@ -127,7 +128,7 @@ class SettingsService {
 
 			return response;
 		} catch (error) {
-			console.error('Set accent color failed:', error);
+			logger.error('Set accent color failed:', error);
 			throw error;
 		}
 	}
@@ -141,7 +142,7 @@ class SettingsService {
 
 			return response.settings;
 		} catch (error) {
-			console.error('Get admin settings failed:', error);
+			logger.error('Get admin settings failed:', error);
 			throw error;
 		}
 	}
@@ -155,7 +156,7 @@ class SettingsService {
 
 			return response;
 		} catch (error) {
-			console.error('Update admin settings failed:', error);
+			logger.error('Update admin settings failed:', error);
 			throw error;
 		}
 	}

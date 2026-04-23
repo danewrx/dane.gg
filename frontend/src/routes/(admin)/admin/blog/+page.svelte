@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { Plus, Edit, Trash2, Eye, EyeOff, FileText, Calendar, Clock, Tag } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
@@ -35,7 +37,7 @@
 			loading = true;
 			posts = await getAllBlogPosts();
 		} catch (err) {
-			console.error('Error loading blog posts:', err);
+			logger.error('Error loading blog posts:', err);
 			toast.error('Failed to load blog posts', {
 				description: 'Please try refreshing the page'
 			});
@@ -86,7 +88,7 @@
 					: 'The blog post has been deleted'
 			});
 		} catch (err) {
-			console.error('Error deleting post:', err);
+			logger.error('Error deleting post:', err);
 			toast.error('Failed to delete post', {
 				description: 'Please try again'
 			});

@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
@@ -92,7 +93,7 @@ router.get('/', requireAuth, async (_req: Request, res: Response) => {
 		}
 		res.json({ success: true, data: allFonts });
 	} catch (error) {
-		console.error('Error fetching fonts:', error);
+		logger.error('Error fetching fonts:', error);
 		res.status(500).json({ success: false, error: 'Failed to fetch fonts' });
 	}
 });
@@ -132,7 +133,7 @@ router.post(
 
 			res.status(201).json({ success: true, data: created });
 		} catch (error: any) {
-			console.error('Font upload error:', error);
+			logger.error('Font upload error:', error);
 			res.status(500).json({ success: false, error: error.message || 'Failed to upload font' });
 		}
 	}
@@ -164,7 +165,7 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
 		await db.delete(fonts).where(eq(fonts.id, id));
 		res.json({ success: true, message: 'Font deleted' });
 	} catch (error) {
-		console.error('Error deleting font:', error);
+		logger.error('Error deleting font:', error);
 		res.status(500).json({ success: false, error: 'Failed to delete font' });
 	}
 });

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { mode, setMode } from 'mode-watcher';
 	import Tabs from '$lib/admin/components/ui/Tabs.svelte';
 	import AccentColorPicker from '$lib/admin/components/ui/AccentColorPicker.svelte';
@@ -92,7 +94,7 @@
 				const dbAccentColor = $user.accentColor || (await settingsService.getAccentColor());
 				currentAccentColor = dbAccentColor;
 			} catch (error) {
-				console.error('Failed to load settings from database:', error);
+				logger.error('Failed to load settings from database:', error);
 				loadFromLocalStorage();
 			}
 		} else {
@@ -125,7 +127,7 @@
 			const data = await response.json();
 			apiKeys = data.keys || [];
 		} catch (err) {
-			console.error('Error loading API keys:', err);
+			logger.error('Error loading API keys:', err);
 			toast.error('Failed to load API keys', {
 				description: err instanceof Error ? err.message : 'Please try refreshing the page'
 			});
@@ -183,7 +185,7 @@
 				description: "Make sure to copy the key - you won't be able to see it again!"
 			});
 		} catch (err) {
-			console.error('Error creating API key:', err);
+			logger.error('Error creating API key:', err);
 			toast.error('Failed to create API key', {
 				description: err instanceof Error ? err.message : 'Please try again'
 			});
@@ -243,7 +245,7 @@
 			await loadApiKeys();
 			toast.success(key.isActive ? 'API key deactivated' : 'API key activated');
 		} catch (err) {
-			console.error('Error toggling API key:', err);
+			logger.error('Error toggling API key:', err);
 			toast.error('Failed to update API key');
 		}
 	}
@@ -281,7 +283,7 @@
 			await loadApiKeys();
 			toast.success('API key regenerated');
 		} catch (err) {
-			console.error('Error regenerating API key:', err);
+			logger.error('Error regenerating API key:', err);
 			toast.error('Failed to regenerate API key');
 		} finally {
 			isSubmitting = false;
@@ -319,7 +321,7 @@
 			cancelDelete();
 			await loadApiKeys();
 		} catch (err) {
-			console.error('Error deleting API key:', err);
+			logger.error('Error deleting API key:', err);
 			toast.error('Failed to delete API key');
 		} finally {
 			isSubmitting = false;
@@ -384,7 +386,7 @@
 				description: 'Your preference has been saved to your account'
 			});
 		} catch (error) {
-			console.error('Failed to set theme:', error);
+			logger.error('Failed to set theme:', error);
 			// Fallback to local mode setting
 			setMode(value as 'light' | 'dark' | 'system');
 
@@ -406,7 +408,7 @@
 				description: `New color ${color.toUpperCase()} applied across the interface`
 			});
 		} catch (error) {
-			console.error('Failed to set accent color:', error);
+			logger.error('Failed to set accent color:', error);
 
 			// Show error toast
 			toast.error('Failed to save accent color preference');

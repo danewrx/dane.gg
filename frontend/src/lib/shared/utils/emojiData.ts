@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 import emojiData from 'emojibase-data/en/data.json';
 import shortcodes from 'emojibase-data/en/shortcodes/emojibase.json';
 import * as emojibase from 'emojibase';
@@ -56,7 +57,7 @@ function initializeLookupMaps() {
 			}
 		}
 	} catch (error) {
-		console.error('Error initializing emoji lookup maps:', error);
+		logger.error('Error initializing emoji lookup maps:', error);
 	}
 }
 
@@ -97,7 +98,7 @@ export function getAllDefaultEmojis(): EmojiData[] {
 			}
 		}
 	} catch (error) {
-		console.error('Error loading emojis from emojibase:', error);
+		logger.error('Error loading emojis from emojibase:', error);
 	}
 
 	return emojiList;

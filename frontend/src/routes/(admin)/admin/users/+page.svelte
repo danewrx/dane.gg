@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import {
 		Plus,
@@ -62,7 +64,7 @@
 			loading = true;
 			users = await userManagementService.getAllUsers();
 		} catch (err) {
-			console.error('Error loading users:', err);
+			logger.error('Error loading users:', err);
 			toast.error('Failed to load users', {
 				description: err instanceof Error ? err.message : 'Please try refreshing the page'
 			});
@@ -98,7 +100,7 @@
 			closeAddModal();
 			await loadUsers();
 		} catch (err) {
-			console.error('Error creating user:', err);
+			logger.error('Error creating user:', err);
 			toast.error('Failed to create user', {
 				description: err instanceof Error ? err.message : 'Please try again'
 			});
@@ -181,7 +183,7 @@
 			closeEditModal();
 			await loadUsers();
 		} catch (err) {
-			console.error('Error updating user:', err);
+			logger.error('Error updating user:', err);
 			toast.error('Failed to update user', {
 				description: err instanceof Error ? err.message : 'Please try again'
 			});
@@ -224,7 +226,7 @@
 			cancelDelete();
 			await loadUsers();
 		} catch (err) {
-			console.error('Error deleting user:', err);
+			logger.error('Error deleting user:', err);
 			toast.error('Failed to delete user', {
 				description: err instanceof Error ? err.message : 'Please try again'
 			});

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { Eye, Users, FileText, Calendar } from 'lucide-svelte';
 	import CountryPieChart from '$lib/admin/components/CountryPieChart.svelte';
@@ -76,7 +78,7 @@
 			}
 
 			const data = await response.json();
-			console.log('API Response:', data);
+			logger.info('API Response:', data);
 
 			if (data.success) {
 				stats = {
@@ -89,12 +91,12 @@
 				browsers = data.data.browsers || [];
 				operatingSystems = data.data.os || [];
 				trends = data.data.trends || [];
-				console.log('Stats page - Countries data:', countries);
+				logger.info('Stats page - Countries data:', countries);
 			} else {
 				throw new Error(data.message || 'Failed to load stats');
 			}
 		} catch (err) {
-			console.error('Error loading stats:', err);
+			logger.error('Error loading stats:', err);
 			error = err instanceof Error ? err.message : 'Failed to load statistics';
 		} finally {
 			loading = false;

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { goto } from '$app/navigation';
 	import { authService } from '$lib/admin/services/auth';
 	import { onMount } from 'svelte';
@@ -20,7 +22,7 @@
 			await authService.logout();
 			goto('/login?redirect=/admin');
 		} catch (error) {
-			console.error('Logout failed:', error);
+			logger.error('Logout failed:', error);
 			goto('/login?redirect=/admin');
 		}
 	}

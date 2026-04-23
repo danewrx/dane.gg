@@ -3,6 +3,7 @@
  * Documentation: https://github.com/louislam/uptime-kuma/blob/master/src/queries/monitor.js
  */
 
+import { logger } from '../utils/logger';
 import { db } from '../db/index';
 import { uptimeKumaMonitors } from '../db/schema';
 import { eq, notInArray, inArray } from 'drizzle-orm';
@@ -57,7 +58,7 @@ export class UptimeKumaService {
 		// Try 1: REST API endpoint (best for group structure)
 		if (this.apiKey) {
 			try {
-				console.log(`[Uptime Kuma] Attempting REST API endpoint at ${this.baseUrl}/api/monitor`);
+				logger.info(`[Uptime Kuma] Attempting REST API endpoint at ${this.baseUrl}/api/monitor`);
 				const authHeader = `Basic ${Buffer.from(`api:${this.apiKey}`).toString('base64')}`;
 				const response = await fetch(`${this.baseUrl}/api/monitor`, {
 					method: 'GET',
@@ -69,12 +70,12 @@ export class UptimeKumaService {
 
 				if (response.ok) {
 					const data = await response.json();
-					console.log(`[Uptime Kuma] REST API endpoint success`);
-					console.log(
+					logger.info(`[Uptime Kuma] REST API endpoint success`);
+					logger.info(
 						`[Uptime Kuma] REST API response type:`,
 						Array.isArray(data) ? 'array' : typeof data
 					);
-					console.log(
+					logger.info(
 						`[Uptime Kuma] REST API response keys:`,
 						Array.isArray(data) ? 'array' : Object.keys(data)
 					);
@@ -96,19 +97,19 @@ export class UptimeKumaService {
 					errors.push(
 						`REST API endpoint failed (${response.status}): ${errorText.substring(0, 100)}`
 					);
-					console.log(
+					logger.info(
 						`[Uptime Kuma] REST API endpoint failed: ${response.status} ${response.statusText}`
 					);
 				}
 			} catch (error: any) {
 				errors.push(`REST API endpoint error: ${error.message}`);
-				console.error('[Uptime Kuma] REST API endpoint error:', error.message);
+				logger.error('[Uptime Kuma] REST API endpoint error:', error.message);
 			}
 		}
 
 		// Try 2: Metrics endpoint (Prometheus format)
 		try {
-			console.log(`[Uptime Kuma] Attempting metrics endpoint at ${this.baseUrl}/metrics`);
+			logger.info(`[Uptime Kuma] Attempting metrics endpoint at ${this.baseUrl}/metrics`);
 			const headers: Record<string, string> = {
 				'Content-Type': 'text/plain'
 			};
@@ -125,10 +126,10 @@ export class UptimeKumaService {
 
 			if (response.ok) {
 				const metricsText = await response.text();
-				console.log(`[Uptime Kuma] Metrics endpoint success, received ${metricsText.length} bytes`);
-				console.log(`[Uptime Kuma] First 500 chars of metrics:`, metricsText.substring(0, 500));
+				logger.info(`[Uptime Kuma] Metrics endpoint success, received ${metricsText.length} bytes`);
+				logger.info(`[Uptime Kuma] First 500 chars of metrics:`, metricsText.substring(0, 500));
 				monitors = this.parsePrometheusMetrics(metricsText);
-				console.log(`[Uptime Kuma] Parsed ${monitors.length} monitors from metrics`);
+				logger.info(`[Uptime Kuma] Parsed ${monitors.length} monitors from metrics`);
 				if (monitors.length > 0) {
 					await this.saveMonitorsToCache(monitors);
 					return monitors;
@@ -136,13 +137,13 @@ export class UptimeKumaService {
 			} else {
 				const errorText = await response.text();
 				errors.push(`Metrics endpoint failed (${response.status}): ${errorText.substring(0, 100)}`);
-				console.log(
+				logger.info(
 					`[Uptime Kuma] Metrics endpoint failed: ${response.status} ${response.statusText}`
 				);
 			}
 		} catch (error: any) {
 			errors.push(`Metrics endpoint error: ${error.message}`);
-			console.error('[Uptime Kuma] Metrics endpoint error:', error.message);
+			logger.error('[Uptime Kuma] Metrics endpoint error:', error.message);
 		}
 
 		// Try 2: Status page endpoint (public, no auth)
@@ -152,7 +153,7 @@ export class UptimeKumaService {
 
 		for (const slug of statusPageSlugs) {
 			try {
-				console.log(
+				logger.info(
 					`[Uptime Kuma] Attempting status page at ${this.baseUrl}/api/status-page/${slug}`
 				);
 				const response = await fetch(`${this.baseUrl}/api/status-page/${slug}`, {
@@ -164,7 +165,7 @@ export class UptimeKumaService {
 
 				if (response.ok) {
 					const data = await response.json();
-					console.log(`[Uptime Kuma] Status page success for slug '${slug}'`);
+					logger.info(`[Uptime Kuma] Status page success for slug '${slug}'`);
 
 					// Status page response structure
 					if (data.monitorList && Array.isArray(data.monitorList)) {
@@ -183,13 +184,13 @@ export class UptimeKumaService {
 				}
 			} catch (error: any) {
 				errors.push(`Status page '${slug}' error: ${error.message}`);
-				console.error(`[Uptime Kuma] Status page '${slug}' error:`, error.message);
+				logger.error(`[Uptime Kuma] Status page '${slug}' error:`, error.message);
 			}
 		}
 
 		// Try 3: Legacy heartbeat endpoint
 		try {
-			console.log(
+			logger.info(
 				`[Uptime Kuma] Attempting heartbeat endpoint at ${this.baseUrl}/api/status-page/heartbeat`
 			);
 			const response = await fetch(`${this.baseUrl}/api/status-page/heartbeat`, {
@@ -201,7 +202,7 @@ export class UptimeKumaService {
 
 			if (response.ok) {
 				const data = await response.json();
-				console.log(`[Uptime Kuma] Heartbeat endpoint success`);
+				logger.info(`[Uptime Kuma] Heartbeat endpoint success`);
 
 				if (Array.isArray(data)) {
 					monitors = this.parseMonitors(data);
@@ -218,29 +219,29 @@ export class UptimeKumaService {
 			}
 		} catch (error: any) {
 			errors.push(`Heartbeat endpoint error: ${error.message}`);
-			console.error('[Uptime Kuma] Heartbeat endpoint error:', error.message);
+			logger.error('[Uptime Kuma] Heartbeat endpoint error:', error.message);
 		}
 
 		// If all attempts failed, try to load from database cache
 		if (monitors.length === 0) {
-			console.log(
+			logger.info(
 				'[Uptime Kuma] All API attempts failed, attempting to load from database cache...'
 			);
 			try {
 				monitors = await this.loadMonitorsFromCache();
 				if (monitors.length > 0) {
-					console.log(`[Uptime Kuma] Loaded ${monitors.length} monitors from database cache`);
+					logger.info(`[Uptime Kuma] Loaded ${monitors.length} monitors from database cache`);
 					return monitors;
 				}
 			} catch (cacheError: any) {
-				console.error('[Uptime Kuma] Failed to load from cache:', cacheError.message);
+				logger.error('[Uptime Kuma] Failed to load from cache:', cacheError.message);
 			}
 		}
 
 		// If still no monitors, throw error
 		if (monitors.length === 0) {
 			const errorMessage = `Failed to connect to Uptime Kuma at ${this.baseUrl}. Tried multiple endpoints:\n${errors.join('\n')}\n\nPossible solutions:\n1. Ensure UPTIME_KUMA_URL is correct\n2. If using REST API, set UPTIME_KUMA_API_KEY\n3. If using status page, ensure a status page is configured in Uptime Kuma\n4. Check if Uptime Kuma is accessible from the server`;
-			console.error('[Uptime Kuma] All connection attempts failed:', errorMessage);
+			logger.error('[Uptime Kuma] All connection attempts failed:', errorMessage);
 			throw new Error(errorMessage);
 		}
 
@@ -267,7 +268,7 @@ export class UptimeKumaService {
 		// Try 1: REST API endpoint
 		if (this.apiKey) {
 			try {
-				console.log(
+				logger.info(
 					`[Uptime Kuma] Attempting REST API endpoint for ${monitorIds.length} selected monitors`
 				);
 				const authHeader = `Basic ${Buffer.from(`api:${this.apiKey}`).toString('base64')}`;
@@ -340,13 +341,13 @@ export class UptimeKumaService {
 			const cachedMonitors = await this.loadMonitorsFromCache();
 			monitors = cachedMonitors.filter((monitor) => monitorIds.includes(monitor.id));
 			if (monitors.length > 0) {
-				console.log(
+				logger.info(
 					`[Uptime Kuma] Loaded ${monitors.length} selected monitors from database cache`
 				);
 				return monitors;
 			}
 		} catch (cacheError: any) {
-			console.error('[Uptime Kuma] Failed to load from cache:', cacheError.message);
+			logger.error('[Uptime Kuma] Failed to load from cache:', cacheError.message);
 		}
 
 		// If still no monitors, throw error
@@ -420,9 +421,9 @@ export class UptimeKumaService {
 						}
 					});
 			}
-			console.log(`[Uptime Kuma] Saved ${monitors.length} selected monitors to database cache`);
+			logger.info(`[Uptime Kuma] Saved ${monitors.length} selected monitors to database cache`);
 		} catch (error: any) {
-			console.error('[Uptime Kuma] Error saving monitors to cache:', error.message);
+			logger.error('[Uptime Kuma] Error saving monitors to cache:', error.message);
 			// Don't throw - caching is optional
 		}
 	}
@@ -447,7 +448,7 @@ export class UptimeKumaService {
 				lastCheck: record.lastCheck?.toISOString() || undefined
 			}));
 		} catch (error: any) {
-			console.error('[Uptime Kuma] Error loading monitors from cache:', error.message);
+			logger.error('[Uptime Kuma] Error loading monitors from cache:', error.message);
 			throw error;
 		}
 	}
@@ -458,9 +459,9 @@ export class UptimeKumaService {
 	static async clearCache(): Promise<void> {
 		try {
 			await db.delete(uptimeKumaMonitors);
-			console.log('[Uptime Kuma] Cleared all monitors from database cache');
+			logger.info('[Uptime Kuma] Cleared all monitors from database cache');
 		} catch (error: any) {
-			console.error('[Uptime Kuma] Error clearing cache:', error.message);
+			logger.error('[Uptime Kuma] Error clearing cache:', error.message);
 			throw error;
 		}
 	}
@@ -497,7 +498,7 @@ export class UptimeKumaService {
 				}
 			}
 		} catch (error: any) {
-			console.error('[Uptime Kuma] Error merging custom names:', error.message);
+			logger.error('[Uptime Kuma] Error merging custom names:', error.message);
 		}
 	}
 
@@ -518,11 +519,11 @@ export class UptimeKumaService {
 					})
 					.where(eq(uptimeKumaMonitors.monitorId, monitorId));
 			}
-			console.log(
+			logger.info(
 				`[Uptime Kuma] Updated custom names for ${Object.keys(customNames).length} monitors`
 			);
 		} catch (error: any) {
-			console.error('[Uptime Kuma] Error updating custom names:', error.message);
+			logger.error('[Uptime Kuma] Error updating custom names:', error.message);
 			throw error;
 		}
 	}
@@ -541,7 +542,7 @@ export class UptimeKumaService {
 			}
 		}
 
-		console.log(`[Uptime Kuma] Found ${groups.size} groups in REST API response`);
+		logger.info(`[Uptime Kuma] Found ${groups.size} groups in REST API response`);
 
 		for (const item of data) {
 			if (item.type === 'group') {
@@ -580,12 +581,12 @@ export class UptimeKumaService {
 		}
 
 		const groupedCount = monitors.filter((m) => m.group).length;
-		console.log(
+		logger.info(
 			`[Uptime Kuma] Parsed ${monitors.length} monitors from REST API, ${groupedCount} with groups`
 		);
 
 		if (groupedCount === 0 && monitors.length > 0) {
-			console.log(
+			logger.info(
 				`[Uptime Kuma] No groups assigned from REST API, falling back to type-based grouping`
 			);
 			const typeMap: Record<string, string> = {
@@ -647,9 +648,9 @@ export class UptimeKumaService {
 				const type = monitor.type?.toLowerCase() || 'unknown';
 				monitor.group = typeMap[type] || type.charAt(0).toUpperCase() + type.slice(1);
 			}
-			console.log(`[Uptime Kuma] Assigned all monitors to type-based groups`);
+			logger.info(`[Uptime Kuma] Assigned all monitors to type-based groups`);
 		} else if (groupedCount < monitors.length) {
-			console.log(
+			logger.info(
 				`[Uptime Kuma] ${monitors.length - groupedCount} monitors without groups, assigning type-based groups`
 			);
 			const typeMap: Record<string, string> = {
@@ -713,7 +714,7 @@ export class UptimeKumaService {
 					monitor.group = typeMap[type] || type.charAt(0).toUpperCase() + type.slice(1);
 				}
 			}
-			console.log(`[Uptime Kuma] Assigned type-based groups to ungrouped monitors`);
+			logger.info(`[Uptime Kuma] Assigned type-based groups to ungrouped monitors`);
 		}
 
 		return monitors;
@@ -860,13 +861,13 @@ export class UptimeKumaService {
 			}
 		}
 
-		console.log(`[Uptime Kuma] Parsed ${monitors.length} monitors from metrics`);
-		console.log(`[Uptime Kuma] Found ${groupNames.size} groups:`, Array.from(groupNames));
+		logger.info(`[Uptime Kuma] Parsed ${monitors.length} monitors from metrics`);
+		logger.info(`[Uptime Kuma] Found ${groupNames.size} groups:`, Array.from(groupNames));
 		const groupedCount = monitors.filter((m) => m.group).length;
-		console.log(`[Uptime Kuma] ${groupedCount} monitors assigned to groups`);
+		logger.info(`[Uptime Kuma] ${groupedCount} monitors assigned to groups`);
 
 		if (groupedCount === 0 && monitors.length > 0) {
-			console.log(`[Uptime Kuma] No groups assigned, falling back to type-based grouping`);
+			logger.info(`[Uptime Kuma] No groups assigned, falling back to type-based grouping`);
 			const typeMap: Record<string, string> = {
 				http: 'Websites',
 				https: 'Websites',
@@ -926,9 +927,9 @@ export class UptimeKumaService {
 				const type = monitor.type?.toLowerCase() || 'unknown';
 				monitor.group = typeMap[type] || type.charAt(0).toUpperCase() + type.slice(1);
 			}
-			console.log(`[Uptime Kuma] Assigned all monitors to type-based groups`);
+			logger.info(`[Uptime Kuma] Assigned all monitors to type-based groups`);
 		} else if (groupedCount < monitors.length) {
-			console.log(
+			logger.info(
 				`[Uptime Kuma] ${monitors.length - groupedCount} monitors without groups, assigning type-based groups`
 			);
 			const typeMap: Record<string, string> = {
@@ -992,7 +993,7 @@ export class UptimeKumaService {
 					monitor.group = typeMap[type] || type.charAt(0).toUpperCase() + type.slice(1);
 				}
 			}
-			console.log(`[Uptime Kuma] Assigned type-based groups to ungrouped monitors`);
+			logger.info(`[Uptime Kuma] Assigned type-based groups to ungrouped monitors`);
 		}
 
 		return monitors;
@@ -1053,7 +1054,7 @@ export class UptimeKumaService {
 			const monitors = await this.getAllMonitors();
 			return monitors.find((m) => m.id === id) || null;
 		} catch (error) {
-			console.error('Error fetching monitor by ID:', error);
+			logger.error('Error fetching monitor by ID:', error);
 			return null;
 		}
 	}

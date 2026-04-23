@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { db } from '../index';
 import { blogTags, postTags, posts } from '../schema';
 
@@ -9,7 +10,7 @@ export async function seedBlogPostsAndTagLinks(
 ): Promise<{ posts: Post[]; postTagLinkCount: number }> {
 	const blogTagId = (name: string) => blogTagSeeds.find((t) => t.name === name)?.id;
 
-	console.log('📰 Seeding blog posts...');
+	logger.info('Seeding blog posts...');
 	const postSeeds = await db
 		.insert(posts)
 		.values([
@@ -99,7 +100,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(\`Server running on port \${PORT}\`);
+  logger.info(\`Server running on port \${PORT}\`);
 });
 \`\`\`
 
@@ -205,7 +206,7 @@ Stay tuned for the full article!`,
 		])
 		.returning();
 
-	console.log('🔗 Linking posts with blog tags...');
+	logger.info('Linking posts with blog tags...');
 	const postTagLinks = [
 		{ postId: postSeeds[0].id, tagId: blogTagId('Tutorial') },
 		{ postId: postSeeds[0].id, tagId: blogTagId('Web Development') },

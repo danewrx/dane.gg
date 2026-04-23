@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import Icon from '@iconify/svelte';
 	import {
 		getIconCategories,
@@ -34,7 +36,7 @@
 				iconCategories = await getIconCategories();
 				await updateFilteredIcons();
 			} catch (error) {
-				console.error('Failed to load icon categories:', error);
+				logger.error('Failed to load icon categories:', error);
 			} finally {
 				isLoading = false;
 			}

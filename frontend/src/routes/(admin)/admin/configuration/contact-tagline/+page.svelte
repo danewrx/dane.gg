@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { Loader2 } from 'lucide-svelte';
@@ -28,7 +30,7 @@
 				}
 			}
 		} catch (error) {
-			console.error('Error loading contact tagline:', error);
+			logger.error('Error loading contact tagline:', error);
 			toast.error('Failed to load contact tagline');
 		} finally {
 			isLoading = false;
@@ -58,7 +60,7 @@
 				throw new Error(result.error || 'Failed to save contact tagline');
 			}
 		} catch (error) {
-			console.error('Error saving contact tagline:', error);
+			logger.error('Error saving contact tagline:', error);
 			toast.error('Failed to save contact tagline');
 		} finally {
 			isSaving = false;

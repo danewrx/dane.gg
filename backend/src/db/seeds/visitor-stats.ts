@@ -1,8 +1,9 @@
+import { logger } from '../../utils/logger';
 import { db } from '../index';
 import { visitorStats } from '../schema';
 
 export async function seedVisitorStats(): Promise<number> {
-	console.log('📊 Seeding visitor statistics...');
+	logger.info('Seeding visitor statistics...');
 	const testVisitorData = [
 		{
 			visitorId: 'visitor-001',
@@ -167,6 +168,6 @@ export async function seedVisitorStats(): Promise<number> {
 	];
 
 	await db.insert(visitorStats).values(testVisitorData);
-	console.log(`✅ Seeded ${testVisitorData.length} visitor records`);
+	logger.info(`Seeded ${testVisitorData.length} visitor records`);
 	return testVisitorData.length;
 }

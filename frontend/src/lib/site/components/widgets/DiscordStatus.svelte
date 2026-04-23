@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 
 	interface DiscordStatusData {
@@ -25,7 +27,7 @@
 			const data = await response.json();
 			status = data;
 		} catch (err) {
-			console.error('Error fetching Discord status:', err);
+			logger.error('Error fetching Discord status:', err);
 			error = err instanceof Error ? err.message : 'Failed to fetch Discord status';
 			// Set default offline status on error
 			status = { status: 0, lastUpdate: new Date().toISOString() };

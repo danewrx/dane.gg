@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { TwitterOpenApi } from 'twitter-openapi-typescript';
 import { TweetService, type TweetData } from './tweetService';
 import { NotificationService } from './notificationService';
@@ -47,7 +48,7 @@ export class TwitterApiService {
 			const cookies = process.env.TWITTER_COOKIES;
 
 			if (!cookies) {
-				console.error('[Twitter API] TWITTER_COOKIES environment variable is not set');
+				logger.error('[Twitter API] TWITTER_COOKIES environment variable is not set');
 				return false;
 			}
 
@@ -67,10 +68,10 @@ export class TwitterApiService {
 
 			this.client = await this.api.getClientFromCookies(cookieMap);
 
-			console.log('[Twitter API] Client initialized successfully');
+			logger.info('[Twitter API] Client initialized successfully');
 			return true;
 		} catch (error: any) {
-			console.error('[Twitter API] Failed to initialize client:', error.message);
+			logger.error('[Twitter API] Failed to initialize client:', error.message);
 			return false;
 		}
 	}
@@ -89,7 +90,7 @@ export class TwitterApiService {
 			}
 
 			if (!this.client) {
-				console.error('[Twitter API] Client is not initialized');
+				logger.error('[Twitter API] Client is not initialized');
 				return null;
 			}
 
@@ -111,15 +112,15 @@ export class TwitterApiService {
 			}
 
 			if (!userId) {
-				console.error('[Twitter API] Could not get user ID for:', username);
-				console.error(
+				logger.error('[Twitter API] Could not get user ID for:', username);
+				logger.error(
 					'[Twitter API] Response structure:',
 					JSON.stringify(userResult.data, null, 2)
 				);
 				return null;
 			}
 
-			console.log('[Twitter API] Found user ID:', userId);
+			logger.info('[Twitter API] Found user ID:', userId);
 
 			// Get user timeline tweets using getTweetApi
 			const timelineResult = await this.client.getTweetApi().getUserTweets({
@@ -130,7 +131,7 @@ export class TwitterApiService {
 			// Extract tweet data from timeline response
 			const responseData = timelineResult.data || timelineResult;
 
-			console.log(
+			logger.info(
 				'[Twitter API] Timeline response structure:',
 				JSON.stringify(responseData, null, 2).substring(0, 1500)
 			);
@@ -177,12 +178,12 @@ export class TwitterApiService {
 			}
 
 			if (!tweetData) {
-				console.log('[Twitter API] No tweet data found in response');
+				logger.info('[Twitter API] No tweet data found in response');
 				return null;
 			}
 
-			console.log('[Twitter API] Tweet data keys:', Object.keys(tweetData));
-			console.log(
+			logger.info('[Twitter API] Tweet data keys:', Object.keys(tweetData));
+			logger.info(
 				'[Twitter API] Full tweet data structure:',
 				JSON.stringify(tweetData, null, 2).substring(0, 2000)
 			);
@@ -193,10 +194,10 @@ export class TwitterApiService {
 			const tweetLegacy = tweetData.legacy;
 
 			if (!tweetLegacy) {
-				console.error('[Twitter API] Tweet data does not have legacy property');
+				logger.error('[Twitter API] Tweet data does not have legacy property');
 				// Try alternative paths
 				if (tweetData.tweet?.legacy) {
-					console.log('[Twitter API] Found legacy in tweet.tweet.legacy');
+					logger.info('[Twitter API] Found legacy in tweet.tweet.legacy');
 					const altLegacy = tweetData.tweet.legacy;
 					const tweetId = altLegacy.id_str || altLegacy.id?.toString() || null;
 					const tweetText = altLegacy.full_text || altLegacy.text || '';
@@ -232,15 +233,15 @@ export class TwitterApiService {
 			const tweetText = tweetLegacy.fullText || tweetLegacy.full_text || tweetLegacy.text || '';
 
 			if (!tweetId || !tweetText) {
-				console.error('[Twitter API] Could not extract tweet ID or text from legacy');
-				console.error(
+				logger.error('[Twitter API] Could not extract tweet ID or text from legacy');
+				logger.error(
 					'[Twitter API] Legacy structure:',
 					JSON.stringify(tweetLegacy, null, 2).substring(0, 500)
 				);
 				return null;
 			}
 
-			console.log('[Twitter API] Successfully extracted tweet:', tweetId);
+			logger.info('[Twitter API] Successfully extracted tweet:', tweetId);
 
 			// Extract user information
 			let userLegacy = null;
@@ -271,7 +272,7 @@ export class TwitterApiService {
 			const tweetUrl = `https://x.com/${authorUsername}/status/${tweetId}`;
 			const profileUrl = `https://x.com/${authorUsername}`;
 
-			console.log('[Twitter API] Profile image URL:', profileImage);
+			logger.info('[Twitter API] Profile image URL:', profileImage);
 
 			const result: TweetData = {
 				tweetId: tweetId,
@@ -286,8 +287,8 @@ export class TwitterApiService {
 
 			return result;
 		} catch (error: any) {
-			console.error('[Twitter API] Error fetching latest tweet:', error.message);
-			console.error('[Twitter API] Error stack:', error.stack);
+			logger.error('[Twitter API] Error fetching latest tweet:', error.message);
+			logger.error('[Twitter API] Error stack:', error.stack);
 			return null;
 		}
 	}
@@ -304,7 +305,7 @@ export class TwitterApiService {
 
 			if (timeSinceLastFetch < this.MIN_FETCH_INTERVAL) {
 				const waitTime = this.MIN_FETCH_INTERVAL - timeSinceLastFetch;
-				console.log(
+				logger.info(
 					`[Twitter API] Rate limiting: waiting ${Math.ceil(waitTime / 1000)}s before next fetch`
 				);
 				return false;
@@ -313,7 +314,7 @@ export class TwitterApiService {
 			if (this.consecutiveErrors >= this.MAX_CONSECUTIVE_ERRORS) {
 				const backoffTime = 10 * 60 * 1000;
 				if (timeSinceLastFetch < backoffTime) {
-					console.log(
+					logger.info(
 						`[Twitter API] Too many errors, backing off for ${Math.ceil((backoffTime - timeSinceLastFetch) / 60000)} minutes`
 					);
 					return false;
@@ -326,7 +327,7 @@ export class TwitterApiService {
 			const tweetData = await this.getLatestTweet(username);
 
 			if (!tweetData) {
-				console.log('[Twitter API] No tweet data to update');
+				logger.info('[Twitter API] No tweet data to update');
 				this.consecutiveErrors++;
 				return false;
 			}
@@ -338,7 +339,7 @@ export class TwitterApiService {
 				if (tweetData.postedAt) {
 					await TweetService.setTweetPostedAt(tweetData.tweetId, tweetData.postedAt);
 				}
-				console.log('[Twitter API] Tweet is already up to date:', tweetData.tweetId);
+				logger.info('[Twitter API] Tweet is already up to date:', tweetData.tweetId);
 				this.consecutiveErrors = 0;
 				return true;
 			}
@@ -347,17 +348,17 @@ export class TwitterApiService {
 			const success = await TweetService.upsertTweet(tweetData);
 
 			if (success) {
-				console.log('[Twitter API] Successfully updated tweet:', tweetData.tweetId);
+				logger.info('[Twitter API] Successfully updated tweet:', tweetData.tweetId);
 				this.consecutiveErrors = 0;
 			} else {
-				console.error('[Twitter API] Failed to save tweet to database');
+				logger.error('[Twitter API] Failed to save tweet to database');
 				this.consecutiveErrors++;
 			}
 
 			return success;
 		} catch (error: any) {
 			this.consecutiveErrors++;
-			console.error('[Twitter API] Error in fetchAndUpdateLatestTweet:', error.message);
+			logger.error('[Twitter API] Error in fetchAndUpdateLatestTweet:', error.message);
 
 			// Check for rate limiting errors
 			if (
@@ -365,7 +366,7 @@ export class TwitterApiService {
 				error.message?.includes('429') ||
 				error.message?.includes('Too Many Requests')
 			) {
-				console.error('[Twitter API] ⚠️  Rate limit detected! Backing off for 15 minutes');
+				logger.error('[Twitter API] Rate limit detected! Backing off for 15 minutes');
 				this.consecutiveErrors = this.MAX_CONSECUTIVE_ERRORS;
 			}
 
@@ -374,7 +375,7 @@ export class TwitterApiService {
 				const username = await this.getUsername();
 				if (username) {
 					this.checkConnectionHealth(username).catch((err) => {
-						console.error('[Twitter API] Health check failed during error handling:', err.message);
+						logger.error('[Twitter API] Health check failed during error handling:', err.message);
 					});
 				}
 			}
@@ -749,18 +750,18 @@ export class TwitterApiService {
 			}
 
 			if (!connectionTest.connected) {
-				console.error(`[Twitter API] Connection failed: ${connectionTest.message}`);
+				logger.error(`[Twitter API] Connection failed: ${connectionTest.message}`);
 				if (connectionTest.failureType) {
-					console.error(`[Twitter API] Failure type: ${connectionTest.failureType}`);
+					logger.error(`[Twitter API] Failure type: ${connectionTest.failureType}`);
 				}
 				if (connectionTest.details) {
-					console.error(`[Twitter API] Details: ${connectionTest.details}`);
+					logger.error(`[Twitter API] Details: ${connectionTest.details}`);
 				}
 			}
 
 			return connectionTest.connected;
 		} catch (error: any) {
-			console.error('[Twitter API] Error checking connection health:', error.message);
+			logger.error('[Twitter API] Error checking connection health:', error.message);
 			return false;
 		}
 	}

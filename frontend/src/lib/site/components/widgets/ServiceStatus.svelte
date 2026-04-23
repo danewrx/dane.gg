@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount, onDestroy } from 'svelte';
 	import { RefreshCw } from 'lucide-svelte';
 
@@ -91,7 +93,7 @@
 				throw new Error(result.error || 'Failed to load status');
 			}
 		} catch (err) {
-			console.error('Error loading service status:', err);
+			logger.error('Error loading service status:', err);
 			error = err instanceof Error ? err.message : 'Failed to load service status';
 			monitors = [];
 		} finally {

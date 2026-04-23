@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 import { settingsService } from './settings';
 import { getErrorMessage } from '$lib/shared/utils/errorUtils';
 
@@ -40,7 +41,7 @@ export class TotpService {
 		if (response.backupCodes) {
 			const validation = this.validateBackupCodes(response.backupCodes);
 			if (!validation.valid) {
-				console.error('Invalid backup codes received from server during setup:', validation.error);
+				logger.error('Invalid backup codes received from server during setup:', validation.error);
 				throw new Error(`Invalid backup codes received from server: ${validation.error}`);
 			}
 		}
@@ -233,7 +234,7 @@ export class TotpService {
 			if (response.backupCodes) {
 				const validation = this.validateBackupCodes(response.backupCodes);
 				if (!validation.valid) {
-					console.error('Invalid backup codes received from server:', validation.error);
+					logger.error('Invalid backup codes received from server:', validation.error);
 					return {
 						error: `Invalid backup codes received from server: ${validation.error}`
 					};

@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
 import { users, totpBackupCodes } from '../db/schema';
@@ -28,7 +29,7 @@ router.get('/', adminLimiter, requireSession, requireAdmin, async (req: Request,
 			count: allUsers.length
 		});
 	} catch (error) {
-		console.error('Get users error:', error);
+		logger.error('Get users error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to fetch users'
@@ -65,7 +66,7 @@ router.get('/:id', requireSession, requireAdmin, async (req: Request, res: Respo
 			user: user[0]
 		});
 	} catch (error) {
-		console.error('Get user error:', error);
+		logger.error('Get user error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to fetch user'
@@ -138,7 +139,7 @@ router.post(
 				user: newUser[0]
 			});
 		} catch (error) {
-			console.error('Create user error:', error);
+			logger.error('Create user error:', error);
 			res.status(500).json({
 				error: 'Internal server error',
 				message: 'Failed to create user'
@@ -217,7 +218,7 @@ router.put('/:id', requireSession, requireAdmin, async (req: Request, res: Respo
 			user: updatedUser[0]
 		});
 	} catch (error) {
-		console.error('Update user error:', error);
+		logger.error('Update user error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to update user'
@@ -260,7 +261,7 @@ router.delete('/:id', requireSession, requireAdmin, async (req: Request, res: Re
 			message: 'User deleted successfully'
 		});
 	} catch (error) {
-		console.error('Delete user error:', error);
+		logger.error('Delete user error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to delete user'
@@ -319,7 +320,7 @@ router.post(
 				message: 'Password reset successfully'
 			});
 		} catch (error) {
-			console.error('Reset password error:', error);
+			logger.error('Reset password error:', error);
 			res.status(500).json({
 				error: 'Internal server error',
 				message: 'Failed to reset password'
@@ -363,7 +364,7 @@ router.post('/:id/reset-2fa', requireSession, requireAdmin, async (req: Request,
 			message: '2FA reset successfully'
 		});
 	} catch (error) {
-		console.error('Reset 2FA error:', error);
+		logger.error('Reset 2FA error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to reset 2FA'

@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { db } from '../db';
 import { discordStatus, type DiscordStatus, type NewDiscordStatus } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
@@ -16,7 +17,7 @@ export class DiscordStatusService {
 
 			return latestStatus[0] || null;
 		} catch (error) {
-			console.error('Error fetching Discord status:', error);
+			logger.error('Error fetching Discord status:', error);
 			return null;
 		}
 	}
@@ -47,14 +48,14 @@ export class DiscordStatusService {
 				await db.insert(discordStatus).values(newStatus);
 			}
 
-			console.log(`Discord status updated: ${status === 1 ? 'online' : 'offline'}`);
+			logger.info(`Discord status updated: ${status === 1 ? 'online' : 'offline'}`);
 
 			// Clean up old records after each update
 			await this.cleanupOldRecords();
 
 			return true;
 		} catch (error) {
-			console.error('Error updating Discord status:', error);
+			logger.error('Error updating Discord status:', error);
 			return false;
 		}
 	}
@@ -70,7 +71,7 @@ export class DiscordStatusService {
 				.orderBy(desc(discordStatus.lastUpdate))
 				.limit(limit);
 		} catch (error) {
-			console.error('Error fetching Discord status history:', error);
+			logger.error('Error fetching Discord status history:', error);
 			return [];
 		}
 	}
@@ -84,7 +85,7 @@ export class DiscordStatusService {
 
 			return result.length;
 		} catch (error) {
-			console.error('Error getting Discord status count:', error);
+			logger.error('Error getting Discord status count:', error);
 			return 0;
 		}
 	}
@@ -110,14 +111,14 @@ export class DiscordStatusService {
 					await db.delete(discordStatus).where(eq(discordStatus.id, id));
 				}
 
-				console.log(
+				logger.info(
 					`Cleaned up ${recordsToDelete.length} old Discord status records (kept last 30)`
 				);
 			}
 
 			return true;
 		} catch (error) {
-			console.error('Error cleaning up Discord status records:', error);
+			logger.error('Error cleaning up Discord status records:', error);
 			return false;
 		}
 	}

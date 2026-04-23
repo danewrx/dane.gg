@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount, tick } from 'svelte';
 	import { browser } from '$app/environment';
 
@@ -161,7 +163,7 @@
 				if (lastTweetId !== data.tweetId) {
 					lastTweetId = data.tweetId;
 					tweetData = data;
-					console.log(
+					logger.info(
 						`[TweetWidget] New tweet detected: @${data.authorUsername} - ${data.content?.substring(0, 50)}...`
 					);
 				} else if (tweetData && tweetData.tweetId === data.tweetId) {
@@ -203,7 +205,7 @@
 				}
 			}
 		} catch (err) {
-			console.error('Error fetching tweet data:', err);
+			logger.error('Error fetching tweet data:', err);
 			// Only set default data if no API response received
 			if (!hasReceivedApiResponse) {
 				tweetData = {

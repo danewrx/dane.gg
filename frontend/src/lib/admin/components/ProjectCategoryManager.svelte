@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { Plus, Edit, Trash2, GripVertical, X } from 'lucide-svelte';
@@ -47,13 +49,13 @@
 					await updateCategoryOrder(categoryOrders);
 					categories = await getAllProjectCategories();
 				} catch (err) {
-					console.error('Error initializing category order:', err);
+					logger.error('Error initializing category order:', err);
 				}
 			}
 
 			categories.sort((a, b) => a.displayOrder - b.displayOrder);
 		} catch (err) {
-			console.error('Error loading categories:', err);
+			logger.error('Error loading categories:', err);
 			toast.error('Failed to load categories', {
 				description: 'Please try refreshing the page'
 			});
@@ -102,7 +104,7 @@
 			await loadCategories();
 			cancelEdit();
 		} catch (err: any) {
-			console.error('Error saving category:', err);
+			logger.error('Error saving category:', err);
 			toast.error('Failed to save category', {
 				description: err.message || 'Please try again'
 			});
@@ -122,7 +124,7 @@
 			});
 			await loadCategories();
 		} catch (err: any) {
-			console.error('Error deleting category:', err);
+			logger.error('Error deleting category:', err);
 			toast.error('Failed to delete category', {
 				description: err.message || 'Please try again'
 			});
@@ -177,7 +179,7 @@
 			await loadCategories();
 			toast.success('Category order updated');
 		} catch (err: any) {
-			console.error('Error updating category order:', err);
+			logger.error('Error updating category order:', err);
 			toast.error('Failed to update category order', {
 				description: err.message || 'Please try again'
 			});

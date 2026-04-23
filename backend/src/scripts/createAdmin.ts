@@ -4,6 +4,7 @@
  * Usage: bun run createAdmin.ts [username] [password]
  */
 
+import { logger } from '../utils/logger';
 import { config } from 'dotenv';
 import { hasAnyUsers, getAdminUserCount } from '../utils/createDefaultAdmin';
 import { db } from '../db';
@@ -16,17 +17,17 @@ config({ path: '../../.env' });
 
 async function createAdminUser(username: string, password: string) {
 	try {
-		console.log(`🔍 Checking if user '${username}' already exists...`);
+		logger.info(`Checking if user '${username}' already exists...`);
 
 		// Check if user already exists
 		const existingUser = await db.select().from(users).where(eq(users.username, username)).limit(1);
 
 		if (existingUser.length > 0) {
-			console.log(`❌ User '${username}' already exists!`);
+			logger.info(`User '${username}' already exists!`);
 			return;
 		}
 
-		console.log(`👤 Creating admin user '${username}'...`);
+		logger.info(`Creating admin user '${username}'...`);
 
 		// Create the admin user
 		const newAdmin = {
@@ -41,16 +42,16 @@ async function createAdminUser(username: string, password: string) {
 		const [createdUser] = await db.insert(users).values(newAdmin).returning();
 
 		if (createdUser) {
-			console.log('✅ Admin user created successfully!');
-			console.log(`📋 User Details:`);
-			console.log(`   Username: ${createdUser.username}`);
-			console.log(`   Admin: ${createdUser.isAdmin ? 'Yes' : 'No'}`);
-			console.log(`   ID: ${createdUser.id}`);
+			logger.info('Admin user created successfully!');
+			logger.info(`User Details:`);
+			logger.info(`   Username: ${createdUser.username}`);
+			logger.info(`   Admin: ${createdUser.isAdmin ? 'Yes' : 'No'}`);
+			logger.info(`   ID: ${createdUser.id}`);
 		} else {
 			throw new Error('Failed to create admin user');
 		}
 	} catch (error) {
-		console.error('❌ Error creating admin user:', error);
+		logger.error('Error creating admin user:', error);
 		process.exit(1);
 	}
 }
@@ -60,33 +61,33 @@ async function main() {
 	const username = args[0] || 'admin';
 	const password = args[1] || 'admin';
 
-	console.log('🔧 Admin User Creation Script');
-	console.log('=============================');
-	console.log('');
+	logger.info('🔧 Admin User Creation Script');
+	logger.info('=============================');
+	logger.info('');
 
 	// Show current database status
 	const hasUsers = await hasAnyUsers();
 	const adminCount = await getAdminUserCount();
 
-	console.log(`📊 Database Status:`);
-	console.log(`   Has users: ${hasUsers ? 'Yes' : 'No'}`);
-	console.log(`   Admin count: ${adminCount}`);
-	console.log('');
+	logger.info(`Database Status:`);
+	logger.info(`   Has users: ${hasUsers ? 'Yes' : 'No'}`);
+	logger.info(`   Admin count: ${adminCount}`);
+	logger.info('');
 
 	if (adminCount > 0) {
-		console.log('⚠️  Admin users already exist in the database.');
-		console.log('   This script will create an additional admin user.');
-		console.log('');
+		logger.info('Admin users already exist in the database.');
+		logger.info('   This script will create an additional admin user.');
+		logger.info('');
 	}
 
 	await createAdminUser(username, password);
 
-	console.log('');
-	console.log('🎉 Script completed successfully!');
+	logger.info('');
+	logger.info('Script completed successfully!');
 }
 
 // Run the script
 main().catch((error) => {
-	console.error('💥 Script failed:', error);
+	logger.error('Script failed:', error);
 	process.exit(1);
 });

@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 /**
  * Shared admin session tracker
  * Tracks which session IDs belong to authenticated admin users
@@ -21,7 +22,7 @@ class AdminSessionsStore {
 			userId,
 			authenticatedAt: new Date()
 		});
-		console.log(`🔑 Admin session registered: ${username}`);
+		logger.info(`Admin session registered: ${username}`);
 	}
 
 	/**
@@ -30,7 +31,7 @@ class AdminSessionsStore {
 	remove(sessionId: string): void {
 		const session = this.sessions.get(sessionId);
 		if (session) {
-			console.log(`🔓 Admin session removed: ${session.username}`);
+			logger.info(`Admin session removed: ${session.username}`);
 			this.sessions.delete(sessionId);
 		}
 	}
@@ -59,7 +60,7 @@ class AdminSessionsStore {
 		for (const [sessionId, info] of this.sessions.entries()) {
 			if (now.getTime() - info.authenticatedAt.getTime() > maxAge) {
 				this.sessions.delete(sessionId);
-				console.log(`🧹 Cleaned up expired admin session: ${info.username}`);
+				logger.info(`Cleaned up expired admin session: ${info.username}`);
 			}
 		}
 	}

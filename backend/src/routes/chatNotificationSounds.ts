@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
@@ -62,7 +63,7 @@ router.get('/', async (req: Request, res: Response) => {
 
 		res.json({ success: true, data: sorted });
 	} catch (error: any) {
-		console.error('Error fetching chat notification sounds:', error);
+		logger.error('Error fetching chat notification sounds:', error);
 		res.status(500).json({ success: false, error: error.message || 'Failed to fetch sounds' });
 	}
 });
@@ -121,7 +122,7 @@ router.post(
 			chatService.broadcastNotificationSoundsUpdate();
 			res.json({ success: true, data: row });
 		} catch (error: any) {
-			console.error('Error uploading chat notification sound:', error);
+			logger.error('Error uploading chat notification sound:', error);
 			if (req.file && fs.existsSync(req.file.path)) {
 				try {
 					fs.unlinkSync(req.file.path);
@@ -167,7 +168,7 @@ router.delete('/:id', requireSession, requireAdmin, async (req: Request, res: Re
 		chatService.broadcastNotificationSoundsUpdate();
 		res.json({ success: true, message: 'Sound deleted' });
 	} catch (error: any) {
-		console.error('Error deleting chat notification sound:', error);
+		logger.error('Error deleting chat notification sound:', error);
 		res.status(500).json({ success: false, error: error.message || 'Failed to delete sound' });
 	}
 });

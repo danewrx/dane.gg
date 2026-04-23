@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router } from 'express';
 import { ConfigService } from '../services/config';
 import { requireSession } from '../middleware/auth';
@@ -30,7 +31,7 @@ router.get('/', async (req, res) => {
 			data: configs
 		});
 	} catch (error) {
-		console.error('❌ Config API Error:', error);
+		logger.error('Config API Error:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch site configuration'
@@ -59,7 +60,7 @@ router.get('/:key', async (req, res) => {
 			}
 		});
 	} catch (error) {
-		console.error('❌ Config API Error:', error);
+		logger.error('Config API Error:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch configuration'
@@ -91,7 +92,7 @@ router.put('/:key', requireSession, async (req, res) => {
 			data: result
 		});
 	} catch (error) {
-		console.error('❌ Config API Error:', error);
+		logger.error('Config API Error:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update configuration'

@@ -1,9 +1,10 @@
+import { logger } from '../../utils/logger';
 import { db } from '../index';
 import { themes } from '../schema';
 
 /** Default + demo themes for local / CI seed */
 export async function seedThemes() {
-	console.log('🎨 Seeding themes...');
+	logger.info('Seeding themes...');
 	return db
 		.insert(themes)
 		.values([

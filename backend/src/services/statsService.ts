@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { db } from '../db';
 import { visitorStats } from '../db/schema';
 import { eq, desc, gte, sql, and, count } from 'drizzle-orm';
@@ -105,7 +106,7 @@ export class StatsService {
 				timestamp: new Date()
 			});
 		} catch (error) {
-			console.error('Error tracking visitor data:', error);
+			logger.error('Error tracking visitor data:', error);
 		}
 	}
 

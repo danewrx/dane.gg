@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { onDestroy } from 'svelte';
@@ -59,7 +61,7 @@
 				customEmojis = data.data || [];
 			}
 		} catch (error) {
-			console.error('Failed to load custom emojis:', error);
+			logger.error('Failed to load custom emojis:', error);
 		} finally {
 			isLoadingCustom = false;
 		}
@@ -207,7 +209,7 @@
 		if (browser) {
 			emojiCategories = generateEmojiCategories();
 			recentEmojis = getRecentEmojis();
-			console.log(
+			logger.info(
 				'Emoji categories loaded:',
 				emojiCategories.length,
 				'categories with',

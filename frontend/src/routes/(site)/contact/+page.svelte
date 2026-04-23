@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { Mail } from 'lucide-svelte';
 	import Icon from '@iconify/svelte';
@@ -43,7 +45,7 @@
 				}
 			}
 		} catch (error) {
-			console.error('Error loading contact tagline:', error);
+			logger.error('Error loading contact tagline:', error);
 			taglineContent = '';
 		} finally {
 			loadingTagline = false;
@@ -64,7 +66,7 @@
 				}
 			}
 		} catch (error) {
-			console.error('Error loading contact emails:', error);
+			logger.error('Error loading contact emails:', error);
 			contactEmails = [];
 		} finally {
 			loadingEmails = false;
@@ -83,7 +85,7 @@
 				}
 			}
 		} catch (error) {
-			console.error('Error loading emails header:', error);
+			logger.error('Error loading emails header:', error);
 		} finally {
 			loadingEmailsHeader = false;
 		}
@@ -132,7 +134,7 @@
 				}
 			}
 		} catch (error) {
-			console.error('Error loading social links:', error);
+			logger.error('Error loading social links:', error);
 			socialLinks = [];
 		} finally {
 			loadingSocial = false;

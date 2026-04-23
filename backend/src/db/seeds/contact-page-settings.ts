@@ -1,8 +1,9 @@
+import { logger } from '../../utils/logger';
 import { db } from '../index';
 import { contactPageSettings } from '../schema';
 
 export async function seedContactPageSettings() {
-	console.log('📝 Seeding contact page settings...');
+	logger.info('Seeding contact page settings...');
 	await db.insert(contactPageSettings).values([
 		{
 			key: 'tagline',

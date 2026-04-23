@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 
@@ -88,7 +89,7 @@ function createAuthStore() {
 						update((state) => ({ ...state, isLoading: false }));
 					}
 				} catch (error) {
-					console.error('Error initializing auth store:', error);
+					logger.error('Error initializing auth store:', error);
 					localStorage.removeItem('auth');
 					update((state) => ({ ...state, isLoading: false }));
 				}
@@ -107,7 +108,7 @@ function createAuthStore() {
 						})
 					);
 				} catch (error) {
-					console.error('Error persisting auth data:', error);
+					logger.error('Error persisting auth data:', error);
 				}
 			}
 		},

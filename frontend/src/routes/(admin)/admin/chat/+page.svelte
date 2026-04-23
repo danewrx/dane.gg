@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
 	import {
@@ -158,7 +160,7 @@
 				customEmojis = data.data || [];
 			}
 		} catch (error) {
-			console.error('Failed to load emojis:', error);
+			logger.error('Failed to load emojis:', error);
 		} finally {
 			isLoadingEmojis = false;
 		}
@@ -254,7 +256,7 @@
 
 			await loadCustomEmojis();
 		} catch (error) {
-			console.error('Error uploading emoji:', error);
+			logger.error('Error uploading emoji:', error);
 			toast.error('Failed to upload emoji', {
 				description: error instanceof Error ? error.message : 'Please try again'
 			});
@@ -292,7 +294,7 @@
 
 			await loadCustomEmojis();
 		} catch (error) {
-			console.error('Error deleting emoji:', error);
+			logger.error('Error deleting emoji:', error);
 			toast.error('Failed to delete emoji');
 		} finally {
 			cancelDeleteEmoji();
@@ -325,7 +327,7 @@
 				notificationSounds = mergeAdminNotificationSounds([]);
 			}
 		} catch (error) {
-			console.error('Failed to load notification sounds:', error);
+			logger.error('Failed to load notification sounds:', error);
 			notificationSounds = mergeAdminNotificationSounds([]);
 		} finally {
 			isLoadingSounds = false;
@@ -386,7 +388,7 @@
 			showSoundUpload = false;
 			await loadNotificationSounds();
 		} catch (error) {
-			console.error(error);
+			logger.error(error);
 			toast.error('Upload failed', {
 				description: error instanceof Error ? error.message : 'Try again'
 			});
@@ -420,7 +422,7 @@
 			toast.success('Sound removed');
 			await loadNotificationSounds();
 		} catch (error) {
-			console.error(error);
+			logger.error(error);
 			toast.error('Failed to delete sound');
 		} finally {
 			cancelDeleteSound();
@@ -484,7 +486,7 @@
 			const v = body.data?.value;
 			discordChatIntegrationEnabled = v !== false && v !== 'false';
 		} catch (e) {
-			console.error('Failed to load Discord chat integration setting:', e);
+			logger.error('Failed to load Discord chat integration setting:', e);
 		} finally {
 			discordChatIntegrationLoaded = true;
 		}

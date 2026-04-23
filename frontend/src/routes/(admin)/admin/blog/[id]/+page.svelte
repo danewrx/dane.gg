@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -49,7 +51,7 @@
 			tags = post.tags.map((t) => t.name);
 			autoSlug = false;
 		} catch (err) {
-			console.error('Error loading post:', err);
+			logger.error('Error loading post:', err);
 			error = 'Failed to load post';
 		} finally {
 			loading = false;
@@ -138,7 +140,7 @@
 				success = 'Post updated successfully!';
 			}
 		} catch (err: any) {
-			console.error('Error saving post:', err);
+			logger.error('Error saving post:', err);
 			error = err.message || 'Failed to save post';
 		} finally {
 			saving = false;

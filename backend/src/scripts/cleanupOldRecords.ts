@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { db } from '../db';
 import { discordStatus, tweets } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
@@ -9,7 +10,7 @@ import { eq, desc } from 'drizzle-orm';
 
 async function cleanupDiscordStatus() {
 	try {
-		console.log('Cleaning up Discord status records...');
+		logger.info('Cleaning up Discord status records...');
 
 		// Get all records ordered by lastUpdate
 		const allRecords = await db
@@ -17,32 +18,32 @@ async function cleanupDiscordStatus() {
 			.from(discordStatus)
 			.orderBy(desc(discordStatus.lastUpdate));
 
-		console.log(`Found ${allRecords.length} Discord status records`);
+		logger.info(`Found ${allRecords.length} Discord status records`);
 
 		// If we have more than 30 records, delete the oldest ones
 		if (allRecords.length > 30) {
 			const recordsToDelete = allRecords.slice(30);
-			console.log(`Deleting ${recordsToDelete.length} old Discord status records...`);
+			logger.info(`Deleting ${recordsToDelete.length} old Discord status records...`);
 
 			// Delete all old records
 			for (const record of recordsToDelete) {
 				await db.delete(discordStatus).where(eq(discordStatus.id, record.id));
 			}
 
-			console.log(
+			logger.info(
 				`✅ Cleaned up ${recordsToDelete.length} old Discord status records (kept last 30)`
 			);
 		} else {
-			console.log('✅ No cleanup needed for Discord status records');
+			logger.info('No cleanup needed for Discord status records');
 		}
 	} catch (error) {
-		console.error('❌ Error cleaning up Discord status records:', error);
+		logger.error('Error cleaning up Discord status records:', error);
 	}
 }
 
 async function cleanupTweets() {
 	try {
-		console.log('Cleaning up tweet records...');
+		logger.info('Cleaning up tweet records...');
 
 		// Get all records ordered by createdAt
 		const allRecords = await db
@@ -50,39 +51,39 @@ async function cleanupTweets() {
 			.from(tweets)
 			.orderBy(desc(tweets.createdAt));
 
-		console.log(`Found ${allRecords.length} tweet records`);
+		logger.info(`Found ${allRecords.length} tweet records`);
 
 		// If we have more than 30 records, delete the oldest ones
 		if (allRecords.length > 30) {
 			const recordsToDelete = allRecords.slice(30);
-			console.log(`Deleting ${recordsToDelete.length} old tweet records...`);
+			logger.info(`Deleting ${recordsToDelete.length} old tweet records...`);
 
 			// Delete all old records
 			for (const record of recordsToDelete) {
 				await db.delete(tweets).where(eq(tweets.id, record.id));
 			}
 
-			console.log(`✅ Cleaned up ${recordsToDelete.length} old tweet records (kept last 30)`);
+			logger.info(`Cleaned up ${recordsToDelete.length} old tweet records (kept last 30)`);
 		} else {
-			console.log('✅ No cleanup needed for tweet records');
+			logger.info('No cleanup needed for tweet records');
 		}
 	} catch (error) {
-		console.error('❌ Error cleaning up tweet records:', error);
+		logger.error('Error cleaning up tweet records:', error);
 	}
 }
 
 async function main() {
-	console.log('🧹 Starting database cleanup...\n');
+	logger.info('Starting database cleanup...\n');
 
 	await cleanupDiscordStatus();
-	console.log('');
+	logger.info('');
 	await cleanupTweets();
 
-	console.log('\n✨ Database cleanup completed!');
+	logger.info('\nDatabase cleanup completed!');
 	process.exit(0);
 }
 
 main().catch((error) => {
-	console.error('❌ Script failed:', error);
+	logger.error('Script failed:', error);
 	process.exit(1);
 });

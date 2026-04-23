@@ -1,18 +1,10 @@
-import { existsSync } from 'node:fs';
+import { logger } from './utils/logger';
 import express from 'express';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
-import { config } from 'dotenv';
 import { createServer } from 'http';
-import path, { resolve } from 'node:path';
+import path from 'node:path';
 import { createDefaultAdmin } from './utils/createDefaultAdmin';
-
-for (const envPath of [resolve(process.cwd(), '.env'), resolve(process.cwd(), '../.env')]) {
-	if (existsSync(envPath)) {
-		config({ path: envPath });
-		break;
-	}
-}
 
 const app = express();
 
@@ -220,7 +212,7 @@ app.use('/api', (req, res) => {
 
 // Error handler
 app.use((err: any, req: any, res: any, _next: any) => {
-	console.error(err.stack);
+	logger.error(err.stack);
 	res.status(500).json({ error: 'Something went wrong!' });
 });
 
@@ -234,7 +226,7 @@ async function initializeApp() {
 			await import('./db/ensureChatNotificationSoundsDisplayName');
 		await ensureChatNotificationSoundsDisplayName();
 	} catch (error) {
-		console.error('❌ Notification sounds schema check failed:', error);
+		logger.error('Notification sounds schema check failed:', error);
 	}
 
 	try {
@@ -244,14 +236,14 @@ async function initializeApp() {
 		const { TwitterScheduler } = await import('./services/twitterScheduler');
 		await TwitterScheduler.initialize();
 	} catch (error) {
-		console.error('❌ Failed to initialize app:', error);
+		logger.error('Failed to initialize app:', error);
 	}
 
 	// Initialize chat WebSocket server (don't block on errors)
 	try {
 		await chatService.initialize(server);
 	} catch (error) {
-		console.error('❌ Failed to initialize chat service:', error);
+		logger.error('Failed to initialize chat service:', error);
 		// Don't throw - allow server to continue even if chat fails
 	}
 }
@@ -262,21 +254,21 @@ const HOST = process.env.HOST || '0.0.0.0';
 server
 	.listen(Number(backendPort), HOST, async () => {
 		if (isStandalone) {
-			console.log(`🚀 Express API running at http://${HOST}:${backendPort}`);
-			console.log(`📚 Health endpoint: http://${HOST}:${backendPort}/api/health`);
+			logger.success(`Express API running at http://${HOST}:${backendPort}`);
+			logger.info(`Health endpoint: http://${HOST}:${backendPort}/api/health`);
 		}
 
 		// Initialize default admin after server starts
 		try {
 			await initializeApp();
 		} catch (error) {
-			console.error('❌ Error during app initialization:', error);
+			logger.error('Error during app initialization:', error);
 		}
 	})
 	.on('error', (error: any) => {
-		console.error('❌ Failed to start server:', error);
+		logger.error('Failed to start server:', error);
 		if (error.code === 'EADDRINUSE') {
-			console.error(
+			logger.error(
 				`Port ${backendPort} is already in use. Please stop the other process or change BACKEND_PORT (or PORT).`
 			);
 		}
@@ -286,8 +278,8 @@ server
 // Log if server is listening (check after a short delay)
 setTimeout(() => {
 	if (server.listening) {
-		console.log(`✅ Server is listening on port ${backendPort}`);
+		logger.success(`Server is listening on port ${backendPort}`);
 	} else {
-		console.error(`❌ Server is NOT listening on port ${backendPort}`);
+		logger.error(`Server is NOT listening on port ${backendPort}`);
 	}
 }, 1000);

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
 	import EmojiPicker from './EmojiPicker.svelte';
@@ -211,7 +213,7 @@
 				return `[${month}/${day}/${year}, ${hours}:${minutes}]`;
 			}
 		} catch (error) {
-			console.error('Error formatting timestamp:', error);
+			logger.error('Error formatting timestamp:', error);
 			return '';
 		}
 	}
@@ -228,7 +230,7 @@
 		try {
 			return localStorage.getItem('chatNickname');
 		} catch (error) {
-			console.error('Error reading nickname from localStorage:', error);
+			logger.error('Error reading nickname from localStorage:', error);
 			return null;
 		}
 	}
@@ -239,7 +241,7 @@
 		try {
 		localStorage.setItem('chatNickname', nickname);
 	} catch (error) {
-			console.error('Error saving nickname to localStorage:', error);
+			logger.error('Error saving nickname to localStorage:', error);
 		}
 	}
 
@@ -250,7 +252,7 @@
 			const stored = localStorage.getItem(NOTIFICATION_STORAGE_KEY);
 			notificationsEnabled = stored === null ? true : stored === 'true';
 		} catch (error) {
-			console.error('Error reading notification setting:', error);
+			logger.error('Error reading notification setting:', error);
 		}
 	}
 
@@ -261,7 +263,7 @@
 			notificationAudio.currentTime = 0;
 			notificationAudio.play().catch(() => {});
 		} catch (error) {
-			console.error('Error playing notification sound:', error);
+			logger.error('Error playing notification sound:', error);
 		}
 	}
 
@@ -338,10 +340,10 @@
 			const host = window.location.host;
 			// Add ?public=true to explicitly mark this as a public chat connection
 			const wsUrl = `${protocol}//${host}/ws/chat?public=true`;
-			console.log('WebSocket URL (proxied through frontend):', wsUrl);
+			logger.info('WebSocket URL (proxied through frontend):', wsUrl);
 			return wsUrl;
 		} catch (error) {
-			console.error('Error constructing WebSocket URL:', error);
+			logger.error('Error constructing WebSocket URL:', error);
 			return '';
 		}
 	}
@@ -356,7 +358,7 @@
 			(globalWsInstance.readyState === WebSocket.CONNECTING ||
 				globalWsInstance.readyState === WebSocket.OPEN)
 		) {
-			console.log('Closing existing global WebSocket connection before creating new one');
+			logger.info('Closing existing global WebSocket connection before creating new one');
 			globalWsInstance.close();
 			globalWsInstance = null;
 		}
@@ -378,20 +380,20 @@
 		try {
 			const wsUrl = getWebSocketUrl();
 			if (!wsUrl) {
-				console.warn('No WebSocket URL available');
+				logger.warn('No WebSocket URL available');
 				connectionStatus = 'disconnected';
 				return;
 			}
 
 			connectionStatus = 'connecting';
-			console.log('Attempting to connect to WebSocket:', wsUrl);
+			logger.info('Attempting to connect to WebSocket:', wsUrl);
 			ws = new WebSocket(wsUrl);
 			globalWsInstance = ws;
 
 			ws.onopen = () => {
 				isConnected = true;
 				connectionStatus = 'connected';
-				console.log('✅ Chat connected successfully');
+				logger.info('Chat connected successfully');
 
 				// Remove disconnected message if it exists (quick reconnect)
 				if (hasDisconnectedMessage) {
@@ -464,7 +466,7 @@
 						messages = [...messages, systemMsg];
 						scrollToBottom();
 					} else if (data.type === 'error' && data.message) {
-						console.error('Chat error:', data.message);
+						logger.error('Chat error:', data.message);
 					} else if (data.type === 'userCount' && typeof data.count === 'number') {
 						userCount = data.count;
 					} else if (data.type === 'delete' && data.messageId) {
@@ -487,13 +489,13 @@
 					// adminConfig messages are received but we don't need to track them
 					// since the color is now stored with each message
 				} catch (error) {
-					console.error('Error parsing WebSocket message:', error);
+					logger.error('Error parsing WebSocket message:', error);
 				}
 			};
 
 			ws.onerror = (error) => {
-				console.error('❌ WebSocket error:', error);
-				console.error('WebSocket readyState:', ws?.readyState);
+				logger.error('WebSocket error:', error);
+				logger.error('WebSocket readyState:', ws?.readyState);
 				connectionStatus = 'disconnected';
 
 				// Clear all messages and show disconnected message
@@ -516,7 +518,7 @@
 			ws.onclose = (event) => {
 				isConnected = false;
 				connectionStatus = 'disconnected';
-				console.log(
+				logger.info(
 					'Chat disconnected. Code:',
 					event.code,
 					'Reason:',
@@ -551,13 +553,13 @@
 				}
 				reconnectTimeout = setTimeout(() => {
 					if (!isConnected && connectionStatus === 'disconnected' && !isDestroyed) {
-						console.log('Attempting to reconnect...');
+						logger.info('Attempting to reconnect...');
 						connect();
 					}
 				}, 3000);
 			};
 		} catch (error) {
-			console.error('Error connecting to chat:', error);
+			logger.error('Error connecting to chat:', error);
 			connectionStatus = 'disconnected';
 			isConnected = false;
 		}
@@ -657,7 +659,7 @@
 				allEmojis = defaultEmojis;
 			}
 		} catch (error) {
-			console.error('Failed to load emojis:', error);
+			logger.error('Failed to load emojis:', error);
 		} finally {
 			isLoadingEmojis = false;
 		}
@@ -1260,7 +1262,7 @@
 						}, 100);
 					}, 50);
 				} catch (error) {
-					console.error('Error initializing chat:', error);
+					logger.error('Error initializing chat:', error);
 					connectionStatus = 'disconnected';
 					try {
 						setNotificationAudioUrl(DEFAULT_CHAT_NOTIFICATION_SOUND_URL);

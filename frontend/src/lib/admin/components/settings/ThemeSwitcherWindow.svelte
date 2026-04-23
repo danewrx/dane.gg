@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { X, Palette } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
@@ -78,7 +80,7 @@
 				selectedThemeId = themes[0]?.id ?? null;
 			}
 		} catch (error) {
-			console.error('Error loading themes:', error);
+			logger.error('Error loading themes:', error);
 		} finally {
 			loading = false;
 		}
@@ -104,7 +106,7 @@
 
 			applying = false;
 		} catch (error) {
-			console.error('Error selecting theme:', error);
+			logger.error('Error selecting theme:', error);
 			applying = false;
 		}
 	}

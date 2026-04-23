@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { db } from '../db';
 import { socialLinks, type SocialLink, type NewSocialLink } from '../db/schema';
 import { eq, asc } from 'drizzle-orm';
@@ -12,8 +13,8 @@ export class SocialLinksService {
 				.where(eq(socialLinks.isActive, true))
 				.orderBy(asc(socialLinks.displayOrder));
 
-			console.log('🔗 Fetched social links from database:', links.length);
-			console.log('📊 First few links:', links.slice(0, 3));
+			logger.info('Fetched social links from database:', links.length);
+			logger.info('First few links:', links.slice(0, 3));
 
 			// Map lucide icons to coreui-brand for compatibility
 			const mappedLinks = links.map((link) => ({
@@ -23,7 +24,7 @@ export class SocialLinksService {
 
 			return mappedLinks;
 		} catch (error) {
-			console.error('❌ SocialLinksService.getAll error:', error);
+			logger.error('SocialLinksService.getAll error:', error);
 			throw new Error('Failed to fetch social links');
 		}
 	}
@@ -35,7 +36,7 @@ export class SocialLinksService {
 
 			return links;
 		} catch (error) {
-			console.error('❌ SocialLinksService.getAllForAdmin error:', error);
+			logger.error('SocialLinksService.getAllForAdmin error:', error);
 			throw new Error('Failed to fetch social links for admin');
 		}
 	}
@@ -47,7 +48,7 @@ export class SocialLinksService {
 
 			return link || null;
 		} catch (error) {
-			console.error('❌ SocialLinksService.getById error:', error);
+			logger.error('SocialLinksService.getById error:', error);
 			throw new Error('Failed to fetch social link');
 		}
 	}
@@ -59,7 +60,7 @@ export class SocialLinksService {
 
 			return link;
 		} catch (error) {
-			console.error('❌ SocialLinksService.create error:', error);
+			logger.error('SocialLinksService.create error:', error);
 			throw new Error('Failed to create social link');
 		}
 	}
@@ -79,7 +80,7 @@ export class SocialLinksService {
 
 			return link;
 		} catch (error) {
-			console.error('❌ SocialLinksService.update error:', error);
+			logger.error('SocialLinksService.update error:', error);
 			throw new Error('Failed to update social link');
 		}
 	}
@@ -101,7 +102,7 @@ export class SocialLinksService {
 
 			return true;
 		} catch (error) {
-			console.error('❌ SocialLinksService.delete error:', error);
+			logger.error('SocialLinksService.delete error:', error);
 			throw new Error('Failed to delete social link');
 		}
 	}
@@ -125,7 +126,7 @@ export class SocialLinksService {
 
 			return updatedLink;
 		} catch (error) {
-			console.error('❌ SocialLinksService.toggleActive error:', error);
+			logger.error('SocialLinksService.toggleActive error:', error);
 			throw new Error('Failed to toggle social link status');
 		}
 	}
@@ -143,7 +144,7 @@ export class SocialLinksService {
 					.where(eq(socialLinks.id, update.id));
 			}
 		} catch (error) {
-			console.error('❌ SocialLinksService.updateDisplayOrder error:', error);
+			logger.error('SocialLinksService.updateDisplayOrder error:', error);
 			throw new Error('Failed to update display order');
 		}
 	}

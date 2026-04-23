@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -152,7 +154,7 @@
 				goto(redirectUrl);
 			}
 		} catch (error) {
-			console.error('Login failed:', error);
+			logger.error('Login failed:', error);
 			// Error is already set in the auth store
 		} finally {
 			isSubmitting = false;
@@ -205,7 +207,7 @@
 				goto(redirectUrl);
 			}
 		} catch (error) {
-			console.error('2FA verification failed:', error);
+			logger.error('2FA verification failed:', error);
 			// Error is already set in the auth store
 		} finally {
 			isSubmitting = false;

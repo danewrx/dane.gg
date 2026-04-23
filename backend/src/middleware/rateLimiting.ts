@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import rateLimit from 'express-rate-limit';
 import slowDown from 'express-slow-down';
 
@@ -154,7 +155,7 @@ export function bruteForceProtection(req: any, res: any, next: any) {
 		// Lock out after 5 failed attempts
 		if (currentAttempts.count >= 5) {
 			currentAttempts.lockedUntil = now + 15 * 60 * 1000; // 15 minutes
-			console.warn(`IP ${ip} locked out due to ${currentAttempts.count} failed login attempts`);
+			logger.warn(`IP ${ip} locked out due to ${currentAttempts.count} failed login attempts`);
 		}
 
 		failedAttempts.set(ip, currentAttempts);

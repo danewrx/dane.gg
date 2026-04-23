@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 import { browser } from '$app/environment';
 import { getNameFromEmoji } from './emojiData';
 
@@ -49,7 +50,7 @@ export function trackEmojiUsage(emoji: string, name?: string): void {
 
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(usage));
 	} catch (error) {
-		console.error('Error tracking emoji usage:', error);
+		logger.error('Error tracking emoji usage:', error);
 	}
 }
 
@@ -70,7 +71,7 @@ export function getRecentEmojis(): Array<{ emoji: string; name: string }> {
 			name: u.name
 		}));
 	} catch (error) {
-		console.error('Error getting recent emojis:', error);
+		logger.error('Error getting recent emojis:', error);
 		return [];
 	}
 }
@@ -84,6 +85,6 @@ export function clearRecentEmojis(): void {
 	try {
 		localStorage.removeItem(STORAGE_KEY);
 	} catch (error) {
-		console.error('Error clearing recent emojis:', error);
+		logger.error('Error clearing recent emojis:', error);
 	}
 }

@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 /**
  * Notification service for sending alerts via Ntfy
  * Ntfy is a simple HTTP-based notification service
@@ -23,7 +24,7 @@ export class NotificationService {
 		try {
 			const finalTopic = topic || process.env.NTFY_TOPIC;
 			if (!finalTopic) {
-				console.warn('[Notification] No topic provided and NTFY_TOPIC not configured');
+				logger.warn('[Notification] No topic provided and NTFY_TOPIC not configured');
 				return false;
 			}
 
@@ -53,16 +54,16 @@ export class NotificationService {
 			});
 
 			if (!response.ok) {
-				console.error(
+				logger.error(
 					`[Notification] Failed to send notification: ${response.status} ${response.statusText}`
 				);
 				return false;
 			}
 
-			console.log(`[Notification] Notification sent successfully to topic: ${finalTopic}`);
+			logger.info(`[Notification] Notification sent successfully to topic: ${finalTopic}`);
 			return true;
 		} catch (error: any) {
-			console.error('[Notification] Error sending notification:', error.message);
+			logger.error('[Notification] Error sending notification:', error.message);
 			return false;
 		}
 	}

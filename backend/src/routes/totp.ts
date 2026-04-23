@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import express from 'express';
 import { requireSession } from '../middleware/auth.js';
 import { TotpService } from '../services/totpService.js';
@@ -25,7 +26,7 @@ router.get('/status', async (req, res) => {
 		const status = await TotpService.getTotpStatus(userId);
 		res.json(status);
 	} catch (error) {
-		console.error('Error getting TOTP status:', error);
+		logger.error('Error getting TOTP status:', error);
 		res.status(500).json({ error: 'Internal server error' });
 	}
 });
@@ -52,7 +53,7 @@ router.post('/setup', async (req, res) => {
 		const setupData = await TotpService.generateSetup(userId, username);
 		res.json(setupData);
 	} catch (error) {
-		console.error('Error generating TOTP setup:', error);
+		logger.error('Error generating TOTP setup:', error);
 		res.status(500).json({ error: 'Internal server error' });
 	}
 });
@@ -94,7 +95,7 @@ router.post('/enable', async (req, res) => {
 			res.status(400).json({ error: 'Invalid token or failed to enable TOTP' });
 		}
 	} catch (error) {
-		console.error('Error enabling TOTP:', error);
+		logger.error('Error enabling TOTP:', error);
 		res.status(500).json({ error: 'Internal server error' });
 	}
 });
@@ -157,7 +158,7 @@ router.post('/disable', async (req, res) => {
 			res.status(500).json({ error: 'Failed to disable TOTP' });
 		}
 	} catch (error) {
-		console.error('Error disabling TOTP:', error);
+		logger.error('Error disabling TOTP:', error);
 		res.status(500).json({ error: 'Internal server error' });
 	}
 });
@@ -193,7 +194,7 @@ router.post('/verify', async (req, res) => {
 			res.status(400).json({ valid: false, error: 'Invalid token' });
 		}
 	} catch (error) {
-		console.error('Error verifying TOTP:', error);
+		logger.error('Error verifying TOTP:', error);
 		res.status(500).json({ error: 'Internal server error' });
 	}
 });
@@ -224,7 +225,7 @@ router.post('/backup-codes/verify', async (req, res) => {
 			res.status(400).json({ valid: false, error: 'Invalid or already used backup code' });
 		}
 	} catch (error) {
-		console.error('Error verifying backup code:', error);
+		logger.error('Error verifying backup code:', error);
 		res.status(500).json({ error: 'Internal server error' });
 	}
 });
@@ -289,7 +290,7 @@ router.post('/backup-codes/regenerate', async (req, res) => {
 			res.status(400).json({ error: 'TOTP is not enabled or failed to regenerate backup codes' });
 		}
 	} catch (error) {
-		console.error('Error regenerating backup codes:', error);
+		logger.error('Error regenerating backup codes:', error);
 		res.status(500).json({ error: 'Internal server error' });
 	}
 });

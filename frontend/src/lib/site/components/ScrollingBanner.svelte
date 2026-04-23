@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { getBanner, type BannerConfig } from '$lib/admin/services/bannerService';
@@ -16,7 +18,7 @@
 			const data = await getBanner();
 			bannerData = data;
 		} catch (error) {
-			console.error('Failed to fetch banner:', error);
+			logger.error('Failed to fetch banner:', error);
 		} finally {
 			loading = false;
 		}

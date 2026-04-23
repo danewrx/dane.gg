@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
@@ -94,7 +96,7 @@
 
 			categories = filteredCategories;
 		} catch (err) {
-			console.error('Error loading projects:', err);
+			logger.error('Error loading projects:', err);
 			error = 'Failed to load projects';
 		} finally {
 			loading = false;

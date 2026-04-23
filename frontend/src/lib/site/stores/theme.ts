@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 import { clampThemeFontScale } from '$lib/site/constants/themeFontScale';
@@ -225,7 +226,7 @@ export async function loadSiteTheme(): Promise<void> {
 
 		applyActiveThemePayload(activeData);
 	} catch (error) {
-		console.error('Error loading site theme:', error);
+		logger.error('Error loading site theme:', error);
 		themeError.set(error instanceof Error ? error.message : 'Unknown error');
 		siteTheme.set(DEFAULT_THEME);
 	} finally {

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { page } from '$app/stores';
 	import Icon from '@iconify/svelte';
 	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
@@ -73,7 +75,7 @@
 			const result = await response.json();
 			categoryData = result.data || null;
 		} catch (err) {
-			console.error('Error loading category projects:', err);
+			logger.error('Error loading category projects:', err);
 			error = err instanceof Error ? err.message : 'Failed to load projects';
 		} finally {
 			loading = false;

@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router } from 'express';
 import { db } from '../db';
 import { themes, fonts } from '../db/schema';
@@ -95,7 +96,7 @@ router.get('/active', async (req, res) => {
 			enforcement
 		});
 	} catch (error) {
-		console.error('Error fetching active theme:', error);
+		logger.error('Error fetching active theme:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch active theme'
@@ -120,7 +121,7 @@ router.get('/', async (req, res) => {
 			enforcement
 		});
 	} catch (error) {
-		console.error('Error fetching themes:', error);
+		logger.error('Error fetching themes:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch themes'
@@ -141,7 +142,7 @@ router.get('/all', requireAuth, async (req, res) => {
 			enforcement
 		});
 	} catch (error) {
-		console.error('Error fetching themes:', error);
+		logger.error('Error fetching themes:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch themes'
@@ -191,7 +192,7 @@ router.put('/enforcement', requireAuth, async (req, res) => {
 			data: payload
 		});
 	} catch (error) {
-		console.error('Error updating theme enforcement:', error);
+		logger.error('Error updating theme enforcement:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update theme enforcement'
@@ -219,7 +220,7 @@ router.get('/:id', requireAuth, async (req, res) => {
 			data: enriched
 		});
 	} catch (error) {
-		console.error('Error fetching theme:', error);
+		logger.error('Error fetching theme:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch theme'
@@ -317,7 +318,7 @@ router.post('/', requireAuth, async (req, res) => {
 			data: newTheme
 		});
 	} catch (error) {
-		console.error('Error creating theme:', error);
+		logger.error('Error creating theme:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to create theme'
@@ -352,7 +353,7 @@ router.put('/order', requireAuth, async (req, res) => {
 			message: 'Themes order updated successfully'
 		});
 	} catch (error) {
-		console.error('Error updating themes order:', error);
+		logger.error('Error updating themes order:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update themes order'
@@ -391,7 +392,7 @@ router.put('/:id/set-default', requireAuth, async (req, res) => {
 			message: 'Default theme updated successfully'
 		});
 	} catch (error) {
-		console.error('Error setting default theme:', error);
+		logger.error('Error setting default theme:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to set default theme'
@@ -496,7 +497,7 @@ router.put('/:id', requireAuth, async (req, res) => {
 			data: updatedTheme
 		});
 	} catch (error) {
-		console.error('Error updating theme:', error);
+		logger.error('Error updating theme:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update theme'
@@ -566,7 +567,7 @@ router.post('/:id/duplicate', requireAuth, async (req, res) => {
 			data: duplicatedTheme
 		});
 	} catch (error) {
-		console.error('Error duplicating theme:', error);
+		logger.error('Error duplicating theme:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to duplicate theme'
@@ -612,7 +613,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
 			message: 'Theme deleted successfully'
 		});
 	} catch (error) {
-		console.error('Error deleting theme:', error);
+		logger.error('Error deleting theme:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to delete theme'

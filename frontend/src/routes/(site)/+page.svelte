@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
@@ -59,7 +61,7 @@
 				}
 			}
 		} catch (err) {
-			console.error('Error loading about me:', err);
+			logger.error('Error loading about me:', err);
 			aboutMeContent = '';
 		} finally {
 			loadingAboutMe = false;
@@ -76,7 +78,7 @@
 				recentPosts = (result.data || []).slice(0, 4);
 			}
 		} catch (err) {
-			console.error('Error loading recent posts:', err);
+			logger.error('Error loading recent posts:', err);
 		} finally {
 			loadingPosts = false;
 		}

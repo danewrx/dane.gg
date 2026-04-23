@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router } from 'express';
 import { db } from '../db';
 import { messages } from '../db/schema';
@@ -67,7 +68,7 @@ router.get('/messages', requireSession, async (req, res) => {
 			}
 		});
 	} catch (error) {
-		console.error('❌ Chat messages API Error:', error);
+		logger.error('Chat messages API Error:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch chat messages'

@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router } from 'express';
 import { SocialLinksService } from '../services/socialLinksService';
 import { requireSession } from '../middleware/auth';
@@ -14,7 +15,7 @@ router.get('/', async (req, res) => {
 			data: links
 		});
 	} catch (error) {
-		console.error('❌ Social Links API Error:', error);
+		logger.error('Social Links API Error:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch social links'
@@ -32,7 +33,7 @@ router.get('/admin', requireSession, async (req, res) => {
 			data: links
 		});
 	} catch (error) {
-		console.error('❌ Social Links Admin API Error:', error);
+		logger.error('Social Links Admin API Error:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch social links for admin'
@@ -58,7 +59,7 @@ router.get('/:id', requireSession, async (req, res) => {
 			data: link
 		});
 	} catch (error) {
-		console.error('❌ Social Links API Error:', error);
+		logger.error('Social Links API Error:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch social link'
@@ -123,7 +124,7 @@ router.post('/', requireSession, async (req, res) => {
 			data: link
 		});
 	} catch (error) {
-		console.error('❌ Social Links API Error:', error);
+		logger.error('Social Links API Error:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to create social link'
@@ -191,7 +192,7 @@ router.put('/:id', requireSession, async (req, res) => {
 			data: link
 		});
 	} catch (error) {
-		console.error('❌ Social Links API Error:', error);
+		logger.error('Social Links API Error:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update social link'
@@ -217,7 +218,7 @@ router.delete('/:id', requireSession, async (req, res) => {
 			message: 'Social link deleted successfully'
 		});
 	} catch (error) {
-		console.error('❌ Social Links API Error:', error);
+		logger.error('Social Links API Error:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to delete social link'
@@ -236,7 +237,7 @@ router.patch('/:id/toggle', requireSession, async (req, res) => {
 			data: link
 		});
 	} catch (error) {
-		console.error('❌ Social Links API Error:', error);
+		logger.error('Social Links API Error:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to toggle social link status'
@@ -263,7 +264,7 @@ router.patch('/reorder', requireSession, async (req, res) => {
 			message: 'Display order updated successfully'
 		});
 	} catch (error) {
-		console.error('❌ Social Links API Error:', error);
+		logger.error('Social Links API Error:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update display order'

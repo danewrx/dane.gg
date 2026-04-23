@@ -1,6 +1,12 @@
 import http from 'node:http';
+import { createConsola, LogLevels } from 'consola';
 import { handler } from './build/handler.js';
 import httpProxy from 'http-proxy';
+
+const raw = (process.env.LOG_LEVEL || 'info').toLowerCase();
+const level =
+	raw in LogLevels ? LogLevels[raw] : /^\d+$/.test(raw) ? Number(raw) : LogLevels.info;
+const logger = createConsola({ level }).withTag('frontend');
 
 const port = Number(process.env.FRONTEND_PORT || process.env.PORT || 3000);
 const host = process.env.HOST || '0.0.0.0';
@@ -19,7 +25,7 @@ const proxy = httpProxy.createProxyServer({
 });
 
 proxy.on('error', (err, _req, res) => {
-	console.error('[proxy]', err.message);
+	logger.error('[proxy]', err.message);
 	if (res && !res.headersSent && typeof res.writeHead === 'function') {
 		res.writeHead(502, { 'Content-Type': 'text/plain' });
 		res.end('Bad gateway (upstream API)');
@@ -50,5 +56,5 @@ server.on('upgrade', (req, socket, head) => {
 });
 
 server.listen(port, host, () => {
-	console.log(`[frontend] listening on http://${host}:${port} (proxy → ${backend})`);
+	logger.success(`listening on http://${host}:${port} (proxy → ${backend})`);
 });

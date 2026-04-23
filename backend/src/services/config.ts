@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { db } from '../db';
 import { siteConfig } from '../db/schema';
 import { eq } from 'drizzle-orm';
@@ -66,7 +67,7 @@ export class ConfigService {
 				if (value === undefined) {
 					const silentKeys = ['uptime_kuma_selected_monitors', 'discord_chat_integration_enabled'];
 					if (!silentKeys.includes(key)) {
-						console.warn(
+						logger.warn(
 							`Configuration key '${key}' not found in database or environment variables`
 						);
 					}
@@ -80,12 +81,12 @@ export class ConfigService {
 
 			return value;
 		} catch (error) {
-			console.error(`Error fetching config key '${key}':`, error);
+			logger.error(`Error fetching config key '${key}':`, error);
 
 			// Fall back to environment variable on error
 			const fallbackValue = ENV_FALLBACKS[key as keyof SiteConfig];
 			if (fallbackValue !== undefined) {
-				console.warn(`Using environment fallback for config key '${key}'`);
+				logger.warn(`Using environment fallback for config key '${key}'`);
 				return fallbackValue;
 			}
 
@@ -120,8 +121,8 @@ export class ConfigService {
 
 			return result as SiteConfig;
 		} catch (error) {
-			console.error('Error fetching all config:', error);
-			console.warn('Using environment variable fallbacks only');
+			logger.error('Error fetching all config:', error);
+			logger.warn('Using environment variable fallbacks only');
 			return ENV_FALLBACKS as SiteConfig;
 		}
 	}
@@ -186,7 +187,7 @@ export class ConfigService {
 
 			return result;
 		} catch (error) {
-			console.error(`Error setting config key '${key}':`, error);
+			logger.error(`Error setting config key '${key}':`, error);
 			throw error;
 		}
 	}
@@ -212,7 +213,7 @@ export class ConfigService {
 				try {
 					return JSON.parse(value);
 				} catch (e) {
-					console.error(`Failed to parse JSON for value: ${value}`, e);
+					logger.error(`Failed to parse JSON for value: ${value}`, e);
 					return value;
 				}
 			default:

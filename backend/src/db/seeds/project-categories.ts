@@ -1,8 +1,9 @@
+import { logger } from '../../utils/logger';
 import { db } from '../index';
 import { projectCategories } from '../schema';
 
 export async function seedProjectCategories() {
-	console.log('📁 Seeding project categories...');
+	logger.info('Seeding project categories...');
 	return db
 		.insert(projectCategories)
 		.values([

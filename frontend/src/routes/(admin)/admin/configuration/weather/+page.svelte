@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { siteConfig, loadSiteConfig } from '$lib/site/stores/siteConfig';
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
@@ -61,7 +63,7 @@
 			notifySiteConfigConsumers();
 			toast.success('Weather settings saved successfully');
 		} catch (error: any) {
-			console.error('Failed to save weather settings:', error);
+			logger.error('Failed to save weather settings:', error);
 			toast.error('Failed to save weather settings', {
 				description: error.message || 'Please try again'
 			});

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import Tabs from '$lib/admin/components/ui/Tabs.svelte';
 
 	// Example tabs data
@@ -22,22 +24,22 @@
 
 	function handleBasicChange(tabId: string, value: any) {
 		activeBasic = tabId;
-		console.log('Basic tab changed:', { tabId, value });
+		logger.info('Basic tab changed:', { tabId, value });
 	}
 
 	function handleStatusChange(tabId: string, value: any) {
 		activeStatus = tabId;
-		console.log('Status tab changed:', { tabId, value });
+		logger.info('Status tab changed:', { tabId, value });
 	}
 
 	function handlePillsChange(tabId: string, value: any) {
 		activePills = tabId;
-		console.log('Pills tab changed:', { tabId, value });
+		logger.info('Pills tab changed:', { tabId, value });
 	}
 
 	function handleUnderlineChange(tabId: string, value: any) {
 		activeUnderline = tabId;
-		console.log('Underline tab changed:', { tabId, value });
+		logger.info('Underline tab changed:', { tabId, value });
 	}
 </script>
 

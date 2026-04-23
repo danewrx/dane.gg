@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
@@ -119,7 +120,7 @@ router.post(
 				}
 			});
 		} catch (error: any) {
-			console.error('Upload error:', error);
+			logger.error('Upload error:', error);
 			res.status(500).json({
 				success: false,
 				error: error.message || 'Failed to upload file'
@@ -207,7 +208,7 @@ router.post(
 				}
 			});
 		} catch (error: any) {
-			console.error('Upload error:', error);
+			logger.error('Upload error:', error);
 			res.status(500).json({
 				success: false,
 				error: error.message || 'Failed to upload file'
@@ -246,7 +247,7 @@ router.get('/file/:filename', async (req: Request, res: Response) => {
 		// Send file
 		res.sendFile(filePath);
 	} catch (error: any) {
-		console.error('Error serving file:', error);
+		logger.error('Error serving file:', error);
 		res.status(500).json({
 			success: false,
 			error: error.message || 'Failed to serve file'
@@ -280,7 +281,7 @@ router.get('/', requireSession, async (req: Request, res: Response) => {
 			data: uploads
 		});
 	} catch (error: any) {
-		console.error('Error fetching uploads:', error);
+		logger.error('Error fetching uploads:', error);
 		res.status(500).json({
 			success: false,
 			error: error.message || 'Failed to fetch uploads'
@@ -325,7 +326,7 @@ router.get('/id/:id', requireSession, async (req: Request, res: Response) => {
 			data: upload
 		});
 	} catch (error: any) {
-		console.error('Error fetching upload:', error);
+		logger.error('Error fetching upload:', error);
 		res.status(500).json({
 			success: false,
 			error: error.message || 'Failed to fetch upload'
@@ -393,7 +394,7 @@ router.delete('/:filename', requireSession, async (req: Request, res: Response) 
 			message: 'File deleted successfully'
 		});
 	} catch (error: any) {
-		console.error('Delete error:', error);
+		logger.error('Delete error:', error);
 		res.status(500).json({
 			success: false,
 			error: error.message || 'Failed to delete file'

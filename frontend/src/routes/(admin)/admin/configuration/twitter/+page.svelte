@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import {
 		CheckCircle2,
@@ -93,7 +95,7 @@
 				}
 			}
 		} catch (err) {
-			console.error('Error loading status:', err);
+			logger.error('Error loading status:', err);
 			error = err instanceof Error ? err.message : 'Failed to load status';
 		} finally {
 			loading = false;
@@ -128,7 +130,7 @@
 				}
 			}
 		} catch (err) {
-			console.error('Error loading latest tweet:', err);
+			logger.error('Error loading latest tweet:', err);
 		}
 	}
 
@@ -159,7 +161,7 @@
 				allTweets = result.data || [];
 			}
 		} catch (err) {
-			console.error('Error loading tweets:', err);
+			logger.error('Error loading tweets:', err);
 			error = err instanceof Error ? err.message : 'Failed to load tweets';
 		} finally {
 			loadingTweets = false;
@@ -197,7 +199,7 @@
 				}
 			}
 		} catch (err) {
-			console.error('Error testing connection:', err);
+			logger.error('Error testing connection:', err);
 			error = err instanceof Error ? err.message : 'Failed to test connection';
 			toast.error(error);
 		} finally {
@@ -259,7 +261,7 @@
 
 			await loadStatus();
 		} catch (err) {
-			console.error('Error saving username:', err);
+			logger.error('Error saving username:', err);
 			error = err instanceof Error ? err.message : 'Failed to save username';
 			toast.error(error);
 		} finally {
@@ -336,7 +338,7 @@
 				}
 			}
 		} catch (err) {
-			console.debug('Polling update failed:', err);
+			logger.debug('Polling update failed:', err);
 		}
 	}
 

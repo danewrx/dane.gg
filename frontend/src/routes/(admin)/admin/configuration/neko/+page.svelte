@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
 	import { Cat, Lock, Save, Loader2 } from 'lucide-svelte';
@@ -94,7 +96,7 @@
 			applyNekoLiveFromStore();
 			toast.success('Default Neko saved');
 		} catch (e) {
-			console.error(e);
+			logger.error(e);
 			toast.error('Failed to save default', {
 				description: e instanceof Error ? e.message : 'Try again'
 			});
@@ -127,7 +129,7 @@
 					: 'Neko lock is off. Visitors can choose a skin again.'
 			);
 		} catch (e) {
-			console.error(e);
+			logger.error(e);
 			toast.error('Failed to save Neko lock', {
 				description: e instanceof Error ? e.message : 'Try again'
 			});

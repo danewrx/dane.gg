@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical } from 'lucide-svelte';
@@ -58,7 +60,7 @@
 		try {
 			iconCategories = await getIconCategories();
 		} catch (error) {
-			console.error('Failed to load icon categories:', error);
+			logger.error('Failed to load icon categories:', error);
 		}
 	}
 
@@ -71,10 +73,10 @@
 			if (data.success) {
 				socialLinks = data.data;
 			} else {
-				console.error('Failed to load social links:', data.error);
+				logger.error('Failed to load social links:', data.error);
 			}
 		} catch (error) {
-			console.error('Error loading social links:', error);
+			logger.error('Error loading social links:', error);
 		} finally {
 			isLoading = false;
 		}
@@ -144,7 +146,7 @@
 				});
 			}
 		} catch (error) {
-			console.error('Error saving link:', error);
+			logger.error('Error saving link:', error);
 			toast.error('Error saving link', {
 				description: 'An unexpected error occurred. Please try again.'
 			});
@@ -182,7 +184,7 @@
 				});
 			}
 		} catch (error) {
-			console.error('Error deleting link:', error);
+			logger.error('Error deleting link:', error);
 			toast.error('Error deleting link', {
 				description: 'An unexpected error occurred. Please try again.'
 			});
@@ -208,7 +210,7 @@
 				});
 			}
 		} catch (error) {
-			console.error('Error toggling link:', error);
+			logger.error('Error toggling link:', error);
 			toast.error('Error updating link', {
 				description: 'An unexpected error occurred. Please try again.'
 			});
@@ -329,7 +331,7 @@
 				});
 			}
 		} catch (error) {
-			console.error('Error reordering links:', error);
+			logger.error('Error reordering links:', error);
 			toast.error('Error reordering links', {
 				description: 'An unexpected error occurred. Please try again.'
 			});

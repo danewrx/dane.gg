@@ -1,5 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
+import { logger } from '$lib/logger';
 import { normalizeDefaultWebNekoTypeForServer } from '$lib/site/oneko/variants';
 
 const API_BASE_URL = process.env.VITE_API_URL || '/api';
@@ -103,7 +104,7 @@ async function verifyAuth(cookies: any, fetch: typeof globalThis.fetch): Promise
 
 		return null;
 	} catch (error) {
-		console.error('Auth verification failed:', error);
+		logger.error('Auth verification failed:', error);
 		return null;
 	}
 }

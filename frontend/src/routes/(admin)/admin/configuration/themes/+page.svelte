@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
@@ -293,7 +295,7 @@
 				}
 			}
 		} catch (error) {
-			console.error('Error loading themes:', error);
+			logger.error('Error loading themes:', error);
 			toast.error('Failed to load themes');
 		} finally {
 			isLoading = false;
@@ -447,7 +449,7 @@
 					credentials: 'include'
 				});
 			} catch (error) {
-				console.error('Error deleting uploaded file:', error);
+				logger.error('Error deleting uploaded file:', error);
 			}
 		}
 		formData.backgroundImage = '';

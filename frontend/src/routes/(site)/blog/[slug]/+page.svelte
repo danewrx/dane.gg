@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { marked } from 'marked';
@@ -39,7 +41,7 @@
 		try {
 			return marked(post.content);
 		} catch (err) {
-			console.error('Error parsing markdown:', err);
+			logger.error('Error parsing markdown:', err);
 			return '<p>Error rendering content</p>';
 		}
 	});
@@ -69,7 +71,7 @@
 			const result = await response.json();
 			post = result.data;
 		} catch (err) {
-			console.error('Error loading blog post:', err);
+			logger.error('Error loading blog post:', err);
 			error = 'Failed to load blog post';
 		} finally {
 			loading = false;
@@ -85,7 +87,7 @@
 				navigation = result.data;
 			}
 		} catch (err) {
-			console.error('Error loading navigation:', err);
+			logger.error('Error loading navigation:', err);
 			// Don't show error for navigation, just silently fail
 		}
 	}

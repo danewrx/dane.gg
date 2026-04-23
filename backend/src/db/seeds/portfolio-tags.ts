@@ -1,10 +1,11 @@
+import { logger } from '../../utils/logger';
 import { db } from '../index';
 import { projectCategories, tags } from '../schema';
 
 type Category = typeof projectCategories.$inferSelect;
 
 export async function seedPortfolioTags(categories: Category[]) {
-	console.log('🏷️ Seeding tags...');
+	logger.info('Seeding tags...');
 	const dev = categories[0];
 	if (!dev) throw new Error('seedPortfolioTags: missing Development category');
 

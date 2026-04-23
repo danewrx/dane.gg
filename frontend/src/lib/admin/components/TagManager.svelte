@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { X, Plus, Edit, Trash2 } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
@@ -37,7 +39,7 @@
 			loading = true;
 			tags = await getAllBlogTags();
 		} catch (err) {
-			console.error('Error loading tags:', err);
+			logger.error('Error loading tags:', err);
 			toast.error('Failed to load tags', {
 				description: 'Please try again'
 			});
@@ -111,7 +113,7 @@
 			dispatch('tagsUpdated');
 			cancelForm();
 		} catch (err: any) {
-			console.error('Error saving tag:', err);
+			logger.error('Error saving tag:', err);
 			toast.error(editingTagForModal ? 'Failed to update tag' : 'Failed to create tag', {
 				description: err.message || 'Please try again'
 			});
@@ -145,7 +147,7 @@
 				await executeDeleteTag(id);
 			}
 		} catch (err: any) {
-			console.error('Error checking posts using tag:', err);
+			logger.error('Error checking posts using tag:', err);
 			toast.error('Failed to check tag usage', {
 				description: err.message || 'Please try again'
 			});
@@ -186,7 +188,7 @@
 			});
 			closeDeleteConfirm();
 		} catch (err: any) {
-			console.error('Error deleting tag:', err);
+			logger.error('Error deleting tag:', err);
 			toast.error('Failed to delete tag', {
 				description: err.message || 'Please try again'
 			});

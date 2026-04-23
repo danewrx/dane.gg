@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
 import { users } from '../db/schema';
@@ -165,7 +166,7 @@ router.post(
 				expiresIn: tokens.expiresIn
 			});
 		} catch (error) {
-			console.error('Login error:', error);
+			logger.error('Login error:', error);
 			res.status(500).json({
 				error: 'Internal server error',
 				message: 'Login failed'
@@ -185,7 +186,7 @@ router.post('/logout', (req: Request, res: Response) => {
 		// Clear session
 		req.session.destroy((err) => {
 			if (err) {
-				console.error('Session destroy error:', err);
+				logger.error('Session destroy error:', err);
 				return res.status(500).json({
 					error: 'Internal server error',
 					message: 'Logout failed'
@@ -203,7 +204,7 @@ router.post('/logout', (req: Request, res: Response) => {
 			});
 		});
 	} catch (error) {
-		console.error('Logout error:', error);
+		logger.error('Logout error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Logout failed'
@@ -286,7 +287,7 @@ router.post('/refresh', tokenRefreshLimiter, async (req: Request, res: Response)
 			expiresIn: tokens.expiresIn
 		});
 	} catch (error) {
-		console.error('Refresh token error:', error);
+		logger.error('Refresh token error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Token refresh failed'
@@ -334,7 +335,7 @@ router.get('/me', async (req: Request, res: Response) => {
 				});
 			}
 		} catch (error) {
-			console.error('Error fetching user data:', error);
+			logger.error('Error fetching user data:', error);
 			res.json({
 				success: true,
 				user: req.session.user,
@@ -414,7 +415,7 @@ router.post(
 				message: 'Password changed successfully'
 			});
 		} catch (error) {
-			console.error('Change password error:', error);
+			logger.error('Change password error:', error);
 			res.status(500).json({
 				error: 'Internal server error',
 				message: 'Password change failed'
@@ -525,7 +526,7 @@ router.post('/update-username', requireSession, async (req: Request, res: Respon
 			}
 		});
 	} catch (error) {
-		console.error('Update username error:', error);
+		logger.error('Update username error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Username update failed'
@@ -598,7 +599,7 @@ router.post('/check-username', requireSession, async (req: Request, res: Respons
 			message: 'Username is available'
 		});
 	} catch (error) {
-		console.error('Check username error:', error);
+		logger.error('Check username error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Username check failed'

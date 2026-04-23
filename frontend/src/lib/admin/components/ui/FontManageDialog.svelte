@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { X, Upload, Trash2, Loader2, Type } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import ConfirmDialog from './ConfirmDialog.svelte';
@@ -37,7 +39,7 @@
 			const all: Font[] = data.data || [];
 			customFonts = all.filter((f) => f.type === 'custom');
 		} catch (e) {
-			console.error(e);
+			logger.error(e);
 			toast.error('Failed to load fonts');
 			customFonts = [];
 		} finally {

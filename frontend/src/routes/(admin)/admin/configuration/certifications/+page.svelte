@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import {
@@ -78,7 +80,7 @@
 				certifications = result.data || [];
 			}
 		} catch (error) {
-			console.error('Error loading certifications:', error);
+			logger.error('Error loading certifications:', error);
 			toast.error('Failed to load certifications');
 		} finally {
 			isLoading = false;
@@ -107,10 +109,10 @@
 				});
 
 				if (!response.ok) {
-					console.error('Failed to delete uploaded file');
+					logger.error('Failed to delete uploaded file');
 				}
 			} catch (error) {
-				console.error('Error deleting uploaded file:', error);
+				logger.error('Error deleting uploaded file:', error);
 			}
 		}
 
@@ -141,10 +143,10 @@
 				});
 
 				if (!response.ok) {
-					console.error('Failed to delete uploaded file');
+					logger.error('Failed to delete uploaded file');
 				}
 			} catch (error) {
-				console.error('Error deleting uploaded file:', error);
+				logger.error('Error deleting uploaded file:', error);
 			}
 		}
 
@@ -359,7 +361,7 @@
 					credentials: 'include'
 				});
 			} catch (error) {
-				console.error('Error deleting uploaded file:', error);
+				logger.error('Error deleting uploaded file:', error);
 			}
 		}
 
@@ -488,7 +490,7 @@
 			toast.success('Certification order updated');
 			await loadCertifications();
 		} catch (err: any) {
-			console.error('Error updating certification order:', err);
+			logger.error('Error updating certification order:', err);
 			toast.error('Failed to update certification order', {
 				description: err.message || 'Please try again'
 			});

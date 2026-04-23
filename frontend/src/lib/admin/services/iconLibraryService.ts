@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 // Dynamic Icon Library Service - fetches all available CoreUI brand icons
 // Uses Iconify API to get the complete list of available icons
 
@@ -156,7 +157,7 @@ async function fetchCoreUIBrandIcons(): Promise<IconOption[]> {
 			return fallbackIcons;
 		}
 	} catch (error) {
-		console.error('Failed to fetch CoreUI brand icons:', error);
+		logger.error('Failed to fetch CoreUI brand icons:', error);
 		const fallbackIcons: IconOption[] = [
 			{
 				name: 'cib-twitter',
@@ -317,7 +318,7 @@ async function fetchLucideIcons(): Promise<IconOption[]> {
 
 		return lucideIcons.sort((a, b) => a.displayName.localeCompare(b.displayName));
 	} catch (error) {
-		console.error('Failed to load Lucide icons:', error);
+		logger.error('Failed to load Lucide icons:', error);
 		return [];
 	}
 }

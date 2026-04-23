@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 /**
  * IP geolocation service
  */
@@ -42,7 +43,7 @@ export class GeoLocationService {
 
 			return null;
 		} catch (error) {
-			console.error('Geolocation failed:', error);
+			logger.error('Geolocation failed:', error);
 			return null;
 		}
 	}

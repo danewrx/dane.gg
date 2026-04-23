@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { db } from '../db';
 import { tweets, type Tweet, type NewTweet } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
@@ -23,7 +24,7 @@ export class TweetService {
 
 			return latestTweet[0] || null;
 		} catch (error) {
-			console.error('Error fetching latest tweet:', error);
+			logger.error('Error fetching latest tweet:', error);
 			return null;
 		}
 	}
@@ -57,11 +58,11 @@ export class TweetService {
 				// Update existing tweet
 				await db.update(tweets).set(tweetRecord).where(eq(tweets.tweetId, tweetData.tweetId));
 
-				console.log(`Updated tweet: ${tweetData.tweetId}`);
+				logger.info(`Updated tweet: ${tweetData.tweetId}`);
 			} else {
 				// Create new tweet
 				await db.insert(tweets).values(tweetRecord);
-				console.log(`Created new tweet: ${tweetData.tweetId}`);
+				logger.info(`Created new tweet: ${tweetData.tweetId}`);
 			}
 
 			// Clean up old records after each update
@@ -69,7 +70,7 @@ export class TweetService {
 
 			return true;
 		} catch (error) {
-			console.error('Error upserting tweet:', error);
+			logger.error('Error upserting tweet:', error);
 			return false;
 		}
 	}
@@ -85,7 +86,7 @@ export class TweetService {
 				.where(eq(tweets.tweetId, tweetId));
 			return true;
 		} catch (error) {
-			console.error('Error setting tweet posted time:', error);
+			logger.error('Error setting tweet posted time:', error);
 			return false;
 		}
 	}
@@ -94,10 +95,10 @@ export class TweetService {
 		try {
 			await db.delete(tweets).where(eq(tweets.tweetId, tweetId));
 
-			console.log(`Deleted tweet: ${tweetId}`);
+			logger.info(`Deleted tweet: ${tweetId}`);
 			return true;
 		} catch (error) {
-			console.error('Error deleting tweet:', error);
+			logger.error('Error deleting tweet:', error);
 			return false;
 		}
 	}
@@ -109,7 +110,7 @@ export class TweetService {
 		try {
 			return await db.select().from(tweets).orderBy(desc(tweets.createdAt));
 		} catch (error) {
-			console.error('Error fetching all tweets:', error);
+			logger.error('Error fetching all tweets:', error);
 			return [];
 		}
 	}
@@ -123,7 +124,7 @@ export class TweetService {
 
 			return result.length;
 		} catch (error) {
-			console.error('Error getting tweet count:', error);
+			logger.error('Error getting tweet count:', error);
 			return 0;
 		}
 	}
@@ -149,12 +150,12 @@ export class TweetService {
 					await db.delete(tweets).where(eq(tweets.id, id));
 				}
 
-				console.log(`Cleaned up ${recordsToDelete.length} old tweet records (kept last 30)`);
+				logger.info(`Cleaned up ${recordsToDelete.length} old tweet records (kept last 30)`);
 			}
 
 			return true;
 		} catch (error) {
-			console.error('Error cleaning up tweet records:', error);
+			logger.error('Error cleaning up tweet records:', error);
 			return false;
 		}
 	}

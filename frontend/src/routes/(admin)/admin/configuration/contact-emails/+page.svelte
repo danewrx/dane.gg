@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical, Edit2, Check, X } from 'lucide-svelte';
@@ -58,7 +60,7 @@
 				contactEmails = [];
 			}
 		} catch (error) {
-			console.error('Error loading contact emails:', error);
+			logger.error('Error loading contact emails:', error);
 			contactEmails = [];
 		} finally {
 			isLoading = false;
@@ -119,7 +121,7 @@
 				toast.error(data.error || 'Failed to save contact email');
 			}
 		} catch (error) {
-			console.error('Error saving contact email:', error);
+			logger.error('Error saving contact email:', error);
 			toast.error('Failed to save contact email');
 		} finally {
 			isSaving = false;
@@ -176,7 +178,7 @@
 				toast.error(data.error || 'Failed to delete contact email');
 			}
 		} catch (error) {
-			console.error('Error deleting contact email:', error);
+			logger.error('Error deleting contact email:', error);
 			toast.error('Failed to delete contact email');
 		} finally {
 			cancelDeleteEmail();
@@ -207,7 +209,7 @@
 				toast.error(data.error || 'Failed to toggle contact email status');
 			}
 		} catch (error) {
-			console.error('Error toggling contact email status:', error);
+			logger.error('Error toggling contact email status:', error);
 			toast.error('Failed to toggle contact email status');
 		}
 	}
@@ -263,7 +265,7 @@
 				toast.error('Failed to update order');
 			}
 		} catch (error) {
-			console.error('Error updating order:', error);
+			logger.error('Error updating order:', error);
 			toast.error('Failed to update order');
 		}
 
@@ -288,7 +290,7 @@
 				}
 			}
 		} catch (error) {
-			console.error('Error loading emails header:', error);
+			logger.error('Error loading emails header:', error);
 		}
 	}
 
@@ -326,7 +328,7 @@
 				toast.error('Failed to save header text');
 			}
 		} catch (error) {
-			console.error('Error saving header:', error);
+			logger.error('Error saving header:', error);
 			toast.error('Failed to save header text');
 		}
 	}

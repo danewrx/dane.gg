@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 export interface BlogPost {
 	id: string;
 	title: string;
@@ -52,7 +53,7 @@ export async function getAllBlogPosts(): Promise<BlogPost[]> {
 		const result = await response.json();
 		return result.data || [];
 	} catch (error) {
-		console.error('Error fetching blog posts:', error);
+		logger.error('Error fetching blog posts:', error);
 		throw error;
 	}
 }
@@ -73,7 +74,7 @@ export async function getBlogPost(id: string): Promise<BlogPost> {
 		const result = await response.json();
 		return result.data;
 	} catch (error) {
-		console.error('Error fetching blog post:', error);
+		logger.error('Error fetching blog post:', error);
 		throw error;
 	}
 }
@@ -100,7 +101,7 @@ export async function createBlogPost(post: CreateBlogPost): Promise<BlogPost> {
 		const result = await response.json();
 		return result.data;
 	} catch (error) {
-		console.error('Error creating blog post:', error);
+		logger.error('Error creating blog post:', error);
 		throw error;
 	}
 }
@@ -127,7 +128,7 @@ export async function updateBlogPost(id: string, post: UpdateBlogPost): Promise<
 		const result = await response.json();
 		return result.data;
 	} catch (error) {
-		console.error('Error updating blog post:', error);
+		logger.error('Error updating blog post:', error);
 		throw error;
 	}
 }
@@ -146,7 +147,7 @@ export async function deleteBlogPost(id: string): Promise<void> {
 			throw new Error('Failed to delete blog post');
 		}
 	} catch (error) {
-		console.error('Error deleting blog post:', error);
+		logger.error('Error deleting blog post:', error);
 		throw error;
 	}
 }
@@ -167,7 +168,7 @@ export async function getAllBlogTags(): Promise<BlogTag[]> {
 		const result = await response.json();
 		return result.data || [];
 	} catch (error) {
-		console.error('Error fetching blog tags:', error);
+		logger.error('Error fetching blog tags:', error);
 		throw error;
 	}
 }
@@ -190,7 +191,7 @@ export async function getPostsUsingBlogTag(
 		const result = await response.json();
 		return result.data || [];
 	} catch (error) {
-		console.error('Error fetching posts using blog tag:', error);
+		logger.error('Error fetching posts using blog tag:', error);
 		throw error;
 	}
 }

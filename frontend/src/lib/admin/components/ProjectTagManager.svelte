@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { Plus, Edit, Trash2, X } from 'lucide-svelte';
@@ -86,7 +88,7 @@
 				tags = allTags;
 			}
 		} catch (err) {
-			console.error('Error loading tags:', err);
+			logger.error('Error loading tags:', err);
 			toast.error('Failed to load tags', {
 				description: 'Please try refreshing the page'
 			});
@@ -125,7 +127,7 @@
 							// Category not found at all - use fallback from tag or default
 							categoryDisplayOrder =
 								(tag.category as any)?.displayOrder ?? tag.category?.displayOrder ?? 999;
-							console.warn(
+							logger.warn(
 								`Category ID ${categoryId} (${tag.category?.name}) not found in categoryOrderMap or categories list`
 							);
 						}
@@ -157,7 +159,7 @@
 
 				// Debug log for troubleshooting
 				if (aOrder === undefined || bOrder === undefined || aOrder === 999 || bOrder === 999) {
-					console.warn('Potential sorting issue:', {
+					logger.warn('Potential sorting issue:', {
 						a: { name: a.category.name, id: a.category.id, displayOrder: aOrder },
 						b: { name: b.category.name, id: b.category.id, displayOrder: bOrder },
 						categoryOrderMap: Array.from(categoryOrderMap.entries()),
@@ -190,7 +192,7 @@
 			// Sort categories by displayOrder to ensure consistent ordering
 			categories = loadedCategories.sort((a, b) => a.displayOrder - b.displayOrder);
 		} catch (err) {
-			console.error('Error loading categories:', err);
+			logger.error('Error loading categories:', err);
 		}
 	}
 
@@ -257,7 +259,7 @@
 			dispatch('tagsUpdated');
 			cancelEdit();
 		} catch (err: any) {
-			console.error('Error saving tag:', err);
+			logger.error('Error saving tag:', err);
 			toast.error('Failed to save tag', {
 				description: err.message || 'Please try again'
 			});
@@ -285,7 +287,7 @@
 				await confirmDelete(id);
 			}
 		} catch (err: any) {
-			console.error('Error checking projects using tag:', err);
+			logger.error('Error checking projects using tag:', err);
 			toast.error('Failed to check tag usage', {
 				description: err.message || 'Please try again'
 			});
@@ -307,7 +309,7 @@
 			dispatch('tagsUpdated');
 			closeDeleteConfirm();
 		} catch (err: any) {
-			console.error('Error deleting tag:', err);
+			logger.error('Error deleting tag:', err);
 			toast.error('Failed to delete tag', {
 				description: err.message || 'Please try again'
 			});

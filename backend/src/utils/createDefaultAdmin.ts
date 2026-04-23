@@ -1,3 +1,4 @@
+import { logger } from './logger';
 import { db } from '../db';
 import { users } from '../db/schema';
 import { hashPassword } from './password';
@@ -9,23 +10,23 @@ import { eq } from 'drizzle-orm';
  */
 export async function createDefaultAdmin(): Promise<void> {
 	try {
-		console.log('🔍 Checking for existing admin users...');
+		logger.info('Checking for existing admin users...');
 
 		// Check if any admin users exist
 		const existingAdmins = await db.select().from(users).where(eq(users.isAdmin, true)).limit(1);
 
 		if (existingAdmins.length > 0) {
-			console.log('✅ Admin users already exist, skipping default admin creation');
+			logger.info('Admin users already exist, skipping default admin creation');
 			return;
 		}
 
-		console.log('⚠️  No admin users found, creating default admin...');
+		logger.info('No admin users found, creating default admin...');
 
 		// Check if any users exist at all
 		const allUsers = await db.select().from(users).limit(1);
 
 		if (allUsers.length > 0) {
-			console.log('ℹ️  Regular users exist but no admins, creating admin user...');
+			logger.info('Regular users exist but no admins, creating admin user...');
 		}
 
 		// Create default admin user
@@ -42,16 +43,16 @@ export async function createDefaultAdmin(): Promise<void> {
 		const [newAdmin] = await db.insert(users).values(defaultAdmin).returning();
 
 		if (newAdmin) {
-			console.log('🎉 Default admin user created successfully!');
-			console.log('📋 Admin Credentials:');
-			console.log('   Username: admin');
-			console.log('   Password: admin');
-			console.log('   ⚠️  IMPORTANT: Change the default password after first login!');
+			logger.info('Default admin user created successfully!');
+			logger.info('Admin Credentials:');
+			logger.info('   Username: admin');
+			logger.info('   Password: admin');
+			logger.info('   IMPORTANT: Change the default password after first login!');
 		} else {
 			throw new Error('Failed to create default admin user');
 		}
 	} catch (error) {
-		console.error('❌ Error creating default admin user:', error);
+		logger.error('Error creating default admin user:', error);
 		throw error;
 	}
 }
@@ -66,7 +67,7 @@ export async function hasAnyUsers(): Promise<boolean> {
 
 		return userCount.length > 0;
 	} catch (error) {
-		console.error('Error checking for existing users:', error);
+		logger.error('Error checking for existing users:', error);
 		return false;
 	}
 }
@@ -80,7 +81,7 @@ export async function getAdminUserCount(): Promise<number> {
 
 		return admins.length;
 	} catch (error) {
-		console.error('Error counting admin users:', error);
+		logger.error('Error counting admin users:', error);
 		return 0;
 	}
 }

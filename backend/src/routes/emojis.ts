@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
@@ -61,7 +62,7 @@ router.get('/', async (req: Request, res: Response) => {
 			data: allEmojis
 		});
 	} catch (error: any) {
-		console.error('Error fetching emojis:', error);
+		logger.error('Error fetching emojis:', error);
 		res.status(500).json({
 			success: false,
 			error: error.message || 'Failed to fetch emojis'
@@ -154,7 +155,7 @@ router.post(
 				data: newEmoji
 			});
 		} catch (error: any) {
-			console.error('Error uploading emoji:', error);
+			logger.error('Error uploading emoji:', error);
 
 			if (req.file && fs.existsSync(req.file.path)) {
 				fs.unlinkSync(req.file.path);
@@ -205,7 +206,7 @@ router.delete('/:id', requireSession, requireAdmin, async (req: Request, res: Re
 			message: 'Emoji deleted successfully'
 		});
 	} catch (error: any) {
-		console.error('Error deleting emoji:', error);
+		logger.error('Error deleting emoji:', error);
 		res.status(500).json({
 			success: false,
 			error: error.message || 'Failed to delete emoji'

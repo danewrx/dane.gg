@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import {
 		Save,
@@ -98,7 +100,7 @@
 				connectionStatus = null;
 			}
 		} catch (err) {
-			console.error('Error loading config:', err);
+			logger.error('Error loading config:', err);
 			error = err instanceof Error ? err.message : 'Failed to load configuration';
 		} finally {
 			loading = false;
@@ -134,7 +136,7 @@
 				throw new Error(result.error || 'Failed to fetch monitors');
 			}
 		} catch (err) {
-			console.error('Error loading monitors:', err);
+			logger.error('Error loading monitors:', err);
 			error = err instanceof Error ? err.message : 'Failed to load monitors';
 			toast.error(error);
 		} finally {
@@ -162,7 +164,7 @@
 				}
 			}
 		} catch (err) {
-			console.error('Error loading custom names:', err);
+			logger.error('Error loading custom names:', err);
 		}
 	}
 
@@ -191,7 +193,7 @@
 
 			toast.success('Selected monitors saved successfully!');
 		} catch (err) {
-			console.error('Error saving config:', err);
+			logger.error('Error saving config:', err);
 			error = err instanceof Error ? err.message : 'Failed to save configuration';
 			toast.error(error);
 		} finally {
@@ -269,7 +271,7 @@
 				throw new Error(result.error || 'Failed to test connection');
 			}
 		} catch (err) {
-			console.error('Error testing connection:', err);
+			logger.error('Error testing connection:', err);
 			connectionStatus = {
 				connected: false,
 				message: err instanceof Error ? err.message : 'Failed to test connection'

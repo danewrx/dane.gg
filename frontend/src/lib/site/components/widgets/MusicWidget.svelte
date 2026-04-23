@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { Radio } from 'lucide-svelte';
 
@@ -33,7 +35,7 @@
 			// Less frequent when not playing (45 seconds)
 			const pollInterval = musicData?.nowPlaying ? 15000 : 45000;
 
-			console.log(
+			logger.info(
 				`Setting up polling: ${pollInterval / 1000}s interval (playing: ${musicData?.nowPlaying})`
 			);
 
@@ -82,7 +84,7 @@
 			'.music-widget .track-artist'
 		) as HTMLElement | null;
 
-		console.log('Checking text overflow - elements found:', {
+		logger.info('Checking text overflow - elements found:', {
 			title: !!titleElement,
 			artist: !!artistElement
 		});
@@ -119,7 +121,7 @@
 					const availableWidth = containerWidth - 16; // Account for some padding
 					const shouldScroll = scrollWidth > availableWidth && scrollWidth > clientWidth;
 
-					console.log(`${elementType}:`, {
+					logger.info(`${elementType}:`, {
 						text: element.textContent?.slice(0, 40),
 						scrollWidth,
 						clientWidth,
@@ -134,7 +136,7 @@
 						const actualOverflow = scrollWidth - availableWidth;
 						const scrollDistance = Math.max(actualOverflow, 0);
 						element.style.setProperty('--scroll-distance', `-${scrollDistance}px`);
-						console.log(
+						logger.info(
 							`${elementType} scroll distance:`,
 							`-${scrollDistance}px`,
 							`(overflow: ${actualOverflow}px)`
@@ -168,7 +170,7 @@
 			clearTimeout(resizeTimeout);
 			resizeTimeout = setTimeout(() => {
 				if (musicData) {
-					console.log('Resize detected, recalculating text overflow...');
+					logger.info('Resize detected, recalculating text overflow...');
 					document
 						.querySelectorAll('.music-widget .track-title, .music-widget .track-artist')
 						.forEach((el) => {
@@ -183,7 +185,7 @@
 		window.addEventListener('resize', handleResize);
 
 		setTimeout(() => {
-			console.log('Initial overflow check on mount...');
+			logger.info('Initial overflow check on mount...');
 			checkTextOverflow();
 		}, 200);
 
@@ -195,7 +197,7 @@
 
 	async function fetchMusicData() {
 		try {
-			console.log('Fetching music data from Last.fm...');
+			logger.info('Fetching music data from Last.fm...');
 			const response = await fetch('/api/widgets/nowplaying');
 
 			if (!response.ok) {
@@ -209,25 +211,25 @@
 			hasReceivedApiResponse = true;
 
 			if (previousPlayingState !== data.nowPlaying) {
-				console.log(
+				logger.info(
 					`Music status changed: ${previousPlayingState ? 'playing' : 'not playing'} -> ${data.nowPlaying ? 'playing' : 'not playing'}`
 				);
 				if (data.nowPlaying) {
-					console.log(`Now playing: ${data.artist} - ${data.track}`);
+					logger.info(`Now playing: ${data.artist} - ${data.track}`);
 				} else {
-					console.log(`Last played: ${data.artist} - ${data.track}`);
+					logger.info(`Last played: ${data.artist} - ${data.track}`);
 				}
 			}
 
 			if (data.track) {
-				console.log(
+				logger.info(
 					`Current status: ${data.nowPlaying ? 'Now Playing' : 'Recently Played'} - ${data.artist} - ${data.track}`
 				);
 			} else {
-				console.log('No music data available');
+				logger.info('No music data available');
 			}
 		} catch (err) {
-			console.error('Error fetching music data:', err);
+			logger.error('Error fetching music data:', err);
 			// Only set default data if no API response yet
 			if (!hasReceivedApiResponse) {
 				musicData = {

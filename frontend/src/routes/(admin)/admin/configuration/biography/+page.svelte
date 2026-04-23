@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { Loader2 } from 'lucide-svelte';
@@ -34,7 +36,7 @@ This is my personal website where I showcase some of the side projects I'm worki
 				biography = result.data?.value || '';
 			}
 		} catch (error) {
-			console.error('Error loading biography:', error);
+			logger.error('Error loading biography:', error);
 			toast.error('Failed to load biography');
 		} finally {
 			isLoading = false;
@@ -63,7 +65,7 @@ This is my personal website where I showcase some of the side projects I'm worki
 
 			toast.success('Biography saved successfully');
 		} catch (error) {
-			console.error('Error saving biography:', error);
+			logger.error('Error saving biography:', error);
 		}
 	}
 </script>

@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 import { setMode } from 'mode-watcher';
 import { settingsService } from './settings';
 import { user } from '$lib/admin/stores/auth';
@@ -47,7 +48,7 @@ class ThemeService {
 				setMode('system');
 			}
 		} catch (error) {
-			console.error('Failed to load user theme:', error);
+			logger.error('Failed to load user theme:', error);
 			// Fallback to system theme if there's an error
 			setMode('system');
 		}
@@ -65,7 +66,7 @@ class ThemeService {
 
 			await settingsService.setThemePreference(themePreference);
 		} catch (error) {
-			console.error('Failed to save theme preference:', error);
+			logger.error('Failed to save theme preference:', error);
 			throw error;
 		}
 	}

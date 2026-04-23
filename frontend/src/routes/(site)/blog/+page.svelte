@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { Calendar } from 'lucide-svelte';
@@ -52,7 +54,7 @@
 			visiblePosts = allPosts.slice(0, POSTS_PER_BATCH);
 			hasMore = visiblePosts.length < allPosts.length;
 		} catch (err) {
-			console.error('Error loading blog posts:', err);
+			logger.error('Error loading blog posts:', err);
 			error = 'Failed to load blog posts';
 		} finally {
 			loading = false;

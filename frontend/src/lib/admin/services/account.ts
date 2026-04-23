@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 import { auth } from '$lib/admin/stores/auth';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -42,7 +43,7 @@ class AccountService {
 
 			return data as T;
 		} catch (error) {
-			console.error('Account API request failed:', endpoint, error);
+			logger.error('Account API request failed:', endpoint, error);
 			throw error;
 		}
 	}
@@ -64,7 +65,7 @@ class AccountService {
 
 			return response;
 		} catch (error) {
-			console.error('Update username failed:', error);
+			logger.error('Update username failed:', error);
 			throw error;
 		}
 	}
@@ -81,7 +82,7 @@ class AccountService {
 
 			return response;
 		} catch (error) {
-			console.error('Update password failed:', error);
+			logger.error('Update password failed:', error);
 			throw error;
 		}
 	}
@@ -106,7 +107,7 @@ class AccountService {
 
 			return response;
 		} catch (error) {
-			console.error('Check username availability failed:', error);
+			logger.error('Check username availability failed:', error);
 			return {
 				available: false,
 				reason: 'taken',
@@ -145,7 +146,7 @@ class AccountService {
 
 			return null;
 		} catch (error) {
-			console.error('Get account info failed:', error);
+			logger.error('Get account info failed:', error);
 			return null;
 		}
 	}

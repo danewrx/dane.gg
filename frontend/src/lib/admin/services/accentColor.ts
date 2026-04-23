@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 import { settingsService } from './settings';
 import { user } from '$lib/admin/stores/auth';
 import { browser } from '$app/environment';
@@ -48,7 +49,7 @@ class AccentColorService {
 				this.applyAccentColor('#3b82f6');
 			}
 		} catch (error) {
-			console.error('Failed to load user accent color:', error);
+			logger.error('Failed to load user accent color:', error);
 			// Fallback to default color if there's an error
 			this.applyAccentColor('#3b82f6');
 		}
@@ -104,7 +105,7 @@ class AccentColorService {
 
 			await settingsService.setAccentColor(color);
 		} catch (error) {
-			console.error('Failed to save accent color:', error);
+			logger.error('Failed to save accent color:', error);
 			throw error;
 		}
 	}

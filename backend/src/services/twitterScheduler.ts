@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import * as cron from 'node-cron';
 import { TwitterApiService } from './twitterApiService';
 import { ConfigService } from './config';
@@ -17,13 +18,13 @@ export class TwitterScheduler {
 	 */
 	static async initialize(): Promise<void> {
 		if (this.isInitialized) {
-			console.log('[Twitter Scheduler] Already initialized');
+			logger.info('[Twitter Scheduler] Already initialized');
 			return;
 		}
 
 		// Check if Twitter is configured
 		if (!process.env.TWITTER_COOKIES) {
-			console.log('[Twitter Scheduler] TWITTER_COOKIES not set, skipping scheduler initialization');
+			logger.info('[Twitter Scheduler] TWITTER_COOKIES not set, skipping scheduler initialization');
 			return;
 		}
 
@@ -36,7 +37,7 @@ export class TwitterScheduler {
 					: process.env.TWITTER_USERNAME;
 
 			if (!username) {
-				console.log(
+				logger.info(
 					'[Twitter Scheduler] Twitter username not configured. Set it in the admin panel or TWITTER_USERNAME environment variable'
 				);
 				return;
@@ -45,14 +46,14 @@ export class TwitterScheduler {
 			// Test connection on startup
 			const connectionTest = await TwitterApiService.testConnection(username);
 			if (connectionTest.connected) {
-				console.log(`[Twitter Scheduler] ✅ Connection test successful for @${username}`);
+				logger.info(`[Twitter Scheduler] Connection test successful for @${username}`);
 			} else {
-				console.error(`[Twitter Scheduler] ❌ Connection test failed: ${connectionTest.message}`);
+				logger.error(`[Twitter Scheduler] Connection test failed: ${connectionTest.message}`);
 			}
 
 			// Perform initial fetch
 			TwitterApiService.fetchAndUpdateLatestTweet(username).catch((err) => {
-				console.error('[Twitter Scheduler] Initial fetch failed:', err.message);
+				logger.error('[Twitter Scheduler] Initial fetch failed:', err.message);
 			});
 
 			// Get cron expression from environment (Supports TWITTER_POLL_INTERVAL for backwards compatibility)
@@ -65,8 +66,8 @@ export class TwitterScheduler {
 				const pollIntervalMs = Math.max(parseInt(process.env.TWITTER_POLL_INTERVAL, 10), 30000);
 				const pollIntervalMinutes = Math.floor(pollIntervalMs / 60000);
 				fetchCronExpression = `*/${pollIntervalMinutes} * * * *`;
-				console.log(
-					`[Twitter Scheduler] ⚠️  TWITTER_POLL_INTERVAL is deprecated. Use TWITTER_FETCH_CRON instead.`
+				logger.info(
+					`[Twitter Scheduler] TWITTER_POLL_INTERVAL is deprecated. Use TWITTER_FETCH_CRON instead.`
 				);
 			} else {
 				// Default: every 2 minutes
@@ -93,10 +94,10 @@ export class TwitterScheduler {
 						if (currentUsername) {
 							await TwitterApiService.fetchAndUpdateLatestTweet(currentUsername);
 						} else {
-							console.warn('[Twitter Scheduler] Username not available, skipping fetch');
+							logger.warn('[Twitter Scheduler] Username not available, skipping fetch');
 						}
 					} catch (error: any) {
-						console.error('[Twitter Scheduler] Scheduled fetch failed:', error.message);
+						logger.error('[Twitter Scheduler] Scheduled fetch failed:', error.message);
 					}
 				},
 				{
@@ -129,10 +130,10 @@ export class TwitterScheduler {
 						if (currentUsername) {
 							await TwitterApiService.checkConnectionHealth(currentUsername);
 						} else {
-							console.warn('[Twitter Scheduler] Username not available, skipping health check');
+							logger.warn('[Twitter Scheduler] Username not available, skipping health check');
 						}
 					} catch (error: any) {
-						console.error('[Twitter Scheduler] Health check failed:', error.message);
+						logger.error('[Twitter Scheduler] Health check failed:', error.message);
 					}
 				},
 				{
@@ -143,14 +144,14 @@ export class TwitterScheduler {
 			this.isInitialized = true;
 
 			const source = dbUsername ? 'database' : 'environment';
-			console.log(`[Twitter Scheduler] ✅ Initialized for @${username} (from ${source})`);
-			console.log(`[Twitter Scheduler] 📅 Fetch schedule: ${fetchCronExpression}`);
-			console.log(`[Twitter Scheduler] 🏥 Health check schedule: ${healthCheckCronExpression}`);
-			console.log(
-				`[Twitter Scheduler] ⚠️  WARNING: Polling too frequently may trigger Twitter rate limits or account restrictions`
+			logger.info(`[Twitter Scheduler] Initialized for @${username} (from ${source})`);
+			logger.info(`[Twitter Scheduler] Fetch schedule: ${fetchCronExpression}`);
+			logger.info(`[Twitter Scheduler] Health check schedule: ${healthCheckCronExpression}`);
+			logger.info(
+				`[Twitter Scheduler] WARNING: Polling too frequently may trigger Twitter rate limits or account restrictions`
 			);
 		} catch (error: any) {
-			console.error('[Twitter Scheduler] Failed to initialize:', error.message);
+			logger.error('[Twitter Scheduler] Failed to initialize:', error.message);
 		}
 	}
 
@@ -169,7 +170,7 @@ export class TwitterScheduler {
 		}
 
 		this.isInitialized = false;
-		console.log('[Twitter Scheduler] Stopped all scheduled jobs');
+		logger.info('[Twitter Scheduler] Stopped all scheduled jobs');
 	}
 
 	/**

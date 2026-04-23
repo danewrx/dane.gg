@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
 import { users, siteConfig } from '../db/schema';
@@ -31,7 +32,7 @@ router.get('/theme', requireSession, async (req: Request, res: Response) => {
 			message: 'Theme preference retrieved successfully'
 		});
 	} catch (error) {
-		console.error('Get theme preference error:', error);
+		logger.error('Get theme preference error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to get theme preference'
@@ -63,7 +64,7 @@ router.get('/accent-color', requireSession, async (req: Request, res: Response) 
 			message: 'Accent color retrieved successfully'
 		});
 	} catch (error) {
-		console.error('Get accent color error:', error);
+		logger.error('Get accent color error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to get accent color'
@@ -93,7 +94,7 @@ router.post('/theme', requireSession, async (req: Request, res: Response) => {
 			message: 'Theme preference updated successfully'
 		});
 	} catch (error) {
-		console.error('Update theme preference error:', error);
+		logger.error('Update theme preference error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to update theme preference'
@@ -124,7 +125,7 @@ router.post('/accent-color', requireSession, async (req: Request, res: Response)
 			message: 'Accent color updated successfully'
 		});
 	} catch (error) {
-		console.error('Update accent color error:', error);
+		logger.error('Update accent color error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to update accent color'
@@ -147,7 +148,7 @@ router.get('/admin', requireSession, async (req: Request, res: Response) => {
 			message: 'Admin settings retrieved successfully'
 		});
 	} catch (error) {
-		console.error('Get admin settings error:', error);
+		logger.error('Get admin settings error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to get admin settings'
@@ -176,7 +177,7 @@ router.post('/admin', requireSession, async (req: Request, res: Response) => {
 			message: 'Admin settings updated successfully'
 		});
 	} catch (error) {
-		console.error('Update admin settings error:', error);
+		logger.error('Update admin settings error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to update admin settings'
@@ -203,7 +204,7 @@ router.get('/admin-chat-nickname', requireSession, async (req: Request, res: Res
 			message: 'Admin chat nickname retrieved successfully'
 		});
 	} catch (error) {
-		console.error('Get admin chat nickname error:', error);
+		logger.error('Get admin chat nickname error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to get admin chat nickname'
@@ -263,7 +264,7 @@ router.post('/admin-chat-nickname', requireSession, async (req: Request, res: Re
 			message: 'Admin chat nickname updated successfully'
 		});
 	} catch (error) {
-		console.error('Update admin chat nickname error:', error);
+		logger.error('Update admin chat nickname error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to update admin chat nickname'
@@ -290,7 +291,7 @@ router.get('/admin-chat-color', requireSession, async (req: Request, res: Respon
 			message: 'Admin chat color retrieved successfully'
 		});
 	} catch (error) {
-		console.error('Get admin chat color error:', error);
+		logger.error('Get admin chat color error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to get admin chat color'
@@ -343,7 +344,7 @@ router.post('/admin-chat-color', requireSession, async (req: Request, res: Respo
 			message: 'Admin chat color updated successfully'
 		});
 	} catch (error) {
-		console.error('Update admin chat color error:', error);
+		logger.error('Update admin chat color error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to update admin chat color'

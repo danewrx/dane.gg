@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router } from 'express';
 import { db } from '../db';
 import { contactEmails, contactPageSettings } from '../db/schema';
@@ -24,7 +25,7 @@ router.get('/emails', async (req, res) => {
 			data: emails
 		});
 	} catch (error) {
-		console.error('Error fetching contact emails:', error);
+		logger.error('Error fetching contact emails:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch contact emails'
@@ -42,7 +43,7 @@ router.get('/emails/all', requireAuth, async (req, res) => {
 			data: emails
 		});
 	} catch (error) {
-		console.error('Error fetching contact emails:', error);
+		logger.error('Error fetching contact emails:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch contact emails'
@@ -81,7 +82,7 @@ router.post('/emails', requireAuth, async (req, res) => {
 			data: newEmail
 		});
 	} catch (error) {
-		console.error('Error creating contact email:', error);
+		logger.error('Error creating contact email:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to create contact email'
@@ -116,7 +117,7 @@ router.put('/emails/order', requireAuth, async (req, res) => {
 			message: 'Contact emails order updated successfully'
 		});
 	} catch (error) {
-		console.error('Error updating contact emails order:', error);
+		logger.error('Error updating contact emails order:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update contact emails order'
@@ -157,7 +158,7 @@ router.put('/emails/:id', requireAuth, async (req, res) => {
 			data: updatedEmail
 		});
 	} catch (error) {
-		console.error('Error updating contact email:', error);
+		logger.error('Error updating contact email:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update contact email'
@@ -187,7 +188,7 @@ router.delete('/emails/:id', requireAuth, async (req, res) => {
 			message: 'Contact email deleted successfully'
 		});
 	} catch (error) {
-		console.error('Error deleting contact email:', error);
+		logger.error('Error deleting contact email:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to delete contact email'
@@ -215,7 +216,7 @@ router.get('/settings', async (req, res) => {
 			data: settingsObj
 		});
 	} catch (error) {
-		console.error('Error fetching contact page settings:', error);
+		logger.error('Error fetching contact page settings:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch contact page settings'
@@ -239,7 +240,7 @@ router.get('/settings/:key', async (req, res) => {
 			data: setting || null
 		});
 	} catch (error) {
-		console.error('Error fetching contact page setting:', error);
+		logger.error('Error fetching contact page setting:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch contact page setting'
@@ -292,7 +293,7 @@ router.put('/settings/:key', requireAuth, async (req, res) => {
 			data: result
 		});
 	} catch (error) {
-		console.error('Error updating contact page setting:', error);
+		logger.error('Error updating contact page setting:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update contact page setting'
@@ -322,7 +323,7 @@ router.delete('/settings/:key', requireAuth, async (req, res) => {
 			message: 'Contact page setting deleted successfully'
 		});
 	} catch (error) {
-		console.error('Error deleting contact page setting:', error);
+		logger.error('Error deleting contact page setting:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to delete contact page setting'

@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 export interface LastFmTrack {
 	artist: string;
 	name: string;
@@ -101,7 +102,7 @@ export class LastFmService {
 				})
 			);
 		} catch (error) {
-			console.error('Error fetching Last.fm data:', error);
+			logger.error('Error fetching Last.fm data:', error);
 			throw error;
 		}
 	}
@@ -115,7 +116,7 @@ export class LastFmService {
 			const nowPlaying = tracks.find((track) => track.nowPlaying);
 			return nowPlaying || null;
 		} catch (error) {
-			console.error('Error fetching now playing track:', error);
+			logger.error('Error fetching now playing track:', error);
 			return null;
 		}
 	}
@@ -129,7 +130,7 @@ export class LastFmService {
 			const lastPlayed = tracks.find((track) => !track.nowPlaying);
 			return lastPlayed || null;
 		} catch (error) {
-			console.error('Error fetching last played track:', error);
+			logger.error('Error fetching last played track:', error);
 			return null;
 		}
 	}
@@ -147,12 +148,12 @@ export class LastFmService {
 		lastUpdate: string;
 	}> {
 		try {
-			console.log('Getting current music status from Last.fm...');
+			logger.info('Getting current music status from Last.fm...');
 
 			// Try to get currently playing track first
 			const nowPlaying = await this.getNowPlaying();
 			if (nowPlaying) {
-				console.log(`Found currently playing track: ${nowPlaying.artist} - ${nowPlaying.name}`);
+				logger.info(`Found currently playing track: ${nowPlaying.artist} - ${nowPlaying.name}`);
 				return {
 					track: nowPlaying.name,
 					artist: nowPlaying.artist,
@@ -165,7 +166,7 @@ export class LastFmService {
 			}
 
 			// Fallback to last played track
-			console.log('No currently playing track, getting last played...');
+			logger.info('No currently playing track, getting last played...');
 			const lastPlayed = await this.getLastPlayed();
 			if (lastPlayed) {
 				// Use the actual timestamp from Last.fm if available, otherwise current time
@@ -176,7 +177,7 @@ export class LastFmService {
 					lastUpdate = playedDate.toISOString();
 				}
 
-				console.log(
+				logger.info(
 					`Found last played track: ${lastPlayed.artist} - ${lastPlayed.name} (played at: ${lastUpdate})`
 				);
 				return {
@@ -191,7 +192,7 @@ export class LastFmService {
 			}
 
 			// No tracks found
-			console.log('No music data available from Last.fm');
+			logger.info('No music data available from Last.fm');
 			return {
 				track: null,
 				artist: null,
@@ -202,7 +203,7 @@ export class LastFmService {
 				lastUpdate: new Date().toISOString()
 			};
 		} catch (error) {
-			console.error('Error getting music status from Last.fm:', error);
+			logger.error('Error getting music status from Last.fm:', error);
 			return {
 				track: null,
 				artist: null,

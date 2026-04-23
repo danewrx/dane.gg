@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
 	import { MessageSquare, Send, Trash2, Smile, Loader2 } from 'lucide-svelte';
@@ -273,7 +275,7 @@
 				return `${month}/${day} ${hours}:${minutes}`;
 			}
 		} catch (error) {
-			console.error('Error formatting timestamp:', error);
+			logger.error('Error formatting timestamp:', error);
 			return '';
 		}
 	}
@@ -287,7 +289,7 @@
 			const host = window.location.host;
 			return `${protocol}//${host}/ws/chat`;
 		} catch (error) {
-			console.error('Error constructing WebSocket URL:', error);
+			logger.error('Error constructing WebSocket URL:', error);
 			return '';
 		}
 	}
@@ -333,7 +335,7 @@
 				}
 			}
 		} catch (error) {
-			console.error('Failed to load messages:', error);
+			logger.error('Failed to load messages:', error);
 		} finally {
 			isLoadingMore = false;
 		}
@@ -426,7 +428,7 @@
 							return (msg as ChatMessage).id !== data.messageId;
 						});
 					} else if (data.type === 'error' && data.message) {
-						console.error('Server error:', data.message);
+						logger.error('Server error:', data.message);
 					} else if (data.type === 'adminConfig' && data.data) {
 						const config = data.data as { nickname?: string; color?: string };
 						if (config.nickname) {
@@ -445,7 +447,7 @@
 						onNotificationSoundsUpdate?.();
 					}
 				} catch (error) {
-					console.error('Error parsing WebSocket message:', error);
+					logger.error('Error parsing WebSocket message:', error);
 				}
 			};
 
@@ -468,7 +470,7 @@
 				}, 3000);
 			};
 		} catch (error) {
-			console.error('Error connecting to chat:', error);
+			logger.error('Error connecting to chat:', error);
 			connectionStatus = 'disconnected';
 			isConnected = false;
 		}

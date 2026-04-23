@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { db } from '../index';
 import {
 	visitorStats,
@@ -18,7 +19,7 @@ import {
 
 /** Deletes rows in FK-safe order before re-seeding */
 export async function clearAllSeedData() {
-	console.log('🧹 Clearing existing data...');
+	logger.info('Clearing existing data...');
 	await db.delete(visitorStats);
 	await db.delete(projectTags);
 	await db.delete(postTags);

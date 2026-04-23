@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router } from 'express';
 import { db } from '../db';
 import { certifications } from '../db/schema';
@@ -16,7 +17,7 @@ router.get('/', async (req, res) => {
 			data: certs
 		});
 	} catch (error) {
-		console.error('Error fetching certifications:', error);
+		logger.error('Error fetching certifications:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch certifications'
@@ -34,7 +35,7 @@ router.get('/all', requireAuth, async (req, res) => {
 			data: certs
 		});
 	} catch (error) {
-		console.error('Error fetching certifications:', error);
+		logger.error('Error fetching certifications:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch certifications'
@@ -102,7 +103,7 @@ router.post('/', requireAuth, async (req, res) => {
 			data: newCert
 		});
 	} catch (error) {
-		console.error('Error creating certification:', error);
+		logger.error('Error creating certification:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to create certification'
@@ -137,7 +138,7 @@ router.put('/order', requireAuth, async (req, res) => {
 			message: 'Certifications order updated successfully'
 		});
 	} catch (error) {
-		console.error('Error updating certifications order:', error);
+		logger.error('Error updating certifications order:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update certifications order'
@@ -204,7 +205,7 @@ router.put('/:id', requireAuth, async (req, res) => {
 			data: updatedCert
 		});
 	} catch (error) {
-		console.error('Error updating certification:', error);
+		logger.error('Error updating certification:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update certification'
@@ -234,7 +235,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
 			message: 'Certification deleted successfully'
 		});
 	} catch (error) {
-		console.error('Error deleting certification:', error);
+		logger.error('Error deleting certification:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to delete certification'

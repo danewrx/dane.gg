@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { Loader2, Link2, Edit2, Check, X, GripVertical } from 'lucide-svelte';
@@ -43,7 +45,7 @@
 				);
 			}
 		} catch (error) {
-			console.error('Error loading social links:', error);
+			logger.error('Error loading social links:', error);
 			toast.error('Failed to load social links');
 		}
 	}
@@ -79,7 +81,7 @@
 				}
 			}
 		} catch (error) {
-			console.error('Error loading contact social config:', error);
+			logger.error('Error loading contact social config:', error);
 		} finally {
 			isLoading = false;
 		}
@@ -127,7 +129,7 @@
 				toast.error('Failed to save header text');
 			}
 		} catch (error) {
-			console.error('Error saving header:', error);
+			logger.error('Error saving header:', error);
 			toast.error('Failed to save header text');
 		}
 	}
@@ -169,7 +171,7 @@
 				toast.error('Failed to save configuration');
 			}
 		} catch (error) {
-			console.error('Error saving contact social config:', error);
+			logger.error('Error saving contact social config:', error);
 			toast.error('Failed to save configuration');
 		} finally {
 			isSaving = false;

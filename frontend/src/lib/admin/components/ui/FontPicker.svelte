@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { Settings2 } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
@@ -56,7 +58,7 @@
 			const data = await res.json();
 			fonts = data.data || [];
 		} catch (e) {
-			console.error(e);
+			logger.error(e);
 			toast.error('Failed to load fonts');
 			fonts = [];
 		} finally {

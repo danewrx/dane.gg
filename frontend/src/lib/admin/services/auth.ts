@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 import { auth } from '$lib/admin/stores/auth';
 import { browser } from '$app/environment';
 
@@ -52,7 +53,7 @@ class AuthService {
 
 				// Only log errors for non-401 status codes (401 is expected for unauthenticated users)
 				if (response.status !== 401) {
-					console.error(`API request failed: ${endpoint}`, response.status, errorData);
+					logger.error(`API request failed: ${endpoint}`, response.status, errorData);
 				}
 
 				// Create error object with status for processing
@@ -67,7 +68,7 @@ class AuthService {
 		} catch (error) {
 			// Only log errors for non-401 status codes
 			if ((error as any).status !== 401) {
-				console.error(`API request failed: ${endpoint}`, error);
+				logger.error(`API request failed: ${endpoint}`, error);
 			}
 			throw error;
 		}
@@ -146,7 +147,7 @@ class AuthService {
 				method: 'POST'
 			});
 		} catch (error) {
-			console.error('Logout error:', error);
+			logger.error('Logout error:', error);
 			// Continue with logout even if API call fails
 		} finally {
 			auth.logout();
@@ -169,7 +170,7 @@ class AuthService {
 
 			return response;
 		} catch (error) {
-			console.error('Token refresh failed:', error);
+			logger.error('Token refresh failed:', error);
 			// Only logout if we're actually authenticated
 			// Note: We can't easily check auth state here without subscribing
 			// This is a fallback, so we'll just clear the persisted data

@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 
@@ -68,7 +69,7 @@ export async function loadSiteConfig(): Promise<void> {
 			throw new Error(data.error || 'Failed to load site configuration');
 		}
 	} catch (error) {
-		console.error('Error loading site configuration:', error);
+		logger.error('Error loading site configuration:', error);
 		configError.set(error instanceof Error ? error.message : 'Unknown error');
 
 		// Fall back to default configuration
@@ -99,7 +100,7 @@ export async function getConfigValue(key: string): Promise<any> {
 			throw new Error(data.error || 'Failed to load config value');
 		}
 	} catch (error) {
-		console.error(`Error loading config value '${key}':`, error);
+		logger.error(`Error loading config value '${key}':`, error);
 		return null;
 	}
 }
@@ -137,7 +138,7 @@ export async function updateConfigValue(
 			throw new Error(data.error || 'Failed to update config value');
 		}
 	} catch (error) {
-		console.error(`Error updating config value '${key}':`, error);
+		logger.error(`Error updating config value '${key}':`, error);
 		return false;
 	}
 }

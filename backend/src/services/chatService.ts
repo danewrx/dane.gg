@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { WebSocketServer, WebSocket } from 'ws';
 import { Server, IncomingMessage } from 'http';
 import { db } from '../db';
@@ -70,7 +71,7 @@ export class ChatService {
 				if (process.env.NODE_ENV === 'production') {
 					throw new Error('SESSION_SECRET environment variable is required in production');
 				}
-				console.warn('WARNING: SESSION_SECRET not set, using default (only for development)');
+				logger.warn('WARNING: SESSION_SECRET not set, using default (only for development)');
 				this.sessionSecret = 'your-super-secret-session-key-change-this-in-production';
 			}
 
@@ -87,13 +88,13 @@ export class ChatService {
 			});
 
 			this.wss.on('error', (error) => {
-				console.error('❌ WebSocket server error:', error);
+				logger.error('WebSocket server error:', error);
 			});
 
-			console.log('✅ Chat WebSocket server initialized on /ws/chat');
-			console.log('   Admin config:', this.adminConfig);
+			logger.info('Chat WebSocket server initialized on /ws/chat');
+			logger.info('Admin config:', this.adminConfig);
 		} catch (error) {
-			console.error('❌ Failed to initialize WebSocket server:', error);
+			logger.error('Failed to initialize WebSocket server:', error);
 		}
 	}
 
@@ -110,7 +111,7 @@ export class ChatService {
 			const isPublicChat = url.searchParams.get('public') === 'true';
 
 			if (isPublicChat) {
-				console.log('📨 Public chat connection detected - ignoring admin session');
+				logger.info('Public chat connection detected - ignoring admin session');
 				return { isAdmin: false };
 			}
 
@@ -129,10 +130,10 @@ export class ChatService {
 				const isValid = await this.validateApiKey(apiKey);
 				if (isValid) {
 					const prefix = apiKey.substring(0, 11); // dk_ + 8 chars
-					console.log(`✅ API key validated for WebSocket connection (prefix: ${prefix})`);
+					logger.info(`API key validated for WebSocket connection (prefix: ${prefix})`);
 					return { isAdmin: true, apiKeyPrefix: prefix };
 				} else {
-					console.log('❌ API key validation failed for WebSocket connection');
+					logger.info('API key validation failed for WebSocket connection');
 				}
 			}
 
@@ -157,13 +158,13 @@ export class ChatService {
 			// Check if session is registered as admin
 			if (adminSessions.isAdmin(sessionId)) {
 				const info = adminSessions.get(sessionId);
-				console.log('✅ Admin session validated for user:', info?.username);
+				logger.info('Admin session validated for user:', info?.username);
 				return { isAdmin: true };
 			}
 
 			return { isAdmin: false };
 		} catch (error) {
-			console.error('Error validating admin session:', error);
+			logger.error('Error validating admin session:', error);
 			return { isAdmin: false };
 		}
 	}
@@ -236,11 +237,11 @@ export class ChatService {
 			db.update(apiKeys)
 				.set({ lastUsedAt: new Date() })
 				.where(eq(apiKeys.id, apiKey.id))
-				.catch((err) => console.error('Failed to update API key last used:', err));
+				.catch((err) => logger.error('Failed to update API key last used:', err));
 
 			return true;
 		} catch (error) {
-			console.error('Error validating API key:', error);
+			logger.error('Error validating API key:', error);
 			return false;
 		}
 	}
@@ -270,9 +271,9 @@ export class ChatService {
 				this.adminConfig.color = colorResult[0].value;
 			}
 
-			console.log('📋 Loaded admin config:', this.adminConfig);
+			logger.info('Loaded admin config:', this.adminConfig);
 		} catch (error) {
-			console.error('Error loading admin config:', error);
+			logger.error('Error loading admin config:', error);
 		}
 	}
 
@@ -305,7 +306,7 @@ export class ChatService {
 
 			return true;
 		} catch (error) {
-			console.error(`Error saving admin ${key}:`, error);
+			logger.error(`Error saving admin ${key}:`, error);
 			return false;
 		}
 	}
@@ -363,7 +364,7 @@ export class ChatService {
 	): Promise<void> {
 		const clientIp = this.getClientIp(req);
 		if (!this.checkConnectionRateLimit(clientIp)) {
-			console.log(`⚠️ Connection rejected: Rate limit exceeded for IP ${clientIp}`);
+			logger.info(`Connection rejected: Rate limit exceeded for IP ${clientIp}`);
 			this.sendToClient(ws, {
 				type: 'error',
 				message: `Too many connections from your IP. Maximum ${this.MAX_CONNECTIONS_PER_IP} connections per minute.`
@@ -380,19 +381,19 @@ export class ChatService {
 			this.adminClients.add(ws);
 			if (apiKeyPrefix) {
 				this.apiKeyConnections.set(ws, apiKeyPrefix);
-				console.log(
-					`🔑 Client connected as admin via API key (prefix: ${apiKeyPrefix}). Total admin clients: ${this.adminClients.size}`
+				logger.info(
+					`Client connected as admin via API key (prefix: ${apiKeyPrefix}). Total admin clients: ${this.adminClients.size}`
 				);
 			} else {
-				console.log(
-					`🔑 Client connected as admin via session. Total admin clients: ${this.adminClients.size}`
+				logger.info(
+					`Client connected as admin via session. Total admin clients: ${this.adminClients.size}`
 				);
 			}
 		} else {
-			console.log(`📨 Client connected as regular user (not admin)`);
+			logger.info(`Client connected as regular user (not admin)`);
 		}
 
-		console.log(`📨 New chat client connected. Total clients: ${this.clients.size}`);
+		logger.info(`New chat client connected. Total clients: ${this.clients.size}`);
 
 		// Send admin config only to admin clients
 		if (isAdmin) {
@@ -406,7 +407,7 @@ export class ChatService {
 		try {
 			await this.sendRecentMessages(ws);
 		} catch (error) {
-			console.error('Error loading recent messages:', error);
+			logger.error('Error loading recent messages:', error);
 		}
 
 		this.sendToClient(ws, {
@@ -446,13 +447,13 @@ export class ChatService {
 				// Handle regular message
 				this.handleMessage(ws, message);
 			} catch (error) {
-				console.error('Error handling chat message:', error);
+				logger.error('Error handling chat message:', error);
 			}
 		});
 
 		ws.on('close', () => this.handleDisconnection(ws, req));
 		ws.on('error', (error) => {
-			console.error('WebSocket error:', error);
+			logger.error('WebSocket error:', error);
 			this.handleDisconnection(ws, req);
 		});
 	}
@@ -479,13 +480,13 @@ export class ChatService {
 			const apiKeyPrefix = this.apiKeyConnections.get(ws);
 			const nickname = this.nicknames.get(ws);
 
-			console.log(`🔍 Auth check requested:`);
-			console.log(`   - In clients set: ${isInClients}`);
-			console.log(`   - In adminClients set: ${isAdmin}`);
-			console.log(`   - API key prefix: ${apiKeyPrefix || 'none'}`);
-			console.log(`   - Nickname: ${nickname || 'none'}`);
-			console.log(`   - Total clients: ${this.clients.size}`);
-			console.log(`   - Total admin clients: ${this.adminClients.size}`);
+			logger.info(`Auth check requested:`);
+			logger.info(`   - In clients set: ${isInClients}`);
+			logger.info(`   - In adminClients set: ${isAdmin}`);
+			logger.info(`   - API key prefix: ${apiKeyPrefix || 'none'}`);
+			logger.info(`   - Nickname: ${nickname || 'none'}`);
+			logger.info(`   - Total clients: ${this.clients.size}`);
+			logger.info(`   - Total admin clients: ${this.adminClients.size}`);
 
 			this.sendToClient(ws, {
 				type: 'system',
@@ -500,8 +501,8 @@ export class ChatService {
 			message.startsWith('/delete_discord_message')
 		) {
 			const isAdmin = this.adminClients.has(ws);
-			console.log(
-				`🔍 Command received: ${message.substring(0, 30)}... | Admin: ${isAdmin} | Total admin clients: ${this.adminClients.size}`
+			logger.info(
+				`Command received: ${message.substring(0, 30)}... | Admin: ${isAdmin} | Total admin clients: ${this.adminClients.size}`
 			);
 		}
 		// /nick <nickname> - Change nickname (shows message)
@@ -524,12 +525,12 @@ export class ChatService {
 			const isInClients = this.clients.has(ws);
 
 			if (!isAdmin) {
-				console.log(`❌ Unauthorized /delete command:`);
-				console.log(`   - Client in clients set: ${isInClients}`);
-				console.log(`   - Client in adminClients set: ${isAdmin}`);
-				console.log(`   - Total clients: ${this.clients.size}`);
-				console.log(`   - Total admin clients: ${this.adminClients.size}`);
-				console.log(`   - Command: ${message.substring(0, 50)}...`);
+				logger.info(`Unauthorized /delete command:`);
+				logger.info(`   - Client in clients set: ${isInClients}`);
+				logger.info(`   - Client in adminClients set: ${isAdmin}`);
+				logger.info(`   - Total clients: ${this.clients.size}`);
+				logger.info(`   - Total admin clients: ${this.adminClients.size}`);
+				logger.info(`   - Command: ${message.substring(0, 50)}...`);
 				this.sendToClient(ws, { type: 'error', message: 'Unauthorized' });
 				return;
 			}
@@ -606,18 +607,18 @@ export class ChatService {
 			const apiKeyPrefix = this.apiKeyConnections.get(ws);
 
 			if (!isAdmin) {
-				console.log(`❌ Unauthorized /set_discord_message_id:`);
-				console.log(`   - Client in clients set: ${isInClients}`);
-				console.log(`   - Client in adminClients set: ${isAdmin}`);
-				console.log(`   - API key prefix: ${apiKeyPrefix || 'none'}`);
-				console.log(`   - Total clients: ${this.clients.size}`);
-				console.log(`   - Total admin clients: ${this.adminClients.size}`);
-				console.log(`   - Command: ${message.substring(0, 50)}...`);
+				logger.info(`Unauthorized /set_discord_message_id:`);
+				logger.info(`   - Client in clients set: ${isInClients}`);
+				logger.info(`   - Client in adminClients set: ${isAdmin}`);
+				logger.info(`   - API key prefix: ${apiKeyPrefix || 'none'}`);
+				logger.info(`   - Total clients: ${this.clients.size}`);
+				logger.info(`   - Total admin clients: ${this.adminClients.size}`);
+				logger.info(`   - Command: ${message.substring(0, 50)}...`);
 
 				// Check if connection was previously authenticated with API key
 				if (apiKeyPrefix) {
-					console.log(
-						`   ⚠️ Connection has API key prefix but is not in adminClients - possible connection state issue`
+					logger.info(
+						`Connection has API key prefix but is not in adminClients - possible connection state issue`
 					);
 				}
 
@@ -640,7 +641,7 @@ export class ChatService {
 			if (parts.length >= 2) {
 				const messageId = parts[0];
 				const discordMessageId = parts.slice(1).join(' ');
-				console.log(`📝 Setting Discord message ID: ${messageId} → ${discordMessageId}`);
+				logger.info(`Setting Discord message ID: ${messageId} → ${discordMessageId}`);
 				await this.handleSetDiscordMessageId(messageId, discordMessageId);
 				this.sendToClient(ws, {
 					type: 'system',
@@ -730,7 +731,7 @@ export class ChatService {
 					discordMessageId
 				);
 			} catch (error) {
-				console.error('Error saving Discord message to database:', error);
+				logger.error('Error saving Discord message to database:', error);
 			}
 
 			const chatMessage: ChatMessage = {
@@ -745,7 +746,7 @@ export class ChatService {
 
 			this.broadcast(chatMessage);
 		} catch (error) {
-			console.error('Error parsing Discord message:', error);
+			logger.error('Error parsing Discord message:', error);
 			this.sendToClient(ws, { type: 'error', message: 'Invalid JSON format' });
 		}
 	}
@@ -761,21 +762,21 @@ export class ChatService {
 		try {
 			// Validate UUID format for message ID
 			if (!this.isValidUUID(messageId)) {
-				console.error(`Invalid message ID format: ${messageId}`);
+				logger.error(`Invalid message ID format: ${messageId}`);
 				return;
 			}
 
 			// Validate Discord message ID (max 100 chars)
 			if (!discordMessageId || discordMessageId.length > 100 || !/^\d+$/.test(discordMessageId)) {
-				console.error(`Invalid Discord message ID format: ${discordMessageId}`);
+				logger.error(`Invalid Discord message ID format: ${discordMessageId}`);
 				return;
 			}
 
 			await db.update(messages).set({ discordMessageId }).where(eq(messages.id, messageId));
 
-			console.log(`✅ Stored Discord message ID ${discordMessageId} for message ${messageId}`);
+			logger.info(`Stored Discord message ID ${discordMessageId} for message ${messageId}`);
 		} catch (error) {
-			console.error('Error storing Discord message ID:', error);
+			logger.error('Error storing Discord message ID:', error);
 		}
 	}
 
@@ -823,7 +824,7 @@ export class ChatService {
 			}
 		}
 
-		console.log(`👤 ${oldNickname} -> ${sanitizedNickname}`);
+		logger.info(`${oldNickname} -> ${sanitizedNickname}`);
 	}
 
 	/**
@@ -860,7 +861,7 @@ export class ChatService {
 		const saved = await this.saveAdminConfig('color', color);
 		if (saved) {
 			this.adminConfig.color = color;
-			console.log(`📢 Admin color changed to: ${color}`);
+			logger.info(`Admin color changed to: ${color}`);
 
 			this.broadcastAdminConfig();
 		} else {
@@ -953,7 +954,7 @@ export class ChatService {
 				source
 			);
 		} catch (error) {
-			console.error('Error saving message to database:', error);
+			logger.error('Error saving message to database:', error);
 		}
 
 		const chatMessage: ChatMessage = {
@@ -976,7 +977,7 @@ export class ChatService {
 		try {
 			// Validate UUID format
 			if (!this.isValidUUID(messageId)) {
-				console.error(`Invalid message ID format: ${messageId}`);
+				logger.error(`Invalid message ID format: ${messageId}`);
 				return;
 			}
 
@@ -991,7 +992,7 @@ export class ChatService {
 
 			// Delete from database
 			await db.delete(messages).where(eq(messages.id, messageId));
-			console.log(`🗑️ Message deleted: ${messageId}`);
+			logger.info(`Message deleted: ${messageId}`);
 
 			// If message has Discord message ID, notify Discord bot to delete it
 			if (discordMessageId && (await this.isDiscordChatIntegrationEnabled())) {
@@ -1000,7 +1001,7 @@ export class ChatService {
 
 			this.broadcastDelete(messageId);
 		} catch (error) {
-			console.error('Error deleting message:', error);
+			logger.error('Error deleting message:', error);
 		}
 	}
 
@@ -1014,9 +1015,9 @@ export class ChatService {
 			if (client.readyState === WebSocket.OPEN) {
 				try {
 					client.send(command);
-					console.log(`📤 Sent Discord delete command to bot: ${discordMessageId}`);
+					logger.info(`Sent Discord delete command to bot: ${discordMessageId}`);
 				} catch (error) {
-					console.error('Error sending Discord delete command:', error);
+					logger.error('Error sending Discord delete command:', error);
 				}
 			}
 		});
@@ -1032,7 +1033,7 @@ export class ChatService {
 				try {
 					client.send(message);
 				} catch (error) {
-					console.error('Error broadcasting delete:', error);
+					logger.error('Error broadcasting delete:', error);
 				}
 			}
 		});
@@ -1048,7 +1049,7 @@ export class ChatService {
 				try {
 					client.send(message);
 				} catch (error) {
-					console.error('Error broadcasting message:', error);
+					logger.error('Error broadcasting message:', error);
 				}
 			}
 		});
@@ -1063,14 +1064,14 @@ export class ChatService {
 			data: this.adminConfig
 		});
 
-		console.log(`📢 Broadcasting admin config:`, this.adminConfig);
+		logger.info(`Broadcasting admin config:`, this.adminConfig);
 
 		this.clients.forEach((client) => {
 			if (client.readyState === WebSocket.OPEN) {
 				try {
 					client.send(message);
 				} catch (error) {
-					console.error('Error broadcasting admin config:', error);
+					logger.error('Error broadcasting admin config:', error);
 				}
 			}
 		});
@@ -1084,14 +1085,14 @@ export class ChatService {
 			type: 'emojiUpdate'
 		});
 
-		console.log('Broadcasting emoji update to all clients');
+		logger.info('Broadcasting emoji update to all clients');
 
 		this.clients.forEach((client) => {
 			if (client.readyState === WebSocket.OPEN) {
 				try {
 					client.send(message);
 				} catch (error) {
-					console.error('Error broadcasting emoji update:', error);
+					logger.error('Error broadcasting emoji update:', error);
 				}
 			}
 		});
@@ -1106,7 +1107,7 @@ export class ChatService {
 				try {
 					client.send(message);
 				} catch (error) {
-					console.error('Error broadcasting notification sounds update:', error);
+					logger.error('Error broadcasting notification sounds update:', error);
 				}
 			}
 		});
@@ -1121,7 +1122,7 @@ export class ChatService {
 				try {
 					client.send(message);
 				} catch (error) {
-					console.error('Error broadcasting site config update:', error);
+					logger.error('Error broadcasting site config update:', error);
 				}
 			}
 		});
@@ -1135,7 +1136,7 @@ export class ChatService {
 			try {
 				ws.send(JSON.stringify(data));
 			} catch (error) {
-				console.error('Error sending to client:', error);
+				logger.error('Error sending to client:', error);
 			}
 		}
 	}
@@ -1154,11 +1155,11 @@ export class ChatService {
 		this.messageRateLimits.delete(ws);
 
 		if (wasAdmin) {
-			console.log(
-				`🔓 Admin client disconnected${apiKeyPrefix ? ` (API key prefix: ${apiKeyPrefix})` : ''}. Total admin clients: ${this.adminClients.size}`
+			logger.info(
+				`Admin client disconnected${apiKeyPrefix ? ` (API key prefix: ${apiKeyPrefix})` : ''}. Total admin clients: ${this.adminClients.size}`
 			);
 		}
-		console.log(`📨 Chat client disconnected. Total clients: ${this.clients.size}`);
+		logger.info(`Chat client disconnected. Total clients: ${this.clients.size}`);
 		this.broadcastUserCount();
 	}
 
@@ -1188,7 +1189,7 @@ export class ChatService {
 					ws.close(1008, 'API key revoked');
 					closedCount++;
 				} catch (error) {
-					console.error('Error closing WebSocket connection:', error);
+					logger.error('Error closing WebSocket connection:', error);
 				}
 			}
 			// Clean up tracking
@@ -1196,8 +1197,8 @@ export class ChatService {
 		});
 
 		if (closedCount > 0) {
-			console.log(
-				`🔒 Closed ${closedCount} WebSocket connection(s) for API key prefix: ${apiKeyPrefix}`
+			logger.info(
+				`Closed ${closedCount} WebSocket connection(s) for API key prefix: ${apiKeyPrefix}`
 			);
 		}
 
@@ -1214,7 +1215,7 @@ export class ChatService {
 				try {
 					client.send(message);
 				} catch (error) {
-					console.error('Error broadcasting user count:', error);
+					logger.error('Error broadcasting user count:', error);
 				}
 			}
 		});
@@ -1251,7 +1252,7 @@ export class ChatService {
 			const result = await db.insert(messages).values(newMessage).returning({ id: messages.id });
 			return result[0]?.id;
 		} catch (error) {
-			console.error('Error saving message:', error);
+			logger.error('Error saving message:', error);
 			return undefined;
 		}
 	}
@@ -1283,7 +1284,7 @@ export class ChatService {
 				};
 			});
 		} catch (error) {
-			console.error('Error loading recent messages:', error);
+			logger.error('Error loading recent messages:', error);
 			return [];
 		}
 	}
@@ -1314,7 +1315,7 @@ export class ChatService {
 			this.clients.clear();
 			this.nicknames.clear();
 			this.adminClients.clear();
-			console.log('Chat WebSocket server closed');
+			logger.info('Chat WebSocket server closed');
 		}
 	}
 }

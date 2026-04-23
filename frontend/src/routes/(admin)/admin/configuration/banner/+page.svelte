@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { Save, Eye, EyeOff } from 'lucide-svelte';
 	import {
@@ -31,7 +33,7 @@
 			const data = await getBannerConfig();
 			config = data;
 		} catch (err) {
-			console.error('Error loading banner config:', err);
+			logger.error('Error loading banner config:', err);
 			toast.error('Failed to load banner configuration', {
 				description: err instanceof Error ? err.message : 'Please try refreshing the page'
 			});
@@ -57,7 +59,7 @@
 			notifySiteConfigConsumers();
 			toast.success('Banner configuration saved successfully');
 		} catch (err) {
-			console.error('Error saving banner config:', err);
+			logger.error('Error saving banner config:', err);
 			toast.error('Failed to save banner configuration', {
 				description: err instanceof Error ? err.message : 'Please try again'
 			});

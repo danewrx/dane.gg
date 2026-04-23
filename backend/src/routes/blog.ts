@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router } from 'express';
 import { db } from '../db';
 import { posts, blogTags, postTags } from '../db/schema';
@@ -50,7 +51,7 @@ router.get('/', async (req, res) => {
 			data: postsWithTags
 		});
 	} catch (error) {
-		console.error('Error fetching blog posts:', error);
+		logger.error('Error fetching blog posts:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch blog posts'
@@ -102,7 +103,7 @@ router.get('/admin/all', requireSession, async (req, res) => {
 			data: postsWithTags
 		});
 	} catch (error) {
-		console.error('Error fetching all blog posts:', error);
+		logger.error('Error fetching all blog posts:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch blog posts'
@@ -158,7 +159,7 @@ router.get('/admin/:id', requireSession, async (req, res) => {
 			}
 		});
 	} catch (error) {
-		console.error('Error fetching blog post:', error);
+		logger.error('Error fetching blog post:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch blog post'
@@ -254,7 +255,7 @@ router.post('/admin', requireSession, async (req, res) => {
 			}
 		});
 	} catch (error) {
-		console.error('Error creating blog post:', error);
+		logger.error('Error creating blog post:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to create blog post'
@@ -348,7 +349,7 @@ router.put('/admin/:id', requireSession, async (req, res) => {
 			}
 		});
 	} catch (error) {
-		console.error('Error updating blog post:', error);
+		logger.error('Error updating blog post:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update blog post'
@@ -377,7 +378,7 @@ router.delete('/admin/:id', requireSession, async (req, res) => {
 			data: deletedPost
 		});
 	} catch (error) {
-		console.error('Error deleting blog post:', error);
+		logger.error('Error deleting blog post:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to delete blog post'
@@ -397,7 +398,7 @@ router.get('/admin/tags/all', requireSession, async (req, res) => {
 			data: allTags
 		});
 	} catch (error) {
-		console.error('Error fetching blog tags:', error);
+		logger.error('Error fetching blog tags:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch blog tags'
@@ -427,7 +428,7 @@ router.get('/admin/tags/:id/posts', requireSession, async (req, res) => {
 			data: rows
 		});
 	} catch (error) {
-		console.error('Error fetching posts for blog tag:', error);
+		logger.error('Error fetching posts for blog tag:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch posts using this tag'
@@ -469,7 +470,7 @@ router.post('/admin/tags', requireSession, async (req, res) => {
 			data: newTag
 		});
 	} catch (error) {
-		console.error('Error creating blog tag:', error);
+		logger.error('Error creating blog tag:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to create blog tag'
@@ -525,7 +526,7 @@ router.put('/admin/tags/:id', requireSession, async (req, res) => {
 			data: updatedTag
 		});
 	} catch (error) {
-		console.error('Error updating blog tag:', error);
+		logger.error('Error updating blog tag:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to update blog tag'
@@ -554,7 +555,7 @@ router.delete('/admin/tags/:id', requireSession, async (req, res) => {
 			data: deletedTag
 		});
 	} catch (error) {
-		console.error('Error deleting blog tag:', error);
+		logger.error('Error deleting blog tag:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to delete blog tag'
@@ -615,7 +616,7 @@ router.get('/:slug/navigation', async (req, res) => {
 			}
 		});
 	} catch (error) {
-		console.error('Error fetching navigation posts:', error);
+		logger.error('Error fetching navigation posts:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch navigation posts'
@@ -660,7 +661,7 @@ router.get('/:slug', async (req, res) => {
 			}
 		});
 	} catch (error) {
-		console.error('Error fetching blog post:', error);
+		logger.error('Error fetching blog post:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Failed to fetch blog post'

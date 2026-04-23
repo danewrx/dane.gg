@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
 import { apiKeys, type NewApiKey } from '../db/schema';
@@ -43,7 +44,7 @@ router.get('/', requireSession, requireAdmin, async (req: Request, res: Response
 
 		res.json({ keys });
 	} catch (error) {
-		console.error('Error listing API keys:', error);
+		logger.error('Error listing API keys:', error);
 		res.status(500).json({ error: 'Failed to list API keys' });
 	}
 });
@@ -99,7 +100,7 @@ router.post('/', requireSession, requireAdmin, async (req: Request, res: Respons
 			...result[0]
 		});
 	} catch (error: any) {
-		console.error('Error creating API key:', error);
+		logger.error('Error creating API key:', error);
 
 		if (error.code === '23505') {
 			return res
@@ -176,13 +177,13 @@ router.patch('/:id', requireSession, requireAdmin, async (req: Request, res: Res
 		if (willBeDeactivated) {
 			const closedCount = chatService.closeConnectionsForApiKey(keyPrefix);
 			if (closedCount > 0) {
-				console.log(`🔒 Closed ${closedCount} connection(s) for deactivated API key: ${keyPrefix}`);
+				logger.info(`Closed ${closedCount} connection(s) for deactivated API key: ${keyPrefix}`);
 			}
 		}
 
 		res.json({ message: 'API key updated', key: result[0] });
 	} catch (error) {
-		console.error('Error updating API key:', error);
+		logger.error('Error updating API key:', error);
 		res.status(500).json({ error: 'Failed to update API key' });
 	}
 });
@@ -237,8 +238,8 @@ router.post(
 			// Close all WebSocket connections using the old API key
 			const closedCount = chatService.closeConnectionsForApiKey(oldKeyPrefix);
 			if (closedCount > 0) {
-				console.log(
-					`🔒 Closed ${closedCount} connection(s) for regenerated API key: ${oldKeyPrefix}`
+				logger.info(
+					`Closed ${closedCount} connection(s) for regenerated API key: ${oldKeyPrefix}`
 				);
 			}
 
@@ -248,7 +249,7 @@ router.post(
 				...result[0]
 			});
 		} catch (error) {
-			console.error('Error regenerating API key:', error);
+			logger.error('Error regenerating API key:', error);
 			res.status(500).json({ error: 'Failed to regenerate API key' });
 		}
 	}
@@ -280,12 +281,12 @@ router.delete('/:id', requireSession, requireAdmin, async (req: Request, res: Re
 		// Close all ws connections using key
 		const closedCount = chatService.closeConnectionsForApiKey(keyPrefix);
 		if (closedCount > 0) {
-			console.log(`🔒 Closed ${closedCount} connection(s) for deleted API key: ${keyPrefix}`);
+			logger.info(`Closed ${closedCount} connection(s) for deleted API key: ${keyPrefix}`);
 		}
 
 		res.json({ message: 'API key deleted', id: result[0].id });
 	} catch (error) {
-		console.error('Error deleting API key:', error);
+		logger.error('Error deleting API key:', error);
 		res.status(500).json({ error: 'Failed to delete API key' });
 	}
 });

@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { db } from '../index';
 import { fonts } from '../schema';
 
@@ -31,7 +32,7 @@ const GOOGLE_FONTS_LIST = [
 ];
 
 export async function seedFonts() {
-	console.log('🔤 Seeding fonts...');
+	logger.info('Seeding fonts...');
 	await db.insert(fonts).values(
 		GOOGLE_FONTS_LIST.map((name, i) => ({
 			name,

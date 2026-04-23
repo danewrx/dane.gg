@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import {
@@ -84,7 +86,7 @@
 				expandedCategories = new Set(categories.map((c) => c.id));
 			}
 		} catch (error) {
-			console.error('Error loading skills:', error);
+			logger.error('Error loading skills:', error);
 			toast.error('Failed to load skills');
 		} finally {
 			isLoading = false;
@@ -388,7 +390,7 @@
 				});
 			}
 		} catch (error) {
-			console.error('Error reordering categories:', error);
+			logger.error('Error reordering categories:', error);
 			toast.error('Error reordering categories', {
 				description: 'An unexpected error occurred. Please try again.'
 			});
@@ -478,7 +480,7 @@
 				});
 			}
 		} catch (error) {
-			console.error('Error reordering skills:', error);
+			logger.error('Error reordering skills:', error);
 			toast.error('Error reordering skills', {
 				description: 'An unexpected error occurred. Please try again.'
 			});

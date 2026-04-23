@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router, Request, Response } from 'express';
 import { requireSession } from '../middleware/auth';
 
@@ -47,7 +48,7 @@ router.get('/rate-limits', requireSession, (req: Request, res: Response) => {
 			message: 'Rate limiting configuration retrieved successfully'
 		});
 	} catch (error) {
-		console.error('Rate limit status error:', error);
+		logger.error('Rate limit status error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: 'Failed to retrieve rate limiting status'
@@ -77,7 +78,7 @@ router.get('/health', (req: Request, res: Response) => {
 
 		res.json(health);
 	} catch (error) {
-		console.error('Health check error:', error);
+		logger.error('Health check error:', error);
 		res.status(500).json({
 			status: 'error',
 			message: 'Health check failed'

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { Loader2 } from 'lucide-svelte';
@@ -37,7 +39,7 @@
 				aboutMe = result.data?.value || '';
 			}
 		} catch (error) {
-			console.error('Error loading about me:', error);
+			logger.error('Error loading about me:', error);
 			toast.error('Failed to load about me content');
 		} finally {
 			isLoading = false;
@@ -66,7 +68,7 @@
 
 			toast.success('About me content saved successfully');
 		} catch (error) {
-			console.error('Error saving about me:', error);
+			logger.error('Error saving about me:', error);
 			toast.error('Failed to save about me content');
 		} finally {
 			isSaving = false;

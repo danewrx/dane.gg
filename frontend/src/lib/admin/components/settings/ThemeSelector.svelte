@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import {
@@ -53,7 +55,7 @@
 				themes = data.data;
 			}
 		} catch (error) {
-			console.error('Error loading themes:', error);
+			logger.error('Error loading themes:', error);
 		} finally {
 			loading = false;
 		}

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { marked } from 'marked';
 	import {
 		Bold,
@@ -168,7 +170,7 @@
 				gfm: true
 			});
 		} catch (error) {
-			console.error('Markdown parsing error:', error);
+			logger.error('Markdown parsing error:', error);
 			return '<p>Error parsing markdown</p>';
 		}
 	});
@@ -192,7 +194,7 @@
 
 			return html;
 		} catch (error) {
-			console.error('Error converting to HTML:', error);
+			logger.error('Error converting to HTML:', error);
 			return markdown;
 		}
 	}

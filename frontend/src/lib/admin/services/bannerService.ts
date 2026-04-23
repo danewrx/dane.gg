@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 export interface BannerConfig {
 	text: string;
 	enabled: boolean;
@@ -47,7 +48,7 @@ export async function getBanner(): Promise<BannerConfig | null> {
 			transparentBackground: configs[BANNER_KEYS.TRANSPARENT_BG] || false
 		};
 	} catch (error) {
-		console.error('Error fetching banner:', error);
+		logger.error('Error fetching banner:', error);
 		return null;
 	}
 }
@@ -90,7 +91,7 @@ export async function getBannerConfig(): Promise<BannerConfig> {
 			transparentBackground: configs[BANNER_KEYS.TRANSPARENT_BG] || false
 		};
 	} catch (error) {
-		console.error('Error fetching banner config:', error);
+		logger.error('Error fetching banner config:', error);
 		throw error;
 	}
 }
@@ -129,7 +130,7 @@ export async function saveBannerConfig(config: BannerConfig): Promise<BannerConf
 
 		return config;
 	} catch (error) {
-		console.error('Error saving banner config:', error);
+		logger.error('Error saving banner config:', error);
 		throw error;
 	}
 }

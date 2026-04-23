@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router, Request, Response } from 'express';
 import { requireSession } from '../middleware/auth';
 import { TwitterApiService } from '../services/twitterApiService';
@@ -48,7 +49,7 @@ router.post('/fetch', requireSession, async (req: Request, res: Response) => {
 			});
 		}
 	} catch (error: any) {
-		console.error('Twitter fetch error:', error);
+		logger.error('Twitter fetch error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: error.message
@@ -86,7 +87,7 @@ router.get('/status', requireSession, async (req: Request, res: Response) => {
 			timestamp: new Date().toISOString()
 		});
 	} catch (error: any) {
-		console.error('Twitter status error:', error);
+		logger.error('Twitter status error:', error);
 		res.status(500).json({
 			error: 'Internal server error'
 		});
@@ -120,7 +121,7 @@ router.get('/health-check', requireSession, async (req: Request, res: Response) 
 			timestamp: new Date().toISOString()
 		});
 	} catch (error: any) {
-		console.error('Twitter health check error:', error);
+		logger.error('Twitter health check error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: error.message
@@ -164,7 +165,7 @@ router.put('/username', requireSession, async (req: Request, res: Response) => {
 			}
 		});
 	} catch (error: any) {
-		console.error('Twitter username update error:', error);
+		logger.error('Twitter username update error:', error);
 		res.status(500).json({
 			success: false,
 			error: 'Internal server error',
@@ -200,7 +201,7 @@ router.get('/tweets', requireSession, async (req: Request, res: Response) => {
 			count: tweetsWithProxyImages.length
 		});
 	} catch (error: any) {
-		console.error('Error fetching tweets:', error);
+		logger.error('Error fetching tweets:', error);
 		res.status(500).json({
 			error: 'Internal server error',
 			message: error.message

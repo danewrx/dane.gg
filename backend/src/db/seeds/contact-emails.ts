@@ -1,8 +1,9 @@
+import { logger } from '../../utils/logger';
 import { db } from '../index';
 import { contactEmails } from '../schema';
 
 export async function seedContactEmails() {
-	console.log('📧 Seeding contact emails...');
+	logger.info('Seeding contact emails...');
 	return db
 		.insert(contactEmails)
 		.values([

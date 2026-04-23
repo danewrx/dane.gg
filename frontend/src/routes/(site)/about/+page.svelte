@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
+
 	import { onMount } from 'svelte';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 	import { ChevronLeft, ChevronRight } from 'lucide-svelte';
@@ -78,7 +80,7 @@
 				skillCategories = result.data || [];
 			}
 		} catch (error) {
-			console.error('Error loading skills:', error);
+			logger.error('Error loading skills:', error);
 		} finally {
 			isLoadingSkills = false;
 		}
@@ -92,7 +94,7 @@
 				certifications = result.data || [];
 			}
 		} catch (error) {
-			console.error('Error loading certifications:', error);
+			logger.error('Error loading certifications:', error);
 		} finally {
 			isLoadingCerts = false;
 		}
@@ -112,7 +114,7 @@
 				}
 			}
 		} catch (error) {
-			console.error('Error loading biography:', error);
+			logger.error('Error loading biography:', error);
 			biographyContent = '';
 		} finally {
 			isLoadingBiography = false;

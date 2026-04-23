@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger';
 import { db } from '../index';
 import { projectCategories, projects, projectTags, tags } from '../schema';
 
@@ -16,7 +17,7 @@ export async function seedProjectsAndTagLinks(
 		throw new Error('seedProjectsAndTagLinks: expected 3 categories');
 	}
 
-	console.log('🚀 Seeding projects...');
+	logger.info('Seeding projects...');
 	const projectSeeds = await db
 		.insert(projects)
 		.values([
@@ -129,7 +130,7 @@ export async function seedProjectsAndTagLinks(
 
 	const tagId = (title: string) => portfolioTags.find((t) => t.title === title)?.id;
 
-	console.log('🔗 Linking projects with tags...');
+	logger.info('Linking projects with tags...');
 	const projectTagLinks = [
 		{ projectId: projectSeeds[0].id, tagId: tagId('JavaScript') },
 		{ projectId: projectSeeds[0].id, tagId: tagId('Express') },

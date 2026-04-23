@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Router } from 'express';
 import { DiscordStatusService } from '../services/discordStatusService';
 import { LastFmService } from '../services/lastfmService';
@@ -25,7 +26,7 @@ router.get('/discord-status', async (req, res) => {
 			lastUpdate: statusData.lastUpdate?.toISOString() || new Date().toISOString()
 		});
 	} catch (error) {
-		console.error('Error fetching Discord status:', error);
+		logger.error('Error fetching Discord status:', error);
 		res.status(500).json({ error: 'Internal server error' });
 	}
 });
@@ -53,7 +54,7 @@ router.get('/nowplaying', async (req, res) => {
 		const musicData = await LastFmService.getCurrentMusicStatus();
 		res.json(musicData);
 	} catch (error) {
-		console.error('Error fetching now playing from Last.fm:', error);
+		logger.error('Error fetching now playing from Last.fm:', error);
 
 		// Return default data on error
 		res.json({
@@ -110,7 +111,7 @@ router.get('/latest-tweet', async (req, res) => {
 			lastUpdate: latestTweet.updatedAt
 		});
 	} catch (error) {
-		console.error('Error fetching latest tweet:', error);
+		logger.error('Error fetching latest tweet:', error);
 		res.status(500).json({ error: 'Internal server error' });
 	}
 });
@@ -152,7 +153,7 @@ router.get('/tweet-profile-image', async (req, res) => {
 
 		res.send(Buffer.from(imageBuffer));
 	} catch (error: any) {
-		console.error('Error proxying tweet profile image:', error);
+		logger.error('Error proxying tweet profile image:', error);
 		res.status(500).json({ error: 'Failed to fetch image' });
 	}
 });
