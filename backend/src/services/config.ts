@@ -36,6 +36,20 @@ const ENV_FALLBACKS: Partial<SiteConfig> = {
 		"Hi, I'm Dane! I'm a software engineer & freelance designer from Manchester, UK."
 };
 
+function toEnvKey(key: string): string {
+	return key.replace(/[^a-zA-Z0-9]+/g, '_').toUpperCase();
+}
+
+function getEnvFallback(key: string): string | undefined {
+	const envKey = toEnvKey(key);
+	const value = process.env[envKey];
+	if (typeof value !== 'string') {
+		return undefined;
+	}
+	const trimmed = value.trim();
+	return trimmed.length > 0 ? trimmed : undefined;
+}
+
 export class ConfigService {
 	private static cache: Map<string, any> = new Map();
 	private static cacheExpiry: Map<string, number> = new Map();
@@ -62,7 +76,7 @@ export class ConfigService {
 				value = this.parseValue(configItem.value, configItem.dataType);
 			} else {
 				// Fall back to environment variable
-				value = ENV_FALLBACKS[key as keyof SiteConfig];
+				value = ENV_FALLBACKS[key as keyof SiteConfig] ?? getEnvFallback(key);
 
 				if (value === undefined) {
 					const silentKeys = ['uptime_kuma_selected_monitors', 'discord_chat_integration_enabled'];
@@ -84,7 +98,7 @@ export class ConfigService {
 			logger.error(`Error fetching config key '${key}':`, error);
 
 			// Fall back to environment variable on error
-			const fallbackValue = ENV_FALLBACKS[key as keyof SiteConfig];
+			const fallbackValue = ENV_FALLBACKS[key as keyof SiteConfig] ?? getEnvFallback(key);
 			if (fallbackValue !== undefined) {
 				logger.warn(`Using environment fallback for config key '${key}'`);
 				return fallbackValue;

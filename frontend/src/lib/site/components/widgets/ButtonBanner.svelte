@@ -19,10 +19,10 @@
 	let buttonLinks: ButtonLink[] = $state([
 		{
 			id: '1',
-			title: 'DimDen',
+			title: 'Dimden',
 			url: 'https://dimden.dev/',
 			imageUrl: 'https://dimden.dev/services/images/88x31.gif',
-			alt: 'DimDen'
+			alt: 'Dimden'
 		},
 		{
 			id: '2',
@@ -33,13 +33,27 @@
 		},
 		{
 			id: '3',
-			title: 'JESX',
-			url: 'https://jesx.dev',
-			imageUrl: 'https://jesx.dev/images/buttons/footer/jesx.gif',
-			alt: 'jesx.dev'
+			title: 'Jesx',
+			url: 'https://anemoia.moe',
+			imageUrl: 'https://anemoia.moe/images/buttons/footer/jesx.gif',
+			alt: 'Jesx'
 		},
 		{
 			id: '4',
+			title: 'Docodemo',
+			url: 'https://dokode.moe',
+			imageUrl: 'https://dokode.moe/media/88x31sites/dokodemobutton3.gif',
+			alt: 'Docodemo'
+		},
+		{
+			id: '5',
+			title: 'Nichind',
+			url: 'https://nichind.dev',
+			imageUrl: 'https://nichind.dev/88x31.gif',
+			alt: 'Nichind'
+		},
+		{
+			id: '6',
 			title: 'NekoWeb',
 			url: 'https://nekoweb.org/',
 			imageUrl: 'https://nekoweb.org/assets/buttons/button6.gif',
