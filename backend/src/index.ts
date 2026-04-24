@@ -255,7 +255,7 @@ server
 	.listen(Number(backendPort), HOST, async () => {
 		if (isStandalone) {
 			logger.success(`Express API running at http://${HOST}:${backendPort}`);
-			logger.info(`Health endpoint: http://${HOST}:${backendPort}/api/health`);
+			logger.info(`http://${HOST}:${backendPort}/api/health`);
 		}
 
 		// Initialize default admin after server starts

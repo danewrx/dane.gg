@@ -44,7 +44,7 @@ class TrackingService {
 	private shouldTrackPath(path: string): boolean {
 		// Skip tracking for admin pages + api routes
 		if (path.startsWith('/admin') || path.startsWith('/login') || path.startsWith('/logout')) {
-			logger.info('TrackingService: Path excluded (admin):', path);
+			logger.info('Path excluded (admin):', path);
 			return false;
 		}
 
@@ -58,7 +58,7 @@ class TrackingService {
 			path.startsWith('/widgets/') ||
 			path.startsWith('/webhooks/')
 		) {
-			logger.info('TrackingService: Path excluded (API):', path);
+			logger.info('Path excluded (API):', path);
 			return false;
 		}
 
@@ -71,24 +71,24 @@ class TrackingService {
 			path.startsWith('/assets/') ||
 			path.startsWith('/static/')
 		) {
-			logger.info('TrackingService: Path excluded (system):', path);
+			logger.info('Path excluded (system):', path);
 			return false;
 		}
 
-		logger.info('TrackingService: Path allowed:', path);
+		logger.info('Path allowed:', path);
 		return true;
 	}
 
 	async trackPageView(path: string): Promise<void> {
-		logger.info('TrackingService: trackPageView called for path:', path);
+		logger.info('trackPageView called for path:', path);
 
 		// Check paths to be tracked
 		if (!this.shouldTrackPath(path)) {
-			logger.info('TrackingService: Path excluded by shouldTrackPath:', path);
+			logger.info('Path excluded by shouldTrackPath:', path);
 			return;
 		}
 
-		logger.info('TrackingService: Sending fetch request for path:', path);
+		logger.info('Sending fetch request for path:', path);
 
 		try {
 			const response = await fetch('/api/track', {
@@ -111,15 +111,15 @@ class TrackingService {
 			if (!response.ok) {
 				const errorData = await response.json();
 				logger.error(
-					'TrackingService: Failed to track page view (response not ok):',
+					'Failed to track page view (response not ok):',
 					response.status,
 					errorData
 				);
 			} else {
-				logger.info('TrackingService: Page view tracsked successfully for path:', path);
+				logger.info('Page view tracked successfully for path:', path);
 			}
 		} catch (error) {
-			logger.error('TrackingService: Failed to track page view (fetch error):', error);
+			logger.error('Failed to track page view (fetch error):', error);
 		}
 	}
 }

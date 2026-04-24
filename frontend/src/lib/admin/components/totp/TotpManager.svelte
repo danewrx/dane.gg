@@ -25,7 +25,7 @@
 	$: if (typeof window !== 'undefined' && totpStatus !== null) {
 		// Small delay to ensure DOM has updated
 		setTimeout(() => {
-			logger.info('TotpManager: Dispatching totpStatusChanged event:', {
+			logger.info('Dispatching totpStatusChanged event:', {
 				enabled: totpStatus?.enabled
 			});
 			window.dispatchEvent(
@@ -35,7 +35,7 @@
 			);
 
 			if ((window as any).updateAccountTotpButtons) {
-				logger.info('TotpManager: Calling global update function from reactive');
+				logger.info('Calling global update function from reactive');
 				setTimeout(() => {
 					(window as any).updateAccountTotpButtons();
 				}, 100);
@@ -85,7 +85,7 @@
 
 		// Force immediate update after setup completion
 		if (typeof window !== 'undefined') {
-			logger.info('TotpManager: Setup complete, dispatching immediate update');
+			logger.info('Setup complete, dispatching immediate update');
 			window.dispatchEvent(
 				new CustomEvent('totpStatusChanged', {
 					detail: { enabled: totpStatus?.enabled }
@@ -93,7 +93,7 @@
 			);
 
 			if ((window as any).updateAccountTotpButtons) {
-				logger.info('TotpManager: Calling global update function');
+				logger.info('Calling global update function');
 				setTimeout(() => {
 					(window as any).updateAccountTotpButtons();
 				}, 100);

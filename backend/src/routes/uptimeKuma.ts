@@ -162,16 +162,16 @@ router.put('/selected', requireSession, async (req, res) => {
 				}
 
 				await UptimeKumaService.saveMonitorsToCache(monitors);
-				logger.info(`[Uptime Kuma] Updated cache with ${monitors.length} selected monitors`);
+				logger.info(`Updated cache with ${monitors.length} selected monitors`);
 			} catch (error: any) {
-				logger.error('[Uptime Kuma] Error updating cache with selected monitors:', error.message);
+				logger.error('Error updating cache with selected monitors:', error.message);
 			}
 		} else if (validIds.length === 0) {
 			try {
 				await UptimeKumaService.clearCache();
-				logger.info('[Uptime Kuma] Cleared cache (no monitors selected)');
+				logger.info('Cleared cache (no monitors selected)');
 			} catch (error: any) {
-				logger.error('[Uptime Kuma] Error clearing cache:', error.message);
+				logger.error('Error clearing cache:', error.message);
 			}
 		}
 

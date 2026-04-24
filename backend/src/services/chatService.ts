@@ -71,7 +71,7 @@ export class ChatService {
 				if (process.env.NODE_ENV === 'production') {
 					throw new Error('SESSION_SECRET environment variable is required in production');
 				}
-				logger.warn('WARNING: SESSION_SECRET not set, using default (only for development)');
+				logger.warn('SESSION_SECRET not set, using default (only for development)');
 				this.sessionSecret = 'your-super-secret-session-key-change-this-in-production';
 			}
 
@@ -364,7 +364,7 @@ export class ChatService {
 	): Promise<void> {
 		const clientIp = this.getClientIp(req);
 		if (!this.checkConnectionRateLimit(clientIp)) {
-			logger.info(`Connection rejected: Rate limit exceeded for IP ${clientIp}`);
+			logger.info(`Rate limit exceeded for IP ${clientIp}`);
 			this.sendToClient(ws, {
 				type: 'error',
 				message: `Too many connections from your IP. Maximum ${this.MAX_CONNECTIONS_PER_IP} connections per minute.`

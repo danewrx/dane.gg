@@ -20,6 +20,8 @@
     "podman:logs": "podman compose logs -f",
     "db:dev:up": "docker compose -f docker-compose.dev.yml up -d",
     "db:dev:down": "docker compose -f docker-compose.dev.yml down",
+    "podman:db:dev:up": "podman compose -f docker-compose.dev.yml up -d",
+    "podman:db:dev:down": "podman compose -f docker-compose.dev.yml down",
     "db:generate": "cd backend && bun run db:generate",
     "db:push": "cd backend && bun run db:push",
     "db:seed": "cd backend && bun run db:seed",

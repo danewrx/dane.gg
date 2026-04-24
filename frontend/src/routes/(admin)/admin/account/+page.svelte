@@ -113,17 +113,17 @@
 	// Reactive update of TOTP button state based on totpStatus
 	$effect(() => {
 		if (totpStatus) {
-			logger.info('Account page: TOTP status reactive update:', totpStatus);
+			logger.info('TOTP status reactive update:', totpStatus);
 			if (totpStatus.enabled) {
 				totpButtonText = 'Disable 2FA';
 				totpButtonClass = 'section-action-button disable';
 				showRegenerateButton = true;
-				logger.info('Account page: Reactive: Set to Disable 2FA');
+				logger.info('Reactive: Set to Disable 2FA');
 			} else {
 				totpButtonText = 'Enable 2FA';
 				totpButtonClass = 'section-action-button';
 				showRegenerateButton = false;
-				logger.info('Account page: Reactive: Set to Enable 2FA');
+				logger.info('Reactive: Set to Enable 2FA');
 			}
 		}
 	});
@@ -179,7 +179,7 @@
 
 		// Listen for TOTP status changes from TotpManager
 		const handleTotpStatusChange = (event: any) => {
-			logger.info('Account page: TOTP status changed:', event.detail);
+			logger.info('TOTP status changed:', event.detail);
 			totpStatus = event.detail;
 			// Update immediately and also after a short delay to ensure DOM is updated
 			updateTotpButtonState();

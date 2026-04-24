@@ -164,7 +164,7 @@
 					lastTweetId = data.tweetId;
 					tweetData = data;
 					logger.info(
-						`[TweetWidget] New tweet detected: @${data.authorUsername} - ${data.content?.substring(0, 50)}...`
+						`New tweet detected: @${data.authorUsername} - ${data.content?.substring(0, 50)}...`
 					);
 				} else if (tweetData && tweetData.tweetId === data.tweetId) {
 					if (tweetData.lastUpdate !== data.lastUpdate) {

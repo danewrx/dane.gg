@@ -42,7 +42,7 @@ class SettingsService {
 
 			if (!response.ok) {
 				const errorText = await response.text();
-				logger.error(`Settings API request failed: ${endpoint}`, response.status, errorText);
+				logger.error(`API request failed: ${endpoint}`, response.status, errorText);
 
 				// Try to parse the error response to extract user-friendly message
 				let errorMessage = `Request failed with status ${response.status}`;
@@ -67,7 +67,7 @@ class SettingsService {
 			const data = await response.json();
 			return data;
 		} catch (error) {
-			logger.error(`Settings API request failed: ${endpoint}`, error);
+			logger.error(`API request failed: ${endpoint}`, error);
 			throw error;
 		}
 	}

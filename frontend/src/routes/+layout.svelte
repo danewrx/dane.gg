@@ -12,19 +12,19 @@
 		const unsubscribe = page.subscribe((newPage) => {
 			if (!newPage?.url?.pathname) return;
 
-			logger.info('Layout: Page store updated. New path:', newPage.url.pathname);
+			logger.info('Page store updated. New path:', newPage.url.pathname);
 			const isAdmin =
 				newPage.url.pathname.startsWith('/admin') ||
 				newPage.url.pathname.startsWith('/login') ||
 				newPage.url.pathname.startsWith('/logout');
 
 			if (!isAdmin && !newPage.url.searchParams.has('themePreview')) {
-				logger.info('Layout: Calling trackPageView for:', newPage.url.pathname);
+				logger.info('Calling trackPageView for:', newPage.url.pathname);
 				trackingService.trackPageView(newPage.url.pathname);
 			} else if (!isAdmin) {
-				logger.info('Layout: Skipping tracking (theme preview iframe)');
+				logger.info('Skipping tracking (theme preview iframe)');
 			} else {
-				logger.info('Layout: Skipping tracking for admin path:', newPage.url.pathname);
+				logger.info('Skipping tracking for admin path:', newPage.url.pathname);
 			}
 		});
 

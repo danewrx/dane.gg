@@ -24,7 +24,7 @@ export class NotificationService {
 		try {
 			const finalTopic = topic || process.env.NTFY_TOPIC;
 			if (!finalTopic) {
-				logger.warn('[Notification] No topic provided and NTFY_TOPIC not configured');
+				logger.warn('No topic provided and NTFY_TOPIC not configured');
 				return false;
 			}
 
@@ -55,15 +55,15 @@ export class NotificationService {
 
 			if (!response.ok) {
 				logger.error(
-					`[Notification] Failed to send notification: ${response.status} ${response.statusText}`
+					`Failed to send notification: ${response.status} ${response.statusText}`
 				);
 				return false;
 			}
 
-			logger.info(`[Notification] Notification sent successfully to topic: ${finalTopic}`);
+			logger.info(`${finalTopic}`);
 			return true;
 		} catch (error: any) {
-			logger.error('[Notification] Error sending notification:', error.message);
+			logger.error('Error sending notification:', error.message);
 			return false;
 		}
 	}
