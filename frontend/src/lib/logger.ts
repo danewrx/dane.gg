@@ -13,12 +13,22 @@ const level =
 
 const baseLogger = createConsola({
 	level
-}).withTag('frontend');
+});
 
 type LogMethod = 'info' | 'warn' | 'error' | 'debug' | 'trace' | 'success';
+const BROWSER_SERVICE_COLORS = [
+	'#38bdf8',
+	'#22d3ee',
+	'#60a5fa',
+	'#818cf8',
+	'#a78bfa',
+	'#f472b6',
+	'#fb7185',
+	'#f59e0b'
+];
 
 function normalizeLocation(location: string): string {
-	const clean = location.replace(/\\/g, '/');
+	const clean = location.replace(/\\/g, '/').split('?')[0].split('#')[0];
 	const srcIndex = clean.lastIndexOf('/src/');
 	if (srcIndex >= 0) {
 		return clean.slice(srcIndex + 5).replace(/\.(ts|tsx|js|mjs|cjs|svelte)$/, '');
@@ -47,9 +57,40 @@ function getCallerLocation(): string {
 	return browser ? 'client' : 'server';
 }
 
+function formatService(location: string): string {
+	const base = location.split('/').filter(Boolean).pop() || 'unknown';
+	return base.replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '').toUpperCase();
+}
+
+function hashService(service: string): number {
+	let hash = 0;
+	for (let i = 0; i < service.length; i += 1) {
+		hash = (hash * 31 + service.charCodeAt(i)) >>> 0;
+	}
+	return hash;
+}
+
+function styleForService(service: string): string {
+	return `color: ${BROWSER_SERVICE_COLORS[hashService(service) % BROWSER_SERVICE_COLORS.length]}; font-weight: 700;`;
+}
+
 function emit(type: LogMethod, args: unknown[]): void {
-	const scoped = baseLogger.withTag(getCallerLocation()) as Record<LogMethod, (...input: unknown[]) => void>;
-	scoped[type](...args);
+	const scoped = baseLogger as Record<LogMethod, (...input: unknown[]) => void>;
+	const service = formatService(getCallerLocation());
+	const prefix = `[${service}]`;
+	if (typeof args[0] === 'string') {
+		if (browser) {
+			scoped[type](`%c${prefix}%c ${args[0]}`, styleForService(service), '', ...args.slice(1));
+			return;
+		}
+		scoped[type](`${prefix} ${args[0]}`, ...args.slice(1));
+		return;
+	}
+	if (browser) {
+		scoped[type](`%c${prefix}%c`, styleForService(service), '', ...args);
+		return;
+	}
+	scoped[type](prefix, ...args);
 }
 
 export const logger = {

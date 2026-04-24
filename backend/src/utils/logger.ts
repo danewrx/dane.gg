@@ -11,9 +11,21 @@ const level = raw in LogLevels
 
 const baseLogger = createConsola({
 	level
-}).withTag('backend');
+});
 
 type LogMethod = 'info' | 'warn' | 'error' | 'debug' | 'trace' | 'success';
+const ANSI_RESET = '\x1b[0m';
+const ANSI_BOLD = '\x1b[1m';
+const ANSI_SERVICE_COLORS = [
+	'\x1b[38;5;39m',
+	'\x1b[38;5;45m',
+	'\x1b[38;5;75m',
+	'\x1b[38;5;111m',
+	'\x1b[38;5;141m',
+	'\x1b[38;5;171m',
+	'\x1b[38;5;208m',
+	'\x1b[38;5;214m'
+];
 
 function normalizeLocation(location: string): string {
 	const clean = location.replace(/\\/g, '/');
@@ -45,9 +57,33 @@ function getCallerLocation(): string {
 	return 'unknown';
 }
 
+function formatService(location: string): string {
+	const base = location.split('/').filter(Boolean).pop() || 'unknown';
+	return base.replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '').toUpperCase();
+}
+
+function hashService(service: string): number {
+	let hash = 0;
+	for (let i = 0; i < service.length; i += 1) {
+		hash = (hash * 31 + service.charCodeAt(i)) >>> 0;
+	}
+	return hash;
+}
+
+function styleService(service: string): string {
+	const color = ANSI_SERVICE_COLORS[hashService(service) % ANSI_SERVICE_COLORS.length];
+	return `${color}${ANSI_BOLD}[${service}]${ANSI_RESET}`;
+}
+
 function emit(type: LogMethod, args: unknown[]): void {
-	const scoped = baseLogger.withTag(getCallerLocation()) as Record<LogMethod, (...input: unknown[]) => void>;
-	scoped[type](...args);
+	const scoped = baseLogger as Record<LogMethod, (...input: unknown[]) => void>;
+	const service = formatService(getCallerLocation());
+	const prefix = styleService(service);
+	if (typeof args[0] === 'string') {
+		scoped[type](`${prefix} ${args[0]}`, ...args.slice(1));
+		return;
+	}
+	scoped[type](prefix, ...args);
 }
 
 export const logger = {
