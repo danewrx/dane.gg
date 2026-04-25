@@ -42,8 +42,9 @@
 	let recentPosts = $state<BlogPost[]>([]);
 	let loadingPosts = $state(true);
 
-	onMount(async () => {
-		await Promise.all([loadRecentPosts(), loadAboutMe()]);
+	onMount(() => {
+		loadRecentPosts();
+		loadAboutMe();
 	});
 
 	async function loadAboutMe() {
@@ -149,7 +150,7 @@
 					<LinksWidget />
 				</BorderedBox>
 
-				<ButtonBanner />
+			<ButtonBanner />
 
 				<BorderedBox
 					padding="0 16px"

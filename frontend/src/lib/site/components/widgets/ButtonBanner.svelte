@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { bannerLabelPosition } from '$lib/site/stores/bannerLabelPosition';
 
 	interface ButtonLink {
 		id: string;
@@ -129,12 +130,33 @@
 		...buttonImages
 	]);
 
+	let scrollContainer: Element | null = null;
+	let resizeObserver: ResizeObserver | null = null;
+
+	function reportPosition() {
+		if (!topRowRef) return;
+		const rect = topRowRef.getBoundingClientRect();
+		bannerLabelPosition.set({ top: rect.top, left: rect.left, visible: true });
+	}
+
 	onMount(() => {
 		startAnimations();
+
+		scrollContainer = topRowRef?.closest('.content-area') ?? null;
+		resizeObserver = new ResizeObserver(reportPosition);
+		if (topRowRef) resizeObserver.observe(topRowRef);
+
+		window.addEventListener('resize', reportPosition);
+		scrollContainer?.addEventListener('scroll', reportPosition);
+		requestAnimationFrame(reportPosition);
 	});
 
 	onDestroy(() => {
 		stopAnimations();
+		bannerLabelPosition.set({ top: 0, left: 0, visible: false });
+		resizeObserver?.disconnect();
+		window.removeEventListener('resize', reportPosition);
+		scrollContainer?.removeEventListener('scroll', reportPosition);
 	});
 
 	function startAnimations() {

@@ -9,9 +9,19 @@
 	import ScrollingBanner from '$lib/site/components/ScrollingBanner.svelte';
 	import ThemeProvider from '$lib/site/components/ThemeProvider.svelte';
 	import '$lib/site/oneko/variants';
+	import { bannerLabelPosition } from '$lib/site/stores/bannerLabelPosition';
 
 	let { children } = $props();
 	let settingsOpen = $state(false);
+	let bannerLabelEl: HTMLDivElement | undefined = $state(undefined);
+
+	const bannerLabelStyle = $derived.by(() => {
+		const pos = $bannerLabelPosition;
+		if (!pos.visible) return 'display:none;';
+		const labelWidth = bannerLabelEl?.offsetWidth ?? 150;
+		const left = Math.max(5, pos.left - labelWidth - 22);
+		return `left:${left}px;top:${pos.top + 10}px;`;
+	});
 
 	const isThemePreviewEmbed = $derived($page.url.searchParams.has(THEME_PREVIEW_SEARCH_PARAM));
 
@@ -47,6 +57,15 @@
 	<div class="bg-overlay bg-overlay--grain" aria-hidden="true"></div>
 	<div class="bg-overlay bg-overlay--vignette" aria-hidden="true"></div>
 	<div class="bg-overlay bg-overlay--glare" aria-hidden="true"></div>
+
+	<div
+		class="banner-side-label"
+		style={bannerLabelStyle}
+		bind:this={bannerLabelEl}
+		aria-hidden="true"
+	>
+		cool sites + friends <span class="banner-side-arrow">&rarr;</span>
+	</div>
 
 	<div class="content-window">
 		<div class="content-area">
@@ -296,6 +315,35 @@
 
 		.content-area {
 			padding: 0.5rem 0.75rem 1.5rem 0.75rem;
+		}
+	}
+
+	.banner-side-label {
+		position: fixed;
+		display: inline-flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 4px;
+		color: rgba(181, 183, 201, 0.4);
+		font-size: 0.58rem;
+		font-weight: 400;
+		letter-spacing: 0.05em;
+		text-transform: lowercase;
+		text-align: right;
+		line-height: 1.4;
+		pointer-events: none;
+		user-select: none;
+		z-index: 2;
+	}
+
+	.banner-side-arrow {
+		font-size: 0.65rem;
+	}
+
+	@media (max-width: 768px) {
+		.banner-side-label {
+			display: none;
 		}
 	}
 </style>
