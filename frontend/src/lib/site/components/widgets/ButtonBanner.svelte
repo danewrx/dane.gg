@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { browser } from '$app/environment';
 	import { bannerLabelPosition } from '$lib/site/stores/bannerLabelPosition';
 
 	interface ButtonLink {
@@ -130,33 +131,37 @@
 		...buttonImages
 	]);
 
-	let scrollContainer: Element | null = null;
-	let resizeObserver: ResizeObserver | null = null;
+	let bannerContainerRef: HTMLDivElement;
+	let rafId: number | null = null;
+	let lastTop = 0;
+	let lastLeft = 0;
 
-	function reportPosition() {
-		if (!topRowRef) return;
-		const rect = topRowRef.getBoundingClientRect();
-		bannerLabelPosition.set({ top: rect.top, left: rect.left, visible: true });
+	function positionLoop() {
+		if (bannerContainerRef) {
+			const rect = bannerContainerRef.getBoundingClientRect();
+			if (rect.top !== lastTop || rect.left !== lastLeft) {
+				lastTop = rect.top;
+				lastLeft = rect.left;
+				bannerLabelPosition.set({ top: rect.top, left: rect.left, visible: true });
+			}
+		}
+		rafId = requestAnimationFrame(positionLoop);
 	}
 
 	onMount(() => {
 		startAnimations();
-
-		scrollContainer = topRowRef?.closest('.content-area') ?? null;
-		resizeObserver = new ResizeObserver(reportPosition);
-		if (topRowRef) resizeObserver.observe(topRowRef);
-
-		window.addEventListener('resize', reportPosition);
-		scrollContainer?.addEventListener('scroll', reportPosition);
-		requestAnimationFrame(reportPosition);
+		if (browser) {
+			positionLoop();
+		}
 	});
 
 	onDestroy(() => {
 		stopAnimations();
 		bannerLabelPosition.set({ top: 0, left: 0, visible: false });
-		resizeObserver?.disconnect();
-		window.removeEventListener('resize', reportPosition);
-		scrollContainer?.removeEventListener('scroll', reportPosition);
+		if (browser && rafId !== null) {
+			cancelAnimationFrame(rafId);
+			rafId = null;
+		}
 	});
 
 	function startAnimations() {
@@ -218,11 +223,12 @@
 	}
 
 	function handleLinkClick(url: string) {
+		if (!browser) return;
 		window.open(url, '_blank', 'noopener,noreferrer');
 	}
 </script>
 
-<div class="button-banner">
+<div class="button-banner" bind:this={bannerContainerRef}>
 	<!-- Top row (pause on hover) -->
 	<div
 		class="button-row top-row"

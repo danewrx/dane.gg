@@ -13,14 +13,11 @@
 
 	let { children } = $props();
 	let settingsOpen = $state(false);
-	let bannerLabelEl: HTMLDivElement | undefined = $state(undefined);
 
 	const bannerLabelStyle = $derived.by(() => {
 		const pos = $bannerLabelPosition;
 		if (!pos.visible) return 'display:none;';
-		const labelWidth = bannerLabelEl?.offsetWidth ?? 150;
-		const left = Math.max(5, pos.left - labelWidth - 22);
-		return `left:${left}px;top:${pos.top + 10}px;`;
+		return `--banner-label-anchor-left:${pos.left}px;--banner-label-anchor-top:${pos.top}px;`;
 	});
 
 	const isThemePreviewEmbed = $derived($page.url.searchParams.has(THEME_PREVIEW_SEARCH_PARAM));
@@ -61,10 +58,10 @@
 	<div
 		class="banner-side-label"
 		style={bannerLabelStyle}
-		bind:this={bannerLabelEl}
 		aria-hidden="true"
 	>
-		cool sites + friends <span class="banner-side-arrow">&rarr;</span>
+		<span class="banner-side-text">cool sites<br />+ friends</span>
+		<span class="banner-side-arrow">&rarr;</span>
 	</div>
 
 	<div class="content-window">
@@ -320,13 +317,13 @@
 
 	.banner-side-label {
 		position: fixed;
+		top: calc(var(--banner-label-anchor-top, 0px) + 18px);
+		right: calc(100vw - var(--banner-label-anchor-left, 0px) + 34px);
 		display: inline-flex;
-		flex-wrap: wrap;
 		align-items: center;
-		justify-content: flex-end;
-		gap: 4px;
-		color: rgba(181, 183, 201, 0.4);
-		font-size: 0.58rem;
+		gap: 6px;
+		font-size: 0.65rem;
+		font-style: italic;
 		font-weight: 400;
 		letter-spacing: 0.05em;
 		text-transform: lowercase;
@@ -335,15 +332,81 @@
 		pointer-events: none;
 		user-select: none;
 		z-index: 2;
+		opacity: 0;
+		animation: banner-label-fade-in 1.2s ease 0.6s forwards;
+	}
+
+	.banner-side-text {
+		background: linear-gradient(
+			135deg,
+			var(--theme-text-muted, #71717a) 0%,
+			var(--theme-accent, #6366f1) 50%,
+			var(--theme-text-muted, #71717a) 100%
+		);
+		background-size: 200% 200%;
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+		animation: banner-shimmer 6s ease-in-out infinite;
 	}
 
 	.banner-side-arrow {
-		font-size: 0.65rem;
+		font-size: 0.75rem;
+		font-style: normal;
+		color: var(--theme-accent, #6366f1);
+		opacity: 0.3;
+		animation: banner-arrow-pulse 2.5s ease-in-out infinite;
 	}
 
-	@media (max-width: 768px) {
+	@keyframes banner-label-fade-in {
+		from {
+			opacity: 0;
+			transform: translateX(6px);
+		}
+		to {
+			opacity: 0.7;
+			transform: translateX(0);
+		}
+	}
+
+	@keyframes banner-shimmer {
+		0%, 100% {
+			background-position: 0% 50%;
+		}
+		50% {
+			background-position: 100% 50%;
+		}
+	}
+
+	@keyframes banner-arrow-pulse {
+		0%, 100% {
+			opacity: 0.35;
+			transform: translateX(0);
+		}
+		50% {
+			opacity: 0.65;
+			transform: translateX(3px);
+		}
+	}
+
+	@media (max-width: 1200px) {
 		.banner-side-label {
 			display: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.banner-side-label {
+			animation: none;
+			opacity: 1;
+		}
+		.banner-side-text {
+			animation: none;
+			background-position: 0% 50%;
+		}
+		.banner-side-arrow {
+			animation: none;
+			opacity: 0.5;
 		}
 	}
 </style>
