@@ -1428,7 +1428,7 @@
 				<button
 					class="send-button"
 					onclick={sendMessage}
-					disabled={!isConnected || !getInputText().trim()}
+					disabled={!isConnected || !inputValue.trim()}
 					title="Send message"
 				>
 					&gt;
