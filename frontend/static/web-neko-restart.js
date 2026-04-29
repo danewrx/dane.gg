@@ -14,6 +14,17 @@
 		return p.indexOf('/admin') === 0 || p.indexOf('/login') === 0 || p.indexOf('/logout') === 0;
 	}
 
+	function skipViewportForWebNeko() {
+		if (typeof matchMedia === 'undefined') return false;
+		try {
+			if (matchMedia('(pointer: coarse)').matches) return true;
+		} catch (e0) {}
+		try {
+			if (matchMedia('(max-width: 768px) and (hover: none)').matches) return true;
+		} catch (e1) {}
+		return false;
+	}
+
 	var DISABLED = 'none';
 
 	function validSkin(s) {
@@ -46,6 +57,11 @@
 	window.daneRestartWebNeko = function () {
 		try {
 			if (isAdminPath()) {
+				window.daneTeardownWebNeko();
+				return;
+			}
+
+			if (skipViewportForWebNeko()) {
 				window.daneTeardownWebNeko();
 				return;
 			}

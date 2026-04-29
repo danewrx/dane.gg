@@ -8,6 +8,13 @@
 	if (typeof window === 'undefined' || typeof document === 'undefined') return;
 	if (typeof location !== 'undefined' && location.search.indexOf('themePreview') !== -1) return;
 	if (typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+	// Touch-first / typical phone layouts — cursor pet is awkward and steals taps
+	try {
+		if (matchMedia('(pointer: coarse)').matches) return;
+	} catch (eCoarse) {}
+	try {
+		if (matchMedia('(max-width: 768px) and (hover: none)').matches) return;
+	} catch (eSmall) {}
 	// Public site only — keep admin /login /logout free of the cursor pet (matches `hooks.client.ts` isAdminRoute)
 	if (typeof location !== 'undefined') {
 		var path = location.pathname || '';

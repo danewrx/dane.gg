@@ -142,4 +142,24 @@ if (browser) {
 			});
 		}
 	});
+
+	function syncWebNekoForViewport() {
+		if (isAdminRoute(window.location.pathname)) return;
+		const w = window as Window & { daneRestartWebNeko?: () => void };
+		if (typeof w.daneRestartWebNeko === 'function') w.daneRestartWebNeko();
+	}
+
+	const webNekoViewportQueries = ['(pointer: coarse)', '(max-width: 768px) and (hover: none)'];
+	for (const q of webNekoViewportQueries) {
+		try {
+			const mq = window.matchMedia(q);
+			mq.addEventListener('change', syncWebNekoForViewport);
+		} catch {
+			try {
+				window.matchMedia(q).addListener(syncWebNekoForViewport);
+			} catch {
+				/* ignore */
+			}
+		}
+	}
 }
