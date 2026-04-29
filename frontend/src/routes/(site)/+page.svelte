@@ -99,8 +99,8 @@
 </script>
 
 <svelte:head>
-	<title>dane.gg - Software Engineer & Designer</title>
-</svelte:head>
+	<title>dane.gg</title>
+</svelte:head>	
 
 <div class="home-content">
 	<!-- Two Column Layout -->
@@ -108,146 +108,168 @@
 		<!-- Left Column (30%) -->
 		<div class="left-column">
 			<div class="widgets-section">
-				<BorderedBox padding="16px" className="discord-widget" contentPadding={true}>
-					<DiscordStatus />
-				</BorderedBox>
+				<div class="card-slot" data-mobile-order="1">
+					<BorderedBox padding="16px" className="discord-widget" contentPadding={true}>
+						<DiscordStatus />
+					</BorderedBox>
+				</div>
 
-				<BorderedBox
-					padding="8px 16px"
-					className="tweet-widget tweet-bordered-box"
-					showHeader={true}
-					headerText={tweetHeaderText}
-					contentPadding={true}
-				>
-					<TweetWidget bind:tweetData />
-				</BorderedBox>
+				<div class="card-slot" data-mobile-order="4">
+					<BorderedBox
+						padding="8px 16px"
+						className="tweet-widget tweet-bordered-box"
+						showHeader={true}
+						headerText={tweetHeaderText}
+						contentPadding={true}
+					>
+						<TweetWidget bind:tweetData />
+					</BorderedBox>
+				</div>
 
-				<BorderedBox
-					padding="8px 16px"
-					className="music-widget"
-					showHeader={true}
-					headerText={musicHeaderText}
-					contentPadding={true}
-					contentBottomPadding={true}
-				>
-					<svelte:fragment slot="header-icon">
-						{#if musicData?.nowPlaying}
-							<Radio size={16} class="status-icon playing" />
-						{:else}
-							<div class="status-icon offline"></div>
-						{/if}
-					</svelte:fragment>
-					<MusicWidget bind:musicData />
-				</BorderedBox>
+				<div class="card-slot" data-mobile-order="5">
+					<BorderedBox
+						padding="8px 16px"
+						className="music-widget"
+						showHeader={true}
+						headerText={musicHeaderText}
+						contentPadding={true}
+						contentBottomPadding={true}
+					>
+						<svelte:fragment slot="header-icon">
+							{#if musicData?.nowPlaying}
+								<Radio size={16} class="status-icon playing" />
+							{:else}
+								<div class="status-icon offline"></div>
+							{/if}
+						</svelte:fragment>
+						<MusicWidget bind:musicData />
+					</BorderedBox>
+				</div>
 
-				<BorderedBox
-					padding="8px 16px"
-					className="links-widget"
-					showHeader={true}
-					headerText="Links"
-					dynamicHeight={true}
-				>
-					<LinksWidget />
-				</BorderedBox>
+				<div class="card-slot" data-mobile-order="8">
+					<BorderedBox
+						padding="8px 16px"
+						className="links-widget"
+						showHeader={true}
+						headerText="Links"
+						dynamicHeight={true}
+					>
+						<LinksWidget />
+					</BorderedBox>
+				</div>
 
-			<ButtonBanner />
+				<div class="card-slot" data-mobile-order="9">
+					<ButtonBanner />
+				</div>
 
-				<BorderedBox
-					padding="0 16px"
-					className="my-button-widget"
-					showHeader={true}
-					headerText="My Button"
-					dynamicHeight={true}
-				>
-					<MyButtonWidget />
-				</BorderedBox>
+				<div class="card-slot" data-mobile-order="10">
+					<BorderedBox
+						padding="0 16px"
+						className="my-button-widget"
+						showHeader={true}
+						headerText="My Button"
+						dynamicHeight={true}
+					>
+						<MyButtonWidget />
+					</BorderedBox>
+				</div>
 
-				<BorderedBox
-					padding="8px 16px"
-					className="site-stats-widget"
-					showHeader={true}
-					headerText="Site Stats"
-					contentPadding={true}
-				>
-					<SiteStats />
-				</BorderedBox>
+				<div class="card-slot" data-mobile-order="11">
+					<BorderedBox
+						padding="8px 16px"
+						className="site-stats-widget"
+						showHeader={true}
+						headerText="Site Stats"
+						contentPadding={true}
+					>
+						<SiteStats />
+					</BorderedBox>
+				</div>
 			</div>
 		</div>
 
 		<!-- Right Column (70%) -->
 		<div class="right-column">
 			<div class="widgets-section">
-				<BorderedBox
-					padding="8px 16px"
-					className="about-section"
-					showHeader={true}
-					headerText="About Me"
-					dynamicHeight={true}
-					contentPadding={true}
-				>
-					{#if loadingAboutMe}
-						<div class="about-me-loading">
-							<p>Loading...</p>
-						</div>
-					{:else if aboutMeContent}
-						<div class="about-me-content">
-							{@html aboutMeContent}
-						</div>
-					{:else}
-						<div class="about-me-empty">
-							<p>No data is available.</p>
-						</div>
-					{/if}
-				</BorderedBox>
-
-				<BorderedBox
-					padding="8px 16px"
-					className="recent-posts-section"
-					showHeader={true}
-					headerText="Recent posts"
-					dynamicHeight={true}
-					contentPadding={true}
-				>
-					<div class="recent-posts-content">
-						{#if loadingPosts}
-							<p class="recent-posts-empty">Loading...</p>
-						{:else if recentPosts.length === 0}
-							<p class="recent-posts-empty">There are currently no posts</p>
-						{:else}
-							{#each recentPosts as post}
-								<button class="recent-post-item" onclick={() => viewPost(post.slug)}>
-									<span class="post-date">{formatDate(post.publishedAt)}</span> :: {post.title}
-								</button>
-							{/each}
-						{/if}
-					</div>
-				</BorderedBox>
-
-				<BorderedBox
-					padding="8px 16px"
-					className="service-status-section"
-					showHeader={true}
-					headerText="Systems status:"
-					subheading={overallStatus}
-					subheadingSemanticStatus={true}
-					dynamicHeight={true}
-					contentPadding={true}
-				>
-					<ServiceStatus bind:overallStatus />
-				</BorderedBox>
-
-				{#if browser}
+				<div class="card-slot" data-mobile-order="2">
 					<BorderedBox
 						padding="8px 16px"
-						className="chat-section"
+						className="about-section"
 						showHeader={true}
-						headerText="Chat"
+						headerText="About Me"
 						dynamicHeight={true}
 						contentPadding={true}
 					>
-						<ChatUserCount slot="header-right" count={userCount} />
-						<Chat bind:userCount />
+						{#if loadingAboutMe}
+							<div class="about-me-loading">
+								<p>Loading...</p>
+							</div>
+						{:else if aboutMeContent}
+							<div class="about-me-content">
+								{@html aboutMeContent}
+							</div>
+						{:else}
+							<div class="about-me-empty">
+								<p>No data is available.</p>
+							</div>
+						{/if}
 					</BorderedBox>
+				</div>
+
+				<div class="card-slot" data-mobile-order="3">
+					<BorderedBox
+						padding="8px 16px"
+						className="recent-posts-section"
+						showHeader={true}
+						headerText="Recent posts"
+						dynamicHeight={true}
+						contentPadding={true}
+					>
+						<div class="recent-posts-content">
+							{#if loadingPosts}
+								<p class="recent-posts-empty">Loading...</p>
+							{:else if recentPosts.length === 0}
+								<p class="recent-posts-empty">There are currently no posts</p>
+							{:else}
+								{#each recentPosts as post}
+									<button class="recent-post-item" onclick={() => viewPost(post.slug)}>
+										<span class="post-date">{formatDate(post.publishedAt)}</span> :: {post.title}
+									</button>
+								{/each}
+							{/if}
+						</div>
+					</BorderedBox>
+				</div>
+
+				<div class="card-slot" data-mobile-order="7">
+					<BorderedBox
+						padding="8px 16px"
+						className="service-status-section"
+						showHeader={true}
+						headerText="Systems status:"
+						subheading={overallStatus}
+						subheadingSemanticStatus={true}
+						dynamicHeight={true}
+						contentPadding={true}
+					>
+						<ServiceStatus bind:overallStatus />
+					</BorderedBox>
+				</div>
+
+				{#if browser}
+					<div class="card-slot" data-mobile-order="6">
+						<BorderedBox
+							padding="8px 16px"
+							className="chat-section"
+							showHeader={true}
+							headerText="Chat"
+							dynamicHeight={true}
+							contentPadding={true}
+						>
+							<ChatUserCount slot="header-right" count={userCount} />
+							<Chat bind:userCount />
+						</BorderedBox>
+					</div>
 				{/if}
 			</div>
 		</div>
@@ -692,25 +714,41 @@
 
 	@media (max-width: 768px) {
 		.two-column-layout {
+			display: flex;
 			flex-direction: column;
-			gap: 1.5rem;
+			gap: 0.5rem;
 		}
 
-		.left-column {
-			flex: none;
-			width: 100%;
-		}
-
+		.left-column,
 		.right-column {
-			flex: none;
+			display: contents;
+		}
+
+		.left-column > .widgets-section,
+		.right-column > .widgets-section {
+			display: contents;
+		}
+
+		.card-slot {
 			width: 100%;
 		}
+
+		.card-slot[data-mobile-order="1"] { order: 1; }
+		.card-slot[data-mobile-order="2"] { order: 2; }
+		.card-slot[data-mobile-order="3"] { order: 3; }
+		.card-slot[data-mobile-order="4"] { order: 4; }
+		.card-slot[data-mobile-order="5"] { order: 5; }
+		.card-slot[data-mobile-order="6"] { order: 6; }
+		.card-slot[data-mobile-order="7"] { order: 7; }
+		.card-slot[data-mobile-order="8"] { order: 8; }
+		.card-slot[data-mobile-order="9"] { order: 9; }
+		.card-slot[data-mobile-order="10"] { order: 10; }
+		.card-slot[data-mobile-order="11"] { order: 11; }
 
 		:global(.discord-widget) {
 			justify-content: flex-start;
 		}
 
-		/* About Me section mobile styling */
 		:global(.about-section .bordered-box-content) {
 			padding: 12px !important;
 		}
@@ -727,8 +765,5 @@
 			margin-bottom: 3px;
 			line-height: 1.3;
 		}
-	}
-
-	@media (max-width: 480px) {
 	}
 </style>
