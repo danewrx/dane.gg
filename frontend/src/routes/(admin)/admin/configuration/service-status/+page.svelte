@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import {
@@ -285,6 +286,10 @@
 		loadConfig();
 	});
 </script>
+
+<svelte:head>
+	<title>{adminPageTitle('Service status')}</title>
+</svelte:head>
 
 <div class="service-status-config">
 	{#if loading}

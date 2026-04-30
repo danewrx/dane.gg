@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import {
@@ -316,7 +317,7 @@
 </script>
 
 <svelte:head>
-	<title>API Keys - Admin Panel</title>
+	<title>{adminPageTitle('API keys')}</title>
 	<meta name="description" content="Manage API keys for external integrations" />
 </svelte:head>
 

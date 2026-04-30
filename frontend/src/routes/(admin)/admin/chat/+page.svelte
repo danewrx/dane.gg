@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
@@ -534,7 +535,7 @@
 </script>
 
 <svelte:head>
-	<title>Chat - Admin Dashboard - dane.gg</title>
+	<title>{adminPageTitle('Chat')}</title>
 </svelte:head>
 
 <ConfirmDialog

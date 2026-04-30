@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { adminPageTitle } from '$lib/site/pageTitle';
 	import { onMount } from 'svelte';
 	import { loadSiteConfig } from '$lib/site/stores/siteConfig';
 
@@ -8,7 +9,7 @@
 </script>
 
 <svelte:head>
-	<title>Site Settings - dane.gg Admin</title>
+	<title>{adminPageTitle('Site settings')}</title>
 </svelte:head>
 
 <!-- This page content is now handled by the layout -->

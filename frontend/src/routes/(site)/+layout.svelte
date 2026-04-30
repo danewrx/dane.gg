@@ -9,6 +9,7 @@
 	import ThemeProvider from '$lib/site/components/ThemeProvider.svelte';
 	import '$lib/site/oneko/variants';
 	import { bannerLabelPosition } from '$lib/site/stores/bannerLabelPosition';
+	import { publicPageTitle } from '$lib/site/pageTitle';
 
 	let { children } = $props();
 	let settingsOpen = $state(false);
@@ -31,7 +32,7 @@
 </script>
 
 <svelte:head>
-	<title>dane.gg - Software Engineer & Designer</title>
+	<title>{publicPageTitle('Home')}</title>
 	<meta
 		name="description"
 		content="Hi, I'm Dane! I'm a software engineer & freelance designer from Manchester, UK."

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { publicPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -136,7 +137,7 @@
 </script>
 
 <svelte:head>
-	<title>Blog - dane.gg</title>
+	<title>{publicPageTitle('Blog')}</title>
 	<meta
 		name="description"
 		content="Read my latest blog posts about software development, design, and technology."

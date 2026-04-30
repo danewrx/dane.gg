@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import { Eye, Users, FileText, Calendar } from 'lucide-svelte';
@@ -115,7 +116,7 @@
 </script>
 
 <svelte:head>
-	<title>Statistics - Admin Dashboard - dane.gg</title>
+	<title>{adminPageTitle('Statistics')}</title>
 </svelte:head>
 
 <div class="stats-page">

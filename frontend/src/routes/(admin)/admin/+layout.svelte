@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { goto } from '$app/navigation';
 	import { authService } from '$lib/admin/services/auth';
@@ -67,7 +68,7 @@
 </script>
 
 <svelte:head>
-	<title>Admin Panel - dane.gg</title>
+	<title>{adminPageTitle('Admin')}</title>
 </svelte:head>
 
 <!-- Mode Watcher for theme management -->

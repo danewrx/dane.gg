@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -67,6 +68,10 @@
 		}
 	}
 </script>
+
+<svelte:head>
+	<title>{adminPageTitle('Contact tagline')}</title>
+</svelte:head>
 
 <div class="contact-tagline-settings">
 	<div class="settings-description">

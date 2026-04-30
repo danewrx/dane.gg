@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -335,7 +336,7 @@
 </script>
 
 <svelte:head>
-	<title>Contact Emails - Site Settings - dane.gg Admin</title>
+	<title>{adminPageTitle('Contact emails')}</title>
 </svelte:head>
 
 <ConfirmDialog

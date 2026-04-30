@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { user } from '$lib/admin/stores/auth';
 	import { accountService } from '$lib/admin/services/account';
@@ -397,7 +398,7 @@
 </script>
 
 <svelte:head>
-	<title>Account - Admin Panel</title>
+	<title>{adminPageTitle('Account')}</title>
 	<meta name="description" content="Manage your account settings and profile information." />
 </svelte:head>
 

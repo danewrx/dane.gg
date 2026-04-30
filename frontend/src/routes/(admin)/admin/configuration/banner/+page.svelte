@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import { Save, Eye, EyeOff } from 'lucide-svelte';
@@ -72,6 +73,10 @@
 		loadConfig();
 	});
 </script>
+
+<svelte:head>
+	<title>{adminPageTitle('Banner')}</title>
+</svelte:head>
 
 <div class="banner-config">
 	{#if loading}

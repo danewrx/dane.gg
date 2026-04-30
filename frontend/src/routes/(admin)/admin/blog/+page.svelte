@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import { Plus, Edit, Trash2, Eye, EyeOff, FileText, Calendar, Clock, Tag } from 'lucide-svelte';
@@ -116,6 +117,10 @@
 		});
 	}
 </script>
+
+<svelte:head>
+	<title>{adminPageTitle('Blog')}</title>
+</svelte:head>
 
 <ConfirmDialog
 	bind:open={showDeletePostDialog}

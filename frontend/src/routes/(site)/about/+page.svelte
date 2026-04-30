@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { publicPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
@@ -196,7 +197,7 @@
 </script>
 
 <svelte:head>
-	<title>About - dane.gg</title>
+	<title>{publicPageTitle('About')}</title>
 	<meta
 		name="description"
 		content="Learn more about Dane, a software engineer & designer from Manchester, UK."

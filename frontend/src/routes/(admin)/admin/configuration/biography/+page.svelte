@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -69,6 +70,10 @@ This is my personal website where I showcase some of the side projects I'm worki
 		}
 	}
 </script>
+
+<svelte:head>
+	<title>{adminPageTitle('Biography')}</title>
+</svelte:head>
 
 <div class="biography-settings">
 	<div class="settings-description">

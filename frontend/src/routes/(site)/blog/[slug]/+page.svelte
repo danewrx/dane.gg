@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { publicPageTitle } from '$lib/site/pageTitle';
 
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
@@ -129,10 +130,10 @@
 
 <svelte:head>
 	{#if post}
-		<title>{post.title} - dane.gg</title>
+		<title>{publicPageTitle(post.title)}</title>
 		<meta name="description" content={post.content.substring(0, 160)} />
 	{:else}
-		<title>Blog Post - dane.gg</title>
+		<title>{publicPageTitle('Blog post')}</title>
 	{/if}
 </svelte:head>
 

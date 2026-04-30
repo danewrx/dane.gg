@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { adminPageTitle } from '$lib/site/pageTitle';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { authService } from '$lib/admin/services/auth';
@@ -13,7 +14,7 @@
 </script>
 
 <svelte:head>
-	<title>Logging out - dane.gg Admin</title>
+	<title>{adminPageTitle('Logging out')}</title>
 </svelte:head>
 
 <div class="logout-container">

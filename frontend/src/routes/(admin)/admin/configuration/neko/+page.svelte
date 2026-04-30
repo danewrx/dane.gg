@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
@@ -138,6 +139,10 @@
 		}
 	}
 </script>
+
+<svelte:head>
+	<title>{adminPageTitle('Web Neko')}</title>
+</svelte:head>
 
 <div class="neko-admin">
 	<div class="page-head">

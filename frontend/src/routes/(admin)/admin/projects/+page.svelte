@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import { Plus, Edit, Trash2, Eye, EyeOff, FolderKanban, FolderTree, Tag } from 'lucide-svelte';
@@ -240,6 +241,10 @@ function handleDragEnd() {
 	draggedOverProjectId = null;
 }
 </script>
+
+<svelte:head>
+	<title>{adminPageTitle('Projects')}</title>
+</svelte:head>
 
 <ConfirmDialog
 	bind:open={showDeleteProjectDialog}

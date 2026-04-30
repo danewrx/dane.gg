@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { publicPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import { Mail } from 'lucide-svelte';
@@ -143,7 +144,7 @@
 </script>
 
 <svelte:head>
-	<title>Contact - dane.gg</title>
+	<title>{publicPageTitle('Contact')}</title>
 	<meta name="description" content="Get in touch with Dane for collaboration or inquiries." />
 </svelte:head>
 

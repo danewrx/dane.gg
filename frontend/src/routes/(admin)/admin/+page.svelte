@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { adminPageTitle } from '$lib/site/pageTitle';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 
@@ -8,7 +9,7 @@
 </script>
 
 <svelte:head>
-	<title>Admin Dashboard - dane.gg</title>
+	<title>{adminPageTitle('Dashboard')}</title>
 </svelte:head>
 
 <div class="redirect-container">

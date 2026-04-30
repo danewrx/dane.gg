@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import {
@@ -248,7 +249,7 @@
 </script>
 
 <svelte:head>
-	<title>User Management - Admin Panel</title>
+	<title>{adminPageTitle('Users')}</title>
 	<meta name="description" content="Manage users and their accounts" />
 </svelte:head>
 

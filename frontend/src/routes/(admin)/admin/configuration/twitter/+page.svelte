@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import {
@@ -374,6 +375,10 @@
 		};
 	});
 </script>
+
+<svelte:head>
+	<title>{adminPageTitle('Twitter')}</title>
+</svelte:head>
 
 <div class="twitter-config">
 	{#if loading}

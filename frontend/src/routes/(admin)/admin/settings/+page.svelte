@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { mode, setMode } from 'mode-watcher';
 	import Tabs from '$lib/admin/components/ui/Tabs.svelte';
@@ -417,7 +418,7 @@
 </script>
 
 <svelte:head>
-	<title>Admin Settings - dane.gg</title>
+	<title>{adminPageTitle('Settings')}</title>
 </svelte:head>
 
 <ConfirmDialog

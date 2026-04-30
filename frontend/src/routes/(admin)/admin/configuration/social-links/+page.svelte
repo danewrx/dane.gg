@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -369,7 +370,7 @@
 </script>
 
 <svelte:head>
-	<title>Social Links - Site Settings - dane.gg Admin</title>
+	<title>{adminPageTitle('Social links')}</title>
 </svelte:head>
 
 <ConfirmDialog

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
@@ -714,6 +715,10 @@
 		dragOverIndex = null;
 	}
 </script>
+
+<svelte:head>
+	<title>{adminPageTitle('Themes')}</title>
+</svelte:head>
 
 <ConfirmDialog
 	bind:open={showDeleteThemeDialog}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -151,6 +152,16 @@
 		goto('/admin/blog');
 	}
 </script>
+
+<svelte:head>
+	<title>
+		{isNewPost
+			? adminPageTitle('New blog post')
+			: title.trim()
+				? adminPageTitle(title)
+				: adminPageTitle('Blog post')}
+	</title>
+</svelte:head>
 
 <div class="blog-editor">
 	<div class="editor-header">

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -250,7 +251,7 @@
 </script>
 
 <svelte:head>
-	<title>Login - dane.gg Admin</title>
+	<title>{adminPageTitle('Login')}</title>
 </svelte:head>
 
 <div class="login-container">

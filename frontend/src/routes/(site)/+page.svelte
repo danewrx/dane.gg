@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { publicPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -99,7 +100,7 @@
 </script>
 
 <svelte:head>
-	<title>dane.gg</title>
+	<title>dane.gg (丹恩)</title>
 </svelte:head>	
 
 <div class="home-content">

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { publicPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
@@ -122,7 +123,7 @@
 </script>
 
 <svelte:head>
-	<title>Projects - dane.gg</title>
+	<title>{publicPageTitle('Projects')}</title>
 	<meta name="description" content="Explore Dane's portfolio of software projects and designs." />
 </svelte:head>
 

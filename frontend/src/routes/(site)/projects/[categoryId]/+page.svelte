@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { publicPageTitle } from '$lib/site/pageTitle';
 
 	import { page } from '$app/stores';
 	import Icon from '@iconify/svelte';
@@ -101,7 +102,7 @@
 </script>
 
 <svelte:head>
-	<title>{categoryData?.category.name || 'Projects'} - dane.gg</title>
+	<title>{publicPageTitle(categoryData?.category.name || 'Projects')}</title>
 	<meta
 		name="description"
 		content="Explore {categoryData?.category.name || 'projects'} from Dane's portfolio."

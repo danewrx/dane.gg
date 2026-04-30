@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import { siteConfig, loadSiteConfig } from '$lib/site/stores/siteConfig';
@@ -82,6 +83,10 @@
 		localSettings.defaultWeatherSpeed = parseFloat(input.value);
 	}
 </script>
+
+<svelte:head>
+	<title>{adminPageTitle('Weather')}</title>
+</svelte:head>
 
 <div class="weather-settings">
 	<div class="settings-description">
