@@ -1,45 +1,9 @@
 import { logger } from '../../utils/logger';
-import { db } from '../index';
-import { fonts } from '../schema';
-
-const GOOGLE_FONTS_LIST = [
-	'Inter',
-	'Roboto',
-	'Open Sans',
-	'Lato',
-	'Montserrat',
-	'Poppins',
-	'Source Sans Pro',
-	'Nunito',
-	'Raleway',
-	'Ubuntu',
-	'Playfair Display',
-	'Merriweather',
-	'PT Sans',
-	'Oswald',
-	'Quicksand',
-	'Work Sans',
-	'Fira Sans',
-	'Rubik',
-	'Karla',
-	'Manrope',
-	'Space Grotesk',
-	'DM Sans',
-	'JetBrains Mono',
-	'Fira Code',
-	'Rajdhani',
-	'Orbitron'
-];
+import { ensureBuiltinSiteFont } from '../ensureBuiltinSiteFont';
+import { ensureGoogleFontsIfEmpty } from '../ensureGoogleFonts';
 
 export async function seedFonts() {
 	logger.info('Seeding fonts...');
-	await db.insert(fonts).values(
-		GOOGLE_FONTS_LIST.map((name, i) => ({
-			name,
-			type: 'google' as const,
-			googleFontFamily: name,
-			filePath: null,
-			displayOrder: i
-		}))
-	);
+	await ensureGoogleFontsIfEmpty();
+	await ensureBuiltinSiteFont();
 }

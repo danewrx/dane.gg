@@ -230,6 +230,27 @@ async function initializeApp() {
 	}
 
 	try {
+		const { ensureGoogleFontsIfEmpty } = await import('./db/ensureGoogleFonts');
+		await ensureGoogleFontsIfEmpty();
+	} catch (error) {
+		logger.error('Google fonts bootstrap failed:', error);
+	}
+
+	try {
+		const { ensureBuiltinSiteFont } = await import('./db/ensureBuiltinSiteFont');
+		await ensureBuiltinSiteFont();
+	} catch (error) {
+		logger.error('Built-in site font bootstrap failed:', error);
+	}
+
+	try {
+		const { ensureDefaultTheme } = await import('./db/ensureDefaultTheme');
+		await ensureDefaultTheme();
+	} catch (error) {
+		logger.error('Default theme bootstrap failed:', error);
+	}
+
+	try {
 		await createDefaultAdmin();
 
 		// Initialize Twitter scheduler

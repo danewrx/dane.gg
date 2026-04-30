@@ -13,6 +13,7 @@
 		googleFontFamily: string | null;
 		filePath: string | null;
 		displayOrder: number;
+		isBuiltIn?: boolean;
 	}
 
 	interface Props {

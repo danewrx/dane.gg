@@ -401,7 +401,7 @@ export const fonts = websiteSchema.table('fonts', {
 	name: varchar('name', { length: 255 }).notNull(),
 	type: varchar('type', { length: 20 }).notNull(), // 'google' | 'custom'
 	googleFontFamily: varchar('google_font_family', { length: 255 }), // Google: family name for API
-	filePath: varchar('file_path', { length: 500 }), // Custom: /uploads/fonts/name.woff2
+	filePath: varchar('file_path', { length: 500 }), // Custom: /uploads/fonts/... or bundled /fonts/...
 	displayOrder: integer('display_order').notNull().default(0),
 	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 	updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()

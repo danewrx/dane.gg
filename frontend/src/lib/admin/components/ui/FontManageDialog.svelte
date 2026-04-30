@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
 
-	import { X, Upload, Trash2, Loader2, Type } from 'lucide-svelte';
+	import { X, Upload, Trash2, Loader2, Type, Lock } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 
@@ -12,6 +12,8 @@
 		googleFontFamily: string | null;
 		filePath: string | null;
 		displayOrder: number;
+		/** Bundled site fonts cannot be deleted */
+		isBuiltIn?: boolean;
 	}
 
 	interface Props {
@@ -96,7 +98,7 @@
 	}
 
 	function requestRemoveFont(font: Font) {
-		if (font.type !== 'custom') return;
+		if (font.type !== 'custom' || font.isBuiltIn) return;
 		fontPendingRemove = font;
 		showRemoveFontDialog = true;
 	}
@@ -107,7 +109,8 @@
 	}
 
 	async function confirmRemoveFont() {
-		if (!fontPendingRemove || fontPendingRemove.type !== 'custom') return;
+		if (!fontPendingRemove || fontPendingRemove.type !== 'custom' || fontPendingRemove.isBuiltIn)
+			return;
 		const font = fontPendingRemove;
 		try {
 			deletingId = font.id;
@@ -115,7 +118,10 @@
 				method: 'DELETE',
 				credentials: 'include'
 			});
-			if (!res.ok) throw new Error('Delete failed');
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error((err as { error?: string }).error || 'Delete failed');
+			}
 			await loadFonts();
 			onFontsChange?.();
 			toast.success('Font removed');
@@ -185,8 +191,8 @@
 			</div>
 			<div class="dialog-body">
 				<p class="dialog-description">
-					Custom fonts are available in the font dropdown when editing themes. Google Fonts are
-					built-in and cannot be removed.
+					Custom fonts are available in the font dropdown when editing themes. Google Fonts and the
+					bundled site font (W95FA) cannot be removed.
 				</p>
 
 				<!-- Add new font -->
@@ -233,20 +239,31 @@
 						<ul class="font-list">
 							{#each customFonts as font (font.id)}
 								<li class="font-list-item">
-									<span class="font-list-name">{font.name}</span>
-									<button
-										type="button"
-										class="font-list-delete"
-										aria-label="Remove {font.name}"
-										disabled={deletingId === font.id}
-										onclick={() => requestRemoveFont(font)}
-									>
-										{#if deletingId === font.id}
-											<Loader2 size={14} class="spin" />
-										{:else}
-											<Trash2 size={14} />
+									<span class="font-list-name-wrap">
+										<span class="font-list-name">{font.name}</span>
+										{#if font.isBuiltIn}
+											<span class="font-list-badge" title="Shipped with the app">Built-in</span>
 										{/if}
-									</button>
+									</span>
+									{#if font.isBuiltIn}
+										<span class="font-list-locked" title="Cannot be removed">
+											<Lock size={14} aria-hidden="true" />
+										</span>
+									{:else}
+										<button
+											type="button"
+											class="font-list-delete"
+											aria-label="Remove {font.name}"
+											disabled={deletingId === font.id}
+											onclick={() => requestRemoveFont(font)}
+										>
+											{#if deletingId === font.id}
+												<Loader2 size={14} class="spin" />
+											{:else}
+												<Trash2 size={14} />
+											{/if}
+										</button>
+									{/if}
 								</li>
 							{/each}
 						</ul>
@@ -455,10 +472,40 @@
 		border-radius: 6px;
 	}
 
+	.font-list-name-wrap {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
+		min-width: 0;
+	}
+
 	.font-list-name {
 		font-size: 14px;
 		color: var(--text-primary, #ffffff);
 		font-weight: 500;
+	}
+
+	.font-list-badge {
+		font-size: 10px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		padding: 2px 6px;
+		border-radius: 4px;
+		background: rgba(99, 102, 241, 0.2);
+		color: var(--accent-color, #a5b4fc);
+	}
+
+	.font-list-locked {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		color: var(--text-secondary, #71717a);
+		opacity: 0.75;
+		user-select: none;
 	}
 
 	.font-list-delete {

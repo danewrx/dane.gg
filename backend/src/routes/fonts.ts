@@ -5,6 +5,9 @@ import path from 'path';
 import fs from 'fs';
 import { db } from '../db';
 import { fonts } from '../db/schema';
+import { BUILTIN_SITE_FONT_NAME, isBundledBuiltinSiteFont } from '../db/builtinSiteFont';
+import { ensureBuiltinSiteFont } from '../db/ensureBuiltinSiteFont';
+import { ensureGoogleFontsIfEmpty } from '../db/ensureGoogleFonts';
 import { eq, asc } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
 
@@ -42,56 +45,24 @@ const fontUpload = multer({
 	}
 });
 
-const DEFAULT_GOOGLE_FONTS = [
-	'Inter',
-	'Roboto',
-	'Open Sans',
-	'Lato',
-	'Montserrat',
-	'Poppins',
-	'Source Sans Pro',
-	'Nunito',
-	'Raleway',
-	'Ubuntu',
-	'Playfair Display',
-	'Merriweather',
-	'PT Sans',
-	'Oswald',
-	'Quicksand',
-	'Work Sans',
-	'Fira Sans',
-	'Rubik',
-	'Karla',
-	'Manrope',
-	'Space Grotesk',
-	'DM Sans',
-	'JetBrains Mono',
-	'Fira Code',
-	'Rajdhani',
-	'Orbitron'
-];
-
 /**
  * GET /api/fonts
  * List all fonts (Google + custom). Auth required for admin theme editor.
- * Seeds default Google fonts if table is empty.
+ * Seeds default Google fonts if table is empty, and registers the bundled site font.
  */
 router.get('/', requireAuth, async (_req: Request, res: Response) => {
 	try {
-		let allFonts = await db.select().from(fonts).orderBy(asc(fonts.displayOrder), asc(fonts.name));
-		if (allFonts.length === 0) {
-			await db.insert(fonts).values(
-				DEFAULT_GOOGLE_FONTS.map((name, i) => ({
-					name,
-					type: 'google',
-					googleFontFamily: name,
-					filePath: null,
-					displayOrder: i
-				}))
-			);
-			allFonts = await db.select().from(fonts).orderBy(asc(fonts.displayOrder), asc(fonts.name));
-		}
-		res.json({ success: true, data: allFonts });
+		await ensureGoogleFontsIfEmpty();
+		await ensureBuiltinSiteFont();
+		const allFonts = await db
+			.select()
+			.from(fonts)
+			.orderBy(asc(fonts.displayOrder), asc(fonts.name));
+		const data = allFonts.map((f) => ({
+			...f,
+			isBuiltIn: isBundledBuiltinSiteFont(f)
+		}));
+		res.json({ success: true, data });
 	} catch (error) {
 		logger.error('Error fetching fonts:', error);
 		res.status(500).json({ success: false, error: 'Failed to fetch fonts' });
@@ -115,6 +86,12 @@ router.post(
 			const name =
 				(req.body.name as string)?.trim() ||
 				path.basename(req.file.originalname, path.extname(req.file.originalname));
+			if (name === BUILTIN_SITE_FONT_NAME) {
+				return res.status(400).json({
+					success: false,
+					error: `The name "${BUILTIN_SITE_FONT_NAME}" is reserved for the built-in site font`
+				});
+			}
 			const filePath = `/uploads/fonts/${req.file.filename}`;
 
 			const existing = await db.select().from(fonts);
@@ -155,8 +132,16 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
 			return res.status(400).json({ success: false, error: 'Only custom fonts can be deleted' });
 		}
 
-		if (font.filePath) {
-			const fullPath = path.join(process.cwd(), 'static', font.filePath);
+		if (isBundledBuiltinSiteFont(font)) {
+			return res.status(400).json({
+				success: false,
+				error: 'This built-in font cannot be removed'
+			});
+		}
+
+		if (font.filePath?.startsWith('/uploads/')) {
+			const rel = font.filePath.replace(/^\//, '');
+			const fullPath = path.join(process.cwd(), 'static', rel);
 			if (fs.existsSync(fullPath)) {
 				fs.unlinkSync(fullPath);
 			}
