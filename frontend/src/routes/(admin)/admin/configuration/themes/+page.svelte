@@ -2293,6 +2293,8 @@
 		justify-content: center;
 		width: 32px;
 		height: 32px;
+		padding: 0;
+		box-sizing: border-box;
 		border: none;
 		border-radius: 6px;
 		background: transparent;
