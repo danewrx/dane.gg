@@ -1,5 +1,4 @@
 <script lang="ts">
-	import favicon from '$lib/shared/assets/favicon.svg';
 	import { page } from '$app/stores';
 	import { THEME_PREVIEW_SEARCH_PARAM } from '$lib/site/themePreview';
 	import SettingsIcon from '$lib/admin/components/settings/SettingsIcon.svelte';
@@ -32,7 +31,6 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
 	<title>dane.gg - Software Engineer & Designer</title>
 	<meta
 		name="description"
