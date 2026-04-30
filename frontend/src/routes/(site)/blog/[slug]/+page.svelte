@@ -7,8 +7,8 @@
 	import { navigating } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { marked } from 'marked';
-	import { ArrowLeft } from 'lucide-svelte';
 	import BorderedBox from '$lib/site/components/ui/BorderedBox.svelte';
+	import SiteBackNav from '$lib/site/components/layout/SiteBackNav.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -54,10 +54,6 @@
 		return readTime;
 	}
 
-	function goBack() {
-		goto('/blog');
-	}
-
 	function getThumbnailUrl(path: string | null): string {
 		if (!path) return '';
 		// If it's an external URL, just return it
@@ -101,17 +97,13 @@
 		<BorderedBox padding="16px" dynamicHeight={true}>
 			<div class="error-state">
 				<p class="error-message">{errorMessage}</p>
-				<button class="back-button" onclick={goBack}>
-					<ArrowLeft size={18} />
-					Back to Blog
-				</button>
+				<SiteBackNav href="/blog" label="Back to Blog" />
 			</div>
 		</BorderedBox>
 	{:else if post}
-		<button class="back-link" onclick={goBack}>
-			<ArrowLeft size={18} />
-			Back to Blog
-		</button>
+		<div class="blog-post-toolbar">
+			<SiteBackNav href="/blog" label="Back to Blog" />
+		</div>
 
 		<article class="blog-post">
 			{#if post.thumbnail}
@@ -176,26 +168,9 @@
 		padding: 0 0.5rem 2rem 0.5rem;
 	}
 
-	.back-link {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		padding: 8px 16px;
-		margin-top: 24px;
-		margin-bottom: 5px;
-		background: transparent;
-		border: 2px solid var(--border-color, #ffffff);
-		border-radius: 0;
-		color: var(--text-primary, #ffffff);
-		font-size: calc(14 * 1em / 14);
-		cursor: pointer;
-		transition: all 0.2s ease;
-	}
-
-	.back-link:hover {
-		background: var(--bg-secondary, #2d2d2d);
-		border-color: var(--accent-color, #6366f1);
-		color: var(--accent-color, #6366f1);
+	.blog-post-toolbar {
+		margin-top: 8px;
+		margin-bottom: 20px;
 	}
 
 	.loading,
@@ -204,6 +179,7 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
+		gap: 1.25rem;
 		padding: 64px 24px;
 		text-align: center;
 	}

@@ -7,6 +7,7 @@
 	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
 	import { getProjectStatusColor } from '$lib/shared/constants/projectConstants';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
+	import SiteBackNav from '$lib/site/components/layout/SiteBackNav.svelte';
 	import type { PageData } from './$types';
 
 	interface ProjectTag {
@@ -94,12 +95,11 @@
 	/>
 {/if}
 
-<div class="header-wrapper">
+<div class="category-hero">
+	<div class="category-hero__toolbar">
+		<SiteBackNav embedded href="/projects" label="Back to Projects" />
+	</div>
 	<TypingHeader text={categoryData?.category.name || 'Projects'} />
-	<a href="/projects" class="back-link">
-		<span class="back-arrow">←</span>
-		<span class="back-text">Back to Projects</span>
-	</a>
 </div>
 
 <div class="page-content">
@@ -110,12 +110,12 @@
 	{:else if data.loadError}
 		<div class="error">
 			<p>{errorMessage}</p>
-			<a href="/projects" class="back-link">← Back to Projects</a>
+			<SiteBackNav href="/projects" label="Back to Projects" />
 		</div>
 	{:else if !categoryData || categoryData.projects.length === 0}
 		<div class="empty">
 			<p>No projects available in this category.</p>
-			<a href="/projects" class="back-link">← Back to Projects</a>
+			<SiteBackNav href="/projects" label="Back to Projects" />
 		</div>
 	{:else}
 		<div class="projects-grid">
@@ -226,54 +226,35 @@
 	.loading,
 	.error,
 	.empty {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1.25rem;
 		text-align: center;
 		padding: 3rem 1rem;
 		color: var(--theme-text-secondary, #a1a1aa);
 	}
 
-	.header-wrapper {
-		position: relative;
+	.category-hero {
+		border: 1px solid var(--border-color, #4a4a4a);
+		border-radius: 4px;
+		background: var(--bg-secondary, #1a1a1a);
 		margin-bottom: 24px;
+		overflow: hidden;
 	}
 
-	.back-link {
-		position: absolute;
-		top: 0;
-		left: 0;
-		display: inline-flex;
+	.category-hero__toolbar {
+		display: flex;
 		align-items: center;
-		gap: 0.5rem;
-		color: var(--theme-text-secondary, #a1a1aa);
-		text-decoration: none;
-		font-size: calc(0.75 * 16 * 1em / 14);
-		font-weight: 500;
-		transition: all 0.2s ease;
-		z-index: 1;
-		padding: 0.5rem 0.75rem;
-		border-radius: 4px 0 0 0;
-		background: var(--theme-background, rgba(0, 0, 0, 0.3));
-		border-right: 1px solid var(--theme-border, #ffffff);
-		border-bottom: 1px solid var(--theme-border, #ffffff);
+		justify-content: flex-start;
+		border-bottom: 1px solid var(--border-color, #4a4a4a);
+		background: color-mix(in srgb, var(--theme-background, #0a0a0a) 55%, transparent);
 	}
 
-	.back-link:hover {
-		color: var(--theme-accent, #6366f1);
-		background: color-mix(in srgb, var(--theme-accent, #6366f1) 10%, transparent);
-	}
-
-	.back-link:hover .back-arrow {
-		transform: translateX(-2px);
-	}
-
-	.back-arrow {
-		font-size: calc(0.875 * 16 * 1em / 14);
-		transition: transform 0.2s ease;
-	}
-
-	.back-text {
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-		font-size: calc(0.7 * 16 * 1em / 14);
+	.category-hero :global(.typing-header) {
+		border: none;
+		border-radius: 0;
+		margin-bottom: 0;
 	}
 
 	.projects-grid {
