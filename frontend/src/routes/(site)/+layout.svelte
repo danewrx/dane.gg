@@ -4,6 +4,7 @@
 	import SettingsIcon from '$lib/admin/components/settings/SettingsIcon.svelte';
 	import SettingsPanel from '$lib/admin/components/settings/SettingsPanel.svelte';
 	import Header from '$lib/site/components/layout/Header.svelte';
+	import SiteAdminShortcut from '$lib/site/components/layout/SiteAdminShortcut.svelte';
 	import WeatherEffects from '$lib/site/components/effects/WeatherEffects.svelte';
 	import ScrollingBanner from '$lib/site/components/ScrollingBanner.svelte';
 	import ThemeProvider from '$lib/site/components/ThemeProvider.svelte';
@@ -78,6 +79,7 @@
 	</div>
 
 	{#if !isThemePreviewEmbed}
+		<SiteAdminShortcut />
 		<!-- Settings Icon -->
 		<SettingsIcon isOpen={settingsOpen} on:toggle={handleSettingsToggle} />
 
