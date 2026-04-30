@@ -9,7 +9,9 @@
 	import ThemeProvider from '$lib/site/components/ThemeProvider.svelte';
 	import '$lib/site/oneko/variants';
 	import { bannerLabelPosition } from '$lib/site/stores/bannerLabelPosition';
-	import { publicPageTitle } from '$lib/site/pageTitle';
+	import CanonicalLink from '$lib/site/components/seo/CanonicalLink.svelte';
+	import OpenGraphTags from '$lib/site/components/seo/OpenGraphTags.svelte';
+	import { getStaticRouteSeo } from '$lib/site/seo';
 
 	let { children } = $props();
 	let settingsOpen = $state(false);
@@ -22,6 +24,8 @@
 
 	const isThemePreviewEmbed = $derived($page.url.searchParams.has(THEME_PREVIEW_SEARCH_PARAM));
 
+	const staticRouteSeo = $derived(getStaticRouteSeo($page.url.pathname));
+
 	function handleSettingsToggle() {
 		settingsOpen = !settingsOpen;
 	}
@@ -31,13 +35,10 @@
 	}
 </script>
 
-<svelte:head>
-	<title>{publicPageTitle('Home')}</title>
-	<meta
-		name="description"
-		content="Hi, I'm Dane! I'm a software engineer & freelance designer from Manchester, UK."
-	/>
-</svelte:head>
+<CanonicalLink />
+{#if staticRouteSeo}
+	<OpenGraphTags title={staticRouteSeo.title} description={staticRouteSeo.description} />
+{/if}
 
 <!-- Public website layout -->
 <div class="main-container dark-theme">

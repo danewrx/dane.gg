@@ -198,10 +198,6 @@
 
 <svelte:head>
 	<title>{publicPageTitle('About')}</title>
-	<meta
-		name="description"
-		content="Learn more about Dane, a software engineer & designer from Manchester, UK."
-	/>
 </svelte:head>
 
 <TypingHeader text="About" />

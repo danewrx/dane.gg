@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { logger } from '$lib/logger';
+	import OpenGraphTags from '$lib/site/components/seo/OpenGraphTags.svelte';
 	import { publicPageTitle } from '$lib/site/pageTitle';
 
-	import { page } from '$app/stores';
+	import { navigating } from '$app/stores';
 	import Icon from '@iconify/svelte';
 	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
 	import { getProjectStatusColor } from '$lib/shared/constants/projectConstants';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
+	import type { PageData } from './$types';
 
 	interface ProjectTag {
 		id: string;
@@ -49,39 +50,21 @@
 		projects: Project[];
 	}
 
-	let categoryData = $state<CategoryData | null>(null);
-	let loading = $state(true);
-	let error = $state('');
+	let { data }: { data: PageData } = $props();
 
-	$effect(() => {
-		const categoryId = $page.params.categoryId;
-		if (categoryId) {
-			loadCategoryProjects(categoryId);
-		}
-	});
+	let categoryData = $derived(data.categoryData as CategoryData | null);
 
-	async function loadCategoryProjects(categoryId: string) {
-		try {
-			loading = true;
-			error = '';
-			const response = await fetch(`/api/projects/category/${categoryId}`);
+	const errorMessage = $derived(
+		data.loadError === 'not_found'
+			? 'Category not found'
+			: data.loadError === 'server'
+				? 'Failed to load projects'
+				: ''
+	);
 
-			if (!response.ok) {
-				if (response.status === 404) {
-					throw new Error('Category not found');
-				}
-				throw new Error('Failed to load projects');
-			}
-
-			const result = await response.json();
-			categoryData = result.data || null;
-		} catch (err) {
-			logger.error('Error loading category projects:', err);
-			error = err instanceof Error ? err.message : 'Failed to load projects';
-		} finally {
-			loading = false;
-		}
-	}
+	const showNavigating = $derived(
+		Boolean($navigating?.to?.url?.pathname?.startsWith('/projects/'))
+	);
 
 	function getImageUrl(imageUrl: string | null): string {
 		if (!imageUrl) return '';
@@ -103,11 +86,13 @@
 
 <svelte:head>
 	<title>{publicPageTitle(categoryData?.category.name || 'Projects')}</title>
-	<meta
-		name="description"
-		content="Explore {categoryData?.category.name || 'projects'} from Dane's portfolio."
-	/>
 </svelte:head>
+{#if categoryData?.category}
+	<OpenGraphTags
+		title={publicPageTitle(categoryData.category.name)}
+		description={`Explore ${categoryData.category.name} projects from my portfolio.`}
+	/>
+{/if}
 
 <div class="header-wrapper">
 	<TypingHeader text={categoryData?.category.name || 'Projects'} />
@@ -118,13 +103,13 @@
 </div>
 
 <div class="page-content">
-	{#if loading}
+	{#if showNavigating}
 		<div class="loading">
 			<p>Loading projects...</p>
 		</div>
-	{:else if error}
+	{:else if data.loadError}
 		<div class="error">
-			<p>{error}</p>
+			<p>{errorMessage}</p>
 			<a href="/projects" class="back-link">← Back to Projects</a>
 		</div>
 	{:else if !categoryData || categoryData.projects.length === 0}

@@ -124,7 +124,6 @@
 
 <svelte:head>
 	<title>{publicPageTitle('Projects')}</title>
-	<meta name="description" content="Explore Dane's portfolio of software projects and designs." />
 </svelte:head>
 
 <TypingHeader text="Projects" />

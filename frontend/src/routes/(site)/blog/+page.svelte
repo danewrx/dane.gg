@@ -138,10 +138,6 @@
 
 <svelte:head>
 	<title>{publicPageTitle('Blog')}</title>
-	<meta
-		name="description"
-		content="Read my latest blog posts about software development, design, and technology."
-	/>
 </svelte:head>
 
 <div class="blog-page">

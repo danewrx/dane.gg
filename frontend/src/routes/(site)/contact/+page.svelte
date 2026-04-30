@@ -145,7 +145,6 @@
 
 <svelte:head>
 	<title>{publicPageTitle('Contact')}</title>
-	<meta name="description" content="Get in touch with Dane for collaboration or inquiries." />
 </svelte:head>
 
 <div class="page-content">

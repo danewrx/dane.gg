@@ -1,41 +1,32 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import OpenGraphTags from '$lib/site/components/seo/OpenGraphTags.svelte';
+	import { plainTextExcerpt } from '$lib/site/seo';
 	import { publicPageTitle } from '$lib/site/pageTitle';
 
-	import { page } from '$app/stores';
+	import { navigating } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { marked } from 'marked';
 	import { ArrowLeft } from 'lucide-svelte';
 	import BorderedBox from '$lib/site/components/ui/BorderedBox.svelte';
+	import type { PageData } from './$types';
 
-	interface BlogPost {
-		id: string;
-		title: string;
-		slug: string;
-		content: string;
-		thumbnail: string | null;
-		publishedAt: string;
-		createdAt: string;
-		updatedAt: string;
-		tags: { id: string; name: string }[];
-	}
+	let { data }: { data: PageData } = $props();
 
-	interface NavigationPost {
-		id: string;
-		title: string;
-		slug: string;
-	}
+	let post = $derived(data.post);
+	let navigation = $derived(data.navigation);
 
-	interface Navigation {
-		previous: NavigationPost | null;
-		next: NavigationPost | null;
-	}
+	const errorMessage = $derived(
+		data.loadError === 'not_found'
+			? 'Blog post not found'
+			: data.loadError === 'server'
+				? 'Failed to load blog post'
+				: ''
+	);
 
-	let slug = $derived($page.params.slug);
-	let post = $state<BlogPost | null>(null);
-	let navigation = $state<Navigation | null>(null);
-	let loading = $state(true);
-	let error = $state('');
+	const showNavigating = $derived(
+		Boolean($navigating?.to?.url?.pathname?.startsWith('/blog/'))
+	);
 
 	let contentHtml = $derived.by(() => {
 		if (!post) return '';
@@ -46,52 +37,6 @@
 			return '<p>Error rendering content</p>';
 		}
 	});
-
-	// React to slug changes
-	$effect(() => {
-		if (slug) {
-			Promise.all([loadPost(), loadNavigation()]);
-		}
-	});
-
-	async function loadPost() {
-		try {
-			loading = true;
-			error = '';
-			const response = await fetch(`/api/blog/${slug}`);
-
-			if (!response.ok) {
-				if (response.status === 404) {
-					error = 'Blog post not found';
-				} else {
-					throw new Error('Failed to load blog post');
-				}
-				return;
-			}
-
-			const result = await response.json();
-			post = result.data;
-		} catch (err) {
-			logger.error('Error loading blog post:', err);
-			error = 'Failed to load blog post';
-		} finally {
-			loading = false;
-		}
-	}
-
-	async function loadNavigation() {
-		try {
-			const response = await fetch(`/api/blog/${slug}/navigation`);
-
-			if (response.ok) {
-				const result = await response.json();
-				navigation = result.data;
-			}
-		} catch (err) {
-			logger.error('Error loading navigation:', err);
-			// Don't show error for navigation, just silently fail
-		}
-	}
 
 	function formatDate(dateString: string): string {
 		const date = new Date(dateString);
@@ -131,22 +76,31 @@
 <svelte:head>
 	{#if post}
 		<title>{publicPageTitle(post.title)}</title>
-		<meta name="description" content={post.content.substring(0, 160)} />
 	{:else}
 		<title>{publicPageTitle('Blog post')}</title>
 	{/if}
 </svelte:head>
+{#if post}
+	<OpenGraphTags
+		title={publicPageTitle(post.title)}
+		description={plainTextExcerpt(post.content, 160)}
+		imagePathOrUrl={post.thumbnail ? getThumbnailUrl(post.thumbnail) : null}
+		ogType="article"
+		publishedTime={new Date(post.publishedAt).toISOString()}
+		modifiedTime={new Date(post.updatedAt).toISOString()}
+	/>
+{/if}
 
 <div class="blog-post-page">
-	{#if loading}
+	{#if showNavigating}
 		<div class="loading">
 			<div class="spinner"></div>
 			<p>Loading post...</p>
 		</div>
-	{:else if error}
+	{:else if data.loadError}
 		<BorderedBox padding="16px" dynamicHeight={true}>
 			<div class="error-state">
-				<p class="error-message">{error}</p>
+				<p class="error-message">{errorMessage}</p>
 				<button class="back-button" onclick={goBack}>
 					<ArrowLeft size={18} />
 					Back to Blog
