@@ -46,7 +46,7 @@
 
 <svelte:head>
 	<title>dane.gg (丹恩)</title>
-</svelte:head>	
+</svelte:head>
 
 <div class="home-content">
 	<!-- Two Column Layout -->
@@ -101,18 +101,14 @@
 						dynamicHeight={true}
 					>
 						<LazyWhenVisible minHeight="100px">
-							{#snippet children()}
-								<LinksWidget />
-							{/snippet}
+							<LinksWidget />
 						</LazyWhenVisible>
 					</BorderedBox>
 				</div>
 
 				<div class="card-slot" data-mobile-order="9">
 					<LazyWhenVisible minHeight="72px">
-						{#snippet children()}
-							<ButtonBanner />
-						{/snippet}
+						<ButtonBanner />
 					</LazyWhenVisible>
 				</div>
 
@@ -125,9 +121,7 @@
 						dynamicHeight={true}
 					>
 						<LazyWhenVisible minHeight="140px">
-							{#snippet children()}
-								<MyButtonWidget />
-							{/snippet}
+							<MyButtonWidget />
 						</LazyWhenVisible>
 					</BorderedBox>
 				</div>
@@ -141,9 +135,7 @@
 						contentPadding={true}
 					>
 						<LazyWhenVisible minHeight="100px">
-							{#snippet children()}
-								<SiteStats />
-							{/snippet}
+							<SiteStats />
 						</LazyWhenVisible>
 					</BorderedBox>
 				</div>
@@ -209,9 +201,7 @@
 						contentPadding={true}
 					>
 						<LazyWhenVisible minHeight="160px">
-							{#snippet children()}
-								<ServiceStatus bind:overallStatus />
-							{/snippet}
+							<ServiceStatus bind:overallStatus />
 						</LazyWhenVisible>
 					</BorderedBox>
 				</div>
@@ -692,17 +682,39 @@
 			width: 100%;
 		}
 
-		.card-slot[data-mobile-order="1"] { order: 1; }
-		.card-slot[data-mobile-order="2"] { order: 2; }
-		.card-slot[data-mobile-order="3"] { order: 3; }
-		.card-slot[data-mobile-order="4"] { order: 4; }
-		.card-slot[data-mobile-order="5"] { order: 5; }
-		.card-slot[data-mobile-order="6"] { order: 6; }
-		.card-slot[data-mobile-order="7"] { order: 7; }
-		.card-slot[data-mobile-order="8"] { order: 8; }
-		.card-slot[data-mobile-order="9"] { order: 9; }
-		.card-slot[data-mobile-order="10"] { order: 10; }
-		.card-slot[data-mobile-order="11"] { order: 11; }
+		.card-slot[data-mobile-order='1'] {
+			order: 1;
+		}
+		.card-slot[data-mobile-order='2'] {
+			order: 2;
+		}
+		.card-slot[data-mobile-order='3'] {
+			order: 3;
+		}
+		.card-slot[data-mobile-order='4'] {
+			order: 4;
+		}
+		.card-slot[data-mobile-order='5'] {
+			order: 5;
+		}
+		.card-slot[data-mobile-order='6'] {
+			order: 6;
+		}
+		.card-slot[data-mobile-order='7'] {
+			order: 7;
+		}
+		.card-slot[data-mobile-order='8'] {
+			order: 8;
+		}
+		.card-slot[data-mobile-order='9'] {
+			order: 9;
+		}
+		.card-slot[data-mobile-order='10'] {
+			order: 10;
+		}
+		.card-slot[data-mobile-order='11'] {
+			order: 11;
+		}
 
 		:global(.discord-widget) {
 			justify-content: flex-start;

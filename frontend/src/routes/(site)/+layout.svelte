@@ -14,10 +14,9 @@
 	import CanonicalLink from '$lib/site/components/seo/CanonicalLink.svelte';
 	import OpenGraphTags from '$lib/site/components/seo/OpenGraphTags.svelte';
 	import { getStaticRouteSeo } from '$lib/site/seo';
-	import type { Snippet } from 'svelte';
-	import type { LayoutData } from './$types';
+	import type { LayoutProps } from './$types';
 
-	let { data, children }: { data: LayoutData; children: Snippet } = $props();
+	let { data, children }: LayoutProps = $props();
 
 	$effect.pre(() => {
 		if (data.themeActive) {
