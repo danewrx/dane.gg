@@ -123,7 +123,10 @@
 			lastTweetId = tweetData.tweetId;
 		}
 
-		fetchTweetData();
+		// SSR may already provide `tweetData`; skip duplicate first fetch (polling still runs).
+		if (!hasReceivedApiResponse) {
+			void fetchTweetData();
+		}
 
 		const pollInterval = setInterval(() => {
 			if (isPageVisible) {

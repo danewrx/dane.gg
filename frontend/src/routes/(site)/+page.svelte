@@ -1,8 +1,4 @@
 <script lang="ts">
-	import { logger } from '$lib/logger';
-	import { publicPageTitle } from '$lib/site/pageTitle';
-
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import DiscordStatus from '$lib/site/components/widgets/DiscordStatus.svelte';
@@ -17,7 +13,6 @@
 	import Chat from '$lib/site/components/Chat.svelte';
 	import ChatUserCount from '$lib/site/components/ChatUserCount.svelte';
 	import { Radio } from 'lucide-svelte';
-	import { marked } from 'marked';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -27,64 +22,13 @@
 	let overallStatus = $state('UNKNOWN');
 	let userCount = $state(0);
 
-	const musicHeaderText = $derived(musicData?.nowPlaying ? 'Now Playing' : 'Recently Played');
-	const tweetHeaderText = $derived('Status');
-
-	let aboutMeContent = $state('');
-	let loadingAboutMe = $state(true);
-
-	interface BlogPost {
-		id: string;
-		title: string;
-		slug: string;
-		publishedAt: string;
-	}
-
-	let recentPosts = $state<BlogPost[]>([]);
-	let loadingPosts = $state(true);
-
-	onMount(() => {
-		loadRecentPosts();
-		loadAboutMe();
+	$effect(() => {
+		musicData = data.musicData;
+		tweetData = data.tweetData;
 	});
 
-	async function loadAboutMe() {
-		try {
-			loadingAboutMe = true;
-			const response = await fetch('/api/config/homepage_about_me');
-
-			if (response.ok) {
-				const result = await response.json();
-				if (result.data?.value) {
-					// Parse markdown to HTML
-					aboutMeContent = await marked.parse(result.data.value);
-				} else {
-					aboutMeContent = '';
-				}
-			}
-		} catch (err) {
-			logger.error('Error loading about me:', err);
-			aboutMeContent = '';
-		} finally {
-			loadingAboutMe = false;
-		}
-	}
-
-	async function loadRecentPosts() {
-		try {
-			loadingPosts = true;
-			const response = await fetch('/api/blog');
-
-			if (response.ok) {
-				const result = await response.json();
-				recentPosts = (result.data || []).slice(0, 4);
-			}
-		} catch (err) {
-			logger.error('Error loading recent posts:', err);
-		} finally {
-			loadingPosts = false;
-		}
-	}
+	const musicHeaderText = $derived(musicData?.nowPlaying ? 'Now Playing' : 'Recently Played');
+	const tweetHeaderText = $derived('Status');
 
 	function formatDate(dateString: string): string {
 		const date = new Date(dateString);
@@ -201,13 +145,9 @@
 						dynamicHeight={true}
 						contentPadding={true}
 					>
-						{#if loadingAboutMe}
-							<div class="about-me-loading">
-								<p>Loading...</p>
-							</div>
-						{:else if aboutMeContent}
+						{#if data.aboutMeHtml}
 							<div class="about-me-content">
-								{@html aboutMeContent}
+								{@html data.aboutMeHtml}
 							</div>
 						{:else}
 							<div class="about-me-empty">
@@ -227,12 +167,10 @@
 						contentPadding={true}
 					>
 						<div class="recent-posts-content">
-							{#if loadingPosts}
-								<p class="recent-posts-empty">Loading...</p>
-							{:else if recentPosts.length === 0}
+							{#if data.recentPosts.length === 0}
 								<p class="recent-posts-empty">There are currently no posts</p>
 							{:else}
-								{#each recentPosts as post}
+								{#each data.recentPosts as post}
 									<button class="recent-post-item" onclick={() => viewPost(post.slug)}>
 										<span class="post-date">{formatDate(post.publishedAt)}</span> :: {post.title}
 									</button>
@@ -473,7 +411,6 @@
 		font-weight: 700;
 	}
 
-	.about-me-loading,
 	.about-me-empty {
 		color: var(--text-secondary, #a1a1aa);
 		font-size: calc(14 * 1em / 14);

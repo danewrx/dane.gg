@@ -19,8 +19,10 @@
 	let isCheckingOverflow = $state(false);
 
 	onMount(() => {
-		// Always fetch data on mount
-		fetchMusicData();
+		// SSR may already provide `musicData`; skip duplicate first fetch (polling still runs).
+		if (!hasReceivedApiResponse) {
+			void fetchMusicData();
+		}
 
 		let fetchInterval: NodeJS.Timeout;
 		let timeUpdateInterval: NodeJS.Timeout;
