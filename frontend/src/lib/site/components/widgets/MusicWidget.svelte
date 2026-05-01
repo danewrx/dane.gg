@@ -308,7 +308,14 @@
 		<div class="track-info">
 			<div class="track-image">
 				{#if musicData.image}
-					<img src={musicData.image} alt="{musicData.artist} - {musicData.track}" />
+					<img
+						src={musicData.image}
+						alt="{musicData.artist} - {musicData.track}"
+						width={52}
+						height={52}
+						loading="lazy"
+						decoding="async"
+					/>
 				{:else}
 					<div class="no-image">
 						<span>♪</span>

@@ -157,23 +157,50 @@ function applyActiveThemePayload(payload: {
 	}
 }
 
+type ActiveThemeApiPayload = {
+	success?: boolean;
+	data?: SiteTheme | null;
+	enforcement?: ThemeEnforcementState;
+};
+
+let ssrActiveThemePayload: ActiveThemeApiPayload | null = null;
+
+/**
+ * Apply `/api/themes/active` JSON from SSR
+ */
+export function hydratePublicThemeFromSsr(payload: unknown): void {
+	if (!payload || typeof payload !== 'object') return;
+	const p = payload as ActiveThemeApiPayload;
+	applyActiveThemePayload(p);
+	themeLoading.set(false);
+	ssrActiveThemePayload = p;
+}
+
 /**
  * Load active theme (or user's preferred theme). Honors admin theme enforcement from the API.
  */
 export async function loadSiteTheme(): Promise<void> {
 	if (!browser) return;
 
-	themeLoading.set(true);
 	themeError.set(null);
 
 	try {
-		const activeRes = await fetch('/api/themes/active');
+		let activeData: ActiveThemeApiPayload;
 
-		if (!activeRes.ok) {
-			throw new Error(`Failed to fetch theme: ${activeRes.statusText}`);
+		if (ssrActiveThemePayload) {
+			activeData = ssrActiveThemePayload;
+			ssrActiveThemePayload = null;
+		} else {
+			themeLoading.set(true);
+			const activeRes = await fetch('/api/themes/active');
+
+			if (!activeRes.ok) {
+				throw new Error(`Failed to fetch theme: ${activeRes.statusText}`);
+			}
+
+			activeData = await activeRes.json();
 		}
 
-		const activeData = await activeRes.json();
 		const enforcement: ThemeEnforcementState = activeData.enforcement ?? {
 			enforced: false,
 			themeId: null
@@ -190,6 +217,7 @@ export async function loadSiteTheme(): Promise<void> {
 		const savedThemeId = localStorage.getItem('selectedTheme');
 
 		if (savedThemeId) {
+			themeLoading.set(true);
 			const themesResponse = await fetch('/api/themes');
 
 			if (themesResponse.ok) {

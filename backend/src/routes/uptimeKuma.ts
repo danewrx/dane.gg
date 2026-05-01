@@ -62,6 +62,8 @@ router.get('/status', async (req, res) => {
 	try {
 		const baseUrl = process.env.UPTIME_KUMA_URL;
 
+		res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
+
 		if (!baseUrl) {
 			return res.json({
 				success: true,

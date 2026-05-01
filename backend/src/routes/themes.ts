@@ -90,6 +90,7 @@ router.get('/active', async (req, res) => {
 		}
 
 		const enriched = row ? await enrichThemeWithFontUrls(row) : null;
+		res.set('Cache-Control', 'public, max-age=15, stale-while-revalidate=60');
 		res.json({
 			success: true,
 			data: enriched,
@@ -115,6 +116,7 @@ router.get('/', async (req, res) => {
 			.orderBy(asc(themes.displayOrder));
 
 		const enriched = await enrichThemesWithFontUrls(visibleThemes);
+		res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
 		res.json({
 			success: true,
 			data: enriched,

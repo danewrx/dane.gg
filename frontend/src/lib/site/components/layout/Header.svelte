@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
 
 	const navigation = [
 		{ name: 'Home', path: '/' },
@@ -17,16 +16,16 @@
 		}
 		return $page.url.pathname.startsWith(path);
 	}
-
-	// Handle navigation
-	function handleNavigation(path: string) {
-		goto(path);
-	}
 </script>
 
 <header class="header">
 	<div class="ascii-container">
-		<button class="ascii-link" onclick={() => handleNavigation('/')} aria-label="Go to homepage">
+		<a
+			href="/"
+			class="ascii-link"
+			aria-label="Go to homepage"
+			data-sveltekit-preload-data="hover"
+		>
 			<div class="ascii-box">
 				<pre>
 　　　　 ／＞　 フ 
@@ -47,7 +46,7 @@
  \__,_|\__,_|_| |_|\___|
 				</pre>
 			</div>
-		</button>
+		</a>
 	</div>
 
 	<nav class="nav">
@@ -55,13 +54,14 @@
 			<ul id="dane-neko-nav-home" class="nav-list">
 				{#each navigation as item}
 					<li class="nav-item">
-						<button
+						<a
+							href={item.path}
 							class="nav-link"
 							class:active={isActive(item.path)}
-							onclick={() => handleNavigation(item.path)}
+							data-sveltekit-preload-data="hover"
 						>
 							{item.name}
-						</button>
+						</a>
 					</li>
 				{/each}
 			</ul>
@@ -90,11 +90,13 @@
 	.ascii-link {
 		background: none;
 		border: none;
+		color: inherit;
 		cursor: pointer;
 		text-decoration: none;
 		padding: 0;
 		outline: none;
 		box-shadow: none;
+		display: inline-block;
 	}
 
 	.ascii-link:hover,
@@ -209,6 +211,7 @@
 		text-decoration: none;
 		transition: all 0.2s ease;
 		position: relative;
+		display: inline-block;
 	}
 
 	.nav-link:hover {

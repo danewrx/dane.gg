@@ -9,9 +9,35 @@ const router = Router();
 
 /**
  * Get all published blog posts (public endpoint)
+ * Query `?list=1` — lightweight rows (no `content`, no per-post tag queries) for home / previews.
  */
 router.get('/', async (req, res) => {
 	try {
+		const listOnly =
+			req.query.list === '1' || req.query.list === 'true' || req.query.summary === '1';
+
+		if (listOnly) {
+			res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
+			const rows = await db
+				.select({
+					id: posts.id,
+					title: posts.title,
+					slug: posts.slug,
+					thumbnail: posts.thumbnail,
+					publishedAt: posts.publishedAt,
+					createdAt: posts.createdAt,
+					updatedAt: posts.updatedAt
+				})
+				.from(posts)
+				.where(eq(posts.published, true))
+				.orderBy(desc(posts.publishedAt));
+
+			return res.json({
+				success: true,
+				data: rows.map((p) => ({ ...p, tags: [] as { id: string; name: string }[] }))
+			});
+		}
+
 		const publishedPosts = await db
 			.select({
 				id: posts.id,
@@ -46,6 +72,7 @@ router.get('/', async (req, res) => {
 			})
 		);
 
+		res.set('Cache-Control', 'public, max-age=20, stale-while-revalidate=120');
 		res.json({
 			success: true,
 			data: postsWithTags

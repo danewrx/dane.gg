@@ -17,6 +17,7 @@ router.get('/public', generalLimiter, async (req: Request, res: Response) => {
 			StatsService.getUniqueVisitors('all')
 		]);
 
+		res.set('Cache-Control', 'public, max-age=45, stale-while-revalidate=180');
 		res.json({
 			success: true,
 			data: {

@@ -10,11 +10,20 @@
 	import ThemeProvider from '$lib/site/components/ThemeProvider.svelte';
 	import '$lib/site/oneko/variants';
 	import { bannerLabelPosition } from '$lib/site/stores/bannerLabelPosition';
+	import { hydratePublicThemeFromSsr } from '$lib/site/stores/theme';
 	import CanonicalLink from '$lib/site/components/seo/CanonicalLink.svelte';
 	import OpenGraphTags from '$lib/site/components/seo/OpenGraphTags.svelte';
 	import { getStaticRouteSeo } from '$lib/site/seo';
+	import type { Snippet } from 'svelte';
+	import type { LayoutData } from './$types';
 
-	let { children } = $props();
+	let { data, children }: { data: LayoutData; children: Snippet } = $props();
+
+	$effect.pre(() => {
+		if (data.themeActive) {
+			hydratePublicThemeFromSsr(data.themeActive);
+		}
+	});
 	let settingsOpen = $state(false);
 
 	const bannerLabelStyle = $derived.by(() => {

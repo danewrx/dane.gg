@@ -12,7 +12,7 @@ export const load = async ({ fetch }: { fetch: typeof globalThis.fetch }) => {
 	const musicUrl = apiFetchUrl('/api/widgets/nowplaying');
 	const tweetUrl = apiFetchUrl('/api/widgets/latest-tweet');
 	const aboutUrl = apiFetchUrl('/api/config/homepage_about_me');
-	const blogUrl = apiFetchUrl('/api/blog');
+	const blogUrl = apiFetchUrl('/api/blog?list=1');
 
 	const [musicResult, tweetResult, aboutResult, blogResult] = await Promise.allSettled([
 		fetch(musicUrl),

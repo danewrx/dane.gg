@@ -263,7 +263,14 @@
 				<div class="author-info">
 					<div class="profile-image">
 						{#if tweetData.authorProfileImage}
-							<img src={tweetData.authorProfileImage} alt={tweetData.authorName} />
+							<img
+								src={tweetData.authorProfileImage}
+								alt={tweetData.authorName ?? ''}
+								width={52}
+								height={52}
+								loading="lazy"
+								decoding="async"
+							/>
 						{:else}
 							<div class="no-image">
 								{tweetData.authorName?.toLowerCase() || 'dane'}

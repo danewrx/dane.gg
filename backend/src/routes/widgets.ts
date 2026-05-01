@@ -3,8 +3,13 @@ import { Router } from 'express';
 import { DiscordStatusService } from '../services/discordStatusService';
 import { LastFmService } from '../services/lastfmService';
 import { TweetService } from '../services/tweetService';
+import { getOrSetCached } from '../utils/shortLivedCache';
 
 const router = Router();
+
+const DISCORD_WIDGET_TTL_MS = 20_000;
+const LASTFM_WIDGET_TTL_MS = 15_000;
+const LATEST_TWEET_WIDGET_TTL_MS = 30_000;
 
 /**
  * GET /api/widgets/discord-status
@@ -12,7 +17,11 @@ const router = Router();
  */
 router.get('/discord-status', async (req, res) => {
 	try {
-		const statusData = await DiscordStatusService.getCurrentStatus();
+		const statusData = await getOrSetCached('widget:discord-status', DISCORD_WIDGET_TTL_MS, () =>
+			DiscordStatusService.getCurrentStatus()
+		);
+
+		res.set('Cache-Control', 'public, max-age=15, stale-while-revalidate=60');
 
 		if (!statusData) {
 			return res.json({
@@ -37,6 +46,8 @@ router.get('/discord-status', async (req, res) => {
  */
 router.get('/nowplaying', async (req, res) => {
 	try {
+		res.set('Cache-Control', 'public, max-age=15, stale-while-revalidate=60');
+
 		if (!LastFmService.isConfigured()) {
 			// Return default data if Last.fm is not configured
 			return res.json({
@@ -50,8 +61,9 @@ router.get('/nowplaying', async (req, res) => {
 			});
 		}
 
-		// Get fresh data directly from Last.fm API
-		const musicData = await LastFmService.getCurrentMusicStatus();
+		const musicData = await getOrSetCached('widget:lastfm-nowplaying', LASTFM_WIDGET_TTL_MS, () =>
+			LastFmService.getCurrentMusicStatus()
+		);
 		res.json(musicData);
 	} catch (error) {
 		logger.error('Error fetching now playing from Last.fm:', error);
@@ -75,7 +87,11 @@ router.get('/nowplaying', async (req, res) => {
  */
 router.get('/latest-tweet', async (req, res) => {
 	try {
-		const latestTweet = await TweetService.getLatestTweet();
+		res.set('Cache-Control', 'public, max-age=20, stale-while-revalidate=120');
+
+		const latestTweet = await getOrSetCached('widget:latest-tweet', LATEST_TWEET_WIDGET_TTL_MS, () =>
+			TweetService.getLatestTweet()
+		);
 
 		if (!latestTweet) {
 			return res.json({

@@ -10,6 +10,7 @@ router.get('/', async (req, res) => {
 	try {
 		const links = await SocialLinksService.getAll();
 
+		res.set('Cache-Control', 'public, max-age=120, stale-while-revalidate=600');
 		res.json({
 			success: true,
 			data: links

@@ -12,6 +12,7 @@
 	import SiteStats from '$lib/site/components/widgets/SiteStats.svelte';
 	import Chat from '$lib/site/components/Chat.svelte';
 	import ChatUserCount from '$lib/site/components/ChatUserCount.svelte';
+	import LazyWhenVisible from '$lib/site/components/LazyWhenVisible.svelte';
 	import { Radio } from 'lucide-svelte';
 	import type { PageData } from './$types';
 
@@ -99,12 +100,20 @@
 						headerText="Links"
 						dynamicHeight={true}
 					>
-						<LinksWidget />
+						<LazyWhenVisible minHeight="100px">
+							{#snippet children()}
+								<LinksWidget />
+							{/snippet}
+						</LazyWhenVisible>
 					</BorderedBox>
 				</div>
 
 				<div class="card-slot" data-mobile-order="9">
-					<ButtonBanner />
+					<LazyWhenVisible minHeight="72px">
+						{#snippet children()}
+							<ButtonBanner />
+						{/snippet}
+					</LazyWhenVisible>
 				</div>
 
 				<div class="card-slot" data-mobile-order="10">
@@ -115,7 +124,11 @@
 						headerText="My Button"
 						dynamicHeight={true}
 					>
-						<MyButtonWidget />
+						<LazyWhenVisible minHeight="140px">
+							{#snippet children()}
+								<MyButtonWidget />
+							{/snippet}
+						</LazyWhenVisible>
 					</BorderedBox>
 				</div>
 
@@ -127,7 +140,11 @@
 						headerText="Site Stats"
 						contentPadding={true}
 					>
-						<SiteStats />
+						<LazyWhenVisible minHeight="100px">
+							{#snippet children()}
+								<SiteStats />
+							{/snippet}
+						</LazyWhenVisible>
 					</BorderedBox>
 				</div>
 			</div>
@@ -191,7 +208,11 @@
 						dynamicHeight={true}
 						contentPadding={true}
 					>
-						<ServiceStatus bind:overallStatus />
+						<LazyWhenVisible minHeight="160px">
+							{#snippet children()}
+								<ServiceStatus bind:overallStatus />
+							{/snippet}
+						</LazyWhenVisible>
 					</BorderedBox>
 				</div>
 
