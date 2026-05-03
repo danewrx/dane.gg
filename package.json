@@ -32,7 +32,10 @@
     "env:setup": "cp .env.example.dev .env && echo '✅ Created .env from .env.example.dev. For Docker prod: cp .env.example.prod .env'",
     "setup": "bun install && cd frontend && bun install && cd ../backend && bun install && bun run env:setup",
     "backend:typecheck": "cd backend && bun run typecheck",
-    "backend:lint": "cd backend && bun run lint"
+    "backend:lint": "cd backend && bun run lint",
+    "test": "bun run frontend:test && bun run backend:test",
+    "frontend:test": "cd frontend && bun run test",
+    "backend:test": "cd backend && bun run test"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

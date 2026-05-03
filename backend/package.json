@@ -3,7 +3,7 @@
 	"version": "1.0.50",
 	"type": "module",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
+		"test": "bun test",
 		"typecheck": "tsc --noEmit",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
