@@ -3,7 +3,7 @@
 	import { toast } from 'svelte-sonner';
 
 	let isExpanded = $state(false);
-	const buttonCode = `<a href="https://dane.gg"><img src="https://dane.gg/assets/img/buttons/1.gif" alt="dane.gg" width="88" height="31"></a>`;
+	const buttonCode = `<a href="https://dane.gg"><img src="https://dane.gg/assets/img/buttons/88x31/button.gif" alt="dane.gg" width="88" height="31"></a>`;
 
 	async function copyCode() {
 		try {
@@ -29,7 +29,7 @@
 <div class="my-button-widget">
 	<div class="button-content">
 		<div class="button-image">
-			<img src="/assets/img/buttons/svelte.gif" alt="dane.gg button" width="88" height="31" />
+			<img src="/assets/img/buttons/88x31/button.gif" alt="dane.gg button" width="88" height="31" />
 		</div>
 
 		<div class="code-section">
