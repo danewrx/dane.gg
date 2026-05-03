@@ -3,6 +3,7 @@ import express from 'express';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
+import os from 'node:os';
 import path from 'node:path';
 import { createDefaultAdmin } from './utils/createDefaultAdmin';
 
@@ -271,15 +272,104 @@ async function initializeApp() {
 
 const HOST = process.env.HOST || '0.0.0.0';
 
-// Always start the server
+function buildBanner(service: string, port: string | number, host: string) {
+	const c = {
+		r: '\x1b[0m',
+		cyan: '\x1b[36m',
+		blue: '\x1b[94m',
+		bBlue: '\x1b[1m\x1b[94m',
+		dim: '\x1b[2m',
+		white: '\x1b[1m\x1b[37m',
+		yellow: '\x1b[33m',
+		green: '\x1b[32m'
+	};
+
+	const totalMem = (os.totalmem() / 1024 / 1024 / 1024).toFixed(1);
+	const freeMem = (os.freemem() / 1024 / 1024 / 1024).toFixed(1);
+	const cpus = os.cpus();
+	const cpuModel = cpus[0]?.model?.replace(/\s+/g, ' ').trim() ?? 'Unknown';
+	const runtime = typeof Bun !== 'undefined' ? `Bun ${Bun.version}` : `Node ${process.version}`;
+
+	const info: [string, string][] = [
+		['Service', `${service}`],
+		['Host', `${host}:${port}`],
+		['Runtime', runtime],
+		['Platform', `${os.platform()} ${os.arch()}`],
+		['Hostname', os.hostname()],
+		['CPU', `${cpuModel} (${cpus.length} cores)`],
+		['Memory', `${freeMem} GB free / ${totalMem} GB total`],
+		['PID', `${process.pid}`],
+		['Node', process.env.NODE_ENV || 'development']
+	];
+
+	const art = [
+		'⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣄⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+		'⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠙⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀',
+		'⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀',
+		'⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣠⣤⣤⣤⣤⣄⣀⣀⠀⠀⠀⠀⠀⣠⠎⠀⠀⠀⠀⠀⠀⠀⠀',
+		'⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣶⣖⡉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+		'⠀⠀⢠⣄⣀⣠⣤⣤⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣄⠀⠀⠀⠀⠀⠀⠀⠀',
+		'⠀⠀⠀⠉⠻⣿⣿⣿⣿⣿⣿⣯⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀⠀⠀⠀⠀',
+		'⠀⠀⠀⠀⢠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣆⠀⠀⠀⠀⠀',
+		'⠀⠀⠀⢠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣆⠀⠀⠀⠀',
+		'⠀⠀⠀⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡄⠀⠀⠀',
+		'⠀⠀⣰⣿⣿⣿⣿⣿⣿⣿⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣄⠀⠀',
+		'⠠⣾⣿⢿⣿⣿⣿⣿⡿⠁⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠉⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣯⠉⠀⠀',
+		'⠀⠀⠀⢸⣿⣿⣿⡿⠑⠊⣿⣿⡿⠿⠛⠛⠙⠛⣻⣿⣿⣄⡻⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡄⠀⠀',
+		'⠀⠀⠀⢸⣿⣿⣿⡗⠾⠛⠉⠉⠀⠀⠀⠀⠀⠀⠈⠉⠉⠙⠛⠛⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⠀⠀',
+		'⠀⠀⠀⢸⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⠟⠛⠻⣿⣿⣿⣿⣿⣿⡄⠀',
+		'⠀⠀⠀⠀⣿⣿⣿⣇⠀⠀⠀⠀⠀⠀⣀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⢶⡋⠳⢸⣿⣿⣿⣿⣿⣇⠀',
+		'⠀⠂⠀⠀⠘⣿⣿⣿⡀⠀⠀⠀⠀⠀⠉⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⡗⠚⢁⣠⣾⣿⣿⣿⣿⣿⣿⠀',
+		'⠀⠉⠀⠀⠀⠈⣻⣿⣿⣦⣄⣀⡀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣾⣿⣿⣿⣷⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⡄',
+		'⠀⠀⠀⢺⣿⠤⠿⢿⣿⣿⣿⣿⣿⣿⣷⣶⡄⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇',
+		'⠀⠀⠀⠀⠀⠀⢀⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⢿⣿⣿⣿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇',
+		'⠀⠀⠀⠀⠀⠀⣸⣿⣿⣿⣿⣿⣿⣿⣿⠟⠁⠀⣀⡠⠜⠋⠁⠀⠀⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠁',
+		'⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⡿⠛⣠⣟⣁⠤⠖⠋⠁⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠀',
+		'⠀⠀⠀⠀⠀⠀⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⡟⢸⠿⠃⠀',
+		'⠀⠀⠀⠀⠀⠀⢸⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢦⠀⠀⠀⠀⠀⠀⠀',
+		'⠀⠀⠀⠀⠀⠀⡼⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣆⠀⠀⠀⠀⠀⠀'
+	];
+
+	const infoStart = Math.floor((art.length - info.length) / 2);
+	const maxLabel = Math.max(...info.map(([l]) => l.length));
+	const lines: string[] = [];
+
+	lines.push('');
+	lines.push(`${c.cyan}══════════════════════════════════════════════════════════════════════════════${c.r}`);
+	lines.push('');
+
+	for (let i = 0; i < art.length; i++) {
+		const artLine = `${c.blue}${art[i]}${c.r}`;
+		const infoIdx = i - infoStart;
+		if (infoIdx >= 0 && infoIdx < info.length) {
+			const [label, value] = info[infoIdx];
+			const padded = label.padStart(maxLabel);
+			lines.push(`${artLine}  ${c.cyan}${padded}${c.r} ${c.dim}│${c.r} ${c.white}${value}${c.r}`);
+		} else {
+			lines.push(artLine);
+		}
+	}
+
+	lines.push('');
+	lines.push(`${c.bBlue}  _____          _   _ ______   _____  _____ ${c.r}`);
+	lines.push(`${c.bBlue} |  __ \\   /\\   | \\ | |  ____| / ____|/ ____|${c.r}`);
+	lines.push(`${c.bBlue} | |  | | /  \\  |  \\| | |__   | |  __| |  __ ${c.r}`);
+	lines.push(`${c.bBlue} | |  | |/ /\\ \\ | . \` |  __|  | | |_ | | |_ |${c.r}`);
+	lines.push(`${c.bBlue} | |__| / ____ \\| |\\  | |____ | |__| | |__| |${c.r}`);
+	lines.push(`${c.bBlue} |_____/_/    \\_\\_| \\_|______(_)_____|\\______|${c.r}`);
+	lines.push('');
+	lines.push(`${c.cyan}══════════════════════════════════════════════════════════════════════════════${c.r}`);
+	lines.push('');
+
+	return lines.join('\n');
+}
+
 server
 	.listen(Number(backendPort), HOST, async () => {
-		if (isStandalone) {
-			logger.success(`Express API running at http://${HOST}:${backendPort}`);
-			logger.info(`http://${HOST}:${backendPort}/api/health`);
-		}
+		console.log(buildBanner('Backend API', backendPort, HOST));
+		logger.success(`Backend API listening on http://${HOST}:${backendPort}`);
+		logger.info(`Health: http://${HOST}:${backendPort}/api/health`);
 
-		// Initialize default admin after server starts
 		try {
 			await initializeApp();
 		} catch (error) {
@@ -295,12 +385,3 @@ server
 		}
 		process.exit(1);
 	});
-
-// Log if server is listening (check after a short delay)
-setTimeout(() => {
-	if (server.listening) {
-		logger.success(`Server is listening on port ${backendPort}`);
-	} else {
-		logger.error(`Server is NOT listening on port ${backendPort}`);
-	}
-}, 1000);

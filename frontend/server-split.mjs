@@ -1,4 +1,5 @@
 import http from 'node:http';
+import os from 'node:os';
 import { createConsola, LogLevels } from 'consola';
 import { handler } from './build/handler.js';
 import httpProxy from 'http-proxy';
@@ -55,6 +56,98 @@ server.on('upgrade', (req, socket, head) => {
 	socket.destroy();
 });
 
+function buildBanner(service, portNum, hostAddr, proxyTarget) {
+	const c = {
+		r: '\x1b[0m',
+		cyan: '\x1b[36m',
+		blue: '\x1b[94m',
+		bBlue: '\x1b[1m\x1b[94m',
+		dim: '\x1b[2m',
+		white: '\x1b[1m\x1b[37m',
+		yellow: '\x1b[33m',
+		green: '\x1b[32m'
+	};
+
+	const totalMem = (os.totalmem() / 1024 / 1024 / 1024).toFixed(1);
+	const freeMem = (os.freemem() / 1024 / 1024 / 1024).toFixed(1);
+	const cpus = os.cpus();
+	const cpuModel = cpus[0]?.model?.replace(/\s+/g, ' ').trim() ?? 'Unknown';
+
+	const info = [
+		['Service', service],
+		['Host', `${hostAddr}:${portNum}`],
+		['Proxy', proxyTarget],
+		['Runtime', `Node ${process.version}`],
+		['Platform', `${os.platform()} ${os.arch()}`],
+		['Hostname', os.hostname()],
+		['CPU', `${cpuModel} (${cpus.length} cores)`],
+		['Memory', `${freeMem} GB free / ${totalMem} GB total`],
+		['PID', `${process.pid}`]
+	];
+
+	const art = [
+		'⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣄⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+		'⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠙⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀',
+		'⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀',
+		'⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣠⣤⣤⣤⣤⣄⣀⣀⠀⠀⠀⠀⠀⣠⠎⠀⠀⠀⠀⠀⠀⠀⠀',
+		'⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣶⣖⡉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀',
+		'⠀⠀⢠⣄⣀⣠⣤⣤⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣄⠀⠀⠀⠀⠀⠀⠀⠀',
+		'⠀⠀⠀⠉⠻⣿⣿⣿⣿⣿⣿⣯⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀⠀⠀⠀⠀',
+		'⠀⠀⠀⠀⢠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣆⠀⠀⠀⠀⠀',
+		'⠀⠀⠀⢠⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣆⠀⠀⠀⠀',
+		'⠀⠀⠀⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡄⠀⠀⠀',
+		'⠀⠀⣰⣿⣿⣿⣿⣿⣿⣿⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣄⠀⠀',
+		'⠠⣾⣿⢿⣿⣿⣿⣿⡿⠁⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠉⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣯⠉⠀⠀',
+		'⠀⠀⠀⢸⣿⣿⣿⡿⠑⠊⣿⣿⡿⠿⠛⠛⠙⠛⣻⣿⣿⣄⡻⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡄⠀⠀',
+		'⠀⠀⠀⢸⣿⣿⣿⡗⠾⠛⠉⠉⠀⠀⠀⠀⠀⠀⠈⠉⠉⠙⠛⠛⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⠀⠀',
+		'⠀⠀⠀⢸⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⠟⠛⠻⣿⣿⣿⣿⣿⣿⡄⠀',
+		'⠀⠀⠀⠀⣿⣿⣿⣇⠀⠀⠀⠀⠀⠀⣀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⢶⡋⠳⢸⣿⣿⣿⣿⣿⣇⠀',
+		'⠀⠂⠀⠀⠘⣿⣿⣿⡀⠀⠀⠀⠀⠀⠉⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⡗⠚⢁⣠⣾⣿⣿⣿⣿⣿⣿⠀',
+		'⠀⠉⠀⠀⠀⠈⣻⣿⣿⣦⣄⣀⡀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣾⣿⣿⣿⣷⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⡄',
+		'⠀⠀⠀⢺⣿⠤⠿⢿⣿⣿⣿⣿⣿⣿⣷⣶⡄⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇',
+		'⠀⠀⠀⠀⠀⠀⢀⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⢿⣿⣿⣿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇',
+		'⠀⠀⠀⠀⠀⠀⣸⣿⣿⣿⣿⣿⣿⣿⣿⠟⠁⠀⣀⡠⠜⠋⠁⠀⠀⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠁',
+		'⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⡿⠛⣠⣟⣁⠤⠖⠋⠁⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠀',
+		'⠀⠀⠀⠀⠀⠀⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⡟⢸⠿⠃⠀',
+		'⠀⠀⠀⠀⠀⠀⢸⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢦⠀⠀⠀⠀⠀⠀⠀',
+		'⠀⠀⠀⠀⠀⠀⡼⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣆⠀⠀⠀⠀⠀⠀'
+	];
+
+	const infoStart = Math.floor((art.length - info.length) / 2);
+	const maxLabel = Math.max(...info.map(([l]) => l.length));
+	const lines = [];
+
+	lines.push('');
+	lines.push(`${c.cyan}══════════════════════════════════════════════════════════════════════════════${c.r}`);
+	lines.push('');
+
+	for (let i = 0; i < art.length; i++) {
+		const artLine = `${c.blue}${art[i]}${c.r}`;
+		const infoIdx = i - infoStart;
+		if (infoIdx >= 0 && infoIdx < info.length) {
+			const [label, value] = info[infoIdx];
+			const padded = label.padStart(maxLabel);
+			lines.push(`${artLine}  ${c.cyan}${padded}${c.r} ${c.dim}│${c.r} ${c.white}${value}${c.r}`);
+		} else {
+			lines.push(artLine);
+		}
+	}
+
+	lines.push('');
+	lines.push(`${c.bBlue}  _____          _   _ ______   _____  _____ ${c.r}`);
+	lines.push(`${c.bBlue} |  __ \\   /\\   | \\ | |  ____| / ____|/ ____|${c.r}`);
+	lines.push(`${c.bBlue} | |  | | /  \\  |  \\| | |__   | |  __| |  __ ${c.r}`);
+	lines.push(`${c.bBlue} | |  | |/ /\\ \\ | . \` |  __|  | | |_ | | |_ |${c.r}`);
+	lines.push(`${c.bBlue} | |__| / ____ \\| |\\  | |____ | |__| | |__| |${c.r}`);
+	lines.push(`${c.bBlue} |_____/_/    \\_\\_| \\_|______(_)_____|\\______|${c.r}`);
+	lines.push('');
+	lines.push(`${c.cyan}══════════════════════════════════════════════════════════════════════════════${c.r}`);
+	lines.push('');
+
+	return lines.join('\n');
+}
+
 server.listen(port, host, () => {
-	logger.success(`listening on http://${host}:${port} (proxy → ${backend})`);
+	console.log(buildBanner('Frontend', port, host, backend));
+	logger.success(`Frontend listening on http://${host}:${port} (proxy → ${backend})`);
 });
