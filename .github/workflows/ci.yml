@@ -40,10 +40,15 @@ jobs:
   # Playwright E2E tests (needs Postgres)
   # ─────────────────────────────────────────────
   e2e-tests:
-    name: E2E Tests
+    name: E2E (${{ matrix.browser }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
 
     env:
+      PW_CI_WORKERS: 4
       DATABASE_URL: postgresql://dane_gg:testpassword@localhost:5432/danegg_test
       JWT_SECRET: ci-test-jwt-secret
       SESSION_SECRET: ci-test-session-secret
@@ -80,23 +85,31 @@ jobs:
       - name: Install dependencies
         run: bun install && cd frontend && bun install && cd ../backend && bun install
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package.json', 'bun.lock', 'frontend/bun.lock', 'backend/bun.lock') }}
+          restore-keys: playwright-${{ runner.os }}-
+
+      - name: Install Playwright browser
+        run: bunx playwright install --with-deps ${{ matrix.browser }}
+
       - name: Run database migrations
         run: bun run db:migrate
 
       - name: Seed test data
         run: bun run db:seed
 
-      - name: Install Playwright browsers
-        run: bunx playwright install --with-deps chromium firefox webkit
-
       - name: Run E2E tests
-        run: bun run test:e2e:all
+        run: bunx playwright test --project=${{ matrix.browser }}
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.browser }}
           path: playwright-report/
           retention-days: 14
 
@@ -104,7 +117,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: test-results
+          name: test-results-${{ matrix.browser }}
           path: test-results/
           retention-days: 14
 
