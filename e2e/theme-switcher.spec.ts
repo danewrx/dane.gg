@@ -17,6 +17,11 @@ async function openThemeSwitcher(page: Page) {
 
 	await themeButton.click({ force: true });
 	await expect(page.locator('.theme-window')).toBeVisible();
+	// Themes load asynchronously after mount — WebKit often needs longer than assert-once checks.
+	await expect(page.locator('.theme-window .loading-state')).toHaveCount(0, {
+		timeout: 15_000
+	});
+	await expect(page.locator('.theme-card').first()).toBeVisible({ timeout: 15_000 });
 }
 
 function getCssVar(page: Page, varName: string) {
