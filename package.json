@@ -24,6 +24,7 @@
     "podman:db:dev:down": "podman compose -f docker-compose.dev.yml down",
     "db:generate": "cd backend && bun run db:generate",
     "db:push": "cd backend && bun run db:push",
+    "db:migrate": "cd backend && bun run db:migrate",
     "db:seed": "cd backend && bun run db:seed",
     "db:reset": "cd backend && bun run db:push && cd backend && bun run db:seed",
     "db:studio": "cd backend && bun run db:studio",
