@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { gotoReady } from './helpers';
 
 async function openThemeSwitcher(page: Page) {
 	const settingsIcon = page.locator('button[aria-label="Open settings"]');
@@ -33,7 +34,7 @@ function getCssVar(page: Page, varName: string) {
 
 test.describe('Theme switcher', () => {
 	test('opens and shows available themes', async ({ page }) => {
-		await page.goto('/', { waitUntil: 'networkidle' });
+		await gotoReady(page, '/');
 		await openThemeSwitcher(page);
 
 		const cards = page.locator('.theme-card');
@@ -45,7 +46,7 @@ test.describe('Theme switcher', () => {
 	});
 
 	test('each theme card shows name and color preview', async ({ page }) => {
-		await page.goto('/', { waitUntil: 'networkidle' });
+		await gotoReady(page, '/');
 		await openThemeSwitcher(page);
 
 		const firstCard = page.locator('.theme-card').first();
@@ -55,7 +56,7 @@ test.describe('Theme switcher', () => {
 	});
 
 	test('switching theme changes CSS custom properties', async ({ page }) => {
-		await page.goto('/', { waitUntil: 'networkidle' });
+		await gotoReady(page, '/');
 		await openThemeSwitcher(page);
 
 		const cards = page.locator('.theme-card');
@@ -88,7 +89,7 @@ test.describe('Theme switcher', () => {
 	});
 
 	test('switching theme persists after closing and reopening', async ({ page }) => {
-		await page.goto('/', { waitUntil: 'networkidle' });
+		await gotoReady(page, '/');
 		await openThemeSwitcher(page);
 
 		const cards = page.locator('.theme-card');
@@ -129,7 +130,7 @@ test.describe('Theme switcher', () => {
 	});
 
 	test('closes via X button and backdrop', async ({ page }) => {
-		await page.goto('/', { waitUntil: 'networkidle' });
+		await gotoReady(page, '/');
 		await openThemeSwitcher(page);
 
 		await page.locator('.theme-window .close-button').click();

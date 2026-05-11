@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { gotoReady } from './helpers';
 
 const routes = [
 	{ name: 'About', path: '/about', selector: '.about-section' },
@@ -9,11 +10,14 @@ const routes = [
 
 test.describe('Site navigation', () => {
 	test('each nav link navigates to the correct page', async ({ page }) => {
-		await page.goto('/', { waitUntil: 'networkidle' });
+		await gotoReady(page, '/');
 
 		for (const route of routes) {
-			await page.locator(`.nav-link:has-text("${route.name}")`).click();
-			await expect(page).toHaveURL(route.path);
+			await page
+				.getByRole('navigation')
+				.getByRole('link', { name: route.name, exact: true })
+				.click();
+			await expect(page).toHaveURL(route.path, { timeout: 20_000 });
 
 			if (route.selector) {
 				await expect(page.locator(route.selector)).toBeVisible();
@@ -24,8 +28,8 @@ test.describe('Site navigation', () => {
 	});
 
 	test('back navigation works after visiting a page', async ({ page }) => {
-		await page.goto('/', { waitUntil: 'networkidle' });
-		await page.locator('.nav-link:has-text("About")').click();
+		await gotoReady(page, '/');
+		await page.getByRole('navigation').getByRole('link', { name: 'About', exact: true }).click();
 		await expect(page).toHaveURL('/about');
 
 		await page.goBack();

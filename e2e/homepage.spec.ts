@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { gotoReady } from './helpers';
 
 test.describe('Homepage', () => {
 	test('loads and shows header + nav', async ({ page }) => {
-		await page.goto('/', { waitUntil: 'networkidle' });
+		await gotoReady(page, '/');
 		await expect(page.locator('header')).toBeVisible();
 		await expect(page.locator('nav')).toBeVisible();
 
@@ -12,7 +13,7 @@ test.describe('Homepage', () => {
 	});
 
 	test('ASCII logo links to homepage', async ({ page }) => {
-		await page.goto('/about', { waitUntil: 'networkidle' });
+		await gotoReady(page, '/about');
 		await page.click('.ascii-link');
 		await expect(page).toHaveURL('/');
 	});

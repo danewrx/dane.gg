@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { gotoReady } from './helpers';
 
 async function openSettings(page: Page) {
 	const icon = page.locator('button[aria-label="Open settings"]');
@@ -25,7 +26,7 @@ async function scrollPanelTo(page: Page, selector: string) {
 test.describe.configure({ mode: 'serial' });
 test.describe('Settings panel', () => {
 	test.beforeEach(async ({ page }) => {
-		await page.goto('/', { waitUntil: 'networkidle' });
+		await gotoReady(page, '/');
 	});
 
 	test('opens via gear icon and closes via backdrop', async ({ page }) => {
@@ -148,7 +149,7 @@ test.describe('Settings panel', () => {
 	test('settings gear icon is present on every page', async ({ page }) => {
 		const routes = ['/', '/about', '/projects', '/blog', '/contact'];
 		for (const route of routes) {
-			await page.goto(route);
+			await gotoReady(page, route);
 			await expect(page.locator('.settings-icon')).toBeVisible();
 		}
 	});

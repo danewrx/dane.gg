@@ -48,7 +48,7 @@ jobs:
         browser: [chromium, firefox, webkit]
 
     env:
-      PW_CI_WORKERS: 4
+      PW_CI_WORKERS: 2
       DATABASE_URL: postgresql://dane_gg:testpassword@localhost:5432/danegg_test
       JWT_SECRET: ci-test-jwt-secret
       SESSION_SECRET: ci-test-session-secret

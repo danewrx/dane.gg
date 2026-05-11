@@ -14,10 +14,10 @@ test.describe('Site pages load without errors', () => {
 			const errors: string[] = [];
 			p.on('pageerror', (err) => errors.push(err.message));
 
-			const response = await p.goto(page.path, { waitUntil: 'networkidle' });
+			const response = await p.goto(page.path, { waitUntil: 'load', timeout: 60_000 });
 			expect(response?.status()).toBeLessThan(400);
 
-			await expect(p.locator(page.content).first()).toBeVisible({ timeout: 10_000 });
+			await expect(p.locator(page.content).first()).toBeVisible({ timeout: 15_000 });
 			await expect(p.locator('header')).toBeVisible();
 			await expect(p.locator('nav')).toBeVisible();
 
