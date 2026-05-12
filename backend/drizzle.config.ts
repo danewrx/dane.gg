@@ -10,12 +10,19 @@ for (const p of [resolve(process.cwd(), '.env'), resolve(process.cwd(), '../.env
 	}
 }
 
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+	throw new Error(
+		'DATABASE_URL must be set for drizzle-kit (see .env.example.dev in the repo root).'
+	);
+}
+
 export default {
 	schema: './src/db/schema.ts',
 	out: './drizzle',
 	dialect: 'postgresql',
 	dbCredentials: {
-		url: process.env.DATABASE_URL || 'postgresql://dane_gg:daneGGPassword!@localhost:5432/dane.gg'
+		url: databaseUrl
 	},
 	verbose: true,
 	strict: true,
