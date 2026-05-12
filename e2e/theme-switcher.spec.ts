@@ -131,6 +131,7 @@ test.describe('Theme switcher', () => {
 		const targetCard = cards.nth(targetIndex);
 
 		const targetName = await targetCard.locator('.theme-name').textContent();
+		if (!targetName) throw new Error('expected theme name on card');
 		await targetCard.click();
 		await expect(targetCard).toHaveClass(/active/, { timeout: 5_000 });
 
@@ -148,7 +149,7 @@ test.describe('Theme switcher', () => {
 		await expect(page.locator('.theme-window')).toBeVisible();
 
 		const reOpenedActive = page.locator('.theme-card.active .theme-name');
-		await expect(reOpenedActive).toHaveText(targetName!);
+		await expect(reOpenedActive).toHaveText(targetName);
 	});
 
 	test('closes via X button and backdrop', async ({ page }) => {
