@@ -1,8 +1,13 @@
 import { describe, expect, mock, test } from 'bun:test';
 import { bruteForceProtection } from './rateLimiting';
 
+let uniqueIpSeq = 0;
 function uniqueIp() {
-	return `10.${Math.floor(Math.random() * 200) + 10}.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`;
+	uniqueIpSeq += 1;
+	const b = (uniqueIpSeq >> 8) % 250;
+	const c = uniqueIpSeq % 250;
+	const a = 10 + (uniqueIpSeq % 200);
+	return `10.${a}.${b}.${c}`;
 }
 
 function mockRes() {
