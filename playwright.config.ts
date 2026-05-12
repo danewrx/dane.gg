@@ -1,16 +1,17 @@
 import { defineConfig } from '@playwright/test';
 
+function ciPlaywrightWorkers(): number {
+	const parsed = Number(process.env.PW_CI_WORKERS);
+	return parsed > 0 ? parsed : 2;
+}
+
 export default defineConfig({
 	testDir: './e2e',
 	fullyParallel: true,
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 1 : 0,
 	timeout: process.env.CI ? 60_000 : 30_000,
-	workers: process.env.CI
-		? Number(process.env.PW_CI_WORKERS) > 0
-			? Number(process.env.PW_CI_WORKERS)
-			: 2
-		: undefined,
+	workers: process.env.CI ? ciPlaywrightWorkers() : undefined,
 	reporter: process.env.CI ? [['list'], ['html']] : 'html',
 
 	use: {
