@@ -1,16 +1,9 @@
 import { test, expect, type Page } from '@playwright/test';
-import { gotoReady } from './helpers';
-
-async function openSettings(page: Page) {
-	const icon = page.locator('button[aria-label="Open settings"]');
-	await icon.waitFor({ state: 'visible', timeout: 15_000 });
-	await icon.click();
-	await expect(page.locator('.settings-backdrop')).toBeVisible({ timeout: 5_000 });
-}
+import { gotoReady, openSettingsPanel } from './helpers';
 
 async function closeSettings(page: Page) {
 	await page.locator('.settings-backdrop').click();
-	await expect(page.locator('.settings-backdrop')).toHaveCount(0);
+	await expect(page.locator('.settings-panel.open')).toHaveCount(0);
 }
 
 async function scrollPanelTo(page: Page, selector: string) {
@@ -30,22 +23,22 @@ test.describe('Settings panel', () => {
 	});
 
 	test('opens via gear icon and closes via backdrop', async ({ page }) => {
-		await expect(page.locator('.settings-backdrop')).toHaveCount(0);
+		await expect(page.locator('.settings-panel.open')).toHaveCount(0);
 
-		await openSettings(page);
+		await openSettingsPanel(page);
 		await closeSettings(page);
 	});
 
 	test('closes via Escape key', async ({ page }) => {
-		await openSettings(page);
+		await openSettingsPanel(page);
 
 		await page.locator('.settings-backdrop').focus();
 		await page.keyboard.press('Escape');
-		await expect(page.locator('.settings-backdrop')).toHaveCount(0);
+		await expect(page.locator('.settings-panel.open')).toHaveCount(0);
 	});
 
 	test('shows all settings sections', async ({ page }) => {
-		await openSettings(page);
+		await openSettingsPanel(page);
 
 		const headings = await page.locator('.settings-section h3').allTextContents();
 		expect(headings).toContain('Theme');
@@ -56,7 +49,7 @@ test.describe('Settings panel', () => {
 	});
 
 	test('font selector has options and can be changed', async ({ page }) => {
-		await openSettings(page);
+		await openSettingsPanel(page);
 		await scrollPanelTo(page, '#font-select');
 
 		const fontSelect = page.locator('#font-select');
@@ -72,7 +65,7 @@ test.describe('Settings panel', () => {
 	});
 
 	test('weather type selector has options', async ({ page }) => {
-		await openSettings(page);
+		await openSettingsPanel(page);
 		await scrollPanelTo(page, '#weather-type');
 
 		const weatherSelect = page.locator('#weather-type');
@@ -83,7 +76,7 @@ test.describe('Settings panel', () => {
 	});
 
 	test('weather speed slider appears when effect is active', async ({ page }) => {
-		await openSettings(page);
+		await openSettingsPanel(page);
 		await scrollPanelTo(page, '#weather-type');
 
 		const weatherSelect = page.locator('#weather-type');
@@ -98,7 +91,7 @@ test.describe('Settings panel', () => {
 	});
 
 	test('neko picker grid is visible with options', async ({ page }) => {
-		await openSettings(page);
+		await openSettingsPanel(page);
 		await scrollPanelTo(page, '.oneko-grid');
 
 		const nekoGrid = page.locator('.oneko-grid');
@@ -109,7 +102,7 @@ test.describe('Settings panel', () => {
 	});
 
 	test('neko picker can select a variant', async ({ page }) => {
-		await openSettings(page);
+		await openSettingsPanel(page);
 		await scrollPanelTo(page, '.oneko-grid');
 
 		const firstOption = page.locator('.oneko-grid .oneko-option').first();
@@ -118,7 +111,7 @@ test.describe('Settings panel', () => {
 	});
 
 	test('chat notifications checkbox toggles', async ({ page }) => {
-		await openSettings(page);
+		await openSettingsPanel(page);
 		await scrollPanelTo(page, '.chat-notification-controls');
 
 		const checkbox = page.locator('.chat-notification-controls input[type="checkbox"]');
@@ -130,7 +123,7 @@ test.describe('Settings panel', () => {
 	});
 
 	test('theme button opens theme switcher window', async ({ page }) => {
-		await openSettings(page);
+		await openSettingsPanel(page);
 		await scrollPanelTo(page, '.theme-button');
 
 		const themeButton = page.locator('.theme-button');

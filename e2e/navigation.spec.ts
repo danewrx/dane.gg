@@ -13,11 +13,14 @@ test.describe('Site navigation', () => {
 		await gotoReady(page, '/');
 
 		for (const route of routes) {
-			await page
+			const navLink = page
 				.getByRole('navigation')
-				.getByRole('link', { name: route.name, exact: true })
-				.click();
-			await expect(page).toHaveURL(route.path, { timeout: 20_000 });
+				.getByRole('link', { name: route.name, exact: true });
+			const urlGlob = route.path === '/' ? '**/' : `**${route.path}`;
+			await Promise.all([
+				page.waitForURL(urlGlob, { timeout: 20_000 }),
+				navLink.click()
+			]);
 
 			if (route.selector) {
 				await expect(page.locator(route.selector)).toBeVisible();

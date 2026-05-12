@@ -44,7 +44,7 @@
 		justify-content: center;
 		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 		box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
-		z-index: 100;
+		z-index: 1100;
 		outline: none;
 	}
 
@@ -65,6 +65,7 @@
 
 	.settings-icon.open {
 		background: var(--bg-hover);
+		z-index: 90;
 	}
 
 	.gear-icon {

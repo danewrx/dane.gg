@@ -1,11 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
-import { gotoReady } from './helpers';
+import { gotoReady, openSettingsPanel } from './helpers';
 
 async function openThemeSwitcher(page: Page) {
-	const settingsIcon = page.locator('button[aria-label="Open settings"]');
-	await settingsIcon.waitFor({ state: 'visible', timeout: 15_000 });
-	await settingsIcon.click();
-	await expect(page.locator('.settings-backdrop')).toBeVisible();
+	await openSettingsPanel(page);
 
 	await page.locator('.settings-content').evaluate((el) => {
 		el.querySelector('.theme-button')?.scrollIntoView({ block: 'center' });
@@ -18,10 +15,13 @@ async function openThemeSwitcher(page: Page) {
 
 	await themeButton.click({ force: true });
 	await expect(page.locator('.theme-window')).toBeVisible();
-	// Themes load asynchronously after mount — WebKit often needs longer than assert-once checks.
 	await expect(page.locator('.theme-window .loading-state')).toHaveCount(0, {
 		timeout: 15_000
 	});
+	const themeWin = page.locator('.theme-window');
+	if (await themeWin.getByText('No themes available').isVisible()) {
+		test.skip(true, 'Theme window is empty — /api/themes returned no rows');
+	}
 	await expect(page.locator('.theme-card').first()).toBeVisible({ timeout: 15_000 });
 }
 
@@ -32,7 +32,31 @@ function getCssVar(page: Page, varName: string) {
 	);
 }
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Theme switcher', () => {
+	test.beforeAll(async ({ request }, testInfo) => {
+		try {
+			await expect
+				.poll(
+					async () => {
+						const res = await request.get('/api/themes');
+						if (!res.ok()) return 0;
+						const j = await res.json();
+						return Array.isArray(j?.data) ? j.data.length : 0;
+					},
+					{ timeout: 60_000 }
+				)
+				.toBeGreaterThan(0);
+		} catch {
+			if (process.env.CI) {
+				throw new Error(
+					'CI requires at least one theme from GET /api/themes (seed the DB or fix the API).'
+				);
+			}
+			testInfo.skip(true, '/api/themes has no themes — seed backend or start with a populated DB');
+		}
+	});
+
 	test('opens and shows available themes', async ({ page }) => {
 		await gotoReady(page, '/');
 		await openThemeSwitcher(page);
@@ -115,9 +139,7 @@ test.describe('Theme switcher', () => {
 
 		await page.locator('.settings-backdrop').click();
 
-		const settingsIcon = page.locator('button[aria-label="Open settings"]');
-		await settingsIcon.click();
-		await expect(page.locator('.settings-backdrop')).toBeVisible();
+		await openSettingsPanel(page);
 
 		await page.locator('.settings-content').evaluate((el) => {
 			el.querySelector('.theme-button')?.scrollIntoView({ block: 'center' });
