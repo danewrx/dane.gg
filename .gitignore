@@ -7,6 +7,10 @@ frontend/build/
 backend/build/
 dist/
 
+# Coverage (generated locally / CI artifacts)
+**/coverage/
+coverage-reports/
+
 # Environment variables
 .env
 .env.local

@@ -5,7 +5,19 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}'],
-		environment: 'node'
+		environment: 'node',
+		coverage: {
+			provider: 'v8',
+			reporter: ['text', 'lcov'],
+			reportsDirectory: './coverage',
+			include: ['src/**/*.{ts,svelte}'],
+			exclude: [
+				'**/*.test.{ts,tsx}',
+				'**/*.spec.{ts,tsx}',
+				'**/node_modules/**',
+				'.svelte-kit/**'
+			]
+		}
 	},
 	server: {
 		proxy: {

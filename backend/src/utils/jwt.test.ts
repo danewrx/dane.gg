@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { describe, expect, test, beforeAll } from 'bun:test';
 import jwtPkg from 'jsonwebtoken';
 
@@ -6,7 +7,7 @@ type JwtMod = typeof import('./jwt');
 let jwt: JwtMod;
 
 beforeAll(async () => {
-	process.env.JWT_SECRET = 'unit-test-jwt-secret-at-least-32-bytes-long!!';
+	process.env.JWT_SECRET = randomBytes(48).toString('base64url');
 	process.env.JWT_EXPIRES_IN = '2h';
 	process.env.JWT_REFRESH_EXPIRES_IN = '2h';
 	jwt = await import('./jwt');
@@ -60,9 +61,10 @@ describe('JWT helpers', () => {
 	});
 
 	test('verifyAccessToken rejects token signed with another secret', () => {
+		const wrongSigningKey = randomBytes(48).toString('base64url');
 		const alien = jwtPkg.sign(
 			{ userId: 'x', username: 'y', isAdmin: false },
-			'completely-different-test-secret-value-min-length',
+			wrongSigningKey,
 			{
 				expiresIn: '1h',
 				issuer: 'dane.gg',
