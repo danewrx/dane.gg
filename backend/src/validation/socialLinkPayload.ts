@@ -22,6 +22,14 @@ function isAllowedIconType(value: unknown): value is string {
 	return typeof value === 'string' && (ICON_TYPES as readonly string[]).includes(value);
 }
 
+function isNonEmptyString(value: unknown): value is string {
+	return typeof value === 'string' && value.trim().length > 0;
+}
+
+function asTrimmedSvgField(value: unknown): string {
+	return typeof value === 'string' ? value : '';
+}
+
 export type ValidatedCreatePayload = {
 	name: string;
 	url: string;
@@ -45,9 +53,12 @@ export function validateCreateSocialLinkBody(body: {
 	displayOrder?: unknown;
 	isActive?: unknown;
 }): { error: string } | ValidatedCreatePayload {
-	if (!body.name || !body.url) {
+	if (!isNonEmptyString(body.name) || !isNonEmptyString(body.url)) {
 		return { error: 'Name and URL are required' };
 	}
+
+	const nameTrimmed = body.name.trim();
+	const urlTrimmed = body.url.trim();
 
 	if (!isAllowedIconType(body.iconType)) {
 		return { error: ICON_TYPE_ERROR };
@@ -55,38 +66,45 @@ export function validateCreateSocialLinkBody(body: {
 
 	const iconType = body.iconType;
 
-	if (iconType === 'custom-text' && !body.iconText) {
+	if (iconType === 'custom-text' && !isNonEmptyString(body.iconText)) {
 		return { error: 'Icon text is required when icon type is custom-text' };
 	}
 
-	if ((iconType === 'coreui-brand' || iconType === 'lucide') && !body.iconName) {
+	if ((iconType === 'coreui-brand' || iconType === 'lucide') && !isNonEmptyString(body.iconName)) {
 		return { error: 'Icon name is required when icon type is coreui-brand or lucide' };
 	}
 
 	let svgUrlOut: string | null = null;
 	if (iconType === 'svg-url') {
-		const n = validateSvgIconUrl(String(body.svgUrl ?? ''));
+		const n = validateSvgIconUrl(asTrimmedSvgField(body.svgUrl));
 		if (!n) return { error: SVG_URL_ERROR };
 		svgUrlOut = n;
 	}
 
 	let svgInlineOut: string | null = null;
 	if (iconType === 'svg-inline') {
-		const safe = sanitizeSvgInlineMarkup(String(body.svgInline ?? ''));
+		const safe = sanitizeSvgInlineMarkup(asTrimmedSvgField(body.svgInline));
 		if (!safe) return { error: SVG_INLINE_ERROR };
 		svgInlineOut = safe;
 	}
 
+	const iconTextOut =
+		iconType === 'custom-text' && isNonEmptyString(body.iconText) ? body.iconText.trim() : null;
+	const iconNameOut =
+		(iconType === 'coreui-brand' || iconType === 'lucide') && isNonEmptyString(body.iconName)
+			? body.iconName.trim()
+			: null;
+
 	return {
-		name: String(body.name),
-		url: String(body.url),
+		name: nameTrimmed,
+		url: urlTrimmed,
 		iconType,
-		iconName: iconType === 'coreui-brand' || iconType === 'lucide' ? String(body.iconName) : null,
-		iconText: iconType === 'custom-text' ? String(body.iconText) : null,
+		iconName: iconNameOut,
+		iconText: iconTextOut,
 		svgUrl: svgUrlOut,
 		svgInline: svgInlineOut,
 		displayOrder: Number(body.displayOrder) || 0,
-		isActive: body.isActive !== undefined ? Boolean(body.isActive) : true
+		isActive: body.isActive === undefined ? true : Boolean(body.isActive)
 	};
 }
 
@@ -104,19 +122,19 @@ export function validateUpdateSocialLinkIconFields(body: {
 }): { error: string } | ValidatedUpdateIconFields {
 	const { iconType } = body;
 
-	if (iconType !== undefined && iconType !== null && !isAllowedIconType(iconType)) {
-		return { error: ICON_TYPE_ERROR };
-	}
-
 	if (iconType === undefined || iconType === null) {
 		return { svgUrlResolved: undefined, svgInlineStored: undefined };
 	}
 
-	if (iconType === 'custom-text' && !body.iconText) {
+	if (!isAllowedIconType(iconType)) {
+		return { error: ICON_TYPE_ERROR };
+	}
+
+	if (iconType === 'custom-text' && !isNonEmptyString(body.iconText)) {
 		return { error: 'Icon text is required when icon type is custom-text' };
 	}
 
-	if ((iconType === 'coreui-brand' || iconType === 'lucide') && !body.iconName) {
+	if ((iconType === 'coreui-brand' || iconType === 'lucide') && !isNonEmptyString(body.iconName)) {
 		return { error: 'Icon name is required when icon type is coreui-brand or lucide' };
 	}
 
@@ -129,13 +147,13 @@ function resolveSvgPayloadForUpdate(
 	svgInline: unknown
 ): { error: string } | ValidatedUpdateIconFields {
 	if (iconType === 'svg-url') {
-		const n = validateSvgIconUrl(String(svgUrl ?? ''));
+		const n = validateSvgIconUrl(asTrimmedSvgField(svgUrl));
 		if (!n) return { error: SVG_URL_ERROR };
 		return { svgUrlResolved: n, svgInlineStored: null };
 	}
 
 	if (iconType === 'svg-inline') {
-		const safe = sanitizeSvgInlineMarkup(String(svgInline ?? ''));
+		const safe = sanitizeSvgInlineMarkup(asTrimmedSvgField(svgInline));
 		if (!safe) return { error: SVG_INLINE_ERROR };
 		return { svgUrlResolved: null, svgInlineStored: safe };
 	}

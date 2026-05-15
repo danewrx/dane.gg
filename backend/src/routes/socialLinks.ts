@@ -139,10 +139,10 @@ router.put('/:id', requireSession, async (req, res) => {
 			iconType,
 			iconName: iconType === 'coreui-brand' || iconType === 'lucide' ? iconName : null,
 			iconText: iconType === 'custom-text' ? iconText : null,
-			svgUrl: svgUrlResolved !== undefined ? svgUrlResolved : undefined,
+			svgUrl: svgUrlResolved === undefined ? undefined : svgUrlResolved,
 			displayOrder,
 			isActive,
-			...(svgInlineStored !== undefined ? { svgInline: svgInlineStored } : {})
+			...(svgInlineStored === undefined ? {} : { svgInline: svgInlineStored })
 		});
 
 		res.json({
