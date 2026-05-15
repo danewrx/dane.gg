@@ -8,7 +8,7 @@
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 	import { marked } from 'marked';
 	import { sanitizeSvgInlineMarkup } from '@repo/shared/utils/sanitizeSvgInline';
-	import { getIconRenderInfo, isLikelyLucideMisstoredAsCoreUi } from '$lib/site/utils/iconHelper';
+	import { getIconRenderInfo, isLikelyLucideMisstoredAsCoreUi, stripCoreUIBrandPrefix } from '$lib/site/utils/iconHelper';
 
 	let taglineContent = $state('');
 	let loadingTagline = $state(true);
@@ -218,7 +218,7 @@
 								<Icon icon="simple-icons:link" width="20" height="20" />
 							{/if}
 						{:else if link.iconType === 'coreui-brand' && link.iconName}
-							{@const contactCoreUi = link.iconName.replace(/^cb-/i, '')}
+							{@const contactCoreUi = stripCoreUIBrandPrefix(link.iconName)}
 							{#if isLikelyLucideMisstoredAsCoreUi(link.iconName)}
 								{@const misContact = getIconRenderInfo(contactCoreUi)}
 								{#if misContact.type === 'component' && misContact.component}

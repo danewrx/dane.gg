@@ -111,7 +111,12 @@ export function getIconRenderInfo(iconName: string | null | undefined): IconRend
 	};
 }
 
+export function stripCoreUIBrandPrefix(iconName: string): string {
+	const t = iconName.trim();
+	return /^cb-/i.test(t) ? t.slice(3) : t;
+}
+
 export function isLikelyLucideMisstoredAsCoreUi(iconName: string): boolean {
-	const n = iconName.replace(/^cb-/i, '').trim();
+	const n = stripCoreUIBrandPrefix(iconName).trim();
 	return n.length > 0 && /^[A-Z]/.test(n);
 }

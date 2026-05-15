@@ -4,7 +4,7 @@
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import { sanitizeSvgInlineMarkup } from '@repo/shared/utils/sanitizeSvgInline';
-	import { getIconRenderInfo, isLikelyLucideMisstoredAsCoreUi } from '$lib/site/utils/iconHelper';
+	import { getIconRenderInfo, isLikelyLucideMisstoredAsCoreUi, stripCoreUIBrandPrefix } from '$lib/site/utils/iconHelper';
 
 	interface SocialLink {
 		id: string;
@@ -83,7 +83,7 @@
 							<Icon icon="simple-icons:link" class="iconify-icon" />
 						{/if}
 					{:else if link.iconType === 'coreui-brand' && link.iconName}
-						{@const coreUiSlug = link.iconName.replace(/^cb-/i, '')}
+						{@const coreUiSlug = stripCoreUIBrandPrefix(link.iconName)}
 						{#if isLikelyLucideMisstoredAsCoreUi(link.iconName)}
 							{@const misInfo = getIconRenderInfo(coreUiSlug)}
 							{#if misInfo.type === 'component' && misInfo.component}
