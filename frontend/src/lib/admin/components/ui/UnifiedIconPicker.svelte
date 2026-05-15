@@ -7,8 +7,8 @@
 		searchIcons,
 		type IconOption
 	} from '$lib/admin/services/iconLibraryService';
-	import { sanitizeSvgInlineMarkup } from '$lib/shared/utils/sanitizeSvgInline';
-	import { validateSvgIconUrl } from '$lib/shared/utils/validateSvgIconUrl';
+	import { sanitizeSvgInlineMarkup } from '@repo/shared/utils/sanitizeSvgInline';
+	import { validateSvgIconUrl } from '@repo/shared/utils/validateSvgIconUrl';
 	import { Search, X } from 'lucide-svelte';
 	import type { ComponentType } from 'svelte';
 

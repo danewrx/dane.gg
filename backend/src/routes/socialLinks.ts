@@ -2,8 +2,8 @@ import { logger } from '../utils/logger';
 import { Router } from 'express';
 import { SocialLinksService } from '../services/socialLinksService';
 import { requireSession } from '../middleware/auth';
-import { sanitizeSvgInlineMarkup } from '../utils/sanitizeSvgInline';
-import { validateSvgIconUrl } from '../utils/validateSvgIconUrl';
+import { sanitizeSvgInlineMarkup } from '@repo/shared/utils/sanitizeSvgInline';
+import { validateSvgIconUrl } from '@repo/shared/utils/validateSvgIconUrl';
 
 const router = Router();
 

@@ -3,7 +3,7 @@
 
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
-	import { sanitizeSvgInlineMarkup } from '$lib/shared/utils/sanitizeSvgInline';
+	import { sanitizeSvgInlineMarkup } from '@repo/shared/utils/sanitizeSvgInline';
 
 	interface SocialLink {
 		id: string;

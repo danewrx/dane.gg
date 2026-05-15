@@ -7,7 +7,7 @@
 	import Icon from '@iconify/svelte';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 	import { marked } from 'marked';
-	import { sanitizeSvgInlineMarkup } from '$lib/shared/utils/sanitizeSvgInline';
+	import { sanitizeSvgInlineMarkup } from '@repo/shared/utils/sanitizeSvgInline';
 
 	let taglineContent = $state('');
 	let loadingTagline = $state(true);

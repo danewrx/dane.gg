@@ -6,7 +6,7 @@
 	import { toast } from 'svelte-sonner';
 	import { Loader2, Link2, Edit2, Check, X, GripVertical } from 'lucide-svelte';
 	import Icon from '@iconify/svelte';
-	import { sanitizeSvgInlineMarkup } from '$lib/shared/utils/sanitizeSvgInline';
+	import { sanitizeSvgInlineMarkup } from '@repo/shared/utils/sanitizeSvgInline';
 
 	interface SocialLink {
 		id: string;

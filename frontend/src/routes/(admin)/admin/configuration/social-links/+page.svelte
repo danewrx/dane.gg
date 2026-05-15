@@ -9,7 +9,7 @@
 	import UnifiedIconPicker from '$lib/admin/components/ui/UnifiedIconPicker.svelte';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 	import { getIconCategories, type IconOption } from '$lib/admin/services/iconLibraryService';
-	import { sanitizeSvgInlineMarkup } from '$lib/shared/utils/sanitizeSvgInline';
+	import { sanitizeSvgInlineMarkup } from '@repo/shared/utils/sanitizeSvgInline';
 	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
 
 	interface SocialLink {
