@@ -110,3 +110,8 @@ export function getIconRenderInfo(iconName: string | null | undefined): IconRend
 		text: iconName
 	};
 }
+
+export function isLikelyLucideMisstoredAsCoreUi(iconName: string): boolean {
+	const n = iconName.replace(/^cb-/i, '').trim();
+	return n.length > 0 && /^[A-Z]/.test(n);
+}

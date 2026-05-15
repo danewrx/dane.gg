@@ -8,7 +8,7 @@
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 	import { marked } from 'marked';
 	import { sanitizeSvgInlineMarkup } from '@repo/shared/utils/sanitizeSvgInline';
-	import { lucideIconNameToIconifySlug } from '$lib/site/lucideIconifySlug';
+	import { getIconRenderInfo, isLikelyLucideMisstoredAsCoreUi } from '$lib/site/utils/iconHelper';
 
 	let taglineContent = $state('');
 	let loadingTagline = $state(true);
@@ -210,14 +210,26 @@
 								<Icon icon="simple-icons:link" width="20" height="20" />
 							{/if}
 						{:else if link.iconType === 'lucide' && link.iconName}
-							{@const contactLucideSlug = lucideIconNameToIconifySlug(link.iconName)}
-							{#if contactLucideSlug}
-								<Icon icon={`lucide:${contactLucideSlug}`} width="20" height="20" />
+							{@const contactLucide = getIconRenderInfo(link.iconName)}
+							{#if contactLucide.type === 'component' && contactLucide.component}
+								{@const ContactLucideIcon = contactLucide.component}
+								<ContactLucideIcon size={20} strokeWidth={2} />
 							{:else}
 								<Icon icon="simple-icons:link" width="20" height="20" />
 							{/if}
 						{:else if link.iconType === 'coreui-brand' && link.iconName}
-							<Icon icon={`cib:${link.iconName.replace('cb-', '')}`} width="20" height="20" />
+							{@const contactCoreUi = link.iconName.replace(/^cb-/i, '')}
+							{#if isLikelyLucideMisstoredAsCoreUi(link.iconName)}
+								{@const misContact = getIconRenderInfo(contactCoreUi)}
+								{#if misContact.type === 'component' && misContact.component}
+									{@const MisLucide = misContact.component}
+									<MisLucide size={20} strokeWidth={2} />
+								{:else}
+									<Icon icon="simple-icons:link" width="20" height="20" />
+								{/if}
+							{:else}
+								<Icon icon={`cib:${contactCoreUi}`} width="20" height="20" />
+							{/if}
 						{:else}
 							<Icon icon="simple-icons:link" width="20" height="20" />
 						{/if}

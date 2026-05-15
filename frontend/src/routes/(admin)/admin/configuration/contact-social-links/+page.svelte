@@ -7,7 +7,7 @@
 	import { Loader2, Link2, Edit2, Check, X, GripVertical } from 'lucide-svelte';
 	import Icon from '@iconify/svelte';
 	import { sanitizeSvgInlineMarkup } from '@repo/shared/utils/sanitizeSvgInline';
-	import { lucideIconNameToIconifySlug } from '$lib/site/lucideIconifySlug';
+	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
 
 	interface SocialLink {
 		id: string;
@@ -364,9 +364,10 @@
 													<Link2 size={20} />
 												{/if}
 											{:else if link.iconType === 'lucide' && link.iconName}
-												{@const cfgLucideSel = lucideIconNameToIconifySlug(link.iconName)}
-												{#if cfgLucideSel}
-													<Icon icon={`lucide:${cfgLucideSel}`} width="20" height="20" />
+												{@const cfgLucideSel = getIconRenderInfo(link.iconName)}
+												{#if cfgLucideSel.type === 'component' && cfgLucideSel.component}
+													{@const CfgLucSel = cfgLucideSel.component}
+													<CfgLucSel size={20} strokeWidth={2} />
 												{:else}
 													<Link2 size={20} />
 												{/if}
@@ -444,9 +445,10 @@
 													<Link2 size={20} />
 												{/if}
 											{:else if link.iconType === 'lucide' && link.iconName}
-												{@const cfgLucideUnsel = lucideIconNameToIconifySlug(link.iconName)}
-												{#if cfgLucideUnsel}
-													<Icon icon={`lucide:${cfgLucideUnsel}`} width="20" height="20" />
+												{@const cfgLucideUnsel = getIconRenderInfo(link.iconName)}
+												{#if cfgLucideUnsel.type === 'component' && cfgLucideUnsel.component}
+													{@const CfgLucUnsel = cfgLucideUnsel.component}
+													<CfgLucUnsel size={20} strokeWidth={2} />
 												{:else}
 													<Link2 size={20} />
 												{/if}
