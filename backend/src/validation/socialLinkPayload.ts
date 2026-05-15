@@ -30,6 +30,56 @@ function asTrimmedSvgField(value: unknown): string {
 	return typeof value === 'string' ? value : '';
 }
 
+type CreateNameUrlOk = { nameTrimmed: string; urlTrimmed: string };
+
+function parseCreateNameAndUrl(body: {
+	name?: unknown;
+	url?: unknown;
+}): { error: string } | CreateNameUrlOk {
+	if (!isNonEmptyString(body.name) || !isNonEmptyString(body.url)) {
+		return { error: 'Name and URL are required' };
+	}
+	return { nameTrimmed: body.name.trim(), urlTrimmed: body.url.trim() };
+}
+
+function validateCreateIconTypeSpecific(
+	iconType: string,
+	body: { iconName?: unknown; iconText?: unknown }
+): { error: string } | null {
+	if (iconType === 'custom-text' && !isNonEmptyString(body.iconText)) {
+		return { error: 'Icon text is required when icon type is custom-text' };
+	}
+	if ((iconType === 'coreui-brand' || iconType === 'lucide') && !isNonEmptyString(body.iconName)) {
+		return { error: 'Icon name is required when icon type is coreui-brand or lucide' };
+	}
+	return null;
+}
+
+function tryCreateSvgFields(
+	iconType: string,
+	body: { svgUrl?: unknown; svgInline?: unknown }
+): { error: string } | { svgUrlOut: string | null; svgInlineOut: string | null } {
+	if (iconType === 'svg-url') {
+		const n = validateSvgIconUrl(asTrimmedSvgField(body.svgUrl));
+		return n ? { svgUrlOut: n, svgInlineOut: null } : { error: SVG_URL_ERROR };
+	}
+	if (iconType === 'svg-inline') {
+		const safe = sanitizeSvgInlineMarkup(asTrimmedSvgField(body.svgInline));
+		return safe ? { svgUrlOut: null, svgInlineOut: safe } : { error: SVG_INLINE_ERROR };
+	}
+	return { svgUrlOut: null, svgInlineOut: null };
+}
+
+function pickCreateIconName(iconType: string, body: { iconName?: unknown }): string | null {
+	return (iconType === 'coreui-brand' || iconType === 'lucide') && isNonEmptyString(body.iconName)
+		? body.iconName.trim()
+		: null;
+}
+
+function pickCreateIconText(iconType: string, body: { iconText?: unknown }): string | null {
+	return iconType === 'custom-text' && isNonEmptyString(body.iconText) ? body.iconText.trim() : null;
+}
+
 export type ValidatedCreatePayload = {
 	name: string;
 	url: string;
@@ -53,12 +103,10 @@ export function validateCreateSocialLinkBody(body: {
 	displayOrder?: unknown;
 	isActive?: unknown;
 }): { error: string } | ValidatedCreatePayload {
-	if (!isNonEmptyString(body.name) || !isNonEmptyString(body.url)) {
-		return { error: 'Name and URL are required' };
+	const nameUrl = parseCreateNameAndUrl(body);
+	if ('error' in nameUrl) {
+		return nameUrl;
 	}
-
-	const nameTrimmed = body.name.trim();
-	const urlTrimmed = body.url.trim();
 
 	if (!isAllowedIconType(body.iconType)) {
 		return { error: ICON_TYPE_ERROR };
@@ -66,43 +114,24 @@ export function validateCreateSocialLinkBody(body: {
 
 	const iconType = body.iconType;
 
-	if (iconType === 'custom-text' && !isNonEmptyString(body.iconText)) {
-		return { error: 'Icon text is required when icon type is custom-text' };
+	const fieldError = validateCreateIconTypeSpecific(iconType, body);
+	if (fieldError) {
+		return fieldError;
 	}
 
-	if ((iconType === 'coreui-brand' || iconType === 'lucide') && !isNonEmptyString(body.iconName)) {
-		return { error: 'Icon name is required when icon type is coreui-brand or lucide' };
+	const svg = tryCreateSvgFields(iconType, body);
+	if ('error' in svg) {
+		return svg;
 	}
-
-	let svgUrlOut: string | null = null;
-	if (iconType === 'svg-url') {
-		const n = validateSvgIconUrl(asTrimmedSvgField(body.svgUrl));
-		if (!n) return { error: SVG_URL_ERROR };
-		svgUrlOut = n;
-	}
-
-	let svgInlineOut: string | null = null;
-	if (iconType === 'svg-inline') {
-		const safe = sanitizeSvgInlineMarkup(asTrimmedSvgField(body.svgInline));
-		if (!safe) return { error: SVG_INLINE_ERROR };
-		svgInlineOut = safe;
-	}
-
-	const iconTextOut =
-		iconType === 'custom-text' && isNonEmptyString(body.iconText) ? body.iconText.trim() : null;
-	const iconNameOut =
-		(iconType === 'coreui-brand' || iconType === 'lucide') && isNonEmptyString(body.iconName)
-			? body.iconName.trim()
-			: null;
 
 	return {
-		name: nameTrimmed,
-		url: urlTrimmed,
+		name: nameUrl.nameTrimmed,
+		url: nameUrl.urlTrimmed,
 		iconType,
-		iconName: iconNameOut,
-		iconText: iconTextOut,
-		svgUrl: svgUrlOut,
-		svgInline: svgInlineOut,
+		iconName: pickCreateIconName(iconType, body),
+		iconText: pickCreateIconText(iconType, body),
+		svgUrl: svg.svgUrlOut,
+		svgInline: svg.svgInlineOut,
 		displayOrder: Number(body.displayOrder) || 0,
 		isActive: body.isActive === undefined ? true : Boolean(body.isActive)
 	};
