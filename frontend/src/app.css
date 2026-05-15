@@ -344,3 +344,30 @@ select:focus {
 .gap-8 {
 	gap: 2rem;
 }
+
+/*
+ * Inline SVG (admin-pasted social icons)
+ */
+.svg-inline-host,
+.svg-inline-thumb {
+	color: inherit;
+}
+
+.svg-inline-host
+	svg
+	:where(path, circle, rect, ellipse, polygon, polyline, line, use),
+.svg-inline-thumb
+	svg
+	:where(path, circle, rect, ellipse, polygon, polyline, line, use) {
+	fill: currentColor;
+}
+
+.svg-inline-host svg :where([fill='none']),
+.svg-inline-thumb svg :where([fill='none']) {
+	fill: none !important;
+}
+
+.svg-inline-host svg :where([stroke]):not([stroke='none']),
+.svg-inline-thumb svg :where([stroke]):not([stroke='none']) {
+	stroke: currentColor;
+}

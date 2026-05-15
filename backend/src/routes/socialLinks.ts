@@ -2,6 +2,10 @@ import { logger } from '../utils/logger';
 import { Router } from 'express';
 import { SocialLinksService } from '../services/socialLinksService';
 import { requireSession } from '../middleware/auth';
+import {
+	validateCreateSocialLinkBody,
+	validateUpdateSocialLinkIconFields
+} from '../validation/socialLinkPayload';
 
 const router = Router();
 
@@ -71,53 +75,24 @@ router.get('/:id', requireSession, async (req, res) => {
 // Create a new social link
 router.post('/', requireSession, async (req, res) => {
 	try {
-		const { name, url, iconType, iconName, iconText, svgUrl, displayOrder, isActive } = req.body;
-
-		// Validation
-		if (!name || !url) {
+		const validated = validateCreateSocialLinkBody(req.body);
+		if ('error' in validated) {
 			return res.status(400).json({
 				success: false,
-				error: 'Name and URL are required'
-			});
-		}
-
-		if (!iconType || !['coreui-brand', 'lucide', 'svg-url', 'custom-text'].includes(iconType)) {
-			return res.status(400).json({
-				success: false,
-				error: 'Valid icon type is required (coreui-brand, lucide, svg-url, or custom-text)'
-			});
-		}
-
-		if (iconType === 'custom-text' && !iconText) {
-			return res.status(400).json({
-				success: false,
-				error: 'Icon text is required when icon type is custom-text'
-			});
-		}
-
-		if ((iconType === 'coreui-brand' || iconType === 'lucide') && !iconName) {
-			return res.status(400).json({
-				success: false,
-				error: 'Icon name is required when icon type is coreui-brand or lucide'
-			});
-		}
-
-		if (iconType === 'svg-url' && !req.body.svgUrl) {
-			return res.status(400).json({
-				success: false,
-				error: 'SVG URL is required when icon type is svg-url'
+				error: validated.error
 			});
 		}
 
 		const link = await SocialLinksService.create({
-			name,
-			url,
-			iconType,
-			iconName: iconType === 'coreui-brand' || iconType === 'lucide' ? iconName : null,
-			iconText: iconType === 'custom-text' ? iconText : null,
-			svgUrl: iconType === 'svg-url' ? svgUrl : null,
-			displayOrder: displayOrder || 0,
-			isActive: isActive !== undefined ? isActive : true
+			name: validated.name,
+			url: validated.url,
+			iconType: validated.iconType,
+			iconName: validated.iconName,
+			iconText: validated.iconText,
+			svgUrl: validated.svgUrl,
+			svgInline: validated.svgInline,
+			displayOrder: validated.displayOrder,
+			isActive: validated.isActive
 		});
 
 		res.status(201).json({
@@ -137,7 +112,7 @@ router.post('/', requireSession, async (req, res) => {
 router.put('/:id', requireSession, async (req, res) => {
 	try {
 		const { id } = req.params;
-		const { name, url, iconType, iconName, iconText, svgUrl, displayOrder, isActive } = req.body;
+		const { name, url, iconType, iconName, iconText, displayOrder, isActive } = req.body;
 
 		// Check if link exists
 		const existingLink = await SocialLinksService.getById(id);
@@ -148,34 +123,15 @@ router.put('/:id', requireSession, async (req, res) => {
 			});
 		}
 
-		// Validation
-		if (iconType && !['coreui-brand', 'lucide', 'svg-url', 'custom-text'].includes(iconType)) {
+		const iconFields = validateUpdateSocialLinkIconFields(req.body);
+		if ('error' in iconFields) {
 			return res.status(400).json({
 				success: false,
-				error: 'Valid icon type is required (coreui-brand, lucide, svg-url, or custom-text)'
+				error: iconFields.error
 			});
 		}
 
-		if (iconType === 'custom-text' && !iconText) {
-			return res.status(400).json({
-				success: false,
-				error: 'Icon text is required when icon type is custom-text'
-			});
-		}
-
-		if ((iconType === 'coreui-brand' || iconType === 'lucide') && !iconName) {
-			return res.status(400).json({
-				success: false,
-				error: 'Icon name is required when icon type is coreui-brand or lucide'
-			});
-		}
-
-		if (iconType === 'svg-url' && !svgUrl) {
-			return res.status(400).json({
-				success: false,
-				error: 'SVG URL is required when icon type is svg-url'
-			});
-		}
+		const { svgUrlResolved, svgInlineStored } = iconFields;
 
 		const link = await SocialLinksService.update(id, {
 			name,
@@ -183,9 +139,10 @@ router.put('/:id', requireSession, async (req, res) => {
 			iconType,
 			iconName: iconType === 'coreui-brand' || iconType === 'lucide' ? iconName : null,
 			iconText: iconType === 'custom-text' ? iconText : null,
-			svgUrl: iconType === 'svg-url' ? svgUrl : null,
+			svgUrl: svgUrlResolved === undefined ? undefined : svgUrlResolved,
 			displayOrder,
-			isActive
+			isActive,
+			...(svgInlineStored === undefined ? {} : { svgInline: svgInlineStored })
 		});
 
 		res.json({

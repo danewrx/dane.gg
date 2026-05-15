@@ -12,7 +12,7 @@ FROM node:22-alpine
 
 RUN apk add --no-cache tini && npm install -g tsx
 
-WORKDIR /app
+WORKDIR /repo/backend
 
 COPY --from=builder /build/node_modules node_modules/
 COPY backend/src        src/
@@ -21,10 +21,13 @@ COPY backend/static     static/
 COPY backend/drizzle    drizzle/
 COPY backend/drizzle.config.ts ./
 
-VOLUME ["/app/static/uploads"]
+# Monorepo helpers imported as @repo/shared (see backend/tsconfig paths)
+COPY shared             ../shared
 
-COPY docker/backend-entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+VOLUME ["/repo/backend/static/uploads"]
+
+COPY docker/backend-entrypoint.sh /repo/backend/entrypoint.sh
+RUN chmod +x /repo/backend/entrypoint.sh
 
 ENV NODE_ENV=production
 ENV PORT=3001
@@ -34,4 +37,4 @@ ENV HOST=0.0.0.0
 EXPOSE 3001
 
 ENTRYPOINT ["tini", "--"]
-CMD ["/app/entrypoint.sh"]
+CMD ["/repo/backend/entrypoint.sh"]

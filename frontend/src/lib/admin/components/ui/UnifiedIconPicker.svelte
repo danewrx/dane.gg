@@ -7,6 +7,8 @@
 		searchIcons,
 		type IconOption
 	} from '$lib/admin/services/iconLibraryService';
+	import { sanitizeSvgInlineMarkup } from '@repo/shared/utils/sanitizeSvgInline';
+	import { validateSvgIconUrl } from '@repo/shared/utils/validateSvgIconUrl';
 	import { Search, X } from 'lucide-svelte';
 	import type { ComponentType } from 'svelte';
 
@@ -20,6 +22,7 @@
 		triggerless?: boolean;
 		open?: boolean;
 		onOpenChange?: (open: boolean) => void;
+		omitSvgInline?: boolean;
 	}
 
 	let {
@@ -31,15 +34,17 @@
 		previewText = 'Button Text',
 		triggerless = false,
 		open = $bindable(false),
-		onOpenChange = () => {}
+		onOpenChange = () => {},
+		omitSvgInline = false
 	}: Props = $props();
 
 	let isOpenInternal = $state(false);
 	let isOpen = $derived.by(() => (triggerless ? open : isOpenInternal));
 	let customSvgUrl = $state('');
+	let customSvgInline = $state('');
 	let customText = $state('');
 	let showCustomInputs = $state(false);
-	let customInputType = $state<'svg' | 'text' | null>(null);
+	let customInputType = $state<'svg-url' | 'svg-inline' | 'text' | null>(null);
 
 	$effect(() => {
 		if (triggerless) {
@@ -56,13 +61,21 @@
 		if (selectedIcon && !showCustomInputs) {
 			if (selectedIcon.type === 'svg-url' && selectedIcon.svgUrl) {
 				showCustomInputs = true;
-				customInputType = 'svg';
+				customInputType = 'svg-url';
 				customSvgUrl = selectedIcon.svgUrl;
+			} else if (selectedIcon.type === 'svg-inline' && selectedIcon.svgInline) {
+				showCustomInputs = true;
+				customInputType = 'svg-inline';
+				customSvgInline = selectedIcon.svgInline;
 			} else if (selectedIcon.type === 'custom-text' && selectedIcon.text) {
 				showCustomInputs = true;
 				customInputType = 'text';
 				customText = selectedIcon.text;
-			} else if (selectedIcon.type !== 'svg-url' && selectedIcon.type !== 'custom-text') {
+			} else if (
+				selectedIcon.type !== 'svg-url' &&
+				selectedIcon.type !== 'svg-inline' &&
+				selectedIcon.type !== 'custom-text'
+			) {
 				showCustomInputs = false;
 				customInputType = null;
 			}
@@ -76,6 +89,16 @@
 	let iconCategories = $state<any[]>([]);
 	let filteredIcons = $state<IconOption[]>([]);
 	let isLoading = $state(true);
+
+	let gridIcons = $derived(
+		omitSvgInline ? filteredIcons.filter((icon) => icon.type !== 'svg-inline') : filteredIcons
+	);
+
+	let svgUrlFieldInvalid = $derived(
+		customInputType === 'svg-url' &&
+			customSvgUrl.trim() !== '' &&
+			!validateSvgIconUrl(customSvgUrl)
+	);
 
 	$effect(() => {
 		(async () => {
@@ -117,14 +140,17 @@
 			event.stopPropagation();
 		}
 
-		if (icon.type === 'svg-url' || icon.type === 'custom-text') {
+		if (icon.type === 'svg-url' || icon.type === 'svg-inline' || icon.type === 'custom-text') {
 			isSelectingCustom = true;
 
 			selectedIcon = icon;
 			showCustomInputs = true;
-			customInputType = icon.type === 'svg-url' ? 'svg' : 'text';
+			customInputType =
+				icon.type === 'svg-url' ? 'svg-url' : icon.type === 'svg-inline' ? 'svg-inline' : 'text';
 			if (icon.type === 'svg-url') {
 				customSvgUrl = icon.svgUrl || '';
+			} else if (icon.type === 'svg-inline') {
+				customSvgInline = icon.svgInline || '';
 			} else {
 				customText = icon.text || '';
 			}
@@ -148,11 +174,26 @@
 
 		if (!selectedIcon) return;
 
-		if (customInputType === 'svg' && customSvgUrl.trim()) {
+		if (customInputType === 'svg-url') {
+			const normalized = validateSvgIconUrl(customSvgUrl);
+			if (!normalized) return;
 			const customIcon: IconOption = {
 				...selectedIcon,
-				svgUrl: customSvgUrl.trim(),
-				name: customSvgUrl.trim()
+				svgUrl: normalized,
+				name: normalized
+			};
+			onIconSelect(customIcon);
+			showCustomInputs = false;
+			customInputType = null;
+			closeDropdown(event);
+		} else if (customInputType === 'svg-inline') {
+			const safe = sanitizeSvgInlineMarkup(customSvgInline);
+			if (!safe) return;
+			const customIcon: IconOption = {
+				...selectedIcon,
+				svgInline: safe,
+				name: 'svg-inline-custom',
+				displayName: 'Custom SVG (paste code)'
 			};
 			onIconSelect(customIcon);
 			showCustomInputs = false;
@@ -178,7 +219,10 @@
 		}
 
 		const wasCustom =
-			selectedIcon && (selectedIcon.type === 'svg-url' || selectedIcon.type === 'custom-text');
+			selectedIcon &&
+			(selectedIcon.type === 'svg-url' ||
+				selectedIcon.type === 'svg-inline' ||
+				selectedIcon.type === 'custom-text');
 		if (wasCustom) {
 			selectedIcon = null;
 			onIconSelect(null);
@@ -186,6 +230,7 @@
 		showCustomInputs = false;
 		customInputType = null;
 		customSvgUrl = '';
+		customSvgInline = '';
 		customText = '';
 	}
 
@@ -220,10 +265,11 @@
 	}
 
 	function getIconRenderInfo(icon: IconOption | null): {
-		type: 'lucide' | 'iconify' | 'svg' | 'text' | null;
+		type: 'lucide' | 'iconify' | 'svg-url' | 'svg-inline' | 'text' | null;
 		component?: ComponentType;
 		icon?: string;
 		url?: string;
+		markup?: string;
 		text?: string;
 	} {
 		if (!icon) return { type: null };
@@ -233,7 +279,10 @@
 		} else if (icon.type === 'coreui-brand' && icon.iconSet && icon.iconName) {
 			return { type: 'iconify', icon: `${icon.iconSet}:${icon.iconName}` };
 		} else if (icon.type === 'svg-url' && icon.svgUrl) {
-			return { type: 'svg', url: icon.svgUrl };
+			return { type: 'svg-url', url: icon.svgUrl };
+		} else if (icon.type === 'svg-inline' && icon.svgInline) {
+			const safe = sanitizeSvgInlineMarkup(icon.svgInline);
+			if (safe) return { type: 'svg-inline', markup: safe };
 		} else if (icon.type === 'custom-text' && icon.text) {
 			return { type: 'text', text: icon.text };
 		}
@@ -254,8 +303,10 @@
 						<IconComponent size={16} />
 					{:else if iconInfo.type === 'iconify' && iconInfo.icon}
 						<Icon icon={iconInfo.icon} width="16" height="16" />
-					{:else if iconInfo.type === 'svg' && iconInfo.url}
+					{:else if iconInfo.type === 'svg-url' && iconInfo.url}
 						<img src={iconInfo.url} alt="Icon" width="16" height="16" />
+					{:else if iconInfo.type === 'svg-inline' && iconInfo.markup}
+						<span class="svg-inline-host" aria-hidden="true">{@html iconInfo.markup}</span>
 					{:else if iconInfo.type === 'text' && iconInfo.text}
 						<span class="text-icon">{iconInfo.text}</span>
 					{:else}
@@ -279,8 +330,12 @@
 						<IconComponent size={20} />
 					{:else if iconInfo.type === 'iconify' && iconInfo.icon}
 						<Icon icon={iconInfo.icon} width="20" height="20" />
-					{:else if iconInfo.type === 'svg' && iconInfo.url}
+					{:else if iconInfo.type === 'svg-url' && iconInfo.url}
 						<img src={iconInfo.url} alt="Icon" width="20" height="20" />
+					{:else if iconInfo.type === 'svg-inline' && iconInfo.markup}
+						<span class="svg-inline-host svg-inline-host--md" aria-hidden="true"
+							>{@html iconInfo.markup}</span
+						>
 					{:else if iconInfo.type === 'text' && iconInfo.text}
 						<span class="text-icon">{iconInfo.text}</span>
 					{:else}
@@ -294,8 +349,10 @@
 								: selectedIcon.type === 'lucide'
 									? 'Lucide'
 									: selectedIcon.type === 'svg-url'
-										? 'Custom SVG'
-										: 'Custom Text'}</span
+										? 'Custom SVG URL'
+										: selectedIcon.type === 'svg-inline'
+											? 'Inline SVG'
+											: 'Custom Text'}</span
 						>
 					</div>
 				</div>
@@ -391,7 +448,7 @@
 							<span class="icon-label">None</span>
 							<span class="icon-pack">Default</span>
 						</button>
-						{#each filteredIcons as icon}
+						{#each gridIcons as icon}
 							{@const iconInfo = getIconRenderInfo(icon)}
 							<button
 								type="button"
@@ -405,12 +462,18 @@
 									<IconComponent size={24} />
 								{:else if iconInfo.type === 'iconify' && iconInfo.icon}
 									<Icon icon={iconInfo.icon} width="24" height="24" />
-								{:else if iconInfo.type === 'svg' && iconInfo.url}
+								{:else if iconInfo.type === 'svg-url' && iconInfo.url}
 									<img src={iconInfo.url} alt={icon.displayName} width="24" height="24" />
+								{:else if iconInfo.type === 'svg-inline' && iconInfo.markup}
+									<span class="svg-inline-host svg-inline-host--lg" aria-hidden="true"
+										>{@html iconInfo.markup}</span
+									>
 								{:else if iconInfo.type === 'text' && iconInfo.text}
 									<span class="text-icon">{iconInfo.text}</span>
 								{:else if icon.type === 'svg-url'}
 									<Icon icon="lucide:link" width="24" height="24" />
+								{:else if icon.type === 'svg-inline'}
+									<Icon icon="lucide:file-code" width="24" height="24" />
 								{:else if icon.type === 'custom-text'}
 									<span class="text-icon-preview">T</span>
 								{:else}
@@ -423,8 +486,10 @@
 										: icon.type === 'lucide'
 											? 'Lucide'
 											: icon.type === 'svg-url'
-												? 'Custom SVG'
-												: 'Custom Text'}</span
+												? 'Custom SVG URL'
+												: icon.type === 'svg-inline'
+													? 'Inline SVG'
+													: 'Custom Text'}</span
 								>
 							</button>
 						{/each}
@@ -440,7 +505,13 @@
 				{#if showCustomInputs && customInputType}
 					<div class="custom-input-section">
 						<div class="custom-input-header">
-							<h4>{customInputType === 'svg' ? 'Enter SVG URL' : 'Enter Custom Text'}</h4>
+							<h4>
+								{customInputType === 'svg-url'
+									? 'Enter SVG URL'
+									: customInputType === 'svg-inline'
+										? 'Paste SVG markup'
+										: 'Enter Custom Text'}
+							</h4>
 							<button
 								type="button"
 								class="cancel-custom-button"
@@ -449,7 +520,7 @@
 								<X size={16} />
 							</button>
 						</div>
-						{#if customInputType === 'svg'}
+						{#if customInputType === 'svg-url'}
 							<div class="custom-input-group">
 								<label for="unified-icon-picker-svg-url">SVG URL</label>
 								<input
@@ -458,8 +529,29 @@
 									bind:value={customSvgUrl}
 									placeholder="https://example.com/icon.svg"
 									class="custom-input"
+									class:custom-input-invalid={svgUrlFieldInvalid}
+									aria-invalid={svgUrlFieldInvalid}
+									autocomplete="off"
 								/>
-								<small>Enter a direct URL to an SVG file</small>
+								<small>
+									Absolute <code>http://</code> or <code>https://</code> URL, max 500 characters (no username/password in the URL).
+								</small>
+								{#if svgUrlFieldInvalid}
+									<small class="svg-url-validation-error">That does not look like a valid URL.</small>
+								{/if}
+							</div>
+						{:else if customInputType === 'svg-inline'}
+							<div class="custom-input-group">
+								<label for="unified-icon-picker-svg-inline">SVG markup</label>
+								<textarea
+									id="unified-icon-picker-svg-inline"
+									bind:value={customSvgInline}
+									placeholder='<svg xmlns="http://www.w3.org/2000/svg" ...></svg>'
+									class="custom-input custom-textarea"
+									rows={6}
+									spellcheck={false}
+								></textarea>
+								<small>Paste a single root &lt;svg&gt; element (stored after basic safety checks)</small>
 							</div>
 						{:else}
 							<div class="custom-input-group">
@@ -480,7 +572,11 @@
 								type="button"
 								class="save-custom-button"
 								onclick={(e) => saveCustomIcon(e)}
-								disabled={customInputType === 'svg' ? !customSvgUrl.trim() : !customText.trim()}
+								disabled={customInputType === 'svg-url'
+									? !validateSvgIconUrl(customSvgUrl)
+									: customInputType === 'svg-inline'
+										? !sanitizeSvgInlineMarkup(customSvgInline)
+										: !customText.trim()}
 							>
 								Save
 							</button>
@@ -529,6 +625,39 @@
 		font-size: 14px;
 		font-weight: 500;
 		min-width: 150px;
+	}
+
+	.preview-button .svg-inline-host :global(svg) {
+		width: 16px;
+		height: 16px;
+		display: block;
+	}
+
+	.svg-inline-host {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		line-height: 0;
+	}
+
+	.svg-inline-host--md :global(svg) {
+		width: 20px;
+		height: 20px;
+		display: block;
+	}
+
+	.svg-inline-host--lg :global(svg) {
+		width: 24px;
+		height: 24px;
+		display: block;
+	}
+
+	.custom-textarea {
+		resize: vertical;
+		min-height: 120px;
+		font-family: ui-monospace, monospace;
+		font-size: 12px;
+		line-height: 1.4;
 	}
 
 	.preview-button .text-icon {
@@ -929,6 +1058,20 @@
 	.custom-input-group small {
 		font-size: 11px;
 		color: var(--text-secondary, #a1a1aa);
+	}
+
+	.custom-input-group small code {
+		font-size: 10px;
+	}
+
+	.svg-url-validation-error {
+		display: block;
+		margin-top: 4px;
+		color: #f87171 !important;
+	}
+
+	.custom-input-invalid {
+		border-color: #f87171 !important;
 	}
 
 	.custom-input-actions {

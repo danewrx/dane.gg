@@ -1,0 +1,1 @@
+ALTER TABLE "website"."social_links" ADD COLUMN "svg_inline" text;
