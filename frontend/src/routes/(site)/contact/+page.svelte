@@ -8,6 +8,7 @@
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 	import { marked } from 'marked';
 	import { sanitizeSvgInlineMarkup } from '@repo/shared/utils/sanitizeSvgInline';
+	import { lucideIconNameToIconifySlug } from '$lib/site/lucideIconifySlug';
 
 	let taglineContent = $state('');
 	let loadingTagline = $state(true);
@@ -205,6 +206,13 @@
 							{@const contactSvg = sanitizeSvgInlineMarkup(link.svgInline)}
 							{#if contactSvg}
 								<span class="svg-inline-host" aria-hidden="true">{@html contactSvg}</span>
+							{:else}
+								<Icon icon="simple-icons:link" width="20" height="20" />
+							{/if}
+						{:else if link.iconType === 'lucide' && link.iconName}
+							{@const contactLucideSlug = lucideIconNameToIconifySlug(link.iconName)}
+							{#if contactLucideSlug}
+								<Icon icon={`lucide:${contactLucideSlug}`} width="20" height="20" />
 							{:else}
 								<Icon icon="simple-icons:link" width="20" height="20" />
 							{/if}

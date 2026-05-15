@@ -4,12 +4,13 @@
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import { sanitizeSvgInlineMarkup } from '@repo/shared/utils/sanitizeSvgInline';
+	import { lucideIconNameToIconifySlug } from '$lib/site/lucideIconifySlug';
 
 	interface SocialLink {
 		id: string;
 		name: string;
 		url: string;
-		iconType: 'coreui-brand' | 'svg-url' | 'svg-inline' | 'custom-text';
+		iconType: 'coreui-brand' | 'lucide' | 'svg-url' | 'svg-inline' | 'custom-text';
 		iconName?: string;
 		iconText?: string;
 		svgUrl?: string;
@@ -70,6 +71,13 @@
 						{@const widgetSvg = sanitizeSvgInlineMarkup(link.svgInline)}
 						{#if widgetSvg}
 							<span class="svg-inline-host" aria-hidden="true">{@html widgetSvg}</span>
+						{:else}
+							<Icon icon="simple-icons:link" class="iconify-icon" />
+						{/if}
+					{:else if link.iconType === 'lucide' && link.iconName}
+						{@const lucideSlug = lucideIconNameToIconifySlug(link.iconName)}
+						{#if lucideSlug}
+							<Icon icon={`lucide:${lucideSlug}`} class="iconify-icon" />
 						{:else}
 							<Icon icon="simple-icons:link" class="iconify-icon" />
 						{/if}
