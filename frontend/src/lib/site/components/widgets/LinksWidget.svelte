@@ -4,12 +4,13 @@
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import { sanitizeSvgInlineMarkup } from '@repo/shared/utils/sanitizeSvgInline';
+	import { getIconRenderInfo, isLikelyLucideMisstoredAsCoreUi, stripCoreUIBrandPrefix } from '$lib/site/utils/iconHelper';
 
 	interface SocialLink {
 		id: string;
 		name: string;
 		url: string;
-		iconType: 'coreui-brand' | 'svg-url' | 'svg-inline' | 'custom-text';
+		iconType: 'coreui-brand' | 'lucide' | 'svg-url' | 'svg-inline' | 'custom-text';
 		iconName?: string;
 		iconText?: string;
 		svgUrl?: string;
@@ -73,8 +74,27 @@
 						{:else}
 							<Icon icon="simple-icons:link" class="iconify-icon" />
 						{/if}
+					{:else if link.iconType === 'lucide' && link.iconName}
+						{@const lucideInfo = getIconRenderInfo(link.iconName)}
+						{#if lucideInfo.type === 'component' && lucideInfo.component}
+							{@const LucideIcon = lucideInfo.component}
+							<LucideIcon size={16} class="links-lucide" strokeWidth={2} />
+						{:else}
+							<Icon icon="simple-icons:link" class="iconify-icon" />
+						{/if}
 					{:else if link.iconType === 'coreui-brand' && link.iconName}
-						<Icon icon={`cib:${link.iconName.replace('cb-', '')}`} class="iconify-icon" />
+						{@const coreUiSlug = stripCoreUIBrandPrefix(link.iconName)}
+						{#if isLikelyLucideMisstoredAsCoreUi(link.iconName)}
+							{@const misInfo = getIconRenderInfo(coreUiSlug)}
+							{#if misInfo.type === 'component' && misInfo.component}
+								{@const LucideMis = misInfo.component}
+								<LucideMis size={16} class="links-lucide" strokeWidth={2} />
+							{:else}
+								<Icon icon="simple-icons:link" class="iconify-icon" />
+							{/if}
+						{:else}
+							<Icon icon={`cib:${coreUiSlug}`} class="iconify-icon" />
+						{/if}
 					{/if}
 				</button>
 			{/each}

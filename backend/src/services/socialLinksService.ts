@@ -16,13 +16,7 @@ export class SocialLinksService {
 			logger.info('Fetched social links from database:', links.length);
 			logger.info('First few links:', links.slice(0, 3));
 
-			// Map lucide icons to coreui-brand for compatibility
-			const mappedLinks = links.map((link) => ({
-				...link,
-				iconType: link.iconType === 'lucide' ? 'coreui-brand' : link.iconType
-			}));
-
-			return mappedLinks;
+			return links;
 		} catch (error) {
 			logger.error('SocialLinksService.getAll error:', error);
 			throw new Error('Failed to fetch social links');

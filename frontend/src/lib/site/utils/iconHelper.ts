@@ -110,3 +110,13 @@ export function getIconRenderInfo(iconName: string | null | undefined): IconRend
 		text: iconName
 	};
 }
+
+export function stripCoreUIBrandPrefix(iconName: string): string {
+	const t = iconName.trim();
+	return /^cb-/i.test(t) ? t.slice(3) : t;
+}
+
+export function isLikelyLucideMisstoredAsCoreUi(iconName: string): boolean {
+	const n = stripCoreUIBrandPrefix(iconName).trim();
+	return n.length > 0 && /^[A-Z]/.test(n);
+}
