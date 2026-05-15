@@ -7,6 +7,7 @@
 	import Icon from '@iconify/svelte';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 	import { marked } from 'marked';
+	import { sanitizeSvgInlineMarkup } from '$lib/shared/utils/sanitizeSvgInline';
 
 	let taglineContent = $state('');
 	let loadingTagline = $state(true);
@@ -23,6 +24,7 @@
 			iconName?: string;
 			iconText?: string;
 			svgUrl?: string;
+			svgInline?: string | null;
 		}[]
 	>([]);
 	let socialHeader = $state('');
@@ -199,6 +201,13 @@
 							<span class="text-icon">{link.iconText}</span>
 						{:else if link.iconType === 'svg-url' && link.svgUrl}
 							<img src={link.svgUrl} alt={link.name} class="svg-icon" />
+						{:else if link.iconType === 'svg-inline' && link.svgInline}
+							{@const contactSvg = sanitizeSvgInlineMarkup(link.svgInline)}
+							{#if contactSvg}
+								<span class="svg-inline-host" aria-hidden="true">{@html contactSvg}</span>
+							{:else}
+								<Icon icon="simple-icons:link" width="20" height="20" />
+							{/if}
 						{:else if link.iconType === 'coreui-brand' && link.iconName}
 							<Icon icon={`cib:${link.iconName.replace('cb-', '')}`} width="20" height="20" />
 						{:else}
@@ -342,6 +351,19 @@
 		width: 20px;
 		height: 20px;
 		object-fit: contain;
+	}
+
+	.svg-inline-host {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		line-height: 0;
+	}
+
+	.svg-inline-host :global(svg) {
+		width: 20px;
+		height: 20px;
+		display: block;
 	}
 
 	.footer-section {

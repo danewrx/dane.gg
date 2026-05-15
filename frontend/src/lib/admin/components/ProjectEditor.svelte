@@ -918,6 +918,7 @@
 			}}
 			triggerless={true}
 			bind:open={projectIconPickerOpen}
+			omitSvgInline={true}
 		/>
 	{/if}
 
@@ -930,6 +931,7 @@
 			}}
 			triggerless={true}
 			bind:open={repoIconPickerOpen}
+			omitSvgInline={true}
 		/>
 	{/if}
 

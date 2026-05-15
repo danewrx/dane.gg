@@ -5,12 +5,13 @@ import { logger } from '$lib/logger';
 export interface IconOption {
 	name: string;
 	displayName: string;
-	type: 'coreui-brand' | 'lucide' | 'svg-url' | 'custom-text';
+	type: 'coreui-brand' | 'lucide' | 'svg-url' | 'svg-inline' | 'custom-text';
 	iconSet?: string;
 	iconName?: string;
 	lucideComponent?: any; // For Lucide icons
 	text?: string; // For text-based icons
 	svgUrl?: string; // For custom SVG URLs
+	svgInline?: string; // For pasted SVG markup (<svg>...</svg>)
 	category: string;
 }
 
@@ -355,6 +356,12 @@ export async function getIconCategories(): Promise<IconCategory[]> {
 export function getCustomOptions(): IconOption[] {
 	return [
 		{ name: 'svg-url', displayName: 'Custom SVG URL', type: 'svg-url', category: 'custom' },
+		{
+			name: 'svg-inline',
+			displayName: 'Custom SVG (paste code)',
+			type: 'svg-inline',
+			category: 'custom'
+		},
 		{ name: 'custom-text', displayName: 'Custom Text', type: 'custom-text', category: 'custom' }
 	];
 }
@@ -393,8 +400,8 @@ export async function getIconByName(name: string): Promise<IconOption | undefine
 
 // Create custom icon options
 export function createCustomIcon(
-	type: 'svg-url' | 'custom-text',
-	data: { svgUrl?: string; text?: string; displayName?: string }
+	type: 'svg-url' | 'svg-inline' | 'custom-text',
+	data: { svgUrl?: string; svgInline?: string; text?: string; displayName?: string }
 ): IconOption {
 	if (type === 'svg-url' && data.svgUrl) {
 		return {
@@ -402,6 +409,14 @@ export function createCustomIcon(
 			displayName: data.displayName || 'Custom SVG',
 			type: 'svg-url',
 			svgUrl: data.svgUrl,
+			category: 'custom'
+		};
+	} else if (type === 'svg-inline' && data.svgInline) {
+		return {
+			name: 'custom-svg-inline',
+			displayName: data.displayName || 'Custom SVG (code)',
+			type: 'svg-inline',
+			svgInline: data.svgInline,
 			category: 'custom'
 		};
 	} else if (type === 'custom-text' && data.text) {

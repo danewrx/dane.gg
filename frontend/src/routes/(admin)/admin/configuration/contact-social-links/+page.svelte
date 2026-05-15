@@ -6,15 +6,17 @@
 	import { toast } from 'svelte-sonner';
 	import { Loader2, Link2, Edit2, Check, X, GripVertical } from 'lucide-svelte';
 	import Icon from '@iconify/svelte';
+	import { sanitizeSvgInlineMarkup } from '$lib/shared/utils/sanitizeSvgInline';
 
 	interface SocialLink {
 		id: string;
 		name: string;
 		url: string;
-		iconType: 'coreui-brand' | 'svg-url' | 'custom-text';
+		iconType: 'coreui-brand' | 'lucide' | 'svg-url' | 'svg-inline' | 'custom-text';
 		iconName?: string;
 		iconText?: string;
 		svgUrl?: string;
+		svgInline?: string | null;
 		displayOrder: number;
 		isActive: boolean;
 	}
@@ -353,6 +355,13 @@
 												<span class="text-icon">{link.iconText}</span>
 											{:else if link.iconType === 'svg-url' && link.svgUrl}
 												<img src={link.svgUrl} alt={link.name} class="svg-icon" />
+											{:else if link.iconType === 'svg-inline' && link.svgInline}
+												{@const cfgSvgSel = sanitizeSvgInlineMarkup(link.svgInline)}
+												{#if cfgSvgSel}
+													<span class="svg-inline-thumb" aria-hidden="true">{@html cfgSvgSel}</span>
+												{:else}
+													<Link2 size={20} />
+												{/if}
 											{:else if link.iconType === 'coreui-brand' && link.iconName}
 												<Icon
 													icon={`cib:${link.iconName.replace('cb-', '')}`}
@@ -419,6 +428,13 @@
 												<span class="text-icon">{link.iconText}</span>
 											{:else if link.iconType === 'svg-url' && link.svgUrl}
 												<img src={link.svgUrl} alt={link.name} class="svg-icon" />
+											{:else if link.iconType === 'svg-inline' && link.svgInline}
+												{@const cfgSvgUnsel = sanitizeSvgInlineMarkup(link.svgInline)}
+												{#if cfgSvgUnsel}
+													<span class="svg-inline-thumb" aria-hidden="true">{@html cfgSvgUnsel}</span>
+												{:else}
+													<Link2 size={20} />
+												{/if}
 											{:else if link.iconType === 'coreui-brand' && link.iconName}
 												<Icon
 													icon={`cib:${link.iconName.replace('cb-', '')}`}
@@ -767,6 +783,12 @@
 		width: 20px;
 		height: 20px;
 		object-fit: contain;
+	}
+
+	.svg-inline-thumb :global(svg) {
+		width: 20px;
+		height: 20px;
+		display: block;
 	}
 
 	.link-info {

@@ -2,8 +2,12 @@ import { logger } from '../utils/logger';
 import { Router } from 'express';
 import { SocialLinksService } from '../services/socialLinksService';
 import { requireSession } from '../middleware/auth';
+import { sanitizeSvgInlineMarkup } from '../utils/sanitizeSvgInline';
+import { validateSvgIconUrl } from '../utils/validateSvgIconUrl';
 
 const router = Router();
+
+const ICON_TYPES = ['coreui-brand', 'lucide', 'svg-url', 'svg-inline', 'custom-text'] as const;
 
 // Get all active social links (public)
 router.get('/', async (req, res) => {
@@ -71,7 +75,8 @@ router.get('/:id', requireSession, async (req, res) => {
 // Create a new social link
 router.post('/', requireSession, async (req, res) => {
 	try {
-		const { name, url, iconType, iconName, iconText, svgUrl, displayOrder, isActive } = req.body;
+		const { name, url, iconType, iconName, iconText, svgUrl, svgInline, displayOrder, isActive } =
+			req.body;
 
 		// Validation
 		if (!name || !url) {
@@ -81,10 +86,11 @@ router.post('/', requireSession, async (req, res) => {
 			});
 		}
 
-		if (!iconType || !['coreui-brand', 'lucide', 'svg-url', 'custom-text'].includes(iconType)) {
+		if (!iconType || !(ICON_TYPES as readonly string[]).includes(iconType)) {
 			return res.status(400).json({
 				success: false,
-				error: 'Valid icon type is required (coreui-brand, lucide, svg-url, or custom-text)'
+				error:
+					'Valid icon type is required (coreui-brand, lucide, svg-url, svg-inline, or custom-text)'
 			});
 		}
 
@@ -102,11 +108,30 @@ router.post('/', requireSession, async (req, res) => {
 			});
 		}
 
-		if (iconType === 'svg-url' && !req.body.svgUrl) {
-			return res.status(400).json({
-				success: false,
-				error: 'SVG URL is required when icon type is svg-url'
-			});
+		let svgUrlNormalized: string | null = null;
+		if (iconType === 'svg-url') {
+			const n = validateSvgIconUrl(String(svgUrl ?? ''));
+			if (!n) {
+				return res.status(400).json({
+					success: false,
+					error:
+						'SVG URL must be a valid absolute http(s) URL (max 500 characters, no username/password in the URL)'
+				});
+			}
+			svgUrlNormalized = n;
+		}
+
+		let svgInlineStored: string | null = null;
+		if (iconType === 'svg-inline') {
+			const safe = sanitizeSvgInlineMarkup(String(svgInline ?? ''));
+			if (!safe) {
+				return res.status(400).json({
+					success: false,
+					error:
+						'Valid inline SVG markup is required when icon type is svg-inline (must start with <svg and pass safety checks)'
+				});
+			}
+			svgInlineStored = safe;
 		}
 
 		const link = await SocialLinksService.create({
@@ -115,7 +140,8 @@ router.post('/', requireSession, async (req, res) => {
 			iconType,
 			iconName: iconType === 'coreui-brand' || iconType === 'lucide' ? iconName : null,
 			iconText: iconType === 'custom-text' ? iconText : null,
-			svgUrl: iconType === 'svg-url' ? svgUrl : null,
+			svgUrl: iconType === 'svg-url' ? svgUrlNormalized : null,
+			svgInline: iconType === 'svg-inline' ? svgInlineStored : null,
 			displayOrder: displayOrder || 0,
 			isActive: isActive !== undefined ? isActive : true
 		});
@@ -137,7 +163,8 @@ router.post('/', requireSession, async (req, res) => {
 router.put('/:id', requireSession, async (req, res) => {
 	try {
 		const { id } = req.params;
-		const { name, url, iconType, iconName, iconText, svgUrl, displayOrder, isActive } = req.body;
+		const { name, url, iconType, iconName, iconText, svgUrl, svgInline, displayOrder, isActive } =
+			req.body;
 
 		// Check if link exists
 		const existingLink = await SocialLinksService.getById(id);
@@ -149,10 +176,11 @@ router.put('/:id', requireSession, async (req, res) => {
 		}
 
 		// Validation
-		if (iconType && !['coreui-brand', 'lucide', 'svg-url', 'custom-text'].includes(iconType)) {
+		if (iconType && !(ICON_TYPES as readonly string[]).includes(iconType)) {
 			return res.status(400).json({
 				success: false,
-				error: 'Valid icon type is required (coreui-brand, lucide, svg-url, or custom-text)'
+				error:
+					'Valid icon type is required (coreui-brand, lucide, svg-url, svg-inline, or custom-text)'
 			});
 		}
 
@@ -170,11 +198,34 @@ router.put('/:id', requireSession, async (req, res) => {
 			});
 		}
 
-		if (iconType === 'svg-url' && !svgUrl) {
-			return res.status(400).json({
-				success: false,
-				error: 'SVG URL is required when icon type is svg-url'
-			});
+		let svgUrlResolved: string | null | undefined = undefined;
+		if (iconType === 'svg-url') {
+			const n = validateSvgIconUrl(String(svgUrl ?? ''));
+			if (!n) {
+				return res.status(400).json({
+					success: false,
+					error:
+						'SVG URL must be a valid absolute http(s) URL (max 500 characters, no username/password in the URL)'
+				});
+			}
+			svgUrlResolved = n;
+		} else if (iconType) {
+			svgUrlResolved = null;
+		}
+
+		let svgInlineStored: string | null | undefined = undefined;
+		if (iconType === 'svg-inline') {
+			const safe = sanitizeSvgInlineMarkup(String(svgInline ?? ''));
+			if (!safe) {
+				return res.status(400).json({
+					success: false,
+					error:
+						'Valid inline SVG markup is required when icon type is svg-inline (must start with <svg and pass safety checks)'
+				});
+			}
+			svgInlineStored = safe;
+		} else if (iconType) {
+			svgInlineStored = null;
 		}
 
 		const link = await SocialLinksService.update(id, {
@@ -183,9 +234,10 @@ router.put('/:id', requireSession, async (req, res) => {
 			iconType,
 			iconName: iconType === 'coreui-brand' || iconType === 'lucide' ? iconName : null,
 			iconText: iconType === 'custom-text' ? iconText : null,
-			svgUrl: iconType === 'svg-url' ? svgUrl : null,
+			svgUrl: svgUrlResolved !== undefined ? svgUrlResolved : undefined,
 			displayOrder,
-			isActive
+			isActive,
+			...(svgInlineStored !== undefined ? { svgInline: svgInlineStored } : {})
 		});
 
 		res.json({

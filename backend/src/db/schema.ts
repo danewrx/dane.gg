@@ -207,10 +207,11 @@ export const socialLinks = websiteSchema.table('social_links', {
 	id: uuid('id').primaryKey().defaultRandom(),
 	name: varchar('name', { length: 100 }).notNull(),
 	url: varchar('url', { length: 500 }).notNull(),
-	iconType: varchar('icon_type', { length: 20 }).notNull().default('coreui-brand'), // 'coreui-brand', 'svg-url', 'custom-text'
+	iconType: varchar('icon_type', { length: 20 }).notNull().default('coreui-brand'), // 'coreui-brand', 'svg-url', 'svg-inline', 'custom-text'
 	iconName: varchar('icon_name', { length: 100 }),
 	iconText: varchar('icon_text', { length: 50 }),
 	svgUrl: varchar('svg_url', { length: 500 }),
+	svgInline: text('svg_inline'),
 	displayOrder: integer('display_order').notNull().default(0),
 	isActive: boolean('is_active').default(true),
 	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
