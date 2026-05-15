@@ -1,8 +1,17 @@
 import jwt, { type SignOptions } from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
-const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '30d';
+/** Read env at call time so tests (and callers) can set vars before first use despite import order/cache. */
+function jwtSecret(): string {
+	return process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
+}
+
+function accessTokenExpiresIn(): SignOptions['expiresIn'] {
+	return (process.env.JWT_EXPIRES_IN || '7d') as SignOptions['expiresIn'];
+}
+
+function refreshTokenExpiresIn(): SignOptions['expiresIn'] {
+	return (process.env.JWT_REFRESH_EXPIRES_IN || '30d') as SignOptions['expiresIn'];
+}
 
 export interface JWTPayload {
 	userId: string;
@@ -26,11 +35,11 @@ export interface RefreshTokenPayload {
  */
 export function generateAccessToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
 	const options: SignOptions = {
-		expiresIn: JWT_EXPIRES_IN as SignOptions['expiresIn'],
+		expiresIn: accessTokenExpiresIn(),
 		issuer: 'dane.gg',
 		audience: 'dane.gg-users'
 	};
-	return jwt.sign(payload, JWT_SECRET, options);
+	return jwt.sign(payload, jwtSecret(), options);
 }
 
 /**
@@ -45,11 +54,11 @@ export function generateRefreshToken(userId: string): string {
 	};
 
 	const options: SignOptions = {
-		expiresIn: JWT_REFRESH_EXPIRES_IN as SignOptions['expiresIn'],
+		expiresIn: refreshTokenExpiresIn(),
 		issuer: 'dane.gg',
 		audience: 'dane.gg-users'
 	};
-	return jwt.sign(payload, JWT_SECRET, options);
+	return jwt.sign(payload, jwtSecret(), options);
 }
 
 /**
@@ -59,7 +68,7 @@ export function generateRefreshToken(userId: string): string {
  */
 export function verifyAccessToken(token: string): JWTPayload | null {
 	try {
-		const decoded = jwt.verify(token, JWT_SECRET, {
+		const decoded = jwt.verify(token, jwtSecret(), {
 			issuer: 'dane.gg',
 			audience: 'dane.gg-users'
 		}) as JWTPayload;
@@ -77,7 +86,7 @@ export function verifyAccessToken(token: string): JWTPayload | null {
  */
 export function verifyRefreshToken(token: string): RefreshTokenPayload | null {
 	try {
-		const decoded = jwt.verify(token, JWT_SECRET, {
+		const decoded = jwt.verify(token, jwtSecret(), {
 			issuer: 'dane.gg',
 			audience: 'dane.gg-users'
 		}) as RefreshTokenPayload;
@@ -109,6 +118,6 @@ export function generateTokenPair(user: { id: string; username: string; isAdmin:
 	return {
 		accessToken,
 		refreshToken,
-		expiresIn: JWT_EXPIRES_IN
+		expiresIn: process.env.JWT_EXPIRES_IN || '7d'
 	};
 }

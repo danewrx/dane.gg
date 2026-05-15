@@ -11,7 +11,7 @@ export interface IconOption {
 	lucideComponent?: any; // For Lucide icons
 	text?: string; // For text-based icons
 	svgUrl?: string; // For custom SVG URLs
-	svgInline?: string; // For pasted SVG markup (<svg>...</svg>)
+	svgInline?: string; // Sanitized inline SVG markup for {@html}
 	category: string;
 }
 
