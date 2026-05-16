@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
+	import { renderMarkdown } from '$lib/site/utils/renderMarkdown';
 	import { getProjectStatusColor } from '$lib/shared/constants/projectConstants';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 	interface ProjectTag {
@@ -23,6 +24,7 @@
 		id: string;
 		title: string;
 		description: string;
+		descriptionHtml: string;
 		featured: boolean;
 		imageUrl: string | null;
 		active: string;
@@ -95,7 +97,17 @@
 					return b.projects.length - a.projects.length;
 				});
 
-			categories = filteredCategories;
+			categories = await Promise.all(
+				filteredCategories.map(async (cg) => ({
+					...cg,
+					projects: await Promise.all(
+						cg.projects.map(async (p) => ({
+							...p,
+							descriptionHtml: await renderMarkdown(p.description || '')
+						}))
+					)
+				}))
+			);
 		} catch (err) {
 			logger.error('Error loading projects:', err);
 			error = 'Failed to load projects';
@@ -186,7 +198,7 @@
 										</div>
 									{/if}
 
-									<p class="project-description">{project.description}</p>
+									<div class="project-description">{@html project.descriptionHtml}</div>
 
 									<div class="project-actions">
 										{#if project.projectUrl}
@@ -454,7 +466,41 @@
 		line-height: 1.6;
 		margin: 0;
 		flex: 1;
-		white-space: pre-line;
+		font-size: calc(14 * 1em / 14);
+	}
+
+	.project-description :global(p) {
+		margin: 0 0 0.5rem 0;
+	}
+
+	.project-description :global(p:last-child) {
+		margin-bottom: 0;
+	}
+
+	.project-description :global(strong),
+	.project-description :global(b) {
+		font-weight: 700;
+		color: var(--theme-text-primary, #ffffff);
+	}
+
+	.project-description :global(em),
+	.project-description :global(i) {
+		font-style: italic;
+	}
+
+	.project-description :global(a) {
+		color: var(--theme-accent, #6366f1);
+		text-decoration: underline;
+	}
+
+	.project-description :global(ul),
+	.project-description :global(ol) {
+		margin: 0 0 0.5rem 0;
+		padding-left: 1.25rem;
+	}
+
+	.project-description :global(li) {
+		margin-bottom: 0.25rem;
 	}
 
 	.project-actions {

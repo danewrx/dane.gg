@@ -1,5 +1,6 @@
 import { apiFetchUrl } from '$lib/server/apiFetchUrl';
 import { logger } from '$lib/logger';
+import { renderMarkdown } from '$lib/site/utils/renderMarkdown';
 import type { PageServerLoad } from './$types';
 
 type CategoryProjectsPayload = {
@@ -46,8 +47,19 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 		return { categoryData: null, loadError: 'server' as const };
 	}
 
+	const raw = body.data as CategoryProjectsPayload;
+	const projectsUnknown = raw.projects as Record<string, unknown>[];
+	const projects = await Promise.all(
+		projectsUnknown.map(async (p) => {
+			const description =
+				typeof p.description === 'string' ? (p.description as string) : '';
+			const descriptionHtml = await renderMarkdown(description);
+			return { ...p, descriptionHtml };
+		})
+	);
+
 	return {
-		categoryData: body.data as CategoryProjectsPayload,
+		categoryData: { ...raw, projects },
 		loadError: null
 	};
 };
