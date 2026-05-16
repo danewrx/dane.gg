@@ -340,9 +340,18 @@
 	}
 
 	.bio-content {
-		color: var(--text-secondary, #a1a1aa);
+		color: var(--text-primary, #ffffff);
 		font-size: calc(14 * 1em / 14);
 		line-height: 1.7;
+	}
+
+	.bio-content :global(a) {
+		color: var(--accent-color, #6366f1);
+		text-decoration: underline;
+	}
+
+	.bio-content :global(a:hover) {
+		color: var(--accent-color-light, #818cf8);
 	}
 
 	.bio-content :global(p) {
