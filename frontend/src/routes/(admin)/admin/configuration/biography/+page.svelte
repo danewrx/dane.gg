@@ -67,6 +67,9 @@ This is my personal website where I showcase some of the side projects I'm worki
 			toast.success('Biography saved successfully');
 		} catch (error) {
 			logger.error('Error saving biography:', error);
+			toast.error('Failed to save biography');
+		} finally {
+			isSaving = false;
 		}
 	}
 </script>
