@@ -377,9 +377,9 @@
 	}
 
 	.skills-grid {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		gap: 1.5rem;
+		columns: 2;
+		column-gap: 1.5rem;
+		column-fill: balance;
 	}
 
 	.skill-card {
@@ -387,6 +387,13 @@
 		border: 1px solid var(--border-color, #ffffff);
 		border-radius: 0;
 		padding: 1.25rem;
+		box-sizing: border-box;
+		width: 100%;
+		display: inline-block;
+		margin-bottom: 1.5rem;
+		break-inside: avoid;
+		page-break-inside: avoid;
+		vertical-align: top;
 	}
 
 	.skill-category {
@@ -547,7 +554,11 @@
 	/* Responsive */
 	@media (max-width: 768px) {
 		.skills-grid {
-			grid-template-columns: 1fr;
+			columns: 1;
+		}
+
+		.skill-card {
+			margin-bottom: 1rem;
 		}
 
 		.skill-name {

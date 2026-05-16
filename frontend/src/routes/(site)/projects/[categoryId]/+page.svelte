@@ -26,6 +26,7 @@
 		id: string;
 		title: string;
 		description: string;
+		descriptionHtml?: string;
 		featured: boolean;
 		imageUrl: string | null;
 		active: string;
@@ -152,7 +153,9 @@
 							</div>
 						{/if}
 
-						<p class="project-description">{project.description}</p>
+						<div class="project-description">
+							{@html project.descriptionHtml ?? ''}
+						</div>
 
 						<div class="project-actions">
 							{#if project.projectUrl}
@@ -401,7 +404,41 @@
 		line-height: 1.6;
 		margin: 0;
 		flex: 1;
-		white-space: pre-line;
+		font-size: calc(14 * 1em / 14);
+	}
+
+	.project-description :global(p) {
+		margin: 0 0 0.5rem 0;
+	}
+
+	.project-description :global(p:last-child) {
+		margin-bottom: 0;
+	}
+
+	.project-description :global(strong),
+	.project-description :global(b) {
+		font-weight: 700;
+		color: var(--theme-text-primary, #ffffff);
+	}
+
+	.project-description :global(em),
+	.project-description :global(i) {
+		font-style: italic;
+	}
+
+	.project-description :global(a) {
+		color: var(--theme-accent, #6366f1);
+		text-decoration: underline;
+	}
+
+	.project-description :global(ul),
+	.project-description :global(ol) {
+		margin: 0 0 0.5rem 0;
+		padding-left: 1.25rem;
+	}
+
+	.project-description :global(li) {
+		margin-bottom: 0.25rem;
 	}
 
 	.project-actions {
