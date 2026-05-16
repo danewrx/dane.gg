@@ -51,8 +51,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 	const projectsUnknown = raw.projects as Record<string, unknown>[];
 	const projects = await Promise.all(
 		projectsUnknown.map(async (p) => {
-			const description =
-				typeof p.description === 'string' ? (p.description as string) : '';
+			const description = typeof p.description === 'string' ? p.description : '';
 			const descriptionHtml = await renderMarkdown(description);
 			return { ...p, descriptionHtml };
 		})
