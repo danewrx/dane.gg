@@ -2,6 +2,9 @@
 	"name": "backend",
 	"version": "1.0.50",
 	"type": "module",
+	"imports": {
+		"@repo/shared/*": "../shared/*"
+	},
 	"scripts": {
 		"test": "bun test",
 		"typecheck": "tsc --noEmit",
@@ -15,7 +18,8 @@
 		"db:seed": "bun src/db/seed.ts",
 		"db:reset": "bun run db:push && bun run db:seed",
 		"db:migrate:display-order": "bun src/scripts/addDisplayOrderToCategories.ts",
-		"create:admin": "bun src/scripts/createAdmin.ts"
+		"create:admin": "bun src/scripts/createAdmin.ts",
+		"db:merge-export": "bun src/scripts/mergeProductionExportData.ts"
 	},
 	"dependencies": {
 		"@types/bcryptjs": "^2.4.6",

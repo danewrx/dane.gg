@@ -17,12 +17,14 @@ WORKDIR /repo/backend
 COPY --from=builder /build/node_modules node_modules/
 COPY backend/src        src/
 COPY backend/package.json ./
+COPY backend/tsconfig.json ./
 COPY backend/static     static/
 COPY backend/drizzle    drizzle/
 COPY backend/drizzle.config.ts ./
 
 # Monorepo helpers imported as @repo/shared (see backend/tsconfig paths)
 COPY shared             ../shared
+RUN mkdir -p node_modules/@repo && ln -s ../../shared node_modules/@repo/shared
 
 VOLUME ["/repo/backend/static/uploads"]
 

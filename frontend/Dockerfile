@@ -9,6 +9,7 @@ COPY frontend/package.json frontend/bun.lock ./frontend/
 RUN cd frontend && bun install --frozen-lockfile
 
 COPY frontend/ ./frontend/
+COPY shared/ ./shared/
 COPY .env.example.prod ./frontend/.env
 RUN cd frontend && bun run prepare && bun run build
 
