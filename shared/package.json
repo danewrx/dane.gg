@@ -1,0 +1,8 @@
+{
+	"name": "@repo/shared",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./*": "./*"
+	}
+}

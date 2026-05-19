@@ -53,3 +53,5 @@ old/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+NEW_SITE_DEV_EXPORT.sql

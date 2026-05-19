@@ -13,4 +13,4 @@ else
 	echo ""
 fi
 
-exec tsx src/index.ts
+exec tsx --tsconfig tsconfig.json src/index.ts
