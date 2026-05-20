@@ -91,7 +91,7 @@ export class LastFmService {
 							? track.album
 							: track.album['#text']
 						: undefined,
-					image: this.getBestImage(track.image),
+					image: this.normalizeArtworkUrl(this.getBestImage(track.image)),
 					url: track.url
 						? typeof track.url === 'string'
 							? track.url
@@ -154,11 +154,14 @@ export class LastFmService {
 			const nowPlaying = await this.getNowPlaying();
 			if (nowPlaying) {
 				logger.info(`Found currently playing track: ${nowPlaying.artist} - ${nowPlaying.name}`);
+				const image =
+					nowPlaying.image ||
+					(await this.fetchFallbackCoverArt(nowPlaying.artist, nowPlaying.name));
 				return {
 					track: nowPlaying.name,
 					artist: nowPlaying.artist,
 					album: nowPlaying.album || null,
-					image: nowPlaying.image || null,
+					image,
 					url: nowPlaying.url || null,
 					nowPlaying: true,
 					lastUpdate: new Date().toISOString()
@@ -180,11 +183,14 @@ export class LastFmService {
 				logger.info(
 					`Found last played track: ${lastPlayed.artist} - ${lastPlayed.name} (played at: ${lastUpdate})`
 				);
+				const image =
+					lastPlayed.image ||
+					(await this.fetchFallbackCoverArt(lastPlayed.artist, lastPlayed.name));
 				return {
 					track: lastPlayed.name,
 					artist: lastPlayed.artist,
 					album: lastPlayed.album || null,
-					image: lastPlayed.image || null,
+					image,
 					url: lastPlayed.url || null,
 					nowPlaying: false,
 					lastUpdate: lastUpdate
@@ -217,27 +223,85 @@ export class LastFmService {
 	}
 
 	/**
+	 * Apple iTunes Search fallback
+	 */
+	private static async fetchFallbackCoverArt(
+		artist: string,
+		track: string
+	): Promise<string | null> {
+		const term = `${track} ${artist}`.trim().slice(0, 200);
+		if (!term) return null;
+
+		try {
+			const url = new URL('https://itunes.apple.com/search');
+			url.searchParams.set('term', term);
+			url.searchParams.set('entity', 'song');
+			url.searchParams.set('limit', '1');
+
+			const response = await fetch(url.toString(), {
+				headers: { Accept: 'application/json' }
+			});
+			if (!response.ok) return null;
+
+			const data = (await response.json()) as {
+				results?: Array<{ artworkUrl100?: string }>;
+			};
+			const artwork = data.results?.[0]?.artworkUrl100;
+			if (!artwork || typeof artwork !== 'string') return null;
+
+			const hiRes = artwork.replace(/100x100bb/gi, '600x600bb');
+			return this.normalizeArtworkUrl(hiRes) ?? null;
+		} catch (error) {
+			logger.warn('Cover art fallback (iTunes) failed:', error);
+			return null;
+		}
+	}
+
+	private static normalizeArtworkUrl(url: string | undefined): string | undefined {
+		if (!url) return undefined;
+		const trimmed = url.trim();
+		if (!trimmed) return undefined;
+
+		let u = trimmed;
+		if (u.startsWith('//')) u = `https:${u}`;
+		if (u.startsWith('http://')) u = `https://${u.slice('http://'.length)}`;
+
+		try {
+			const parsed = new URL(u);
+			if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return undefined;
+			return u;
+		} catch {
+			return undefined;
+		}
+	}
+
+	/**
 	 * Get the best available image from Last.fm
 	 */
 	private static getBestImage(images: any): string | undefined {
 		if (!images) return undefined;
 
-		// Handle both array and single image formats
 		const imageArray = Array.isArray(images) ? images : [images];
 
-		// Look for the largest image (extralarge, large, medium, small)
+		const textOf = (img: { '#text'?: string; text?: string }) => {
+			const raw = img?.['#text'] ?? img?.text;
+			return typeof raw === 'string' ? raw.trim() : '';
+		};
+
 		const sizes = ['extralarge', 'large', 'medium', 'small'];
 
 		for (const size of sizes) {
 			const image = imageArray.find((img) => img.size === size);
-			if (image?.['#text']) {
-				return image['#text'];
-			}
+			const t = image ? textOf(image) : '';
+			if (t) return t;
 		}
 
-		// Fallback to first available image
-		const firstImage = imageArray.find((img) => img['#text']);
-		return firstImage?.['#text'];
+		for (const img of imageArray) {
+			const t = textOf(img);
+			if (t) return t;
+		}
+
+		return undefined;
 	}
 
 	/**
