@@ -35,7 +35,7 @@
 		"consola": "^3.4.2",
 		"cookie-parser": "^1.4.7",
 		"dotenv": "^17.2.2",
-		"drizzle-orm": "0.36.4",
+		"drizzle-orm": "0.45.2",
 		"express": "^5.1.0",
 		"express-rate-limit": "^8.1.0",
 		"express-session": "^1.18.2",
