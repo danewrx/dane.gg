@@ -249,7 +249,7 @@ export class LastFmService {
 			const artwork = data.results?.[0]?.artworkUrl100;
 			if (!artwork || typeof artwork !== 'string') return null;
 
-			const hiRes = artwork.replace(/100x100bb/gi, '600x600bb');
+			const hiRes = artwork.replaceAll(/100x100bb/gi, '600x600bb');
 			return this.normalizeArtworkUrl(hiRes) ?? null;
 		} catch (error) {
 			logger.warn('Cover art fallback (iTunes) failed:', error);
