@@ -236,6 +236,81 @@ const WINDOWS_XP_BLISS_THEME_INSERT = {
     rgba(0, 0, 0, 0.06) 4px
   );
 }
+
+/* Character Map — match Luna widget chrome */
+.emoji-picker {
+  border: 1px solid #0054e3;
+  border-radius: 6px 6px 0 0;
+  box-shadow:
+    inset 1px 1px 0 #ffffff,
+    inset -1px -1px 0 #808080,
+    1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.emoji-picker .win95-titlebar {
+  background: linear-gradient(180deg, #0997ff 0%, #0053ee 45%, #0054e3 100%);
+  color: #ffffff;
+  border-bottom: 1px solid #003399;
+  border-top: none;
+}
+
+.emoji-picker .titlebar-button {
+  border: 1px solid #003399;
+  background: linear-gradient(180deg, #3c8cfd 0%, #2459d3 100%);
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.emoji-picker .titlebar-button:hover:not(:disabled) {
+  background: linear-gradient(180deg, #5a9cff 0%, #3168e0 100%);
+}
+
+.emoji-picker .win95-tabs {
+  background: var(--theme-background);
+  border-bottom: 1px solid #aca899;
+}
+
+.emoji-picker .win95-tab {
+  border: 1px solid #aca899;
+  background: linear-gradient(180deg, #ffffff 0%, #ece9d8 100%);
+  color: var(--theme-text-primary);
+  box-shadow: none;
+}
+
+.emoji-picker .win95-tab.active {
+  border-bottom-color: var(--theme-background);
+  background: var(--theme-background);
+}
+
+.emoji-picker .win95-content {
+  background: #ffffff;
+  border: 1px inset #aca899;
+}
+
+.emoji-picker .win95-grid,
+.emoji-picker .win95-char-button {
+  background: #ffffff;
+  border-color: #aca899;
+  color: var(--theme-text-primary);
+  box-shadow: none;
+}
+
+.emoji-picker .win95-char-button:hover {
+  background: #316ac5;
+  color: #ffffff;
+  border-color: #316ac5;
+}
+
+.emoji-picker .win95-statusbar {
+  background: linear-gradient(180deg, #ece9d8 0%, #d6d3ce 100%);
+  color: var(--theme-text-primary);
+  border-top: 1px solid #aca899;
+}
+
+.emoji-picker .category-heading {
+  color: var(--theme-text-muted);
+  border-bottom-color: #aca899;
+}
 `,
 	displayOrder: 2
 } satisfies InferInsertModel<typeof themes>;
@@ -410,6 +485,72 @@ const WINDOWS_95_THEME_INSERT = {
     rgba(0, 0, 0, 0.05) 2px,
     rgba(0, 0, 0, 0.05) 4px
   );
+}
+
+/* Character Map — classic Win95 chrome */
+.emoji-picker {
+  border: 2px solid;
+  border-color: #dfdfdf #000000 #000000 #dfdfdf;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.emoji-picker .win95-titlebar {
+  background: #000080;
+  color: #ffffff;
+  border-bottom: none;
+}
+
+.emoji-picker .titlebar-button {
+  border: 1px solid #000000;
+  background: #c0c0c0;
+  color: #000000;
+  box-shadow: none;
+}
+
+.emoji-picker .titlebar-button:hover:not(:disabled) {
+  background: #dfdfdf;
+}
+
+.emoji-picker .win95-tabs,
+.emoji-picker .win95-statusbar {
+  background: #c0c0c0;
+  border-color: #808080;
+}
+
+.emoji-picker .win95-tab {
+  background: #c0c0c0;
+  border: 1px outset #c0c0c0;
+  color: #000000;
+}
+
+.emoji-picker .win95-tab.active {
+  background: #c0c0c0;
+  border: 1px inset #c0c0c0;
+}
+
+.emoji-picker .win95-content {
+  background: #ffffff;
+  border: 2px inset #c0c0c0;
+}
+
+.emoji-picker .win95-grid,
+.emoji-picker .win95-char-button {
+  background: #ffffff;
+  border: 1px solid #c0c0c0;
+  color: #000000;
+  box-shadow: none;
+}
+
+.emoji-picker .win95-char-button:hover {
+  background: #000080;
+  color: #ffffff;
+  border-color: #000080;
+}
+
+.emoji-picker .category-heading {
+  color: #000000;
+  border-bottom-color: #808080;
 }
 `,
 	displayOrder: 3
@@ -1918,6 +2059,81 @@ const GEOCITIES_THEME_INSERT = {
 	}
 	html[data-theme="geocities"] .geo-rainbow-char:nth-child(8n) {
 	  color: #ff4444;
+	}
+	}
+
+	/* Character Map — GeoCities panel chrome */
+	html[data-theme="geocities"] .emoji-picker {
+	border: 2px ridge var(--geo-teal, #5a9a7a);
+	border-radius: 0;
+	box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+	font-family: var(--global-font-family);
+	}
+
+	html[data-theme="geocities"] .emoji-picker .win95-titlebar {
+	background: var(--geo-indigo, #2a2040);
+	color: var(--geo-amber, #e8a857);
+	border-bottom: 1px ridge var(--geo-teal, #5a9a7a);
+	}
+
+	html[data-theme="geocities"] .emoji-picker .titlebar-button {
+	border: 1px ridge var(--geo-teal, #5a9a7a);
+	background: var(--geo-panel-raised, #1a2824);
+	color: var(--geo-cyan, #7ad4e8);
+	box-shadow: none;
+	}
+
+	html[data-theme="geocities"] .emoji-picker .titlebar-button:hover:not(:disabled) {
+	color: #ff00ff;
+	border-color: var(--geo-purple, #9b8ac4);
+	}
+
+	html[data-theme="geocities"] .emoji-picker .win95-tabs {
+	background: var(--geo-panel-raised, #1a2824);
+	border-bottom: 1px dashed var(--geo-teal, #5a9a7a);
+	}
+
+	html[data-theme="geocities"] .emoji-picker .win95-tab {
+	background: rgba(0, 0, 0, 0.35);
+	border: 1px ridge var(--geo-teal, #5a9a7a);
+	color: var(--geo-mint, #d8f2e8);
+	box-shadow: none;
+	}
+
+	html[data-theme="geocities"] .emoji-picker .win95-tab.active {
+	background: var(--geo-panel, rgba(14, 22, 20, 0.82));
+	border-color: var(--geo-cyan, #7ad4e8);
+	color: var(--geo-cyan, #7ad4e8);
+	}
+
+	html[data-theme="geocities"] .emoji-picker .win95-content {
+	background: rgba(0, 0, 0, 0.35);
+	border: 1px ridge var(--geo-teal, #5a9a7a);
+	}
+
+	html[data-theme="geocities"] .emoji-picker .win95-grid,
+	html[data-theme="geocities"] .emoji-picker .win95-char-button {
+	background: transparent;
+	border: 1px solid var(--geo-teal, #5a9a7a);
+	color: var(--geo-mint, #d8f2e8);
+	box-shadow: none;
+	}
+
+	html[data-theme="geocities"] .emoji-picker .win95-char-button:hover {
+	background: rgba(42, 64, 56, 0.8);
+	border-color: var(--geo-cyan, #7ad4e8);
+	color: #ff00ff;
+	}
+
+	html[data-theme="geocities"] .emoji-picker .category-heading {
+	color: var(--geo-amber, #e8a857);
+	border-bottom-color: var(--geo-teal, #5a9a7a);
+	}
+
+	html[data-theme="geocities"] .emoji-picker .win95-statusbar {
+	background: var(--geo-indigo, #2a2040);
+	color: var(--geo-mint, #d8f2e8);
+	border-top: 1px ridge var(--geo-teal, #5a9a7a);
 	}
 	}
 `,
