@@ -116,6 +116,22 @@ export const siteTheme = writable<SiteTheme>(DEFAULT_THEME);
 export const themeLoading = writable<boolean>(true);
 export const themeError = writable<string | null>(null);
 
+/** Slug for bundled GeoCities theme (`html[data-theme="geocities"]` in seed customCss). */
+export const GEOCITIES_THEME_SLUG = 'geocities';
+
+export function themeSlugFromName(name: string): string {
+	return name
+		.trim()
+		.toLowerCase()
+		.replace(/\s+/g, '-')
+		.replace(/[^a-z0-9-]/g, '');
+}
+
+export const isGeoCitiesTheme = derived(
+	siteTheme,
+	($theme) => themeSlugFromName($theme.name) === GEOCITIES_THEME_SLUG
+);
+
 export const themeColors = derived(siteTheme, ($theme) => ({
 	primary: $theme.primaryColor,
 	secondary: $theme.secondaryColor,
@@ -341,6 +357,7 @@ export function clearSiteThemePresentation(): void {
 	document.querySelector('style[data-theme-custom]')?.remove();
 	document.querySelector('link[data-google-fonts]')?.remove();
 	try {
+		delete document.documentElement.dataset.theme;
 		delete document.documentElement.dataset.themeSurfaceTone;
 		delete document.documentElement.dataset.themeCodeTone;
 	} catch {
@@ -382,6 +399,12 @@ export function applyThemeStyles(theme: SiteTheme): void {
 	el.textContent = css;
 
 	try {
+		const slug = themeSlugFromName(theme.name);
+		if (slug) {
+			document.documentElement.dataset.theme = slug;
+		} else {
+			delete document.documentElement.dataset.theme;
+		}
 		document.documentElement.dataset.themeSurfaceTone = inferSurfaceTone(theme.surfaceColor);
 		document.documentElement.dataset.themeCodeTone = inferMarkdownCodeBlockTone(
 			theme.surfaceColor,

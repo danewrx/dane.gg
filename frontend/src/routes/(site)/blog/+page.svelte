@@ -6,6 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { Calendar } from 'lucide-svelte';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
+	import RainbowText from '$lib/site/components/RainbowText.svelte';
 
 	interface BlogPost {
 		id: string;
@@ -167,7 +168,7 @@
 					{/if}
 					<div class="post-content">
 						<button class="post-title" onclick={() => viewPost(post.slug)}>
-							{post.title}
+							<RainbowText text={post.title} />
 						</button>
 						<div class="post-date">
 							<Calendar size={14} />

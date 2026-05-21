@@ -9,6 +9,7 @@
 	import { marked } from 'marked';
 	import BorderedBox from '$lib/site/components/ui/BorderedBox.svelte';
 	import SiteBackNav from '$lib/site/components/layout/SiteBackNav.svelte';
+	import RainbowText from '$lib/site/components/RainbowText.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -111,7 +112,9 @@
 					<img src={getThumbnailUrl(post.thumbnail)} alt={post.title} />
 				</div>
 			{/if}
-			<h1 class="post-title">{post.title}</h1>
+			<h1 class="post-title">
+				<RainbowText text={post.title} />
+			</h1>
 
 			<div class="post-meta">
 				<span class="meta-item">

@@ -61,6 +61,8 @@ A modern full-stack web application built with SvelteKit frontend and Express ba
 - `bun run db:generate` - Generate database migrations
 - `bun run db:push` - Push schema changes to database
 - `bun run db:studio` - Open Drizzle Studio
+- `bun run db:seed:themes` - Insert bundled themes if missing (includes GeoCities)
+- `bun run db:seed:themes:refresh` - Update bundled theme rows from seed definitions (run after editing GeoCities `customCss` in `backend/src/db/seeds/themes.ts` or other theme seeds)
 
 ## Project Structure
 

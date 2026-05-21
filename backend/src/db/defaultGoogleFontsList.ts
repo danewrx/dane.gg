@@ -25,5 +25,6 @@ export const DEFAULT_GOOGLE_FONT_NAMES = [
 	'JetBrains Mono',
 	'Fira Code',
 	'Rajdhani',
-	'Orbitron'
+	'Orbitron',
+	'Comic Neue'
 ] as const;
