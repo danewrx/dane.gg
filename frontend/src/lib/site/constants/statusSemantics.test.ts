@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+	buildMarkdownCodeCssVariables,
 	buildStatusCssVariables,
 	compositeOnWhite,
+	inferMarkdownCodeBlockTone,
 	inferSurfaceTone,
 	parseCssColor,
 	relativeLuminance,
@@ -86,5 +88,36 @@ describe('buildStatusCssVariables', () => {
 		expect(css).toContain('--status-ok:');
 		expect(css).toContain('--status-down:');
 		expect(css).toContain('--status-loading:');
+	});
+});
+
+describe('inferMarkdownCodeBlockTone', () => {
+	it('uses text primary when set (dark text → light box)', () => {
+		expect(inferMarkdownCodeBlockTone('#0a0a0a', '#000000')).toBe('light');
+	});
+
+	it('uses text primary when set (light text → dark box)', () => {
+		expect(inferMarkdownCodeBlockTone('#c0c0c0', '#ffffff')).toBe('dark');
+	});
+
+	it('falls back to surface when text is missing', () => {
+		expect(inferMarkdownCodeBlockTone('#c0c0c0')).toBe('light');
+		expect(inferMarkdownCodeBlockTone('#1a1a1a')).toBe('dark');
+	});
+});
+
+describe('buildMarkdownCodeCssVariables', () => {
+	it('uses dark text on a light grey box for light surfaces', () => {
+		const css = buildMarkdownCodeCssVariables('#c0c0c0', '#000000');
+		expect(css).toContain('--theme-code-tone: light');
+		expect(css).toContain('--theme-code-foreground: #1a1a1a');
+		expect(css).toContain('--theme-code-background: #e4e4e4');
+	});
+
+	it('uses light text on a dark grey box for dark surfaces', () => {
+		const css = buildMarkdownCodeCssVariables('#1a1a1a', '#f0f0f0');
+		expect(css).toContain('--theme-code-tone: dark');
+		expect(css).toContain('--theme-code-foreground: #f0f0f0');
+		expect(css).toContain('--theme-code-background: #2a2a2a');
 	});
 });

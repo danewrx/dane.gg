@@ -126,3 +126,37 @@ export function buildStatusCssVariables(surfaceColor: string): string {
   --status-neutral: ${P.neutral};
   --status-loading: ${P.loading};`;
 }
+
+/**
+ * Markdown code blocks: box tone opposes body text (not just widget surface).
+ * `light` box = light grey fill + dark text; `dark` box = dark grey fill + light text.
+ */
+export function inferMarkdownCodeBlockTone(surfaceColor: string, textPrimary?: string): SurfaceTone {
+	const text = textPrimary?.trim();
+	if (text) {
+		const raw = parseCssColor(text);
+		if (raw) {
+			const comp = compositeOnWhite(raw);
+			// Light page text → dark code box; dark page text → light code box
+			return relativeLuminance(comp.r, comp.g, comp.b) > 0.52 ? 'dark' : 'light';
+		}
+	}
+	return inferSurfaceTone(surfaceColor);
+}
+
+/** Markdown inline `code` and fenced ``` blocks — grey box opposes text tone. */
+export function buildMarkdownCodeCssVariables(surfaceColor: string, textPrimary?: string): string {
+	const boxTone = inferMarkdownCodeBlockTone(surfaceColor, textPrimary);
+	if (boxTone === 'light') {
+		return `  --theme-code-tone: light;
+  --theme-code-foreground: #1a1a1a;
+  --theme-code-background: #e4e4e4;
+  --theme-code-inline-background: #ebebeb;
+  --theme-code-border: #c8c8c8;`;
+	}
+	return `  --theme-code-tone: dark;
+  --theme-code-foreground: #f0f0f0;
+  --theme-code-background: #2a2a2a;
+  --theme-code-inline-background: #333333;
+  --theme-code-border: #444444;`;
+}

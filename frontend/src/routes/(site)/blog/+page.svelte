@@ -315,17 +315,10 @@
 		gap: 8px;
 		margin: 8px 0;
 		padding-top: 12px;
-		border-top: 1px solid var(--border-color, #4a4a4a);
+		border-top: 1px solid var(--theme-border, var(--border-color, #4a4a4a));
 	}
 
-	.tag {
-		padding: 6px 12px;
-		background: var(--bg-tertiary, #2a2a2a);
-		border-radius: 0;
-		font-size: calc(12 * 1em / 14);
-		color: var(--text-secondary, #d1d5db);
-		border: 1px solid var(--border-color, #4a4a4a);
-	}
+	/* .tag colors — global rules in app.css (--theme-code-* + data-theme-code-tone) */
 
 	.read-more {
 		margin-top: auto;
@@ -401,7 +394,7 @@
 			font-size: calc(12 * 1em / 14);
 		}
 
-		.tag {
+		.post-tags .tag {
 			font-size: calc(11 * 1em / 14);
 			padding: 5px 10px;
 		}

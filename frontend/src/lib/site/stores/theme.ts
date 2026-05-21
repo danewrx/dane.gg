@@ -3,7 +3,12 @@ import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 import { clampThemeFontScale } from '$lib/site/constants/themeFontScale';
 import { clampThemeUnitOpacity, themeDarkenToRgba } from '$lib/site/constants/themeOverlayOpacity';
-import { buildStatusCssVariables, inferSurfaceTone } from '$lib/site/constants/statusSemantics';
+import {
+	buildMarkdownCodeCssVariables,
+	buildStatusCssVariables,
+	inferMarkdownCodeBlockTone,
+	inferSurfaceTone
+} from '$lib/site/constants/statusSemantics';
 
 export type ThemeEnforcementState = {
 	enforced: boolean;
@@ -323,6 +328,7 @@ function buildThemeVarsStylesheet(theme: SiteTheme): string {
   --theme-overlay-grain-opacity: ${clampThemeUnitOpacity(theme.overlayGrainOpacity, '0')};
   --theme-overlay-glare-opacity: ${clampThemeUnitOpacity(theme.overlayGlareOpacity, '0')};
 ${buildStatusCssVariables(theme.surfaceColor)}
+${buildMarkdownCodeCssVariables(theme.surfaceColor, theme.textPrimary)}
 }`;
 }
 
@@ -336,6 +342,7 @@ export function clearSiteThemePresentation(): void {
 	document.querySelector('link[data-google-fonts]')?.remove();
 	try {
 		delete document.documentElement.dataset.themeSurfaceTone;
+		delete document.documentElement.dataset.themeCodeTone;
 	} catch {
 		/* ignore */
 	}
@@ -376,6 +383,10 @@ export function applyThemeStyles(theme: SiteTheme): void {
 
 	try {
 		document.documentElement.dataset.themeSurfaceTone = inferSurfaceTone(theme.surfaceColor);
+		document.documentElement.dataset.themeCodeTone = inferMarkdownCodeBlockTone(
+			theme.surfaceColor,
+			theme.textPrimary
+		);
 	} catch {
 		/* ignore */
 	}

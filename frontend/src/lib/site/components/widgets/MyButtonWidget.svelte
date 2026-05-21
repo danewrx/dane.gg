@@ -36,8 +36,8 @@
 			<div class="code-block">
 				<pre><code>{buttonCode}</code></pre>
 			</div>
-			<button class="copy-button" onclick={copyCode} title="Copy code to clipboard">
-				<Copy size={16} />
+			<button class="copy-button" onclick={copyCode} title="Copy code to clipboard" type="button">
+				<Copy size={14} strokeWidth={2.25} aria-hidden="true" />
 			</button>
 		</div>
 	</div>
@@ -131,8 +131,8 @@
 	}
 
 	.code-block {
-		background: var(--theme-background, #1a1a1a);
-		border: 1px solid var(--theme-border, #333);
+		background: var(--theme-code-background, #2a2a2a);
+		border: 1px solid var(--theme-code-border, #444444);
 		border-radius: 4px 0 0 4px;
 		padding: 4px 8px;
 		flex: 1;
@@ -147,7 +147,7 @@
 		margin: 0;
 		font-family: 'Courier New', monospace;
 		font-size: calc(13 * 1em / 14);
-		color: var(--theme-text-primary, #e5e5e5);
+		color: var(--theme-code-foreground, #f0f0f0);
 		white-space: pre-wrap;
 		word-break: break-all;
 		overflow-y: auto;
@@ -159,30 +159,41 @@
 	}
 
 	.copy-button {
-		background: var(--theme-border, #333);
-		color: var(--theme-text-primary, #e5e5e5);
+		--copy-btn-fg: var(--theme-text-primary, #e5e5e5);
+		background: var(--theme-surface, #1a1a1a);
+		color: var(--copy-btn-fg);
 		border: 1px solid var(--theme-border, #333);
 		border-left: none;
 		border-radius: 0 4px 4px 0;
 		padding: 2px 4px;
 		cursor: pointer;
-		font-size: calc(8 * 1em / 14);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: all 0.2s ease;
 		height: 31px;
 		width: 22px;
 		flex-shrink: 0;
 	}
 
+	.copy-button :global(svg) {
+		stroke: currentColor;
+	}
+
+	/* Icon contrast vs button fill (set from theme surface in ThemeProvider) */
+	:global(html[data-theme-surface-tone='light']) .copy-button {
+		--copy-btn-fg: #000000;
+	}
+
+	:global(html[data-theme-surface-tone='dark']) .copy-button {
+		--copy-btn-fg: #ffffff;
+	}
+
 	.copy-button:hover {
-		background: var(--theme-surface, #444);
-		transform: translateY(-1px);
+		background: color-mix(in srgb, var(--theme-surface, #1a1a1a) 75%, var(--theme-accent, #6366f1));
 	}
 
 	.copy-button:active {
-		transform: translateY(0);
+		background: color-mix(in srgb, var(--theme-surface, #1a1a1a) 55%, var(--theme-border, #333));
 	}
 
 	.hotlink-section {

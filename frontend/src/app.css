@@ -90,7 +90,15 @@ body {
 	font-family: var(--global-font-family);
 }
 
-/* Override for ASCII art - keep monospace */
+/* Override for ASCII art - keep monospace, no markdown code-block chrome */
+.ascii-box pre,
+.header .ascii-box pre {
+	background: none !important;
+	border: none !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+}
+
 .ascii-box pre:first-child,
 .ascii-box pre:last-child {
 	font-family: var(--ascii-font-family) !important;
@@ -150,6 +158,106 @@ body {
 /* Flow text inherits scaled base (markdown HTML, :global slots); widgets with explicit font-size still win */
 .content-area :not(.ascii-box) :is(p, li, dd, dt, blockquote, figcaption) {
 	font-size: inherit;
+}
+
+/* Markdown code — paired fg/bg (exclude header .ascii-box pre inside .content-area) */
+.post-content pre,
+.about-me-content pre,
+.project-description pre,
+.bio-content pre {
+	background: var(--theme-code-background, #2a2a2a);
+	color: var(--theme-code-foreground, #f0f0f0);
+	border: 1px solid var(--theme-code-border, #444444);
+	border-radius: var(--theme-widget-border-radius, 4px);
+	padding: 12px 14px;
+	overflow-x: auto;
+	margin: 1.25em 0;
+	font-size: 0.9em;
+	line-height: 1.45;
+	font-family: 'JetBrains Mono', 'Courier New', Consolas, monospace;
+}
+
+html[data-theme-code-tone='light'] .post-content pre,
+html[data-theme-code-tone='light'] .about-me-content pre,
+html[data-theme-code-tone='light'] .project-description pre,
+html[data-theme-code-tone='light'] .bio-content pre {
+	background: #e4e4e4;
+	color: #1a1a1a;
+	border-color: #c8c8c8;
+}
+
+html[data-theme-code-tone='dark'] .post-content pre,
+html[data-theme-code-tone='dark'] .about-me-content pre,
+html[data-theme-code-tone='dark'] .project-description pre,
+html[data-theme-code-tone='dark'] .bio-content pre {
+	background: #2a2a2a;
+	color: #f0f0f0;
+	border-color: #444444;
+}
+
+.post-content pre code,
+.about-me-content pre code,
+.project-description pre code,
+.bio-content pre code {
+	background: none;
+	color: inherit;
+	padding: 0;
+	border: none;
+	font-size: inherit;
+}
+
+.post-content :not(pre) > code,
+.about-me-content :not(pre) > code,
+.project-description :not(pre) > code,
+.bio-content :not(pre) > code {
+	background: var(--theme-code-inline-background, #333333);
+	color: var(--theme-code-foreground, #f0f0f0);
+	border: 1px solid var(--theme-code-border, #444444);
+	border-radius: 2px;
+	padding: 2px 6px;
+	font-family: 'JetBrains Mono', 'Courier New', Consolas, monospace;
+	font-size: 0.9em;
+}
+
+html[data-theme-code-tone='light'] .post-content :not(pre) > code,
+html[data-theme-code-tone='light'] .about-me-content :not(pre) > code,
+html[data-theme-code-tone='light'] .project-description :not(pre) > code,
+html[data-theme-code-tone='light'] .bio-content :not(pre) > code {
+	background: #ebebeb;
+	color: #1a1a1a;
+	border-color: #c8c8c8;
+}
+
+html[data-theme-code-tone='dark'] .post-content :not(pre) > code,
+html[data-theme-code-tone='dark'] .about-me-content :not(pre) > code,
+html[data-theme-code-tone='dark'] .project-description :not(pre) > code,
+html[data-theme-code-tone='dark'] .bio-content :not(pre) > code {
+	background: #333333;
+	color: #f0f0f0;
+	border-color: #444444;
+}
+
+/* Blog tags — same fg/bg pairing as markdown inline code (--theme-code-*) */
+.post-tags .tag {
+	background: var(--theme-code-inline-background, #333333);
+	color: var(--theme-code-foreground, #f0f0f0);
+	border: 1px solid var(--theme-code-border, #444444);
+	border-radius: var(--theme-widget-border-radius, 0);
+	padding: 6px 12px;
+	font-size: 0.857em;
+	line-height: 1.2;
+}
+
+html[data-theme-code-tone='light'] .post-tags .tag {
+	background: #ebebeb;
+	color: #1a1a1a;
+	border-color: #c8c8c8;
+}
+
+html[data-theme-code-tone='dark'] .post-tags .tag {
+	background: #333333;
+	color: #f0f0f0;
+	border-color: #444444;
 }
 
 /* Scrollbar styling */

@@ -61,16 +61,22 @@
 <div class="discord-status">
 	<div class="status-text">
 		<span class="status-prefix">I'm</span>
-		<div class="status-indicator">
-			{#if isLoading}
-				<span class="status-state loading">LOADING...</span>
-			{:else if error}
-				<span class="status-state error">ERROR</span>
-			{:else}
-				<span class="status-state {statusClass}">{statusText}</span>
-			{/if}
-			<span class="status-exclaim {statusClass}">!</span>
-		</div>
+			<div
+				class="status-indicator"
+				class:online={isOnline && !isLoading && !error}
+				class:offline={!isOnline && !isLoading && !error}
+				class:loading={isLoading}
+				class:error={!!error}
+			>
+				{#if isLoading}
+					<span class="status-state loading">LOADING...</span>
+				{:else if error}
+					<span class="status-state error">ERROR</span>
+				{:else}
+					<span class="status-state {statusClass}">{statusText}</span>
+				{/if}
+				<span class="status-exclaim {statusClass}">!</span>
+			</div>
 	</div>
 </div>
 
