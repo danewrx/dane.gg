@@ -2593,6 +2593,368 @@ html[data-theme="gruvbox"] ::selection {
 	displayOrder: 8
 } satisfies InferInsertModel<typeof themes>;
 
+const LETS_ALL_LOVE_LAIN_THEME_INSERT = {
+	name: 'Lets All Love Lain',
+	description:
+		"Let's all love Lain — Serial Experiments Lain mood with maroon CRT scanlines, pink and cream accents, wired green when connected",
+	isActive: false,
+	isDefault: false,
+	isVisible: true,
+
+	primaryColor: '#fff5e1',
+	secondaryColor: '#e8829e',
+	accentColor: '#e8829e',
+	backgroundColor: '#0d080a',
+	surfaceColor: 'rgba(26, 14, 18, 0.55)',
+	borderColor: '#4a2b2f',
+	textPrimary: '#f0e8e4',
+	textSecondary: '#c4a0a8',
+	textMuted: '#6e454c',
+
+	backgroundImage: '/assets/themes/lain/backgrounds/2.gif',
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(13, 8, 10, 0.2)',
+	overlayDarkenOpacity: '0.15',
+	backgroundBlur: 0,
+	backgroundPosition: 'right center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'Special Elite',
+	headingFontFamily: 'Special Elite',
+	fontScale: '1',
+
+	borderRadius: '0px',
+	widgetBorderRadius: '0px',
+	scanlinesOpacity: '0.32',
+	overlayVignetteOpacity: '0.22',
+	overlayGridOpacity: '0',
+	overlayGrainOpacity: '0.1',
+	overlayGlareOpacity: '0',
+	customCss: `
+	html[data-theme="lets-all-love-lain"] {
+	--lain-panel: rgba(26, 14, 18, 0.52);
+	--lain-maroon: #4a2b2f;
+	--lain-pink: #e8829e;
+	--lain-cream: #fff5e1;
+	--lain-wired: #33e870;
+	--lain-red: #c31f26;
+	--lain-blue: #2e75b2;
+	--theme-shell-shadow: 0 0 48px rgba(0, 0, 0, 0.75), 0 0 32px rgba(232, 130, 158, 0.06);
+	--theme-content-max-width: 1000px;
+	--theme-shell-border-width: 1px;
+	--theme-widget-border-width: 1px;
+	--global-font-family: 'Special Elite', 'Courier New', cursive;
+	--ascii-font-family: 'JetBrains Mono', 'Courier New', monospace;
+	--status-ok: #33e870;
+	--status-down: #c31f26;
+	--status-warn: #e8829e;
+	--status-pending: #c4a0a8;
+	--status-neutral: #6e454c;
+	--status-loading: #fff5e1;
+	}
+
+	/* Character GIF — bottom-left; below weather canvas (z-index 1) */
+	html[data-theme="lets-all-love-lain"] .lain-ambient-deco {
+	display: flex;
+	align-items: flex-end;
+	position: fixed;
+	z-index: 0;
+	pointer-events: none;
+	top: auto;
+	bottom: 0;
+	left: 0;
+	right: auto;
+	margin: 0;
+	padding: 0;
+	width: min(480px, 42vw);
+	max-height: 96vh;
+	}
+
+	html[data-theme="lets-all-love-lain"] .lain-ambient-deco img {
+	display: block;
+	width: 100%;
+	height: auto;
+	max-height: 96vh;
+	object-fit: contain;
+	object-position: bottom left;
+	image-rendering: auto;
+	opacity: 0.92;
+	filter: drop-shadow(0 0 32px rgba(232, 130, 158, 0.3));
+	}
+
+	@media (max-width: 1280px) {
+	html[data-theme="lets-all-love-lain"] .lain-ambient-deco {
+	  width: min(360px, 38vw);
+	}
+
+	html[data-theme="lets-all-love-lain"] .lain-ambient-deco img {
+	  max-height: 88vh;
+	}
+	}
+
+	@media (max-width: 1100px) {
+	html[data-theme="lets-all-love-lain"] .lain-ambient-deco {
+	  display: none;
+	}
+	}
+
+	/* Pink-brown scanlines over the wallpaper */
+	html[data-theme="lets-all-love-lain"] .scanlines {
+	background-image: repeating-linear-gradient(
+	  0deg,
+	  transparent,
+	  transparent 2px,
+	  rgba(74, 43, 47, 0.28) 2px,
+	  rgba(74, 43, 47, 0.28) 4px
+	);
+	}
+
+	html[data-theme="lets-all-love-lain"] .bg-overlay--vignette {
+	background: radial-gradient(
+	  ellipse 95% 85% at 55% 48%,
+	  transparent 35%,
+	  rgba(13, 8, 10, 0.55) 100%
+	);
+	}
+
+	html[data-theme="lets-all-love-lain"] .bg-overlay--grain {
+	background-image: radial-gradient(rgba(232, 130, 158, 0.12) 0.6px, transparent 0.7px);
+	}
+
+	html[data-theme="lets-all-love-lain"] .content-window {
+	border: 1px solid var(--lain-pink, #e8829e);
+	background: var(--lain-panel, rgba(26, 14, 18, 0.52));
+	backdrop-filter: blur(10px) saturate(1.15);
+	-webkit-backdrop-filter: blur(10px) saturate(1.15);
+	box-shadow:
+	  var(--theme-shell-shadow),
+	  inset 0 0 0 1px rgba(255, 245, 225, 0.08);
+	}
+
+	html[data-theme="lets-all-love-lain"] .content-area {
+	background: transparent;
+	}
+
+	html[data-theme="lets-all-love-lain"] .header {
+	border-bottom: 1px solid var(--lain-maroon, #4a2b2f);
+	}
+
+	html[data-theme="lets-all-love-lain"] .ascii-container {
+	border: 1px solid var(--lain-maroon, #4a2b2f);
+	background: rgba(13, 8, 10, 0.35);
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+	margin-bottom: 0 !important;
+	}
+
+	html[data-theme="lets-all-love-lain"] .header .nav {
+	margin-top: 28px !important;
+	padding-top: 12px;
+	}
+
+	html[data-theme="lets-all-love-lain"] .header .nav-list {
+	gap: 10px 20px;
+	}
+
+	html[data-theme="lets-all-love-lain"] .header .ascii-box pre {
+	color: var(--lain-cream, #fff5e1) !important;
+	text-shadow: 0 0 18px rgba(232, 130, 158, 0.25);
+	}
+
+	html[data-theme="lets-all-love-lain"] .nav-link {
+	color: var(--lain-pink, #e8829e);
+	text-decoration: none;
+	}
+
+	html[data-theme="lets-all-love-lain"] .nav-link:visited {
+	color: #a86b7a;
+	}
+
+	html[data-theme="lets-all-love-lain"] .nav-link:hover,
+	html[data-theme="lets-all-love-lain"] .nav-link.active {
+	color: var(--lain-cream, #fff5e1);
+	text-shadow: 0 0 14px rgba(255, 245, 225, 0.35);
+	}
+
+	html[data-theme="lets-all-love-lain"] .nav-link.active::after {
+	background: var(--lain-red, #c31f26);
+	}
+
+	html[data-theme="lets-all-love-lain"] .banner-container {
+	border: 1px solid var(--lain-maroon, #4a2b2f);
+	background: rgba(13, 8, 10, 0.45) !important;
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+	color: var(--lain-cream, #fff5e1) !important;
+	}
+
+	html[data-theme="lets-all-love-lain"] .bordered-box {
+	border: 1px solid var(--lain-maroon, #4a2b2f);
+	background: rgba(20, 12, 16, 0.48);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.25);
+	}
+
+	html[data-theme="lets-all-love-lain"] .bordered-box .header-text {
+	color: var(--lain-cream, #fff5e1) !important;
+	}
+
+	html[data-theme="lets-all-love-lain"] .bordered-box .header-divider {
+	background: var(--lain-pink, #e8829e);
+	height: 1px;
+	opacity: 0.65;
+	}
+
+	html[data-theme="lets-all-love-lain"] .bordered-box:hover {
+	background: rgba(26, 14, 18, 0.62);
+	}
+
+	html[data-theme="lets-all-love-lain"] .typing-header {
+	background: rgba(13, 8, 10, 0.5) !important;
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+	border: 1px solid var(--lain-maroon, #4a2b2f) !important;
+	border-radius: 0 !important;
+	}
+
+	html[data-theme="lets-all-love-lain"] .typing-header .typing-text,
+	html[data-theme="lets-all-love-lain"] .typing-header .cursor {
+	color: var(--lain-cream, #fff5e1) !important;
+	}
+
+	/* Side label — soft pink/cream, no badge chrome */
+	html[data-theme="lets-all-love-lain"] .banner-side-label {
+	font-family: var(--global-font-family);
+	opacity: 1;
+	animation: lain-banner-label-fade-in 1.2s ease 0.6s forwards;
+	}
+
+	@keyframes lain-banner-label-fade-in {
+	from {
+	  opacity: 0;
+	  transform: translateX(6px);
+	}
+	to {
+	  opacity: 1;
+	  transform: translateX(0);
+	}
+	}
+
+	html[data-theme="lets-all-love-lain"] .banner-side-text {
+	background: linear-gradient(
+	  90deg,
+	  #c4a0a8 0%,
+	  #e8829e 25%,
+	  #fff5e1 50%,
+	  #e8829e 75%,
+	  #c4a0a8 100%
+	);
+	background-size: 200% 100%;
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	color: transparent;
+	animation: lain-banner-shimmer 10s ease-in-out infinite !important;
+	}
+
+	@keyframes lain-banner-shimmer {
+	0%,
+	100% {
+	  background-position: 0% 50%;
+	}
+	50% {
+	  background-position: 100% 50%;
+	}
+	}
+
+	html[data-theme="lets-all-love-lain"] .banner-side-arrow {
+	color: var(--lain-pink, #e8829e) !important;
+	-webkit-text-fill-color: var(--lain-pink, #e8829e) !important;
+	opacity: 1 !important;
+	animation: lain-banner-arrow-nudge 2.5s ease-in-out infinite;
+	}
+
+	@keyframes lain-banner-arrow-nudge {
+	0%,
+	100% {
+	  transform: translateX(0);
+	}
+	50% {
+	  transform: translateX(3px);
+	}
+	}
+
+	html[data-theme="lets-all-love-lain"] .banner-side-arrow::after {
+	content: none;
+	}
+
+	/* Wired green = connected; pink-gray = idle */
+	html[data-theme="lets-all-love-lain"] .home-content .bordered-box.music-widget .status-icon.offline {
+	background-color: #6e454c !important;
+	box-shadow: 0 0 6px rgba(110, 69, 76, 0.5);
+	}
+
+	html[data-theme="lets-all-love-lain"] .home-content .bordered-box.music-widget .status-icon.playing {
+	color: var(--lain-wired, #33e870) !important;
+	filter: drop-shadow(0 0 8px rgba(51, 232, 112, 0.55));
+	animation: lain-wired-pulse 2s ease-in-out infinite !important;
+	}
+
+	@keyframes lain-wired-pulse {
+	0%,
+	100% {
+	  filter: drop-shadow(0 0 6px rgba(51, 232, 112, 0.45));
+	}
+	50% {
+	  filter: drop-shadow(0 0 14px rgba(51, 232, 112, 0.85));
+	}
+	}
+
+	html[data-theme="lets-all-love-lain"] a:hover,
+	html[data-theme="lets-all-love-lain"] .read-more:hover {
+	color: var(--lain-cream, #fff5e1);
+	text-shadow: 0 0 10px rgba(232, 130, 158, 0.35);
+	}
+
+	html[data-theme="lets-all-love-lain"] ::selection {
+	background: var(--lain-maroon, #4a2b2f);
+	color: var(--lain-cream, #fff5e1);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+	html[data-theme="lets-all-love-lain"] .scanlines {
+	  animation: none;
+	}
+
+	html[data-theme="lets-all-love-lain"] .bg-overlay--grain {
+	  animation: none;
+	}
+
+	html[data-theme="lets-all-love-lain"] .banner-side-label {
+	  animation: none;
+	}
+
+	html[data-theme="lets-all-love-lain"] .banner-side-text {
+	  animation: none !important;
+	  background-position: 50% 50%;
+	  -webkit-text-fill-color: var(--lain-pink, #e8829e);
+	  color: var(--lain-pink, #e8829e);
+	}
+
+	html[data-theme="lets-all-love-lain"] .banner-side-arrow {
+	  animation: none;
+	}
+
+	html[data-theme="lets-all-love-lain"] .home-content .bordered-box.music-widget .status-icon.playing {
+	  animation: none !important;
+	}
+	}
+	`,
+	displayOrder: 9
+} satisfies InferInsertModel<typeof themes>;
+
 /** Bundled themes inserted by full seed (after clear) or partial seed when missing. */
 export const ALL_SEED_THEMES = [
 	BUILTIN_DEFAULT_THEME_INSERT,
@@ -2603,10 +2965,28 @@ export const ALL_SEED_THEMES = [
 	DRACULA_THEME_INSERT,
 	CATPPUCCIN_MOCHA_THEME_INSERT,
 	TOKYO_NIGHT_THEME_INSERT,
-	GRUVBOX_THEME_INSERT
+	GRUVBOX_THEME_INSERT,
+	LETS_ALL_LOVE_LAIN_THEME_INSERT
 ] as const satisfies readonly InferInsertModel<typeof themes>[];
 
 const RETIRED_THEME_NAMES = ['Kawaii Pink'] as const;
+
+/** Former bundled theme names → current seed name (DB row rename on refresh/seed). */
+const RENAMED_BUNDLED_THEMES = [{ from: 'Lain', to: 'Lets All Love Lain' }] as const;
+
+async function applyRenamedBundledThemes(): Promise<void> {
+	for (const { from, to } of RENAMED_BUNDLED_THEMES) {
+		const rows = await db
+			.update(themes)
+			.set({ name: to, updatedAt: new Date() })
+			.where(eq(themes.name, from))
+			.returning({ id: themes.id });
+
+		if (rows.length > 0) {
+			logger.info(`Renamed bundled theme: ${from} → ${to}`);
+		}
+	}
+}
 
 async function removeRetiredThemes(): Promise<void> {
 	for (const name of RETIRED_THEME_NAMES) {
@@ -2653,6 +3033,7 @@ async function seedThemeIfMissing(theme: InferInsertModel<typeof themes>) {
 export async function refreshBundledThemes() {
 	logger.info('Refreshing bundled themes...');
 	await removeRetiredThemes();
+	await applyRenamedBundledThemes();
 
 	const updated = [];
 	for (const theme of ALL_SEED_THEMES) {
@@ -2670,6 +3051,7 @@ export async function refreshBundledThemes() {
 export async function seedThemesIfMissing() {
 	logger.info('Seeding missing themes...');
 	await removeRetiredThemes();
+	await applyRenamedBundledThemes();
 
 	const inserted = [];
 	for (const theme of ALL_SEED_THEMES) {
