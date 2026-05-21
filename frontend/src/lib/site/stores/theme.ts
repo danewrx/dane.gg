@@ -87,7 +87,7 @@ export const DEFAULT_THEME: SiteTheme = {
 	textMuted: '#71717a',
 
 	// Background
-	backgroundImage: '/assets/img/backgrounds/1.png',
+	backgroundImage: '/assets/themes/default/backgrounds/1.png',
 	backgroundImageExternal: false,
 	backgroundBlur: 0,
 	backgroundPosition: 'center center',

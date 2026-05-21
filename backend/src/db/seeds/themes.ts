@@ -24,7 +24,7 @@ const CYBERPUNK_NEON_THEME_INSERT = {
 	textSecondary: '#00d4ff',
 	textMuted: '#6080a0',
 
-				backgroundImage: '/assets/img/backgrounds/2.jpg',
+				backgroundImage: '/assets/themes/cyberpunk-neon/backgrounds/2.jpg',
 				backgroundImageExternal: false,
 				backgroundOverlay: 'rgba(0, 0, 0, 0.6)',
 				overlayDarkenOpacity: '0.6',
@@ -79,7 +79,7 @@ const WINDOWS_XP_BLISS_THEME_INSERT = {
 	textSecondary: '#0a246a',
 	textMuted: '#5a5a5a',
 
-	backgroundImage: '/assets/img/backgrounds/3.jpg',
+	backgroundImage: '/assets/themes/windows-xp/backgrounds/3.jpg',
 	backgroundImageExternal: false,
 	backgroundOverlay: 'rgba(255, 255, 255, 0.08)',
 	overlayDarkenOpacity: '0.1',
@@ -332,7 +332,7 @@ const WINDOWS_95_THEME_INSERT = {
 	textSecondary: '#000080',
 	textMuted: '#404040',
 
-	backgroundImage: '/assets/img/backgrounds/4.webp',
+	backgroundImage: '/assets/themes/windows-95/backgrounds/4.webp',
 	backgroundImageExternal: false,
 	backgroundOverlay: 'rgba(0, 0, 0, 0.12)',
 	overlayDarkenOpacity: '0.12',
@@ -574,7 +574,7 @@ const GEOCITIES_THEME_INSERT = {
 	textSecondary: '#7ad4e8',
 	textMuted: '#8aa89a',
 
-	backgroundImage: '/assets/img/backgrounds/5.gif',
+	backgroundImage: '/assets/themes/geocities/backgrounds/5.gif',
 	backgroundImageExternal: false,
 	backgroundOverlay: 'rgba(0, 0, 0, 0)',
 	overlayDarkenOpacity: '0',
@@ -618,7 +618,7 @@ const GEOCITIES_THEME_INSERT = {
 	background-size: auto !important;
 	}
 
-	/* Decorative GIFs from https://gifcities.org (Internet Archive GeoCities mirror) — self-hosted under /assets/img/geocities/ */
+	/* Decorative GIFs from https://gifcities.org (Internet Archive GeoCities mirror) — self-hosted under /assets/themes/geocities/misc/ */
 
 	html[data-theme="geocities"] .content-window {
 	position: relative;
@@ -721,7 +721,7 @@ const GEOCITIES_THEME_INSERT = {
 	width: 22px;
 	height: 22px;
 	transform: translateY(-50%);
-	background: url('/assets/img/geocities/header-sparkle.gif') no-repeat center / contain;
+	background: url('/assets/themes/geocities/misc/header-sparkle.gif') no-repeat center / contain;
 	image-rendering: pixelated;
 	mix-blend-mode: lighten;
 	pointer-events: none;
@@ -742,7 +742,7 @@ const GEOCITIES_THEME_INSERT = {
 	width: 88px;
 	height: 31px;
 	margin-top: 10px;
-	background: url('/assets/img/geocities/under-construction.gif') no-repeat center / contain;
+	background: url('/assets/themes/geocities/misc/under-construction.gif') no-repeat center / contain;
 	image-rendering: pixelated;
 	mix-blend-mode: lighten;
 	opacity: 0.95;
@@ -820,23 +820,23 @@ const GEOCITIES_THEME_INSERT = {
 	}
 
 	html[data-theme="geocities"] .nav-link[href='/']::before {
-	background-image: url('/assets/img/geocities/nav-home.gif');
+	background-image: url('/assets/themes/geocities/misc/nav-home.gif');
 	}
 
 	html[data-theme="geocities"] .nav-link[href='/about']::before {
-	background-image: url('/assets/img/geocities/nav-about.gif');
+	background-image: url('/assets/themes/geocities/misc/nav-about.gif');
 	}
 
 	html[data-theme="geocities"] .nav-link[href='/projects']::before {
-	background-image: url('/assets/img/geocities/nav-projects.gif');
+	background-image: url('/assets/themes/geocities/misc/nav-projects.gif');
 	}
 
 	html[data-theme="geocities"] .nav-link[href='/blog']::before {
-	background-image: url('/assets/img/geocities/nav-blog.gif');
+	background-image: url('/assets/themes/geocities/misc/nav-blog.gif');
 	}
 
 	html[data-theme="geocities"] .nav-link[href='/contact']::before {
-	background-image: url('/assets/img/geocities/mail-icon.gif');
+	background-image: url('/assets/themes/geocities/misc/mail-icon.gif');
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
@@ -871,7 +871,7 @@ const GEOCITIES_THEME_INSERT = {
 	width: 120px;
 	height: 36px;
 	transform: translateY(-50%);
-	background: url('/assets/img/geocities/welcome.gif') no-repeat left center / contain;
+	background: url('/assets/themes/geocities/misc/welcome.gif') no-repeat left center / contain;
 	image-rendering: pixelated;
 	pointer-events: none;
 	opacity: 0.35;
@@ -942,7 +942,7 @@ const GEOCITIES_THEME_INSERT = {
 	width: 36px;
 	height: 22px;
 	transform: translateY(-50%);
-	background: url('/assets/img/geocities/new.gif') no-repeat center / contain;
+	background: url('/assets/themes/geocities/misc/new.gif') no-repeat center / contain;
 	image-rendering: pixelated;
 	mix-blend-mode: lighten;
 	pointer-events: none;
@@ -1575,7 +1575,7 @@ const GEOCITIES_THEME_INSERT = {
 	transform: translateX(-50%);
 	width: 96px;
 	height: 16px;
-	background: url('/assets/img/geocities/counter.gif') no-repeat center / contain;
+	background: url('/assets/themes/geocities/misc/counter.gif') no-repeat center / contain;
 	image-rendering: pixelated;
 	pointer-events: none;
 	}
@@ -1713,7 +1713,7 @@ const GEOCITIES_THEME_INSERT = {
 	}
 
 	html[data-theme="geocities"] .home-content .bordered-box.music-widget .bordered-box-header {
-	--geo-widget-header-gif: url('/assets/img/geocities/widget-music.gif');
+	--geo-widget-header-gif: url('/assets/themes/geocities/misc/widget-music.gif');
 	--geo-widget-header-gif-width: 100px;
 	--geo-widget-header-gif-size: auto 28px;
 	--geo-widget-header-pad-right: 106px;
@@ -1725,7 +1725,7 @@ const GEOCITIES_THEME_INSERT = {
 	min-width: 16px;
 	border-radius: 0;
 	background-color: transparent !important;
-	background: url('/assets/img/geocities/music-off.gif') no-repeat center / contain;
+	background: url('/assets/themes/geocities/misc/music-off.gif') no-repeat center / contain;
 	image-rendering: pixelated;
 	mix-blend-mode: lighten;
 	}
@@ -1735,7 +1735,7 @@ const GEOCITIES_THEME_INSERT = {
 	height: 16px;
 	min-width: 16px;
 	color: transparent !important;
-	background: url('/assets/img/geocities/music-playing.gif') no-repeat center / contain;
+	background: url('/assets/themes/geocities/misc/music-playing.gif') no-repeat center / contain;
 	image-rendering: pixelated;
 	mix-blend-mode: lighten;
 	animation: none !important;
@@ -1747,46 +1747,46 @@ const GEOCITIES_THEME_INSERT = {
 	}
 
 	html[data-theme="geocities"] .home-content .bordered-box.tweet-widget .bordered-box-header {
-	--geo-widget-header-gif: url('/assets/img/geocities/widget-status.gif');
+	--geo-widget-header-gif: url('/assets/themes/geocities/misc/widget-status.gif');
 	--geo-widget-header-gif-width: 58px;
 	--geo-widget-header-pad-right: 64px;
 	}
 
 	html[data-theme="geocities"] .home-content .bordered-box.links-widget .bordered-box-header {
-	--geo-widget-header-gif: url('/assets/img/geocities/widget-links.gif');
+	--geo-widget-header-gif: url('/assets/themes/geocities/misc/widget-links.gif');
 	--geo-widget-header-gif-width: 76px;
 	--geo-widget-header-gif-size: auto 28px;
 	--geo-widget-header-pad-right: 82px;
 	}
 
 	html[data-theme="geocities"] .home-content .bordered-box.my-button-widget .bordered-box-header {
-	--geo-widget-header-gif: url('/assets/img/geocities/widget-button.gif');
+	--geo-widget-header-gif: url('/assets/themes/geocities/misc/widget-button.gif');
 	--geo-widget-header-gif-width: 92px;
 	--geo-widget-header-pad-right: 98px;
 	}
 
 	html[data-theme="geocities"] .home-content .bordered-box.site-stats-widget .bordered-box-header {
-	--geo-widget-header-gif: url('/assets/img/geocities/widget-stats.gif');
+	--geo-widget-header-gif: url('/assets/themes/geocities/misc/widget-stats.gif');
 	--geo-widget-header-gif-width: 120px;
 	--geo-widget-header-gif-size: auto 22px;
 	--geo-widget-header-pad-right: 126px;
 	}
 
 	html[data-theme="geocities"] .home-content .bordered-box.about-section .bordered-box-header {
-	--geo-widget-header-gif: url('/assets/img/geocities/widget-about.gif');
+	--geo-widget-header-gif: url('/assets/themes/geocities/misc/widget-about.gif');
 	--geo-widget-header-gif-width: 44px;
 	--geo-widget-header-gif-size: auto 26px;
 	--geo-widget-header-pad-right: 50px;
 	}
 
 	html[data-theme="geocities"] .home-content .bordered-box.recent-posts-section .bordered-box-header {
-	--geo-widget-header-gif: url('/assets/img/geocities/widget-blog.gif');
+	--geo-widget-header-gif: url('/assets/themes/geocities/misc/widget-blog.gif');
 	--geo-widget-header-gif-width: 36px;
 	--geo-widget-header-pad-right: 42px;
 	}
 
 	html[data-theme="geocities"] .home-content .bordered-box.service-status-section .bordered-box-header {
-	--geo-widget-header-gif: url('/assets/img/geocities/widget-systems.gif');
+	--geo-widget-header-gif: url('/assets/themes/geocities/misc/widget-systems.gif');
 	--geo-widget-header-gif-width: 100px;
 	--geo-widget-header-gif-size: auto 26px;
 	--geo-widget-header-pad-right: 106px;
@@ -1794,7 +1794,7 @@ const GEOCITIES_THEME_INSERT = {
 
 	html[data-theme="geocities"] .home-content .bordered-box.chat-section .bordered-box-header,
 	html[data-theme="geocities"] .home-content .bordered-box.chat-section .bordered-box-header .header-right-wrapper {
-	--geo-widget-header-gif: url('/assets/img/geocities/widget-chat.gif');
+	--geo-widget-header-gif: url('/assets/themes/geocities/misc/widget-chat.gif');
 	--geo-widget-header-gif-width: 48px;
 	}
 
