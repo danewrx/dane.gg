@@ -2311,13 +2311,299 @@ const GEOCITIES_THEME_INSERT = {
 	displayOrder: 4
 } satisfies InferInsertModel<typeof themes>;
 
+const DRACULA_THEME_INSERT = {
+	name: 'Dracula',
+	description: 'Dracula editor palette — purple accents on charcoal, pink and green highlights',
+	isActive: false,
+	isDefault: false,
+	isVisible: true,
+
+	primaryColor: '#f8f8f2',
+	secondaryColor: '#bd93f9',
+	accentColor: '#ff79c6',
+	backgroundColor: '#282a36',
+	surfaceColor: 'rgba(68, 71, 90, 0.94)',
+	borderColor: '#6272a4',
+	textPrimary: '#f8f8f2',
+	textSecondary: '#8be9fd',
+	textMuted: '#6272a4',
+
+	backgroundImage: null,
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(40, 42, 54, 0)',
+	overlayDarkenOpacity: '0',
+	backgroundBlur: 0,
+	backgroundPosition: 'center center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'JetBrains Mono',
+	headingFontFamily: 'JetBrains Mono',
+	fontScale: '1',
+
+	borderRadius: '8px',
+	widgetBorderRadius: '6px',
+	scanlinesOpacity: '0',
+	overlayVignetteOpacity: '0.12',
+	overlayGridOpacity: '0',
+	overlayGrainOpacity: '0',
+	overlayGlareOpacity: '0',
+	customCss: `
+html[data-theme="dracula"] {
+  --theme-shell-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
+  --theme-content-max-width: 1000px;
+  background: linear-gradient(145deg, #21222c 0%, #282a36 45%, #21222c 100%) !important;
+}
+
+html[data-theme="dracula"] .content-window {
+  border-color: #bd93f9;
+  box-shadow:
+    var(--theme-shell-shadow),
+    0 0 24px rgba(189, 147, 249, 0.12);
+}
+
+html[data-theme="dracula"] .bordered-box {
+  box-shadow: 0 0 0 1px rgba(189, 147, 249, 0.15);
+}
+
+html[data-theme="dracula"] .bordered-box .header-text {
+  color: #f8f8f2 !important;
+}
+
+html[data-theme="dracula"] .nav-link:hover,
+html[data-theme="dracula"] .nav-link.active {
+  text-shadow: 0 0 12px rgba(255, 121, 198, 0.55);
+}
+
+html[data-theme="dracula"] ::selection {
+  background: #44475a;
+  color: #50fa7b;
+}
+`,
+	displayOrder: 5
+} satisfies InferInsertModel<typeof themes>;
+
+const CATPPUCCIN_MOCHA_THEME_INSERT = {
+	name: 'Catppuccin Mocha',
+	description: 'Catppuccin Mocha — pastel dark UI with mauve, blue, and pink accents',
+	isActive: false,
+	isDefault: false,
+	isVisible: true,
+
+	primaryColor: '#cdd6f4',
+	secondaryColor: '#cba6f7',
+	accentColor: '#f5c2e7',
+	backgroundColor: '#1e1e2e',
+	surfaceColor: 'rgba(49, 50, 68, 0.94)',
+	borderColor: '#45475a',
+	textPrimary: '#cdd6f4',
+	textSecondary: '#89b4fa',
+	textMuted: '#a6adc8',
+
+	backgroundImage: null,
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(30, 30, 46, 0)',
+	overlayDarkenOpacity: '0',
+	backgroundBlur: 0,
+	backgroundPosition: 'center center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'Inter',
+	headingFontFamily: 'Inter',
+	fontScale: '1',
+
+	borderRadius: '12px',
+	widgetBorderRadius: '10px',
+	scanlinesOpacity: '0',
+	overlayVignetteOpacity: '0.1',
+	overlayGridOpacity: '0',
+	overlayGrainOpacity: '0',
+	overlayGlareOpacity: '0',
+	customCss: `
+html[data-theme="catppuccin-mocha"] {
+  --theme-shell-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
+  --theme-content-max-width: 1000px;
+  background: linear-gradient(160deg, #181825 0%, #1e1e2e 50%, #11111b 100%) !important;
+}
+
+html[data-theme="catppuccin-mocha"] .content-window {
+  border-color: #cba6f7;
+  box-shadow:
+    var(--theme-shell-shadow),
+    0 0 28px rgba(203, 166, 247, 0.1);
+}
+
+html[data-theme="catppuccin-mocha"] .bordered-box {
+  box-shadow: 0 0 0 1px rgba(137, 180, 250, 0.12);
+}
+
+html[data-theme="catppuccin-mocha"] .nav-link:hover,
+html[data-theme="catppuccin-mocha"] .nav-link.active {
+  color: #89b4fa !important;
+  text-shadow: 0 0 10px rgba(137, 180, 250, 0.35);
+}
+
+html[data-theme="catppuccin-mocha"] ::selection {
+  background: #45475a;
+  color: #f5c2e7;
+}
+`,
+	displayOrder: 6
+} satisfies InferInsertModel<typeof themes>;
+
+const TOKYO_NIGHT_THEME_INSERT = {
+	name: 'Tokyo Night',
+	description: 'Tokyo Night — deep blue editor theme with magenta and sky accents',
+	isActive: false,
+	isDefault: false,
+	isVisible: true,
+
+	primaryColor: '#c0caf5',
+	secondaryColor: '#7aa2f7',
+	accentColor: '#bb9af7',
+	backgroundColor: '#1a1b26',
+	surfaceColor: 'rgba(36, 40, 59, 0.94)',
+	borderColor: '#3b4261',
+	textPrimary: '#c0caf5',
+	textSecondary: '#7dcfff',
+	textMuted: '#565f89',
+
+	backgroundImage: null,
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(26, 27, 38, 0)',
+	overlayDarkenOpacity: '0',
+	backgroundBlur: 0,
+	backgroundPosition: 'center center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'Inter',
+	headingFontFamily: 'Inter',
+	fontScale: '1',
+
+	borderRadius: '8px',
+	widgetBorderRadius: '6px',
+	scanlinesOpacity: '0',
+	overlayVignetteOpacity: '0.08',
+	overlayGridOpacity: '0.04',
+	overlayGrainOpacity: '0',
+	overlayGlareOpacity: '0',
+	customCss: `
+html[data-theme="tokyo-night"] {
+  --theme-shell-shadow: 0 10px 36px rgba(0, 0, 0, 0.5);
+  --theme-content-max-width: 1000px;
+  background: radial-gradient(ellipse at 20% 0%, #24283b 0%, #1a1b26 55%, #16161e 100%) !important;
+}
+
+html[data-theme="tokyo-night"] .content-window {
+  border-color: #7aa2f7;
+  box-shadow:
+    var(--theme-shell-shadow),
+    0 0 20px rgba(122, 162, 247, 0.15);
+}
+
+html[data-theme="tokyo-night"] .bordered-box .header-text {
+  color: #c0caf5 !important;
+}
+
+html[data-theme="tokyo-night"] .nav-link:hover,
+html[data-theme="tokyo-night"] .nav-link.active {
+  color: #bb9af7 !important;
+  text-shadow: 0 0 14px rgba(187, 154, 247, 0.45);
+}
+
+html[data-theme="tokyo-night"] ::selection {
+  background: #33467c;
+  color: #7dcfff;
+}
+`,
+	displayOrder: 7
+} satisfies InferInsertModel<typeof themes>;
+
+const GRUVBOX_THEME_INSERT = {
+	name: 'Gruvbox',
+	description: 'Gruvbox Dark — warm retro terminal palette with orange and aqua accents',
+	isActive: false,
+	isDefault: false,
+	isVisible: true,
+
+	primaryColor: '#ebdbb2',
+	secondaryColor: '#83a598',
+	accentColor: '#fe8019',
+	backgroundColor: '#282828',
+	surfaceColor: 'rgba(60, 56, 54, 0.94)',
+	borderColor: '#504945',
+	textPrimary: '#ebdbb2',
+	textSecondary: '#8ec07c',
+	textMuted: '#928374',
+
+	backgroundImage: null,
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(40, 40, 40, 0)',
+	overlayDarkenOpacity: '0',
+	backgroundBlur: 0,
+	backgroundPosition: 'center center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'JetBrains Mono',
+	headingFontFamily: 'JetBrains Mono',
+	fontScale: '1',
+
+	borderRadius: '4px',
+	widgetBorderRadius: '4px',
+	scanlinesOpacity: '0',
+	overlayVignetteOpacity: '0.14',
+	overlayGridOpacity: '0',
+	overlayGrainOpacity: '0.03',
+	overlayGlareOpacity: '0',
+	customCss: `
+html[data-theme="gruvbox"] {
+  --theme-shell-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35);
+  --theme-content-max-width: 1000px;
+  background: linear-gradient(180deg, #1d2021 0%, #282828 40%, #32302f 100%) !important;
+}
+
+html[data-theme="gruvbox"] .content-window {
+  border-color: #fe8019;
+  border-width: 2px;
+  box-shadow: var(--theme-shell-shadow);
+}
+
+html[data-theme="gruvbox"] .bordered-box {
+  border-width: 2px;
+  box-shadow: inset 0 0 0 1px rgba(235, 219, 178, 0.06);
+}
+
+html[data-theme="gruvbox"] .bordered-box .header-divider {
+  background: #fe8019;
+}
+
+html[data-theme="gruvbox"] .nav-link:hover,
+html[data-theme="gruvbox"] .nav-link.active {
+  color: #fe8019 !important;
+}
+
+html[data-theme="gruvbox"] ::selection {
+  background: #504945;
+  color: #fabd2f;
+}
+`,
+	displayOrder: 8
+} satisfies InferInsertModel<typeof themes>;
+
 /** Bundled themes inserted by full seed (after clear) or partial seed when missing. */
 export const ALL_SEED_THEMES = [
 	BUILTIN_DEFAULT_THEME_INSERT,
 	CYBERPUNK_NEON_THEME_INSERT,
 	WINDOWS_XP_BLISS_THEME_INSERT,
 	WINDOWS_95_THEME_INSERT,
-	GEOCITIES_THEME_INSERT
+	GEOCITIES_THEME_INSERT,
+	DRACULA_THEME_INSERT,
+	CATPPUCCIN_MOCHA_THEME_INSERT,
+	TOKYO_NIGHT_THEME_INSERT,
+	GRUVBOX_THEME_INSERT
 ] as const satisfies readonly InferInsertModel<typeof themes>[];
 
 const RETIRED_THEME_NAMES = ['Kawaii Pink'] as const;
