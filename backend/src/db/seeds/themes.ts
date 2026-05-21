@@ -237,6 +237,32 @@ const WINDOWS_XP_BLISS_THEME_INSERT = {
   );
 }
 
+/* Music widget — Now Playing / Recently Played status icons */
+.home-content .bordered-box.music-widget .status-icon.offline {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  border-radius: 0;
+  background-color: transparent !important;
+  background: url('/assets/themes/windows-xp/misc/notplaying.png') no-repeat center / contain;
+  image-rendering: auto;
+}
+
+.home-content .bordered-box.music-widget .status-icon.playing {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  color: transparent !important;
+  background: url('/assets/themes/windows-xp/misc/playing.png') no-repeat center / contain;
+  image-rendering: auto;
+  animation: none !important;
+  filter: none !important;
+}
+
+.home-content .bordered-box.music-widget .status-icon.playing svg {
+  display: none !important;
+}
+
 /* Character Map — match Luna widget chrome */
 .emoji-picker {
   border: 1px solid #0054e3;
@@ -485,6 +511,32 @@ const WINDOWS_95_THEME_INSERT = {
     rgba(0, 0, 0, 0.05) 2px,
     rgba(0, 0, 0, 0.05) 4px
   );
+}
+
+/* Music widget — Now Playing / Recently Played status icons */
+.home-content .bordered-box.music-widget .status-icon.offline {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  border-radius: 0;
+  background-color: transparent !important;
+  background: url('/assets/themes/windows-95/misc/notplaying.webp') no-repeat center / contain;
+  image-rendering: pixelated;
+}
+
+.home-content .bordered-box.music-widget .status-icon.playing {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  color: transparent !important;
+  background: url('/assets/themes/windows-95/misc/playing.webp') no-repeat center / contain;
+  image-rendering: pixelated;
+  animation: none !important;
+  filter: none !important;
+}
+
+.home-content .bordered-box.music-widget .status-icon.playing svg {
+  display: none !important;
 }
 
 /* Character Map — classic Win95 chrome */
