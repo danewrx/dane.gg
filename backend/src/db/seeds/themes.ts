@@ -5,6 +5,10 @@ import { BUILTIN_DEFAULT_THEME_INSERT } from '../builtinDefaultTheme';
 import { BUILTIN_SITE_FONT_NAME } from '../builtinSiteFont';
 import { db } from '../index';
 import { themes } from '../schema';
+import {
+	applyBundledThemeCategoryAssignments,
+	ensureThemeCategories
+} from './theme-categories';
 
 const CYBERPUNK_NEON_THEME_INSERT = {
 	name: 'Cyberpunk Neon',
@@ -3032,6 +3036,7 @@ async function seedThemeIfMissing(theme: InferInsertModel<typeof themes>) {
 /** Overwrite bundled themes in the DB from seed definitions (by name). */
 export async function refreshBundledThemes() {
 	logger.info('Refreshing bundled themes...');
+	await ensureThemeCategories();
 	await removeRetiredThemes();
 	await applyRenamedBundledThemes();
 
@@ -3044,12 +3049,14 @@ export async function refreshBundledThemes() {
 			logger.info(`Theme "${theme.name}" not found — skipped refresh.`);
 		}
 	}
+	await applyBundledThemeCategoryAssignments();
 	return updated;
 }
 
 /** Insert any bundled theme that is not already present (safe on existing DBs). */
 export async function seedThemesIfMissing() {
 	logger.info('Seeding missing themes...');
+	await ensureThemeCategories();
 	await removeRetiredThemes();
 	await applyRenamedBundledThemes();
 
@@ -3058,13 +3065,17 @@ export async function seedThemesIfMissing() {
 		const row = await seedThemeIfMissing(theme);
 		if (row) inserted.push(row);
 	}
+	await applyBundledThemeCategoryAssignments();
 	return inserted;
 }
 
 /** Insert all bundled themes (use only when `themes` table was cleared). */
 export async function seedThemes() {
 	logger.info('Seeding themes...');
-	return db.insert(themes).values([...ALL_SEED_THEMES]).returning();
+	await ensureThemeCategories();
+	const inserted = await db.insert(themes).values([...ALL_SEED_THEMES]).returning();
+	await applyBundledThemeCategoryAssignments();
+	return inserted;
 }
 
 if (import.meta.main) {

@@ -19,8 +19,14 @@
 		EyeOff,
 		Star,
 		Lock,
-		ChevronDown
+		ChevronDown,
+		FolderTree
 	} from 'lucide-svelte';
+	import ThemeCategoryManager from '$lib/admin/components/ThemeCategoryManager.svelte';
+	import {
+		getAllThemeCategories,
+		type ThemeCategory
+	} from '$lib/admin/services/themeCategoriesService';
 	import FileUpload, { type UploadedFile } from '$lib/admin/components/ui/FileUpload.svelte';
 	import FontPicker from '$lib/admin/components/ui/FontPicker.svelte';
 	import CssCodeEditor from '$lib/admin/components/ui/CssCodeEditor.svelte';
@@ -87,9 +93,13 @@
 		displayOrder: number;
 		createdAt: string;
 		updatedAt: string;
+		categoryId?: string | null;
+		category?: { id: string; name: string; displayOrder: number } | null;
 	}
 
 	let themes = $state<Theme[]>([]);
+	let themeCategories = $state<ThemeCategory[]>([]);
+	let showCategoryManager = $state(false);
 	let isLoading = $state(true);
 	let isSaving = $state(false);
 	let isSavingEnforcement = $state(false);
@@ -254,7 +264,8 @@
 		overlayGridOpacity: '0',
 		overlayGrainOpacity: '0',
 		overlayGlareOpacity: '0',
-		overlayDarkenOpacity: '0.7'
+		overlayDarkenOpacity: '0.7',
+		categoryId: '' as string
 	});
 
 	let fontScaleNumeric = $derived(parseFloat(clampThemeFontScale(formData.fontScale)));
@@ -269,8 +280,28 @@
 		}
 		window.addEventListener('message', onWinMsg);
 		void loadThemes();
+		void loadThemeCategories();
 		return () => window.removeEventListener('message', onWinMsg);
 	});
+
+	async function loadThemeCategories() {
+		try {
+			themeCategories = await getAllThemeCategories();
+			themeCategories.sort((a, b) => a.displayOrder - b.displayOrder);
+		} catch (error) {
+			logger.error('Error loading theme categories:', error);
+		}
+	}
+
+	function handleCategoryManagerClose() {
+		showCategoryManager = false;
+		void loadThemeCategories();
+		void loadThemes();
+	}
+
+	function defaultCategoryIdForNewTheme(): string {
+		return themeCategories.find((c) => c.name === 'Custom')?.id ?? themeCategories[0]?.id ?? '';
+	}
 
 	async function loadThemes() {
 		try {
@@ -376,7 +407,8 @@
 			overlayGrainOpacity: '0',
 			overlayGlareOpacity: '0',
 			overlayDarkenOpacity: '0.7',
-			isVisible: false
+			isVisible: false,
+			categoryId: defaultCategoryIdForNewTheme()
 		};
 	}
 
@@ -419,7 +451,8 @@
 			overlayGridOpacity: theme.overlayGridOpacity ?? '0',
 			overlayGrainOpacity: theme.overlayGrainOpacity ?? '0',
 			overlayGlareOpacity: theme.overlayGlareOpacity ?? '0',
-			overlayDarkenOpacity: theme.overlayDarkenOpacity ?? '0'
+			overlayDarkenOpacity: theme.overlayDarkenOpacity ?? '0',
+			categoryId: theme.categoryId ?? theme.category?.id ?? ''
 		};
 		editingTheme = theme;
 		isCreating = false;
@@ -508,7 +541,8 @@
 				overlayGridOpacity: formData.overlayGridOpacity,
 				overlayGrainOpacity: formData.overlayGrainOpacity,
 				overlayGlareOpacity: formData.overlayGlareOpacity,
-				overlayDarkenOpacity: formData.overlayDarkenOpacity
+				overlayDarkenOpacity: formData.overlayDarkenOpacity,
+				categoryId: formData.categoryId || null
 			};
 
 			let response;
@@ -862,6 +896,33 @@
 										placeholder="A brief description of this theme..."
 										rows="2"
 									></textarea>
+								</div>
+								<div class="form-group">
+									<label for="theme-form-category">Category</label>
+									<div class="category-field-row">
+										<select
+											id="theme-form-category"
+											class="form-input category-select"
+											bind:value={formData.categoryId}
+										>
+											<option value="">Uncategorized</option>
+											{#each themeCategories as cat (cat.id)}
+												<option value={cat.id}>{cat.name}</option>
+											{/each}
+										</select>
+										<button
+											type="button"
+											class="manage-categories-btn"
+											onclick={() => (showCategoryManager = true)}
+											title="Manage theme categories"
+										>
+											<FolderTree size={16} />
+											Manage
+										</button>
+									</div>
+									<p class="form-hint">
+										Groups this theme in the public theme selector.
+									</p>
 								</div>
 							</div>
 						</section>
@@ -1801,6 +1862,9 @@
 											<span class="default-badge">Default</span>
 										{/if}
 									</div>
+									{#if theme.category?.name}
+										<p class="theme-category-label">{theme.category.name}</p>
+									{/if}
 									{#if theme.description}
 										<p class="theme-description">{theme.description}</p>
 									{/if}
@@ -1926,6 +1990,9 @@
 											<span class="default-badge">Default</span>
 										{/if}
 									</div>
+									{#if theme.category?.name}
+										<p class="theme-category-label">{theme.category.name}</p>
+									{/if}
 									{#if theme.description}
 										<p class="theme-description">{theme.description}</p>
 									{/if}
@@ -1990,6 +2057,32 @@
 		</div>
 	{/if}
 </div>
+
+{#if showCategoryManager}
+	<div
+		class="category-manager-overlay"
+		onclick={handleCategoryManagerClose}
+		role="button"
+		tabindex="0"
+		onkeydown={(e) => {
+			if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				handleCategoryManagerClose();
+			}
+		}}
+	>
+		<div
+			class="category-manager-container"
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+		>
+			<ThemeCategoryManager on:close={handleCategoryManagerClose} />
+		</div>
+	</div>
+{/if}
 
 <style>
 	.themes-settings {
@@ -2343,12 +2436,48 @@
 		color: #ef4444;
 	}
 
+	.category-field-row {
+		display: flex;
+		align-items: stretch;
+		gap: 8px;
+	}
+
+	.category-select {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.manage-categories-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		padding: 0 14px;
+		background: var(--bg-secondary, #2d2d2d);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		color: var(--text-secondary, #a1a1aa);
+		font-size: 13px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		flex-shrink: 0;
+		white-space: nowrap;
+	}
+
+	.manage-categories-btn:hover {
+		border-color: var(--accent-color, #6366f1);
+		color: var(--accent-color, #6366f1);
+		background: rgba(99, 102, 241, 0.08);
+	}
+
 	.add-theme-btn {
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		gap: 8px;
 		padding: 16px;
+		width: 100%;
 		background: transparent;
 		border: 2px dashed var(--border-color, #3a3a3a);
 		border-radius: 8px;
@@ -2363,6 +2492,44 @@
 		border-color: var(--accent-color, #6366f1);
 		color: var(--accent-color, #6366f1);
 		background: rgba(99, 102, 241, 0.05);
+	}
+
+	.theme-category-label {
+		margin: 4px 0 0;
+		font-size: 12px;
+		color: var(--accent-color, #6366f1);
+		font-weight: 500;
+	}
+
+	.form-hint {
+		margin: 6px 0 0;
+		font-size: 12px;
+		color: var(--text-secondary, #a1a1aa);
+		line-height: 1.4;
+	}
+
+	.category-manager-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.7);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 1000;
+		padding: 16px;
+	}
+
+	.category-manager-container {
+		width: 100%;
+		max-width: 800px;
+		max-height: 90vh;
+		overflow-y: auto;
+		background: var(--bg-primary, #1a1a1a);
+		border-radius: 8px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 	}
 
 	@media (max-width: 700px) {
