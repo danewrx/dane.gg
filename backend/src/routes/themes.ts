@@ -342,7 +342,7 @@ router.put('/categories/order', requireAuth, async (req, res) => {
 			categoryOrders.map(({ id, displayOrder }: { id: string; displayOrder: number }) =>
 				db
 					.update(themeCategories)
-					.set({ displayOrder: parseInt(String(displayOrder), 10) })
+					.set({ displayOrder: Number.parseInt(String(displayOrder), 10) })
 					.where(eq(themeCategories.id, id))
 			)
 		);

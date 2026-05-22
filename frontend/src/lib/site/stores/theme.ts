@@ -123,8 +123,8 @@ export function themeSlugFromName(name: string): string {
 	return name
 		.trim()
 		.toLowerCase()
-		.replace(/\s+/g, '-')
-		.replace(/[^a-z0-9-]/g, '');
+		.replaceAll(/\s+/g, '-')
+		.replaceAll(/[^a-z0-9-]/g, '');
 }
 
 export const isGeoCitiesTheme = derived(

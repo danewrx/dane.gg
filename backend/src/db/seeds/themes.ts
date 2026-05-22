@@ -3079,15 +3079,18 @@ export async function seedThemes() {
 }
 
 if (import.meta.main) {
-	const argv = process.argv.slice(2);
-	const forceAll = argv.includes('--all');
-	const refresh = argv.includes('--refresh');
+	const argv = new Set(process.argv.slice(2));
+	const forceAll = argv.has('--all');
+	const refresh = argv.has('--refresh');
 
-	const run = refresh
-		? refreshBundledThemes()
-		: forceAll
-			? seedThemes()
-			: seedThemesIfMissing();
+	let run: ReturnType<typeof refreshBundledThemes>;
+	if (refresh) {
+		run = refreshBundledThemes();
+	} else if (forceAll) {
+		run = seedThemes();
+	} else {
+		run = seedThemesIfMissing();
+	}
 
 	run
 		.then(() => process.exit(0))
