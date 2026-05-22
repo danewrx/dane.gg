@@ -9,6 +9,7 @@
 	import { marked } from 'marked';
 	import BorderedBox from '$lib/site/components/ui/BorderedBox.svelte';
 	import SiteBackNav from '$lib/site/components/layout/SiteBackNav.svelte';
+	import RainbowText from '$lib/site/components/RainbowText.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -111,7 +112,9 @@
 					<img src={getThumbnailUrl(post.thumbnail)} alt={post.title} />
 				</div>
 			{/if}
-			<h1 class="post-title">{post.title}</h1>
+			<h1 class="post-title">
+				<RainbowText text={post.title} />
+			</h1>
 
 			<div class="post-meta">
 				<span class="meta-item">
@@ -331,27 +334,7 @@
 		font-style: italic;
 	}
 
-	.post-content :global(code) {
-		background: var(--bg-tertiary, #2a2a2a);
-		padding: 2px 6px;
-		border-radius: 3px;
-		font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
-		font-size: 0.9em;
-	}
-
-	.post-content :global(pre) {
-		background: var(--bg-tertiary, #2a2a2a);
-		padding: 16px;
-		border-radius: 6px;
-		overflow-x: auto;
-		margin: 1.5em 0;
-		font-size: 0.9em;
-	}
-
-	.post-content :global(pre code) {
-		background: none;
-		padding: 0;
-	}
+	/* Fenced / inline code — global rules in app.css (--theme-code-* + data-theme-code-tone) */
 
 	.post-content :global(ul),
 	.post-content :global(ol) {
@@ -390,15 +373,12 @@
 		flex-wrap: wrap;
 		gap: 8px;
 		padding-top: 24px;
-		border-top: 1px solid var(--border-color, #3a3a3a);
+		border-top: 1px solid var(--theme-border, var(--border-color, #3a3a3a));
 	}
 
-	.tag {
-		padding: 6px 12px;
-		background: var(--bg-tertiary, #2a2a2a);
-		border-radius: 4px;
+	/* .tag colors — global rules in app.css (--theme-code-* + data-theme-code-tone) */
+	.post-tags .tag {
 		font-size: calc(13 * 1em / 14);
-		color: var(--text-secondary, #b0b0b0);
 	}
 
 	.post-navigation {

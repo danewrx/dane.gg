@@ -6,11 +6,18 @@
 	import { get } from 'svelte/store';
 	import { siteTheme, themeEnforcement } from '$lib/site/stores/theme';
 
+	type ThemeCategoryRef = {
+		id: string;
+		name: string;
+		displayOrder: number;
+	};
+
 	interface Theme {
 		id: string;
 		name: string;
 		description: string;
 		isDefault?: boolean;
+		category?: ThemeCategoryRef | null;
 		primaryColor: string;
 		secondaryColor: string;
 		accentColor: string;
@@ -42,6 +49,31 @@
 	let selectedThemeId = $state<string | null>(null);
 	let applying = $state(false);
 
+	type ThemeGroup = {
+		label: string;
+		themes: Theme[];
+	};
+
+	const groupedThemes = $derived.by((): ThemeGroup[] => {
+		const groups = new Map<string, ThemeGroup & { displayOrder: number }>();
+
+		for (const theme of themes) {
+			const cat = theme.category;
+			const key = cat?.id ?? '__uncategorized__';
+			const label = cat?.name ?? 'Other';
+			const displayOrder = cat?.displayOrder ?? 9999;
+
+			if (!groups.has(key)) {
+				groups.set(key, { label, themes: [], displayOrder });
+			}
+			groups.get(key)!.themes.push(theme);
+		}
+
+		return [...groups.values()]
+			.sort((a, b) => a.displayOrder - b.displayOrder)
+			.map(({ label, themes: groupThemes }) => ({ label, themes: groupThemes }));
+	});
+
 	onMount(() => {
 		loadThemes();
 	});
@@ -56,8 +88,7 @@
 			}
 
 			const result = await response.json();
-			const raw = result.data || [];
-			themes = [...raw].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
+			themes = result.data || [];
 
 			if (result.enforcement) {
 				themeEnforcement.set({
@@ -180,50 +211,59 @@
 						</p>
 					</div>
 				{:else}
-					<div class="themes-grid">
-						{#each themes as theme (theme.id)}
-							<button
-								class="theme-card"
-								class:active={theme.id === selectedThemeId}
-								class:applying={applying && theme.id === selectedThemeId}
-								onclick={() => selectTheme(theme.id)}
-								disabled={applying || $themeEnforcement.enforced}
-							>
-								<!-- Theme Preview -->
-								<div
-									class="theme-preview"
-									style="
-										background: {theme.surfaceColor};
-										border-color: {theme.borderColor};
-									"
-								>
-									{#if theme.backgroundImage}
-										<div
-											class="preview-bg"
-											style="background-image: url('{getBackgroundUrl(theme)}');"
-										></div>
-									{/if}
-									<div class="preview-colors">
-										<div class="color-bar" style="background: {theme.accentColor};"></div>
-										<div class="color-swatch" style="background: {theme.primaryColor};"></div>
-										<div class="color-swatch" style="background: {theme.secondaryColor};"></div>
-										<div class="color-swatch" style="background: {theme.accentColor};"></div>
-									</div>
-								</div>
+					<div class="themes-grouped">
+						{#each groupedThemes as group (group.label)}
+							<section class="theme-category-section">
+								<h3 class="category-heading">{group.label}</h3>
+								<div class="themes-grid">
+									{#each group.themes as theme (theme.id)}
+										<button
+											class="theme-card"
+											class:active={theme.id === selectedThemeId}
+											class:applying={applying && theme.id === selectedThemeId}
+											onclick={() => selectTheme(theme.id)}
+											disabled={applying || $themeEnforcement.enforced}
+											title={theme.name}
+										>
+											<div
+												class="theme-preview"
+												style="
+													background: {theme.surfaceColor};
+													border-color: {theme.borderColor};
+												"
+											>
+												{#if theme.backgroundImage}
+													<div
+														class="preview-bg"
+														style="background-image: url('{getBackgroundUrl(theme)}');"
+													></div>
+												{/if}
+												<div class="preview-colors">
+													<div class="color-bar" style="background: {theme.accentColor};"></div>
+													<div class="color-swatch" style="background: {theme.primaryColor};"></div>
+													<div
+														class="color-swatch"
+														style="background: {theme.secondaryColor};"
+													></div>
+													<div class="color-swatch" style="background: {theme.accentColor};"></div>
+												</div>
+											</div>
 
-								<!-- Theme Info -->
-								<div class="theme-info">
-									<div class="theme-name-row">
-										<span class="theme-name">{theme.name}</span>
-										{#if theme.isDefault}
-											<span class="default-badge">Default</span>
-										{/if}
-									</div>
-									{#if theme.id === selectedThemeId}
-										<div class="active-badge">Active</div>
-									{/if}
+											<div class="theme-info">
+												<div class="theme-name-row">
+													<span class="theme-name">{theme.name}</span>
+													{#if theme.isDefault}
+														<span class="default-badge">Default</span>
+													{/if}
+												</div>
+												{#if theme.id === selectedThemeId}
+													<div class="active-badge">Active</div>
+												{/if}
+											</div>
+										</button>
+									{/each}
 								</div>
-							</button>
+							</section>
 						{/each}
 					</div>
 				{/if}
@@ -276,7 +316,7 @@
 			0 8px 32px rgba(0, 0, 0, 0.6),
 			0 0 40px var(--theme-accent, #90ee90);
 		width: 90%;
-		max-width: min(600px, calc(100vw - 32px));
+		max-width: min(720px, calc(100vw - 32px));
 		max-height: min(80vh, 80dvh);
 		min-width: 0;
 		box-sizing: border-box;
@@ -399,6 +439,29 @@
 		}
 	}
 
+	.themes-grouped {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+	}
+
+	.theme-category-section {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.category-heading {
+		margin: 0;
+		font-size: 11px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 1px;
+		color: var(--theme-text-muted, #71717a);
+		padding-bottom: 4px;
+		border-bottom: 1px solid color-mix(in srgb, var(--theme-border, #ffffff) 35%, transparent);
+	}
+
 	/* Themes Grid */
 	.themes-grid {
 		display: grid;
@@ -505,15 +568,17 @@
 	}
 
 	.theme-name {
-		font-size: 13px;
+		font-size: 12px;
 		font-weight: bold;
 		color: var(--theme-text-primary, #ffffff);
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
+		letter-spacing: 0.2px;
 		min-width: 0;
+		line-height: 1.25;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
 		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		text-align: left;
 	}
 
 	.default-badge {

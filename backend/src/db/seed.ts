@@ -15,6 +15,7 @@ import { seedBlogPostsAndTagLinks } from './seeds/blog-posts';
 import { seedSiteConfig } from './seeds/site-config';
 import { seedContactEmails } from './seeds/contact-emails';
 import { seedContactPageSettings } from './seeds/contact-page-settings';
+import { seedThemeCategories } from './seeds/theme-categories';
 import { seedThemes } from './seeds/themes';
 import { seedVisitorStats } from './seeds/visitor-stats';
 
@@ -38,6 +39,7 @@ export async function seed() {
 		await seedSiteConfig();
 		const contactEmailSeeds = await seedContactEmails();
 		await seedContactPageSettings();
+		const themeCategorySeeds = await seedThemeCategories();
 		const themeSeeds = await seedThemes();
 		const visitorCount = await seedVisitorStats();
 
@@ -53,6 +55,7 @@ export async function seed() {
 		logger.info(`   - 5 site configuration settings`);
 		logger.info(`   - ${contactEmailSeeds.length} contact emails`);
 		logger.info(`   - 4 contact page settings`);
+		logger.info(`   - ${themeCategorySeeds.length} theme categories`);
 		logger.info(`   - ${themeSeeds.length} themes`);
 		logger.info(`   - ${visitorCount} visitor statistics records`);
 	} catch (error) {

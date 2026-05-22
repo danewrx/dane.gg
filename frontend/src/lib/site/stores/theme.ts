@@ -3,7 +3,12 @@ import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 import { clampThemeFontScale } from '$lib/site/constants/themeFontScale';
 import { clampThemeUnitOpacity, themeDarkenToRgba } from '$lib/site/constants/themeOverlayOpacity';
-import { buildStatusCssVariables, inferSurfaceTone } from '$lib/site/constants/statusSemantics';
+import {
+	buildMarkdownCodeCssVariables,
+	buildStatusCssVariables,
+	inferMarkdownCodeBlockTone,
+	inferSurfaceTone
+} from '$lib/site/constants/statusSemantics';
 
 export type ThemeEnforcementState = {
 	enforced: boolean;
@@ -82,7 +87,7 @@ export const DEFAULT_THEME: SiteTheme = {
 	textMuted: '#71717a',
 
 	// Background
-	backgroundImage: '/assets/img/backgrounds/1.png',
+	backgroundImage: '/assets/themes/default/backgrounds/1.png',
 	backgroundImageExternal: false,
 	backgroundBlur: 0,
 	backgroundPosition: 'center center',
@@ -110,6 +115,22 @@ export const DEFAULT_THEME: SiteTheme = {
 export const siteTheme = writable<SiteTheme>(DEFAULT_THEME);
 export const themeLoading = writable<boolean>(true);
 export const themeError = writable<string | null>(null);
+
+/** Slug for bundled GeoCities theme (`html[data-theme="geocities"]` in seed customCss). */
+export const GEOCITIES_THEME_SLUG = 'geocities';
+
+export function themeSlugFromName(name: string): string {
+	return name
+		.trim()
+		.toLowerCase()
+		.replaceAll(/\s+/g, '-')
+		.replaceAll(/[^a-z0-9-]/g, '');
+}
+
+export const isGeoCitiesTheme = derived(
+	siteTheme,
+	($theme) => themeSlugFromName($theme.name) === GEOCITIES_THEME_SLUG
+);
 
 export const themeColors = derived(siteTheme, ($theme) => ({
 	primary: $theme.primaryColor,
@@ -323,6 +344,7 @@ function buildThemeVarsStylesheet(theme: SiteTheme): string {
   --theme-overlay-grain-opacity: ${clampThemeUnitOpacity(theme.overlayGrainOpacity, '0')};
   --theme-overlay-glare-opacity: ${clampThemeUnitOpacity(theme.overlayGlareOpacity, '0')};
 ${buildStatusCssVariables(theme.surfaceColor)}
+${buildMarkdownCodeCssVariables(theme.surfaceColor, theme.textPrimary)}
 }`;
 }
 
@@ -335,7 +357,9 @@ export function clearSiteThemePresentation(): void {
 	document.querySelector('style[data-theme-custom]')?.remove();
 	document.querySelector('link[data-google-fonts]')?.remove();
 	try {
+		delete document.documentElement.dataset.theme;
 		delete document.documentElement.dataset.themeSurfaceTone;
+		delete document.documentElement.dataset.themeCodeTone;
 	} catch {
 		/* ignore */
 	}
@@ -375,7 +399,17 @@ export function applyThemeStyles(theme: SiteTheme): void {
 	el.textContent = css;
 
 	try {
+		const slug = themeSlugFromName(theme.name);
+		if (slug) {
+			document.documentElement.dataset.theme = slug;
+		} else {
+			delete document.documentElement.dataset.theme;
+		}
 		document.documentElement.dataset.themeSurfaceTone = inferSurfaceTone(theme.surfaceColor);
+		document.documentElement.dataset.themeCodeTone = inferMarkdownCodeBlockTone(
+			theme.surfaceColor,
+			theme.textPrimary
+		);
 	} catch {
 		/* ignore */
 	}

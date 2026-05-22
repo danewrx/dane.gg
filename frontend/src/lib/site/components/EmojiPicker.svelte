@@ -525,15 +525,14 @@
 		flex-direction: column;
 		z-index: 10000;
 		overflow: hidden;
-		font-family: 'MS Sans Serif', 'Segoe UI', sans-serif;
+		font-family: var(--theme-font-family, 'MS Sans Serif', 'Segoe UI', sans-serif);
 		font-size: calc(12 * 1em / 14);
-		border: 2px outset var(--theme-border, #4a4a4a);
-		background: var(--theme-surface, #2a2a2a);
+		color: var(--theme-text-primary, #000000);
+		border: 2px outset var(--theme-border, #808080);
+		background: var(--theme-surface, #c0c0c0);
 		box-shadow:
-			inset -1px -1px 0 rgba(0, 0, 0, 0.5),
-			inset 1px 1px 0 rgba(255, 255, 255, 0.1),
-			inset -2px -2px 0 rgba(0, 0, 0, 0.3),
-			inset 2px 2px 0 rgba(255, 255, 255, 0.05);
+			inset -1px -1px 0 color-mix(in srgb, var(--theme-border, #000000) 40%, transparent),
+			inset 1px 1px 0 color-mix(in srgb, var(--theme-primary, #ffffff) 25%, transparent);
 		box-sizing: border-box;
 	}
 
@@ -559,15 +558,15 @@
 		display: flex;
 		align-items: center;
 		height: 22px;
-		background: #3a3a3a;
-		color: #e0e0e0;
+		background: var(--theme-secondary, #000080);
+		color: var(--theme-primary, #ffffff);
 		padding: 0 3px;
 		font-weight: bold;
 		font-size: calc(12 * 1em / 14);
 		user-select: none;
 		cursor: default;
-		border-bottom: 1px solid #1a1a1a;
-		border-top: 1px solid #555555;
+		border-bottom: 1px solid
+			color-mix(in srgb, var(--theme-border, #000000) 65%, transparent);
 	}
 
 	.titlebar-icon {
@@ -595,30 +594,34 @@
 		height: 16px;
 		padding: 0;
 		margin: 0;
-		border: 1px solid #4a4a4a;
-		background: #3a3a3a;
-		color: #e0e0e0;
+		border: 1px solid var(--theme-border, #808080);
+		background: var(--theme-surface, #c0c0c0);
+		color: var(--theme-text-primary, #000000);
 		font-size: calc(12 * 1em / 14);
 		line-height: 1;
 		cursor: pointer;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-family: 'MS Sans Serif', sans-serif;
+		font-family: inherit;
 		box-shadow:
-			inset -1px -1px 0 #000000,
-			inset 1px 1px 0 #666666;
+			inset -1px -1px 0 color-mix(in srgb, var(--theme-border, #000000) 50%, transparent),
+			inset 1px 1px 0 color-mix(in srgb, var(--theme-primary, #ffffff) 35%, transparent);
 	}
 
 	.titlebar-button:hover:not(:disabled) {
-		background: #4a4a4a;
-		color: #ffffff;
+		background: color-mix(
+			in srgb,
+			var(--theme-surface, #c0c0c0) 70%,
+			var(--theme-primary, #ffffff)
+		);
+		color: var(--theme-text-primary, #000000);
 	}
 
 	.titlebar-button:active:not(:disabled) {
 		box-shadow:
-			inset 1px 1px 0 #000000,
-			inset -1px -1px 0 #666666;
+			inset 1px 1px 0 color-mix(in srgb, var(--theme-border, #000000) 50%, transparent),
+			inset -1px -1px 0 color-mix(in srgb, var(--theme-primary, #ffffff) 35%, transparent);
 	}
 
 	.titlebar-button:disabled {
@@ -636,8 +639,8 @@
 		flex-wrap: wrap;
 		gap: 3px;
 		padding: 3px;
-		background: #2a2a2a;
-		border-bottom: 1px solid #1a1a1a;
+		background: var(--theme-background, var(--theme-surface, #c0c0c0));
+		border-bottom: 1px solid var(--theme-border, #808080);
 		overflow-y: auto;
 		max-height: 80px;
 	}
@@ -648,50 +651,51 @@
 	}
 
 	.win95-tabs::-webkit-scrollbar-track {
-		background: #2a2a2a;
-		border: 1px inset #2a2a2a;
+		background: var(--theme-background, var(--theme-surface, #c0c0c0));
+		border: 1px inset var(--theme-border, #808080);
 	}
 
 	.win95-tabs::-webkit-scrollbar-thumb {
-		background: #3a3a3a;
-		border: 1px outset #3a3a3a;
-		box-shadow:
-			inset -1px -1px 0 #000000,
-			inset 1px 1px 0 #666666;
+		background: var(--theme-surface, #c0c0c0);
+		border: 1px outset var(--theme-border, #808080);
 	}
 
 	.win95-tab {
 		padding: 3px 10px;
-		background: #3a3a3a;
-		border: 1px outset #3a3a3a;
-		color: #e0e0e0;
+		background: var(--theme-surface, #c0c0c0);
+		border: 1px outset var(--theme-border, #808080);
+		color: var(--theme-text-primary, #000000);
 		font-size: calc(12 * 1em / 14);
 		cursor: pointer;
 		white-space: nowrap;
 		font-family: inherit;
 		box-shadow:
-			inset -1px -1px 0 #000000,
-			inset 1px 1px 0 #666666;
+			inset -1px -1px 0 color-mix(in srgb, var(--theme-border, #000000) 40%, transparent),
+			inset 1px 1px 0 color-mix(in srgb, var(--theme-primary, #ffffff) 30%, transparent);
 	}
 
 	.win95-tab:hover {
-		background: #4a4a4a;
-		color: #ffffff;
+		background: color-mix(
+			in srgb,
+			var(--theme-surface, #c0c0c0) 75%,
+			var(--theme-accent, #000080)
+		);
+		color: var(--theme-text-primary, #000000);
 	}
 
 	.win95-tab.active {
-		background: #2a2a2a;
-		border: 1px inset #2a2a2a;
-		color: #ffffff;
+		background: var(--theme-background, var(--theme-surface, #c0c0c0));
+		border: 1px inset var(--theme-border, #808080);
+		color: var(--theme-text-primary, #000000);
 		box-shadow:
-			inset 1px 1px 0 #000000,
-			inset -1px -1px 0 #666666;
+			inset 1px 1px 0 color-mix(in srgb, var(--theme-border, #000000) 40%, transparent),
+			inset -1px -1px 0 color-mix(in srgb, var(--theme-primary, #ffffff) 30%, transparent);
 	}
 
 	.win95-content {
 		flex: 1;
-		background: #1a1a1a;
-		border: 1px inset #2a2a2a;
+		background: var(--theme-background, #ffffff);
+		border: 1px inset var(--theme-border, #808080);
 		margin: 2px;
 		overflow: hidden;
 		display: flex;
@@ -710,21 +714,18 @@
 	}
 
 	.win95-grid-container::-webkit-scrollbar-track {
-		background: #2a2a2a;
-		border: 1px inset #2a2a2a;
+		background: var(--theme-background, #ffffff);
+		border: 1px inset var(--theme-border, #808080);
 	}
 
 	.win95-grid-container::-webkit-scrollbar-thumb {
-		background: #3a3a3a;
-		border: 1px outset #3a3a3a;
-		box-shadow:
-			inset -1px -1px 0 #000000,
-			inset 1px 1px 0 #666666;
+		background: var(--theme-surface, #c0c0c0);
+		border: 1px outset var(--theme-border, #808080);
 	}
 
 	.win95-grid-container::-webkit-scrollbar-corner {
-		background: #2a2a2a;
-		border: 1px inset #2a2a2a;
+		background: var(--theme-background, #ffffff);
+		border: 1px inset var(--theme-border, #808080);
 	}
 
 	.emoji-category-section {
@@ -734,11 +735,11 @@
 	}
 
 	.category-heading {
-		color: #e0e0e0;
+		color: var(--theme-text-muted, var(--theme-text-primary, #000000));
 		font-size: calc(13 * 1em / 14);
 		font-weight: bold;
 		padding: 4px 0;
-		border-bottom: 1px solid #3a3a3a;
+		border-bottom: 1px solid var(--theme-border, #808080);
 		margin-top: 8px;
 	}
 
@@ -750,7 +751,7 @@
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
 		gap: 3px;
-		background: #1a1a1a;
+		background: var(--theme-background, #ffffff);
 	}
 
 	@media (max-width: 480px) {
@@ -763,8 +764,8 @@
 		width: 100%;
 		aspect-ratio: 1;
 		min-width: 36px;
-		background: #1a1a1a;
-		border: 1px solid #3a3a3a;
+		background: var(--theme-background, #ffffff);
+		border: 1px solid var(--theme-border, #808080);
 		font-size: calc(20 * 1em / 14);
 		line-height: 1;
 		cursor: pointer;
@@ -772,10 +773,10 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: #e0e0e0;
+		color: var(--theme-text-primary, #000000);
 		box-shadow:
-			inset -1px -1px 0 #000000,
-			inset 1px 1px 0 #555555;
+			inset -1px -1px 0 color-mix(in srgb, var(--theme-border, #000000) 35%, transparent),
+			inset 1px 1px 0 color-mix(in srgb, var(--theme-primary, #ffffff) 20%, transparent);
 	}
 
 	@media (max-width: 480px) {
@@ -786,15 +787,15 @@
 	}
 
 	.win95-char-button:hover {
-		background: #1a3a5a;
-		color: #ffffff;
-		border-color: #2a5a7a;
+		background: var(--theme-accent, #000080);
+		color: var(--theme-primary, #ffffff);
+		border-color: var(--theme-accent, #000080);
 	}
 
 	.win95-char-button:active {
 		box-shadow:
-			inset 1px 1px 0 #000000,
-			inset -1px -1px 0 #555555;
+			inset 1px 1px 0 color-mix(in srgb, var(--theme-border, #000000) 35%, transparent),
+			inset -1px -1px 0 color-mix(in srgb, var(--theme-primary, #ffffff) 20%, transparent);
 	}
 
 	.win95-char-button img {
@@ -805,30 +806,21 @@
 		image-rendering: crisp-edges;
 	}
 
-	/* Status Bar */
 	.win95-statusbar {
 		display: flex;
 		justify-content: space-between;
 		height: 22px;
-		background: #3a3a3a;
-		border-top: 1px solid #1a1a1a;
-		border-bottom: 1px solid #555555;
+		background: var(--theme-surface, #c0c0c0);
+		border-top: 1px solid var(--theme-border, #808080);
 		padding: 0 6px;
 		align-items: center;
 		font-size: calc(12 * 1em / 14);
-		color: #e0e0e0;
+		color: var(--theme-text-primary, #000000);
 	}
 
 	.statusbar-left,
 	.statusbar-right {
 		display: flex;
 		align-items: center;
-	}
-
-	/* Consistent dark theme styling */
-	:global(html.dark) .emoji-picker,
-	:global(html:not(.dark)) .emoji-picker {
-		border: 2px outset #4a4a4a;
-		background: #2a2a2a;
 	}
 </style>

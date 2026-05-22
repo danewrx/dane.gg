@@ -343,9 +343,18 @@ export const contactPageSettings = websiteSchema.table('contact_page_settings', 
 });
 
 // Site themes table
+// Theme categories
+export const themeCategories = websiteSchema.table('theme_categories', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	name: varchar('name', { length: 50 }).notNull().unique(),
+	displayOrder: integer('display_order').notNull().default(0),
+	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
+});
+
 export const themes = websiteSchema.table('themes', {
 	id: uuid('id').primaryKey().defaultRandom(),
 	name: varchar('name', { length: 100 }).notNull(),
+	categoryId: uuid('category_id').references(() => themeCategories.id, { onDelete: 'set null' }),
 	description: text('description'),
 	isActive: boolean('is_active').default(false),
 	isDefault: boolean('is_default').default(false),
@@ -474,6 +483,17 @@ export const userUploadsRelations = relations(userUploads, ({ one }) => ({
 	})
 }));
 
+export const themeCategoriesRelations = relations(themeCategories, ({ many }) => ({
+	themes: many(themes)
+}));
+
+export const themesRelations = relations(themes, ({ one }) => ({
+	category: one(themeCategories, {
+		fields: [themes.categoryId],
+		references: [themeCategories.id]
+	})
+}));
+
 export const skillCategoriesRelations = relations(skillCategories, ({ many }) => ({
 	skills: many(skills)
 }));
@@ -533,5 +553,7 @@ export type ContactEmail = typeof contactEmails.$inferSelect;
 export type NewContactEmail = typeof contactEmails.$inferInsert;
 export type ContactPageSetting = typeof contactPageSettings.$inferSelect;
 export type NewContactPageSetting = typeof contactPageSettings.$inferInsert;
+export type ThemeCategory = typeof themeCategories.$inferSelect;
+export type NewThemeCategory = typeof themeCategories.$inferInsert;
 export type Theme = typeof themes.$inferSelect;
 export type NewTheme = typeof themes.$inferInsert;

@@ -7,6 +7,7 @@
 	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
 	import { getProjectStatusColor } from '$lib/shared/constants/projectConstants';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
+	import RainbowText from '$lib/site/components/RainbowText.svelte';
 	import SiteBackNav from '$lib/site/components/layout/SiteBackNav.svelte';
 	import type { PageData } from './$types';
 
@@ -130,7 +131,9 @@
 
 					<div class="project-content">
 						<div class="project-header">
-							<h3 class="project-title">{project.title}</h3>
+							<h3 class="project-title">
+								<RainbowText text={project.title} />
+							</h3>
 							<div class="project-status">
 								<span
 									class="status-indicator"

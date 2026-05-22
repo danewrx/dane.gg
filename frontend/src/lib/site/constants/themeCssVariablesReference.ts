@@ -41,6 +41,13 @@ export const THEME_CSS_VARIABLES_REFERENCE = `:root {
   --theme-overlay-grain-opacity: 0;
   --theme-overlay-glare-opacity: 0;
 
+  /* === Markdown code blocks (grey box opposes text tone) === */
+  --theme-code-tone: dark;
+  --theme-code-foreground: #f0f0f0;
+  --theme-code-background: #2a2a2a;
+  --theme-code-inline-background: #333333;
+  --theme-code-border: #444444;
+
   /* === Status colors (pastels; tone follows surface) === */
   --theme-surface-tone: dark;
   --status-ok: #90ee90;

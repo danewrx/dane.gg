@@ -8,6 +8,7 @@
 	import { renderMarkdown } from '$lib/site/utils/renderMarkdown';
 	import { getProjectStatusColor } from '$lib/shared/constants/projectConstants';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
+	import RainbowText from '$lib/site/components/RainbowText.svelte';
 	interface ProjectTag {
 		id: string;
 		title: string;
@@ -175,7 +176,9 @@
 
 								<div class="project-content">
 									<div class="project-header">
-										<h3 class="project-title">{project.title}</h3>
+										<h3 class="project-title">
+											<RainbowText text={project.title} />
+										</h3>
 										<div class="project-status">
 											<span
 												class="status-indicator"

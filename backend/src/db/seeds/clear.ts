@@ -14,6 +14,7 @@ import {
 	contactEmails,
 	contactPageSettings,
 	themes,
+	themeCategories,
 	fonts
 } from '../schema';
 
@@ -33,5 +34,6 @@ export async function clearAllSeedData() {
 	await db.delete(contactEmails);
 	await db.delete(contactPageSettings);
 	await db.delete(themes);
+	await db.delete(themeCategories);
 	await db.delete(fonts);
 }

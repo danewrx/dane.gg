@@ -1,7 +1,7 @@
 import { logger } from '../utils/logger';
 import { Router } from 'express';
 import { db } from '../db';
-import { themes, fonts } from '../db/schema';
+import { themes, themeCategories, fonts } from '../db/schema';
 import { eq, asc, and } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
 import { ConfigService } from '../services/config';
@@ -49,6 +49,70 @@ async function getDefaultPublicThemeRow(): Promise<typeof themes.$inferSelect | 
 		.limit(1);
 
 	return firstVisibleTheme ?? null;
+}
+
+type ThemeCategoryPayload = {
+	id: string;
+	name: string;
+	displayOrder: number;
+} | null;
+
+function mapCategoryFromJoin(
+	category: { id: string; name: string; displayOrder: number } | null
+): ThemeCategoryPayload {
+	if (!category?.id) return null;
+	return {
+		id: category.id,
+		name: category.name,
+		displayOrder: category.displayOrder
+	};
+}
+
+async function selectThemesWithCategories(whereClause?: ReturnType<typeof eq>) {
+	const baseQuery = db
+		.select({
+			theme: themes,
+			category: {
+				id: themeCategories.id,
+				name: themeCategories.name,
+				displayOrder: themeCategories.displayOrder
+			}
+		})
+		.from(themes)
+		.leftJoin(themeCategories, eq(themes.categoryId, themeCategories.id))
+		.orderBy(asc(themeCategories.displayOrder), asc(themes.displayOrder));
+
+	const rows = whereClause ? await baseQuery.where(whereClause) : await baseQuery;
+
+	return rows.map(({ theme, category }) => ({
+		...theme,
+		category: mapCategoryFromJoin(category)
+	}));
+}
+
+async function getCustomCategoryId(): Promise<string | null> {
+	const [row] = await db
+		.select({ id: themeCategories.id })
+		.from(themeCategories)
+		.where(eq(themeCategories.name, 'Custom'))
+		.limit(1);
+	return row?.id ?? null;
+}
+
+async function resolveCategoryIdForCreate(
+	categoryId: unknown
+): Promise<string | null | undefined> {
+	if (categoryId === null) return null;
+	if (typeof categoryId === 'string' && categoryId) {
+		const [cat] = await db
+			.select({ id: themeCategories.id })
+			.from(themeCategories)
+			.where(eq(themeCategories.id, categoryId))
+			.limit(1);
+		if (!cat) return undefined;
+		return categoryId;
+	}
+	return getCustomCategoryId();
 }
 
 async function enrichThemesWithFontUrls(themesData: any[]): Promise<any[]> {
@@ -109,11 +173,7 @@ router.get('/active', async (req, res) => {
 router.get('/', async (req, res) => {
 	try {
 		const enforcement = await getThemeEnforcement();
-		const visibleThemes = await db
-			.select()
-			.from(themes)
-			.where(eq(themes.isVisible, true))
-			.orderBy(asc(themes.displayOrder));
+		const visibleThemes = await selectThemesWithCategories(eq(themes.isVisible, true));
 
 		const enriched = await enrichThemesWithFontUrls(visibleThemes);
 		res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
@@ -135,7 +195,7 @@ router.get('/', async (req, res) => {
 router.get('/all', requireAuth, async (req, res) => {
 	try {
 		const enforcement = await getThemeEnforcement();
-		const allThemes = await db.select().from(themes).orderBy(asc(themes.displayOrder));
+		const allThemes = await selectThemesWithCategories();
 
 		const enriched = await enrichThemesWithFontUrls(allThemes);
 		res.json({
@@ -202,6 +262,180 @@ router.put('/enforcement', requireAuth, async (req, res) => {
 	}
 });
 
+// GET all theme categories (admin)
+router.get('/categories/all', requireAuth, async (req, res) => {
+	try {
+		const categories = await db
+			.select()
+			.from(themeCategories)
+			.orderBy(asc(themeCategories.displayOrder), asc(themeCategories.name));
+
+		res.json({
+			success: true,
+			data: categories
+		});
+	} catch (error) {
+		logger.error('Error fetching theme categories:', error);
+		res.status(500).json({
+			success: false,
+			error: 'Failed to fetch theme categories'
+		});
+	}
+});
+
+// POST create theme category (admin)
+router.post('/categories', requireAuth, async (req, res) => {
+	try {
+		const { name } = req.body;
+
+		if (!name || !String(name).trim()) {
+			return res.status(400).json({
+				success: false,
+				error: 'Category name is required'
+			});
+		}
+
+		const trimmed = String(name).trim();
+		const allCategories = await db.select().from(themeCategories);
+		const maxOrder = allCategories.reduce((max, cat) => Math.max(max, cat.displayOrder), -1);
+
+		const [newCategory] = await db
+			.insert(themeCategories)
+			.values({
+				name: trimmed,
+				displayOrder: maxOrder + 1
+			})
+			.returning();
+
+		res.status(201).json({
+			success: true,
+			data: newCategory
+		});
+	} catch (error: any) {
+		logger.error('Error creating theme category:', error);
+		if (error.code === '23505') {
+			return res.status(400).json({
+				success: false,
+				error: 'A category with this name already exists'
+			});
+		}
+		res.status(500).json({
+			success: false,
+			error: 'Failed to create theme category'
+		});
+	}
+});
+
+// PUT update theme category order (admin)
+router.put('/categories/order', requireAuth, async (req, res) => {
+	try {
+		const { categoryOrders } = req.body;
+
+		if (!Array.isArray(categoryOrders)) {
+			return res.status(400).json({
+				success: false,
+				error: 'categoryOrders must be an array'
+			});
+		}
+
+		await Promise.all(
+			categoryOrders.map(({ id, displayOrder }: { id: string; displayOrder: number }) =>
+				db
+					.update(themeCategories)
+					.set({ displayOrder: Number.parseInt(String(displayOrder), 10) })
+					.where(eq(themeCategories.id, id))
+			)
+		);
+
+		res.json({
+			success: true,
+			message: 'Category order updated successfully'
+		});
+	} catch (error) {
+		logger.error('Error updating theme category order:', error);
+		res.status(500).json({
+			success: false,
+			error: 'Failed to update category order'
+		});
+	}
+});
+
+// PUT update theme category (admin)
+router.put('/categories/:id', requireAuth, async (req, res) => {
+	try {
+		const { id } = req.params;
+		const { name } = req.body;
+
+		if (!name || !String(name).trim()) {
+			return res.status(400).json({
+				success: false,
+				error: 'Category name is required'
+			});
+		}
+
+		const [updatedCategory] = await db
+			.update(themeCategories)
+			.set({ name: String(name).trim() })
+			.where(eq(themeCategories.id, id))
+			.returning();
+
+		if (!updatedCategory) {
+			return res.status(404).json({
+				success: false,
+				error: 'Category not found'
+			});
+		}
+
+		res.json({
+			success: true,
+			data: updatedCategory
+		});
+	} catch (error: any) {
+		logger.error('Error updating theme category:', error);
+		if (error.code === '23505') {
+			return res.status(400).json({
+				success: false,
+				error: 'A category with this name already exists'
+			});
+		}
+		res.status(500).json({
+			success: false,
+			error: 'Failed to update theme category'
+		});
+	}
+});
+
+// DELETE theme category (admin)
+router.delete('/categories/:id', requireAuth, async (req, res) => {
+	try {
+		const { id } = req.params;
+
+		const [deletedCategory] = await db
+			.delete(themeCategories)
+			.where(eq(themeCategories.id, id))
+			.returning();
+
+		if (!deletedCategory) {
+			return res.status(404).json({
+				success: false,
+				error: 'Category not found'
+			});
+		}
+
+		res.json({
+			success: true,
+			data: deletedCategory,
+			message: 'Category deleted successfully'
+		});
+	} catch (error) {
+		logger.error('Error deleting theme category:', error);
+		res.status(500).json({
+			success: false,
+			error: 'Failed to delete theme category'
+		});
+	}
+});
+
 // GET single theme by ID
 router.get('/:id', requireAuth, async (req, res) => {
 	try {
@@ -236,6 +470,7 @@ router.post('/', requireAuth, async (req, res) => {
 		const {
 			name,
 			description,
+			categoryId,
 			isVisible,
 			primaryColor,
 			secondaryColor,
@@ -273,6 +508,14 @@ router.post('/', requireAuth, async (req, res) => {
 			});
 		}
 
+		const resolvedCategoryId = await resolveCategoryIdForCreate(categoryId);
+		if (resolvedCategoryId === undefined) {
+			return res.status(400).json({
+				success: false,
+				error: 'Category not found'
+			});
+		}
+
 		const allThemes = await db.select().from(themes);
 		const maxOrder = allThemes.reduce((max, t) => Math.max(max, t.displayOrder), -1);
 
@@ -281,6 +524,7 @@ router.post('/', requireAuth, async (req, res) => {
 			.values({
 				name,
 				description: description || null,
+				categoryId: resolvedCategoryId,
 				isDefault: false,
 				isVisible: isVisible !== false,
 				primaryColor: primaryColor || '#ffffff',
@@ -409,6 +653,7 @@ router.put('/:id', requireAuth, async (req, res) => {
 		const {
 			name,
 			description,
+			categoryId,
 			isVisible,
 			primaryColor,
 			secondaryColor,
@@ -446,6 +691,20 @@ router.put('/:id', requireAuth, async (req, res) => {
 
 		if (name !== undefined) updateData.name = name;
 		if (description !== undefined) updateData.description = description;
+		if (categoryId !== undefined) {
+			if (categoryId === null) {
+				updateData.categoryId = null;
+			} else {
+				const resolvedCategoryId = await resolveCategoryIdForCreate(categoryId);
+				if (resolvedCategoryId === undefined) {
+					return res.status(400).json({
+						success: false,
+						error: 'Category not found'
+					});
+				}
+				updateData.categoryId = resolvedCategoryId;
+			}
+		}
 		if (isVisible !== undefined) updateData.isVisible = isVisible;
 		if (primaryColor !== undefined) updateData.primaryColor = primaryColor;
 		if (secondaryColor !== undefined) updateData.secondaryColor = secondaryColor;
@@ -560,6 +819,7 @@ router.post('/:id/duplicate', requireAuth, async (req, res) => {
 				overlayGrainOpacity: originalTheme.overlayGrainOpacity,
 				overlayGlareOpacity: originalTheme.overlayGlareOpacity,
 				overlayDarkenOpacity: originalTheme.overlayDarkenOpacity ?? '0',
+				categoryId: originalTheme.categoryId,
 				displayOrder: maxOrder + 1
 			})
 			.returning();

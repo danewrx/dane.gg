@@ -53,6 +53,16 @@
 <div class="main-container dark-theme">
 	<ThemeProvider />
 
+	<div class="lain-ambient-deco" aria-hidden="true">
+		<img
+			src="/assets/themes/lain/misc/lain.gif"
+			alt=""
+			width="480"
+			height="720"
+			decoding="async"
+		/>
+	</div>
+
 	<!-- Weather Effects -->
 	{#if !isThemePreviewEmbed}
 		<WeatherEffects />
@@ -323,6 +333,11 @@
 		.content-area {
 			padding: 0.5rem 0.75rem 1.5rem 0.75rem;
 		}
+	}
+
+	/* Hidden unless html[data-theme="lets-all-love-lain"] (see themes.ts) */
+	.lain-ambient-deco {
+		display: none;
 	}
 
 	.banner-side-label {
