@@ -5,10 +5,7 @@ import { BUILTIN_DEFAULT_THEME_INSERT } from '../builtinDefaultTheme';
 import { BUILTIN_SITE_FONT_NAME } from '../builtinSiteFont';
 import { db } from '../index';
 import { themes } from '../schema';
-import {
-	applyBundledThemeCategoryAssignments,
-	ensureThemeCategories
-} from './theme-categories';
+import { applyBundledThemeCategoryAssignments } from './theme-categories';
 
 const CYBERPUNK_NEON_THEME_INSERT = {
 	name: 'Cyberpunk Neon',
@@ -2597,6 +2594,547 @@ html[data-theme="gruvbox"] ::selection {
 	displayOrder: 8
 } satisfies InferInsertModel<typeof themes>;
 
+const ONE_DARK_THEME_INSERT = {
+	name: 'One Dark',
+	description: 'Atom One Dark — familiar blue-gray editor UI with purple and green accents',
+	isActive: false,
+	isDefault: false,
+	isVisible: true,
+
+	primaryColor: '#abb2bf',
+	secondaryColor: '#61afef',
+	accentColor: '#c678dd',
+	backgroundColor: '#282c34',
+	surfaceColor: 'rgba(40, 44, 52, 0.94)',
+	borderColor: '#3e4451',
+	textPrimary: '#abb2bf',
+	textSecondary: '#98c379',
+	textMuted: '#5c6370',
+
+	backgroundImage: null,
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(40, 44, 52, 0)',
+	overlayDarkenOpacity: '0',
+	backgroundBlur: 0,
+	backgroundPosition: 'center center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'Inter',
+	headingFontFamily: 'Inter',
+	fontScale: '1',
+
+	borderRadius: '8px',
+	widgetBorderRadius: '6px',
+	scanlinesOpacity: '0',
+	overlayVignetteOpacity: '0.1',
+	overlayGridOpacity: '0',
+	overlayGrainOpacity: '0',
+	overlayGlareOpacity: '0',
+	customCss: `
+html[data-theme="one-dark"] {
+  --theme-shell-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  --theme-content-max-width: 1000px;
+  background: linear-gradient(165deg, #21252b 0%, #282c34 50%, #21252b 100%) !important;
+}
+
+html[data-theme="one-dark"] .content-window {
+  border-color: #61afef;
+  box-shadow:
+    var(--theme-shell-shadow),
+    0 0 22px rgba(97, 175, 239, 0.12);
+}
+
+html[data-theme="one-dark"] .bordered-box {
+  box-shadow: 0 0 0 1px rgba(97, 175, 239, 0.1);
+}
+
+html[data-theme="one-dark"] .nav-link:hover,
+html[data-theme="one-dark"] .nav-link.active {
+  color: #c678dd !important;
+  text-shadow: 0 0 12px rgba(198, 120, 221, 0.4);
+}
+
+html[data-theme="one-dark"] ::selection {
+  background: #3e4451;
+  color: #98c379;
+}
+`,
+	displayOrder: 10
+} satisfies InferInsertModel<typeof themes>;
+
+const NORD_THEME_INSERT = {
+	name: 'Nord',
+	description: 'Nord — arctic blue-gray palette with frost blue and aurora mauve accents',
+	isActive: false,
+	isDefault: false,
+	isVisible: true,
+
+	primaryColor: '#eceff4',
+	secondaryColor: '#88c0d0',
+	accentColor: '#b48ead',
+	backgroundColor: '#2e3440',
+	surfaceColor: 'rgba(59, 66, 82, 0.94)',
+	borderColor: '#4c566a',
+	textPrimary: '#eceff4',
+	textSecondary: '#8fbcbb',
+	textMuted: '#81a1c1',
+
+	backgroundImage: null,
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(46, 52, 64, 0)',
+	overlayDarkenOpacity: '0',
+	backgroundBlur: 0,
+	backgroundPosition: 'center center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'Inter',
+	headingFontFamily: 'Inter',
+	fontScale: '1',
+
+	borderRadius: '8px',
+	widgetBorderRadius: '6px',
+	scanlinesOpacity: '0',
+	overlayVignetteOpacity: '0.08',
+	overlayGridOpacity: '0',
+	overlayGrainOpacity: '0',
+	overlayGlareOpacity: '0',
+	customCss: `
+html[data-theme="nord"] {
+  --theme-shell-shadow: 0 12px 44px rgba(46, 52, 64, 0.55);
+  --theme-content-max-width: 1000px;
+  background: linear-gradient(180deg, #242933 0%, #2e3440 45%, #3b4252 100%) !important;
+}
+
+html[data-theme="nord"] .content-window {
+  border-color: #88c0d0;
+  box-shadow:
+    var(--theme-shell-shadow),
+    0 0 24px rgba(136, 192, 208, 0.14);
+}
+
+html[data-theme="nord"] .bordered-box .header-text {
+  color: #eceff4 !important;
+}
+
+html[data-theme="nord"] .nav-link:hover,
+html[data-theme="nord"] .nav-link.active {
+  color: #88c0d0 !important;
+  text-shadow: 0 0 14px rgba(136, 192, 208, 0.35);
+}
+
+html[data-theme="nord"] ::selection {
+  background: #434c5e;
+  color: #ebcb8b;
+}
+`,
+	displayOrder: 11
+} satisfies InferInsertModel<typeof themes>;
+
+const ROSE_PINE_THEME_INSERT = {
+	name: 'Rosé Pine',
+	description: 'Rosé Pine Moon — soft dark UI with iris, foam, and love pink highlights',
+	isActive: false,
+	isDefault: false,
+	isVisible: true,
+
+	primaryColor: '#e0def4',
+	secondaryColor: '#c4a7e7',
+	accentColor: '#eb6f92',
+	backgroundColor: '#191724',
+	surfaceColor: 'rgba(31, 29, 46, 0.94)',
+	borderColor: '#403d52',
+	textPrimary: '#e0def4',
+	textSecondary: '#9ccfd8',
+	textMuted: '#908caa',
+
+	backgroundImage: null,
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(25, 23, 36, 0)',
+	overlayDarkenOpacity: '0',
+	backgroundBlur: 0,
+	backgroundPosition: 'center center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'Inter',
+	headingFontFamily: 'Inter',
+	fontScale: '1',
+
+	borderRadius: '10px',
+	widgetBorderRadius: '8px',
+	scanlinesOpacity: '0',
+	overlayVignetteOpacity: '0.1',
+	overlayGridOpacity: '0',
+	overlayGrainOpacity: '0',
+	overlayGlareOpacity: '0',
+	customCss: `
+html[data-theme="rose-pine"] {
+  --theme-shell-shadow: 0 14px 48px rgba(25, 23, 36, 0.5);
+  --theme-content-max-width: 1000px;
+  background: linear-gradient(155deg, #1f1d2e 0%, #191724 50%, #26233a 100%) !important;
+}
+
+html[data-theme="rose-pine"] .content-window {
+  border-color: #c4a7e7;
+  box-shadow:
+    var(--theme-shell-shadow),
+    0 0 28px rgba(196, 167, 231, 0.12);
+}
+
+html[data-theme="rose-pine"] .bordered-box {
+  box-shadow: 0 0 0 1px rgba(235, 111, 146, 0.08);
+}
+
+html[data-theme="rose-pine"] .nav-link:hover,
+html[data-theme="rose-pine"] .nav-link.active {
+  color: #eb6f92 !important;
+  text-shadow: 0 0 12px rgba(235, 111, 146, 0.35);
+}
+
+html[data-theme="rose-pine"] ::selection {
+  background: #403d52;
+  color: #f6c177;
+}
+`,
+	displayOrder: 12
+} satisfies InferInsertModel<typeof themes>;
+
+const CATPPUCCIN_LATTE_THEME_INSERT = {
+	name: 'Catppuccin Latte',
+	description: 'Catppuccin Latte — light pastel UI with blue, mauve, and pink accents',
+	isActive: false,
+	isDefault: false,
+	isVisible: true,
+
+	primaryColor: '#4c4f69',
+	secondaryColor: '#8839ef',
+	accentColor: '#1e66f5',
+	backgroundColor: '#eff1f5',
+	surfaceColor: 'rgba(230, 233, 239, 0.96)',
+	borderColor: '#ccd0da',
+	textPrimary: '#4c4f69',
+	textSecondary: '#1e66f5',
+	textMuted: '#6c6f85',
+
+	backgroundImage: null,
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(239, 241, 245, 0)',
+	overlayDarkenOpacity: '0',
+	backgroundBlur: 0,
+	backgroundPosition: 'center center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'Inter',
+	headingFontFamily: 'Inter',
+	fontScale: '1',
+
+	borderRadius: '12px',
+	widgetBorderRadius: '10px',
+	scanlinesOpacity: '0',
+	overlayVignetteOpacity: '0',
+	overlayGridOpacity: '0',
+	overlayGrainOpacity: '0',
+	overlayGlareOpacity: '0.06',
+	customCss: `
+html[data-theme="catppuccin-latte"] {
+  --theme-shell-shadow: 0 8px 32px rgba(76, 79, 105, 0.12);
+  --theme-content-max-width: 1000px;
+  background: linear-gradient(165deg, #dce0e8 0%, #eff1f5 45%, #e6e9ef 100%) !important;
+}
+
+html[data-theme="catppuccin-latte"] .content-window {
+  border-color: #8839ef;
+  box-shadow:
+    var(--theme-shell-shadow),
+    0 0 20px rgba(136, 57, 239, 0.08);
+}
+
+html[data-theme="catppuccin-latte"] .bordered-box {
+  box-shadow: 0 0 0 1px rgba(30, 102, 245, 0.1);
+}
+
+html[data-theme="catppuccin-latte"] .bordered-box .header-text {
+  color: #4c4f69 !important;
+}
+
+html[data-theme="catppuccin-latte"] .nav-link:hover,
+html[data-theme="catppuccin-latte"] .nav-link.active {
+  color: #1e66f5 !important;
+  text-shadow: none;
+}
+
+html[data-theme="catppuccin-latte"] ::selection {
+  background: #ccd0da;
+  color: #8839ef;
+}
+`,
+	displayOrder: 13
+} satisfies InferInsertModel<typeof themes>;
+
+const GITHUB_LIGHT_THEME_INSERT = {
+	name: 'GitHub Light',
+	description: 'GitHub Light — clean neutral UI with blue link accents',
+	isActive: false,
+	isDefault: false,
+	isVisible: true,
+
+	primaryColor: '#1f2328',
+	secondaryColor: '#0969da',
+	accentColor: '#8250df',
+	backgroundColor: '#ffffff',
+	surfaceColor: 'rgba(246, 248, 250, 0.98)',
+	borderColor: '#d0d7de',
+	textPrimary: '#1f2328',
+	textSecondary: '#0969da',
+	textMuted: '#656d76',
+
+	backgroundImage: null,
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(255, 255, 255, 0)',
+	overlayDarkenOpacity: '0',
+	backgroundBlur: 0,
+	backgroundPosition: 'center center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'Inter',
+	headingFontFamily: 'Inter',
+	fontScale: '1',
+
+	borderRadius: '6px',
+	widgetBorderRadius: '6px',
+	scanlinesOpacity: '0',
+	overlayVignetteOpacity: '0',
+	overlayGridOpacity: '0',
+	overlayGrainOpacity: '0',
+	overlayGlareOpacity: '0.04',
+	customCss: `
+html[data-theme="github-light"] {
+  --theme-shell-shadow: 0 1px 3px rgba(31, 35, 40, 0.12), 0 8px 24px rgba(31, 35, 40, 0.08);
+  --theme-content-max-width: 1000px;
+  background: linear-gradient(180deg, #f6f8fa 0%, #ffffff 55%, #f6f8fa 100%) !important;
+}
+
+html[data-theme="github-light"] .content-window {
+  border-color: #d0d7de;
+  box-shadow: var(--theme-shell-shadow);
+}
+
+html[data-theme="github-light"] .bordered-box {
+  box-shadow: 0 0 0 1px rgba(208, 215, 222, 0.8);
+}
+
+html[data-theme="github-light"] .nav-link:hover,
+html[data-theme="github-light"] .nav-link.active {
+  color: #0969da !important;
+}
+
+html[data-theme="github-light"] ::selection {
+  background: #b6e3ff;
+  color: #1f2328;
+}
+`,
+	displayOrder: 14
+} satisfies InferInsertModel<typeof themes>;
+
+const ONE_LIGHT_THEME_INSERT = {
+	name: 'One Light',
+	description: 'Atom One Light — soft gray UI with blue and purple syntax accents',
+	isActive: false,
+	isDefault: false,
+	isVisible: true,
+
+	primaryColor: '#383a42',
+	secondaryColor: '#4078f2',
+	accentColor: '#a626a4',
+	backgroundColor: '#fafafa',
+	surfaceColor: 'rgba(250, 250, 250, 0.98)',
+	borderColor: '#e5e5e6',
+	textPrimary: '#383a42',
+	textSecondary: '#4078f2',
+	textMuted: '#a0a1a7',
+
+	backgroundImage: null,
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(250, 250, 250, 0)',
+	overlayDarkenOpacity: '0',
+	backgroundBlur: 0,
+	backgroundPosition: 'center center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'Inter',
+	headingFontFamily: 'Inter',
+	fontScale: '1',
+
+	borderRadius: '8px',
+	widgetBorderRadius: '6px',
+	scanlinesOpacity: '0',
+	overlayVignetteOpacity: '0',
+	overlayGridOpacity: '0',
+	overlayGrainOpacity: '0',
+	overlayGlareOpacity: '0.05',
+	customCss: `
+html[data-theme="one-light"] {
+  --theme-shell-shadow: 0 8px 28px rgba(56, 58, 66, 0.1);
+  --theme-content-max-width: 1000px;
+  background: linear-gradient(165deg, #f0f0f1 0%, #fafafa 50%, #ffffff 100%) !important;
+}
+
+html[data-theme="one-light"] .content-window {
+  border-color: #4078f2;
+  box-shadow:
+    var(--theme-shell-shadow),
+    0 0 16px rgba(64, 120, 242, 0.08);
+}
+
+html[data-theme="one-light"] .nav-link:hover,
+html[data-theme="one-light"] .nav-link.active {
+  color: #a626a4 !important;
+}
+
+html[data-theme="one-light"] ::selection {
+  background: #e5e5e6;
+  color: #50a14f;
+}
+`,
+	displayOrder: 15
+} satisfies InferInsertModel<typeof themes>;
+
+const GRUVBOX_LIGHT_THEME_INSERT = {
+	name: 'Gruvbox Light',
+	description: 'Gruvbox Light — warm cream palette with orange and aqua accents',
+	isActive: false,
+	isDefault: false,
+	isVisible: true,
+
+	primaryColor: '#3c3836',
+	secondaryColor: '#076678',
+	accentColor: '#af3a03',
+	backgroundColor: '#fbf1c7',
+	surfaceColor: 'rgba(249, 245, 215, 0.96)',
+	borderColor: '#d5c4a1',
+	textPrimary: '#3c3836',
+	textSecondary: '#427b58',
+	textMuted: '#928374',
+
+	backgroundImage: null,
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(251, 241, 199, 0)',
+	overlayDarkenOpacity: '0',
+	backgroundBlur: 0,
+	backgroundPosition: 'center center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'JetBrains Mono',
+	headingFontFamily: 'JetBrains Mono',
+	fontScale: '1',
+
+	borderRadius: '4px',
+	widgetBorderRadius: '4px',
+	scanlinesOpacity: '0',
+	overlayVignetteOpacity: '0',
+	overlayGridOpacity: '0',
+	overlayGrainOpacity: '0.02',
+	overlayGlareOpacity: '0.04',
+	customCss: `
+html[data-theme="gruvbox-light"] {
+  --theme-shell-shadow: 3px 3px 0 rgba(60, 56, 54, 0.12);
+  --theme-content-max-width: 1000px;
+  background: linear-gradient(180deg, #f9f5d7 0%, #fbf1c7 45%, #ebdbb2 100%) !important;
+}
+
+html[data-theme="gruvbox-light"] .content-window {
+  border-color: #af3a03;
+  border-width: 2px;
+  box-shadow: var(--theme-shell-shadow);
+}
+
+html[data-theme="gruvbox-light"] .bordered-box .header-divider {
+  background: #af3a03;
+}
+
+html[data-theme="gruvbox-light"] .nav-link:hover,
+html[data-theme="gruvbox-light"] .nav-link.active {
+  color: #af3a03 !important;
+}
+
+html[data-theme="gruvbox-light"] ::selection {
+  background: #d5c4a1;
+  color: #b57614;
+}
+`,
+	displayOrder: 16
+} satisfies InferInsertModel<typeof themes>;
+
+const ROSE_PINE_DAWN_THEME_INSERT = {
+	name: 'Rose Pine Dawn',
+	description: 'Rosé Pine Dawn — light variant with iris, foam, and soft pink highlights',
+	isActive: false,
+	isDefault: false,
+	isVisible: true,
+
+	primaryColor: '#575279',
+	secondaryColor: '#907aa9',
+	accentColor: '#b4637a',
+	backgroundColor: '#faf4ed',
+	surfaceColor: 'rgba(255, 250, 243, 0.96)',
+	borderColor: '#dfdad9',
+	textPrimary: '#575279',
+	textSecondary: '#56949f',
+	textMuted: '#9893a8',
+
+	backgroundImage: null,
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(250, 244, 237, 0)',
+	overlayDarkenOpacity: '0',
+	backgroundBlur: 0,
+	backgroundPosition: 'center center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'Inter',
+	headingFontFamily: 'Inter',
+	fontScale: '1',
+
+	borderRadius: '10px',
+	widgetBorderRadius: '8px',
+	scanlinesOpacity: '0',
+	overlayVignetteOpacity: '0',
+	overlayGridOpacity: '0',
+	overlayGrainOpacity: '0',
+	overlayGlareOpacity: '0.05',
+	customCss: `
+html[data-theme="rose-pine-dawn"] {
+  --theme-shell-shadow: 0 10px 36px rgba(87, 82, 121, 0.1);
+  --theme-content-max-width: 1000px;
+  background: linear-gradient(155deg, #fffaf3 0%, #faf4ed 50%, #f2e9e1 100%) !important;
+}
+
+html[data-theme="rose-pine-dawn"] .content-window {
+  border-color: #907aa9;
+  box-shadow:
+    var(--theme-shell-shadow),
+    0 0 20px rgba(144, 122, 169, 0.1);
+}
+
+html[data-theme="rose-pine-dawn"] .nav-link:hover,
+html[data-theme="rose-pine-dawn"] .nav-link.active {
+  color: #b4637a !important;
+}
+
+html[data-theme="rose-pine-dawn"] ::selection {
+  background: #dfdad9;
+  color: #286983;
+}
+`,
+	displayOrder: 17
+} satisfies InferInsertModel<typeof themes>;
+
 const LETS_ALL_LOVE_LAIN_THEME_INSERT = {
 	name: 'Lets All Love Lain',
 	description:
@@ -2970,6 +3508,14 @@ export const ALL_SEED_THEMES = [
 	CATPPUCCIN_MOCHA_THEME_INSERT,
 	TOKYO_NIGHT_THEME_INSERT,
 	GRUVBOX_THEME_INSERT,
+	ONE_DARK_THEME_INSERT,
+	NORD_THEME_INSERT,
+	ROSE_PINE_THEME_INSERT,
+	CATPPUCCIN_LATTE_THEME_INSERT,
+	GITHUB_LIGHT_THEME_INSERT,
+	ONE_LIGHT_THEME_INSERT,
+	GRUVBOX_LIGHT_THEME_INSERT,
+	ROSE_PINE_DAWN_THEME_INSERT,
 	LETS_ALL_LOVE_LAIN_THEME_INSERT
 ] as const satisfies readonly InferInsertModel<typeof themes>[];
 
@@ -3036,7 +3582,6 @@ async function seedThemeIfMissing(theme: InferInsertModel<typeof themes>) {
 /** Overwrite bundled themes in the DB from seed definitions (by name). */
 export async function refreshBundledThemes() {
 	logger.info('Refreshing bundled themes...');
-	await ensureThemeCategories();
 	await removeRetiredThemes();
 	await applyRenamedBundledThemes();
 
@@ -3056,7 +3601,6 @@ export async function refreshBundledThemes() {
 /** Insert any bundled theme that is not already present (safe on existing DBs). */
 export async function seedThemesIfMissing() {
 	logger.info('Seeding missing themes...');
-	await ensureThemeCategories();
 	await removeRetiredThemes();
 	await applyRenamedBundledThemes();
 
@@ -3072,7 +3616,6 @@ export async function seedThemesIfMissing() {
 /** Insert all bundled themes (use only when `themes` table was cleared). */
 export async function seedThemes() {
 	logger.info('Seeding themes...');
-	await ensureThemeCategories();
 	const inserted = await db.insert(themes).values([...ALL_SEED_THEMES]).returning();
 	await applyBundledThemeCategoryAssignments();
 	return inserted;
