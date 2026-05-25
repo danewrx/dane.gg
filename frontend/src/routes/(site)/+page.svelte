@@ -83,9 +83,11 @@
 					>
 						<svelte:fragment slot="header-icon">
 							{#if musicData?.nowPlaying}
-								<Radio size={16} class="status-icon playing" />
+								<span class="status-icon playing" aria-hidden="true">
+									<Radio size={16} />
+								</span>
 							{:else}
-								<div class="status-icon offline"></div>
+								<div class="status-icon offline" aria-hidden="true"></div>
 							{/if}
 						</svelte:fragment>
 						<MusicWidget bind:musicData />

@@ -3135,6 +3135,179 @@ html[data-theme="rose-pine-dawn"] ::selection {
 	displayOrder: 17
 } satisfies InferInsertModel<typeof themes>;
 
+const MATRIX_TERMINAL_THEME_INSERT = {
+	name: 'Matrix Terminal',
+	description: 'Phosphor green on black — CRT terminal glow, scanlines, and monospace readouts',
+	isActive: false,
+	isDefault: false,
+	isVisible: true,
+
+	primaryColor: '#00ff41',
+	secondaryColor: '#00cc33',
+	accentColor: '#39ff14',
+	backgroundColor: '#0a0f0a',
+	surfaceColor: 'rgba(0, 24, 0, 0.92)',
+	borderColor: '#00ff41',
+	textPrimary: '#00ff41',
+	textSecondary: '#00dd38',
+	textMuted: '#007a20',
+
+	backgroundImage: null,
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(0, 0, 0, 0)',
+	overlayDarkenOpacity: '0',
+	backgroundBlur: 0,
+	backgroundPosition: 'center center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'JetBrains Mono',
+	headingFontFamily: 'JetBrains Mono',
+	fontScale: '1',
+
+	borderRadius: '0px',
+	widgetBorderRadius: '0px',
+	scanlinesOpacity: '0.55',
+	overlayVignetteOpacity: '0.35',
+	overlayGridOpacity: '0.06',
+	overlayGrainOpacity: '0.08',
+	overlayGlareOpacity: '0',
+	customCss: `
+html[data-theme="matrix-terminal"] {
+  --theme-shell-shadow: 0 0 24px rgba(0, 255, 65, 0.15), 0 12px 48px rgba(0, 0, 0, 0.85);
+  --theme-content-max-width: 1000px;
+  --theme-shell-border-width: 1px;
+  --theme-widget-border-width: 1px;
+  --global-font-family: 'JetBrains Mono', 'Courier New', 'Lucida Console', monospace;
+  --ascii-font-family: 'JetBrains Mono', 'Courier New', monospace;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(0, 255, 65, 0.07) 0%, transparent 55%),
+    linear-gradient(180deg, #030803 0%, #0a0f0a 40%, #050a05 100%) !important;
+}
+
+html[data-theme="matrix-terminal"] .content-window {
+  border-color: #00ff41;
+  box-shadow:
+    var(--theme-shell-shadow),
+    inset 0 0 40px rgba(0, 255, 65, 0.04);
+}
+
+html[data-theme="matrix-terminal"] .bordered-box {
+  border-color: #00cc33;
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 65, 0.2),
+    inset 0 0 24px rgba(0, 255, 65, 0.03);
+}
+
+html[data-theme="matrix-terminal"] .bordered-box::before {
+  content: none;
+  display: none;
+}
+
+html[data-theme="matrix-terminal"] .bordered-box .header-text {
+  color: #39ff14 !important;
+  text-shadow: 0 0 8px rgba(57, 255, 20, 0.45);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html[data-theme="matrix-terminal"] .nav-link {
+  letter-spacing: 0.04em;
+}
+
+html[data-theme="matrix-terminal"] .nav-link:hover,
+html[data-theme="matrix-terminal"] .nav-link.active {
+  color: #39ff14 !important;
+  text-shadow:
+    0 0 6px rgba(0, 255, 65, 0.8),
+    0 0 14px rgba(0, 255, 65, 0.35);
+}
+
+html[data-theme="matrix-terminal"] ::selection {
+  background: #003b00;
+  color: #39ff14;
+}
+
+html[data-theme="matrix-terminal"] a:hover {
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.55);
+}
+
+/* Music widget — terminal glyphs (▶ now playing, ■ recently played) */
+html[data-theme="matrix-terminal"] .home-content .bordered-box.music-widget .status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+html[data-theme="matrix-terminal"] .home-content .bordered-box.music-widget .status-icon.offline {
+  width: 1.15em;
+  height: 1em;
+  min-width: 1.15em;
+  border-radius: 0;
+  background-color: transparent !important;
+  background: none;
+}
+
+html[data-theme="matrix-terminal"] .home-content .bordered-box.music-widget .status-icon.offline::after {
+  content: '■';
+  font-family: var(--global-font-family, 'JetBrains Mono', monospace);
+  font-size: 11px;
+  line-height: 1;
+  color: #008f11;
+  text-shadow: 0 0 6px rgba(0, 255, 65, 0.35);
+}
+
+html[data-theme="matrix-terminal"] .home-content .bordered-box.music-widget .status-icon.playing {
+  width: 1.15em;
+  height: 1em;
+  min-width: 1.15em;
+  color: transparent !important;
+  background: none;
+  animation: none !important;
+  filter: none !important;
+}
+
+html[data-theme="matrix-terminal"] .home-content .bordered-box.music-widget .status-icon.playing svg {
+  display: none !important;
+}
+
+html[data-theme="matrix-terminal"] .home-content .bordered-box.music-widget .status-icon.playing::after {
+  content: '▶';
+  font-family: var(--global-font-family, 'JetBrains Mono', monospace);
+  font-size: 11px;
+  line-height: 1;
+  color: #39ff14;
+  text-shadow:
+    0 0 6px rgba(57, 255, 20, 0.8),
+    0 0 12px rgba(0, 255, 65, 0.45);
+  animation: matrix-terminal-aud-pulse 2s ease-in-out infinite;
+}
+
+@keyframes matrix-terminal-aud-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    text-shadow:
+      0 0 6px rgba(57, 255, 20, 0.8),
+      0 0 12px rgba(0, 255, 65, 0.45);
+  }
+  50% {
+    opacity: 0.88;
+    text-shadow:
+      0 0 10px rgba(57, 255, 20, 1),
+      0 0 18px rgba(0, 255, 65, 0.65);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="matrix-terminal"] .home-content .bordered-box.music-widget .status-icon.playing::after {
+    animation: none;
+  }
+}
+`,
+	displayOrder: 18
+} satisfies InferInsertModel<typeof themes>;
+
 const LETS_ALL_LOVE_LAIN_THEME_INSERT = {
 	name: 'Lets All Love Lain',
 	description:
@@ -3516,6 +3689,7 @@ export const ALL_SEED_THEMES = [
 	ONE_LIGHT_THEME_INSERT,
 	GRUVBOX_LIGHT_THEME_INSERT,
 	ROSE_PINE_DAWN_THEME_INSERT,
+	MATRIX_TERMINAL_THEME_INSERT,
 	LETS_ALL_LOVE_LAIN_THEME_INSERT
 ] as const satisfies readonly InferInsertModel<typeof themes>[];
 

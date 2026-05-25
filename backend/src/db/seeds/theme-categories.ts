@@ -40,7 +40,8 @@ export const BUNDLED_THEME_CATEGORY_BY_NAME: Record<string, string> = {
 	'One Light': 'Editor (Light)',
 	'Gruvbox Light': 'Editor (Light)',
 	'Rose Pine Dawn': 'Editor (Light)',
-	'Lets All Love Lain': 'Special'
+	'Lets All Love Lain': 'Special',
+	'Matrix Terminal': 'Special'
 };
 
 export async function seedThemeCategories() {
