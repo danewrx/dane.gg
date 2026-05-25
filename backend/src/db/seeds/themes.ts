@@ -3169,7 +3169,7 @@ const MATRIX_TERMINAL_THEME_INSERT = {
 	widgetBorderRadius: '0px',
 	scanlinesOpacity: '0.55',
 	overlayVignetteOpacity: '0.35',
-	overlayGridOpacity: '0.06',
+	overlayGridOpacity: '0.22',
 	overlayGrainOpacity: '0.08',
 	overlayGlareOpacity: '0',
 	customCss: `
@@ -3180,9 +3180,23 @@ html[data-theme="matrix-terminal"] {
   --theme-widget-border-width: 1px;
   --global-font-family: 'JetBrains Mono', 'Courier New', 'Lucida Console', monospace;
   --ascii-font-family: 'JetBrains Mono', 'Courier New', monospace;
+  --theme-overlay-grid-line: rgba(0, 255, 65, 0.16);
+  --theme-overlay-grid-size: 40px;
   background:
     radial-gradient(ellipse at 50% 0%, rgba(0, 255, 65, 0.07) 0%, transparent 55%),
     linear-gradient(180deg, #030803 0%, #0a0f0a 40%, #050a05 100%) !important;
+}
+
+/* Fine + coarse phosphor grid behind content */
+html[data-theme="matrix-terminal"] .bg-overlay--grid {
+  background-image:
+    linear-gradient(rgba(0, 255, 65, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 65, 0.1) 1px, transparent 1px),
+    linear-gradient(rgba(0, 255, 65, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 65, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px, 48px 48px, 16px 16px, 16px 16px;
+  mask-image: radial-gradient(ellipse 92% 85% at 50% 48%, black 25%, transparent 82%);
+  -webkit-mask-image: radial-gradient(ellipse 92% 85% at 50% 48%, black 25%, transparent 82%);
 }
 
 html[data-theme="matrix-terminal"] .content-window {

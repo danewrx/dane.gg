@@ -127,6 +127,8 @@
 		--theme-scanlines-opacity: 1;
 		--theme-overlay-vignette-opacity: 0;
 		--theme-overlay-grid-opacity: 0;
+		--theme-overlay-grid-line: rgba(255, 255, 255, 0.05);
+		--theme-overlay-grid-size: 56px;
 		--theme-overlay-grain-opacity: 0;
 		--theme-overlay-glare-opacity: 0;
 		--theme-body-line-height: 1.65;
@@ -244,11 +246,15 @@
 	.bg-overlay--grid {
 		opacity: var(--theme-overlay-grid-opacity, 0);
 		background-image:
-			linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-			linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-		background-size: 56px 56px;
-		mask-image: radial-gradient(ellipse 75% 65% at 50% 42%, black 15%, transparent 75%);
-		-webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 42%, black 15%, transparent 75%);
+			linear-gradient(var(--theme-overlay-grid-line, rgba(255, 255, 255, 0.05)) 1px, transparent 1px),
+			linear-gradient(
+				90deg,
+				var(--theme-overlay-grid-line, rgba(255, 255, 255, 0.05)) 1px,
+				transparent 1px
+			);
+		background-size: var(--theme-overlay-grid-size, 56px) var(--theme-overlay-grid-size, 56px);
+		mask-image: radial-gradient(ellipse 80% 70% at 50% 45%, black 20%, transparent 78%);
+		-webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 45%, black 20%, transparent 78%);
 	}
 
 	.bg-overlay--grain {

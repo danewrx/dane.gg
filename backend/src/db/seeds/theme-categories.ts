@@ -27,6 +27,7 @@ export const BUNDLED_THEME_CATEGORY_BY_NAME: Record<string, string> = {
 	'Cyberpunk Neon': 'Special',
 	'Windows XP': 'Retro',
 	'Windows 95': 'Retro',
+	'Matrix Terminal': 'Retro',
 	GeoCities: 'Retro',
 	Dracula: 'Editor (Dark)',
 	'Catppuccin Mocha': 'Editor (Dark)',
@@ -40,8 +41,7 @@ export const BUNDLED_THEME_CATEGORY_BY_NAME: Record<string, string> = {
 	'One Light': 'Editor (Light)',
 	'Gruvbox Light': 'Editor (Light)',
 	'Rose Pine Dawn': 'Editor (Light)',
-	'Lets All Love Lain': 'Special',
-	'Matrix Terminal': 'Special'
+	'Lets All Love Lain': 'Special'
 };
 
 export async function seedThemeCategories() {
