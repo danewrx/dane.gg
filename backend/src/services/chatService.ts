@@ -3,7 +3,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { Server, IncomingMessage } from 'http';
 import { db } from '../db';
 import { messages, siteConfig, apiKeys, type NewMessage } from '../db/schema';
-import { desc, gte, eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import cookie from 'cookie';
 import signature from 'cookie-signature';
 import crypto from 'crypto';
@@ -48,7 +48,7 @@ export class ChatService {
 	private messageRateLimits: Map<WebSocket, MessageRateLimit> = new Map(); // Rate limiting per connection
 	private connectionRateLimits: Map<string, ConnectionRateLimit> = new Map(); // Global connection rate limiting per IP
 	private readonly DEFAULT_NICKNAME = 'Anonymous';
-	private readonly MESSAGE_HISTORY_DAYS = 30;
+	private readonly MESSAGE_HISTORY_LIMIT = 50;
 	private readonly MAX_MESSAGE_LENGTH = 1000;
 	private readonly RATE_LIMIT_MESSAGES = 8;
 	private readonly RATE_LIMIT_WINDOW_MS = 5000; // 5 seconds
@@ -1258,18 +1258,15 @@ export class ChatService {
 	}
 
 	/**
-	 * Load recent messages from database
+	 * Load the latest fixed-size chat history from database
 	 */
 	private async loadRecentMessages(): Promise<ChatMessage[]> {
 		try {
-			const cutoffTime = new Date();
-			cutoffTime.setDate(cutoffTime.getDate() - this.MESSAGE_HISTORY_DAYS);
-
 			const recentMessages = await db
 				.select()
 				.from(messages)
-				.where(gte(messages.timestamp, cutoffTime))
-				.orderBy(desc(messages.timestamp));
+				.orderBy(desc(messages.timestamp))
+				.limit(this.MESSAGE_HISTORY_LIMIT);
 
 			return recentMessages.reverse().map((msg) => {
 				const timestamp = msg.timestamp ? new Date(msg.timestamp) : new Date();
