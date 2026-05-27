@@ -65,7 +65,6 @@ export class TweetService {
 				logger.info(`Created new tweet: ${tweetData.tweetId}`);
 			}
 
-			// Clean up old records after each update
 			await this.cleanupOldRecords();
 
 			return true;
@@ -130,19 +129,28 @@ export class TweetService {
 	}
 
 	/**
-	 * Clean up old tweet records (keep only last 30)
+	 * Clean up old tweet records.
+	 * Controlled by TWITTER_MAX_STORED_TWEETS:
+	 * - <= 0 (default): keep all history
+	 * - > 0: keep only the most recent N tweets
 	 */
 	static async cleanupOldRecords(): Promise<boolean> {
 		try {
+			const rawMax = process.env.TWITTER_MAX_STORED_TWEETS ?? '0';
+			const maxStoredTweets = Number.parseInt(rawMax, 10);
+
+			if (!Number.isFinite(maxStoredTweets) || maxStoredTweets <= 0) {
+				return true;
+			}
+
 			// Get all records ordered by createdAt
 			const allRecords = await db
 				.select({ id: tweets.id })
 				.from(tweets)
 				.orderBy(desc(tweets.createdAt));
 
-			// If we have more than 30 records, delete the oldest ones
-			if (allRecords.length > 30) {
-				const recordsToDelete = allRecords.slice(30);
+			if (allRecords.length > maxStoredTweets) {
+				const recordsToDelete = allRecords.slice(maxStoredTweets);
 				const idsToDelete = recordsToDelete.map((record) => record.id);
 
 				// Delete all old records at once
@@ -150,13 +158,28 @@ export class TweetService {
 					await db.delete(tweets).where(eq(tweets.id, id));
 				}
 
-				logger.info(`Cleaned up ${recordsToDelete.length} old tweet records (kept last 30)`);
+				logger.info(
+					`Cleaned up ${recordsToDelete.length} old tweet records (kept last ${maxStoredTweets})`
+				);
 			}
 
 			return true;
 		} catch (error) {
 			logger.error('Error cleaning up tweet records:', error);
 			return false;
+		}
+	}
+
+	/**
+	 * Get all stored tweet IDs (used for backfilling missing tweets).
+	 */
+	static async getAllTweetIds(): Promise<string[]> {
+		try {
+			const rows = await db.select({ tweetId: tweets.tweetId }).from(tweets);
+			return rows.map((r) => r.tweetId);
+		} catch (error) {
+			logger.error('Error fetching tweet ids:', error);
+			return [];
 		}
 	}
 }
