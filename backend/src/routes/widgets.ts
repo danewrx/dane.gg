@@ -11,6 +11,17 @@ const DISCORD_WIDGET_TTL_MS = 20_000;
 const LASTFM_WIDGET_TTL_MS = 15_000;
 const LATEST_TWEET_WIDGET_TTL_MS = 30_000;
 
+function shouldProxyTwitterImages(): boolean {
+	return (process.env.TWITTER_PROXY_PROFILE_IMAGES ?? 'true').toLowerCase() === 'true';
+}
+
+function proxiedTwitterImageUrl(url: string | null | undefined): string | null {
+	if (!url) return null;
+	if (!shouldProxyTwitterImages()) return url;
+	if (!url.includes('pbs.twimg.com') && !url.includes('twimg.com')) return url;
+	return `/api/widgets/tweet-profile-image?url=${encodeURIComponent(url)}`;
+}
+
 /**
  * GET /api/widgets/discord-status
  * Get current Discord status for widgets
@@ -112,7 +123,7 @@ router.get('/latest-tweet', async (req, res) => {
 			content: latestTweet.content,
 			authorName: latestTweet.authorName,
 			authorUsername: latestTweet.authorUsername,
-			authorProfileImage: latestTweet.authorProfileImage,
+			authorProfileImage: proxiedTwitterImageUrl(latestTweet.authorProfileImage),
 			authorProfileUrl: latestTweet.authorProfileUrl,
 			tweetUrl: latestTweet.tweetUrl,
 			createdAt: latestTweet.createdAt,
