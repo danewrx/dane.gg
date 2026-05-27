@@ -182,4 +182,30 @@ export class TweetService {
 			return [];
 		}
 	}
+
+	/**
+	 * Delete tweets that are not in the provided set of tweet IDs.
+	 * @returns Number of tweets deleted
+	 */
+	static async deleteTweetsNotIn(keepTweetIds: Set<string>): Promise<number> {
+		if (keepTweetIds.size === 0) {
+			return 0;
+		}
+
+		try {
+			const storedIds = await this.getAllTweetIds();
+			let deleted = 0;
+
+			for (const tweetId of storedIds) {
+				if (keepTweetIds.has(tweetId)) continue;
+				const ok = await this.deleteTweet(tweetId);
+				if (ok) deleted++;
+			}
+
+			return deleted;
+		} catch (error) {
+			logger.error('Error deleting tweets not in backfill set:', error);
+			return 0;
+		}
+	}
 }

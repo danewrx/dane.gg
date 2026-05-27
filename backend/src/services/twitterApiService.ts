@@ -629,17 +629,19 @@ export class TwitterApiService {
 
 			const profileUrl = `https://x.com/${authorUsername}`;
 
-			// Existing tweet IDs so we can decide what's missing.
 			const existingIds = new Set(await TweetService.getAllTweetIds());
+			const fetchedIds = new Set<string>();
 
 			const batchSize = Math.max(parseInt(process.env.TWITTER_FULL_BACKFILL_BATCH_SIZE ?? '20', 10), 1);
 			const maxPages = Math.max(parseInt(process.env.TWITTER_FULL_BACKFILL_MAX_PAGES ?? '200', 10), 1);
 			const maxNewTweets = parseInt(process.env.TWITTER_FULL_BACKFILL_MAX_NEW_TWEETS ?? '0', 10); // 0 => unlimited
+			const pruneDeleted =
+				(process.env.TWITTER_FULL_BACKFILL_PRUNE_DELETED ?? 'true').toLowerCase() === 'true';
 
 			let cursor: string | undefined = undefined;
 			let pages = 0;
 			let inserted = 0;
-			let newInsertedStreak = 0;
+			let reachedEndOfTimeline = false;
 
 			const pickTweetId = (legacy: any, fallback: any): string | null => {
 				const idStr =
@@ -759,6 +761,8 @@ export class TwitterApiService {
 					const tweetText = legacy?.full_text ?? legacy?.fullText ?? legacy?.text;
 					if (!tweetId || typeof tweetText !== 'string' || !tweetText.trim()) continue;
 
+					fetchedIds.add(tweetId);
+
 					if (existingIds.has(tweetId)) continue;
 
 					const postedAt = parseTweetPostedAtFromLegacy(legacy as Record<string, unknown>);
@@ -781,26 +785,32 @@ export class TwitterApiService {
 
 				pages++;
 
-				if (batchNew === 0) {
-					newInsertedStreak++;
-				} else {
-					newInsertedStreak = 0;
-				}
-
-				if (newInsertedStreak >= 3) break;
-
 				const nextCursor: string | null =
 					extractBottomCursor(rawJson) ?? extractBottomCursor(timelineResult);
-				if (!nextCursor) break;
+				if (!nextCursor) {
+					reachedEndOfTimeline = true;
+					break;
+				}
 
 				cursor = nextCursor;
 
 				logger.info(
-					`TWITTER: backfill page ${pages}/${maxPages} (inserted ${batchNew}, total ${inserted})`
+					`TWITTER: backfill page ${pages}/${maxPages} (inserted ${batchNew}, total ${inserted}, fetched ${fetchedIds.size})`
 				);
 			}
 
-			logger.info(`TWITTER: backfill complete (inserted ${inserted} new tweets)`);
+			let pruned = 0;
+			if (pruneDeleted && fetchedIds.size > 0 && reachedEndOfTimeline) {
+				pruned = await TweetService.deleteTweetsNotIn(fetchedIds);
+			} else if (pruneDeleted && fetchedIds.size > 0 && !reachedEndOfTimeline) {
+				logger.warn(
+					'TWITTER: skipped pruning deleted tweets — timeline pagination did not reach the end (increase TWITTER_FULL_BACKFILL_MAX_PAGES or check limits)'
+				);
+			}
+
+			logger.info(
+				`TWITTER: backfill complete (inserted ${inserted} new, pruned ${pruned}, fetched ${fetchedIds.size} from timeline)`
+			);
 			this.consecutiveFullBackfillErrors = 0;
 			return true;
 		} catch (error: any) {
