@@ -3,6 +3,7 @@ import { TwitterOpenApi } from 'twitter-openapi-typescript';
 import { TweetService, type TweetData } from './tweetService';
 import { NotificationService } from './notificationService';
 import { ConfigService } from './config';
+import { getKwargs } from 'twitter-openapi-typescript/dist/src/utils/api';
 
 function parseTweetPostedAtFromLegacy(
 	legacy: Record<string, unknown> | null | undefined
@@ -123,10 +124,15 @@ export class TwitterApiService {
 			logger.info('Found user ID:', userId);
 
 			// Get user timeline tweets using getTweetApi
-			const timelineResult = await this.client.getTweetApi().getUserTweets({
-				userId: userId,
-				count: 1
-			});
+			const tweetApiUtils = this.client.getTweetApi();
+			const flag = tweetApiUtils?.flag?.UserTweets ?? tweetApiUtils?.flag?.['UserTweets'];
+			const initOverrides = tweetApiUtils?.initOverrides?.(flag);
+			const timelineCount = 20;
+			const args = getKwargs(flag, { userId, count: timelineCount });
+
+			const rawResp = await tweetApiUtils.api.getUserTweetsRaw(args, initOverrides);
+			const rawJson = await rawResp.raw.json();
+			const timelineResult: any = rawJson;
 
 			// Extract tweet data from timeline response
 			const responseData = timelineResult.data || timelineResult;
@@ -139,31 +145,108 @@ export class TwitterApiService {
 			// Extract tweet from the timeline structure
 			let tweetData: any = null;
 
-			if (responseData.raw?.instruction) {
+			function pickNewerTweet(current: any, candidate: any): any {
+				if (!current) return candidate;
+				if (!candidate) return current;
+
+				const curLegacy = current?.legacy as Record<string, unknown> | undefined;
+				const candLegacy = candidate?.legacy as Record<string, unknown> | undefined;
+
+				const curPosted = curLegacy ? parseTweetPostedAtFromLegacy(curLegacy) : undefined;
+				const candPosted = candLegacy ? parseTweetPostedAtFromLegacy(candLegacy) : undefined;
+
+				if (curPosted && candPosted) return candPosted > curPosted ? candidate : current;
+				if (candPosted && !curPosted) return candidate;
+				if (curPosted && !candPosted) return current;
+
+				const curIdRaw =
+					current?.rest_id ??
+					current?.restId ??
+					curLegacy?.id_str ??
+					curLegacy?.idStr ??
+					current?.id ??
+					current?.id_str ??
+					current?.idStr ??
+					null;
+				const candIdRaw =
+					candidate?.rest_id ??
+					candidate?.restId ??
+					candLegacy?.id_str ??
+					candLegacy?.idStr ??
+					candidate?.id ??
+					candidate?.id_str ??
+					candidate?.idStr ??
+					null;
+
+				const curId = typeof curIdRaw === 'string' ? curIdRaw : curIdRaw != null ? String(curIdRaw) : '';
+				const candId = typeof candIdRaw === 'string' ? candIdRaw : candIdRaw != null ? String(candIdRaw) : '';
+
+				if (/^\d+$/.test(curId) && /^\d+$/.test(candId)) {
+					return BigInt(candId) > BigInt(curId) ? candidate : current;
+				}
+
+				return current;
+			}
+
+			const instructions =
+				responseData?.user?.result?.timeline?.timeline?.instructions ??
+				responseData?.data?.user?.result?.timeline?.timeline?.instructions ??
+				responseData.raw?.instruction ??
+				null;
+
+			if (Array.isArray(instructions)) {
+				for (const instruction of instructions) {
+					const entries = (instruction as any)?.entries;
+					if (!Array.isArray(entries)) continue;
+					for (const entry of entries) {
+						const result =
+							(entry as any)?.content?.itemContent?.tweet_results?.result ??
+							(entry as any)?.content?.itemContent?.tweetResults?.result ??
+							null;
+						if (result && (result.__typename === 'Tweet' || result.legacy)) {
+							tweetData = pickNewerTweet(tweetData, result);
+						}
+					}
+				}
+			} else if (responseData.raw?.instruction) {
 				for (const instruction of responseData.raw.instruction) {
 					if (instruction.entries) {
 						for (const entry of instruction.entries) {
 							if (entry.content?.itemContent?.tweetResults?.result) {
-								tweetData = entry.content.itemContent.tweetResults.result;
-								break;
+								const result = entry.content.itemContent.tweetResults.result;
+								if (result && (result.__typename === 'Tweet' || result.legacy)) {
+									tweetData = pickNewerTweet(tweetData, result);
+								}
 							}
 						}
-						if (tweetData) break;
 					}
 				}
 			}
 
-			// Fallback: try to find tweet recursively if structure is off
 			if (!tweetData) {
 				function findTweet(obj: any, depth = 0): any {
 					if (depth > 10) return null;
 
 					if (obj && typeof obj === 'object') {
-						// Check for tweet object with legacy data
-						if (obj.legacy && (obj.legacy.full_text || obj.legacy.text)) {
+						if (
+							obj.legacy &&
+							(obj.legacy.full_text || obj.legacy.fullText || obj.legacy.text)
+						) {
 							return obj;
 						}
-						if (obj.full_text || obj.text) {
+						if (
+							(obj.full_text || obj.fullText || obj.text) &&
+							typeof (obj.full_text || obj.fullText || obj.text) === 'string' &&
+							(obj.legacy ||
+								obj.__typename === 'Tweet' ||
+								(typeof obj.id_str === 'string' && /^\d+$/.test(obj.id_str)) ||
+								(typeof obj.idStr === 'string' && /^\d+$/.test(obj.idStr)) ||
+								(typeof obj.id === 'string' && /^\d+$/.test(obj.id)))
+						) {
+							return obj;
+						}
+
+						if (obj.__typename === 'Tweet') {
 							return obj;
 						}
 
@@ -225,6 +308,79 @@ export class TwitterApiService {
 							postedAt: parseTweetPostedAtFromLegacy(altLegacy as Record<string, unknown>)
 						};
 					}
+				}
+
+				function extractIdAndText(obj: any): { tweetId: string | null; tweetText: string | null } {
+					let tweetId: string | null = null;
+					let tweetText: string | null = null;
+
+					function walk(cur: any, d: number): void {
+						if (tweetId && tweetText) return;
+						if (!cur || typeof cur !== 'object') return;
+						if (d > 10) return;
+
+						for (const [k, v] of Object.entries(cur)) {
+							if (tweetId == null && typeof v === 'string') {
+								if (
+									(k === 'id_str' || k === 'idStr' || k === 'id') &&
+									/^\d+$/.test(v)
+								) {
+									tweetId = v;
+								}
+							}
+
+							if (tweetText == null && typeof v === 'string') {
+								if (
+									(k === 'full_text' || k === 'fullText' || k === 'text') &&
+									v.trim().length > 0 &&
+									(v.trim().length >= 2 || v.includes(' '))
+								) {
+									tweetText = v;
+								}
+							}
+
+							walk(v, d + 1);
+							if (tweetId && tweetText) return;
+						}
+					}
+
+					walk(obj, 0);
+					return { tweetId, tweetText };
+				}
+
+				const { tweetId, tweetText } = extractIdAndText(tweetData);
+				if (tweetId && tweetText) {
+					const modernUserLegacy =
+						(tweetData.core?.userResults?.result?.legacy as any) ??
+						(tweetData.core?.user_results?.result?.legacy as any) ??
+						(tweetData.core?.userResults?.result as any) ??
+						(tweetData.core?.user_results?.result as any);
+
+					const userLegacy = modernUserLegacy ?? userData?.legacy ?? userData;
+
+					const authorName = userLegacy?.name || '';
+					const authorUsername =
+						userLegacy?.screenName || userLegacy?.screen_name || username;
+
+					const profileImage =
+						userLegacy?.profileImageUrlHttps ||
+						userLegacy?.profile_image_url_https ||
+						userLegacy?.profile_image_url ||
+						null;
+
+					const tweetUrl = `https://x.com/${authorUsername}/status/${tweetId}`;
+					const profileUrl = `https://x.com/${authorUsername}`;
+
+					return {
+						tweetId,
+						content: tweetText,
+						authorName,
+						authorUsername,
+						authorProfileImage: profileImage,
+						authorProfileUrl: profileUrl,
+						tweetUrl,
+						postedAt: undefined
+					};
 				}
 				return null;
 			}
