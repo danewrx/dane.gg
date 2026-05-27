@@ -10,33 +10,30 @@ function parseTweetPostedAtFromLegacy(
 	legacy: Record<string, unknown> | null | undefined
 ): Date | undefined {
 	if (!legacy) return undefined;
-	const raw =
+	const rawValue =
 		legacy.created_at ??
 		legacy.createdAt ??
 		legacy.timestamp_ms ??
 		legacy.timestampMs;
+	if (rawValue == null) return undefined;
 
-	if (raw == null) return undefined;
-
-	if (typeof raw === 'number') {
-		const d = new Date(raw);
+	const toValidDate = (value: string | number): Date | undefined => {
+		const d = new Date(value);
 		return Number.isNaN(d.getTime()) ? undefined : d;
-	}
+	};
 
-	if (typeof raw === 'string') {
-		// If it's digits, treat as epoch millis.
-		if (/^\d+$/.test(raw)) {
-			const ms = Number(raw);
-			if (Number.isNaN(ms)) return undefined;
-			const d = new Date(ms);
-			return Number.isNaN(d.getTime()) ? undefined : d;
-		}
+	const asEpochMs = (value: string): number | undefined => {
+		if (!/^\d+$/.test(value)) return undefined;
+		const ms = Number(value);
+		return Number.isNaN(ms) ? undefined : ms;
+	};
 
-		const d = new Date(raw);
-		return Number.isNaN(d.getTime()) ? undefined : d;
-	}
+	if (typeof rawValue === 'number') return toValidDate(rawValue);
+	if (typeof rawValue !== 'string') return undefined;
 
-	return undefined;
+	const epochMs = asEpochMs(rawValue);
+	if (epochMs != null) return toValidDate(epochMs);
+	return toValidDate(rawValue);
 }
 
 /** Compare Twitter snowflake tweet IDs. Returns negative if a < b. */
@@ -186,42 +183,44 @@ export class TwitterApiService {
 				if (!current) return candidate;
 				if (!candidate) return current;
 
-				const curLegacy = current?.legacy as Record<string, unknown> | undefined;
-				const candLegacy = candidate?.legacy as Record<string, unknown> | undefined;
+				const parsePostedAt = (tweet: any): Date | undefined => {
+					const legacy = tweet?.legacy as Record<string, unknown> | undefined;
+					return legacy ? parseTweetPostedAtFromLegacy(legacy) : undefined;
+				};
 
-				const curPosted = curLegacy ? parseTweetPostedAtFromLegacy(curLegacy) : undefined;
-				const candPosted = candLegacy ? parseTweetPostedAtFromLegacy(candLegacy) : undefined;
+				const pickTweetId = (tweet: any): string => {
+					const legacy = tweet?.legacy as Record<string, unknown> | undefined;
+					const raw =
+						tweet?.rest_id ??
+						tweet?.restId ??
+						legacy?.id_str ??
+						legacy?.idStr ??
+						tweet?.id ??
+						tweet?.id_str ??
+						tweet?.idStr ??
+						null;
+					if (typeof raw === 'string') return raw;
+					if (raw == null) return '';
+					return String(raw);
+				};
 
-				if (curPosted && candPosted) return candPosted > curPosted ? candidate : current;
-				if (candPosted && !curPosted) return candidate;
-				if (curPosted && !candPosted) return current;
+				const byPostedAt = (() => {
+					const curPosted = parsePostedAt(current);
+					const candPosted = parsePostedAt(candidate);
+					if (curPosted && candPosted) {
+						if (candPosted > curPosted) return candidate;
+						return current;
+					}
+					if (candPosted) return candidate;
+					if (curPosted) return current;
+					return null;
+				})();
+				if (byPostedAt) return byPostedAt;
 
-				const curIdRaw =
-					current?.rest_id ??
-					current?.restId ??
-					curLegacy?.id_str ??
-					curLegacy?.idStr ??
-					current?.id ??
-					current?.id_str ??
-					current?.idStr ??
-					null;
-				const candIdRaw =
-					candidate?.rest_id ??
-					candidate?.restId ??
-					candLegacy?.id_str ??
-					candLegacy?.idStr ??
-					candidate?.id ??
-					candidate?.id_str ??
-					candidate?.idStr ??
-					null;
-
-				const curId = typeof curIdRaw === 'string' ? curIdRaw : curIdRaw != null ? String(curIdRaw) : '';
-				const candId = typeof candIdRaw === 'string' ? candIdRaw : candIdRaw != null ? String(candIdRaw) : '';
-
-				if (/^\d+$/.test(curId) && /^\d+$/.test(candId)) {
-					return BigInt(candId) > BigInt(curId) ? candidate : current;
-				}
-
+				const curId = pickTweetId(current);
+				const candId = pickTweetId(candidate);
+				if (!/^\d+$/.test(curId) || !/^\d+$/.test(candId)) return current;
+				if (BigInt(candId) > BigInt(curId)) return candidate;
 				return current;
 			}
 
