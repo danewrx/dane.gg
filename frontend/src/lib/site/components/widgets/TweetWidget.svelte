@@ -132,7 +132,7 @@
 			if (isPageVisible) {
 				fetchTweetData();
 			}
-		}, 30000);
+		}, 10000);
 
 		function handleVisibilityChange() {
 			isPageVisible = !document.hidden;
@@ -152,7 +152,9 @@
 
 	async function fetchTweetData() {
 		try {
-			const response = await fetch('/api/widgets/latest-tweet');
+			const response = await fetch(`/api/widgets/latest-tweet?ts=${Date.now()}`, {
+				cache: 'no-store'
+			});
 
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);

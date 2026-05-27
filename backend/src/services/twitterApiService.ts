@@ -4,6 +4,7 @@ import { TweetService, type TweetData } from './tweetService';
 import { NotificationService } from './notificationService';
 import { ConfigService } from './config';
 import { getKwargs } from 'twitter-openapi-typescript/dist/src/utils/api';
+import { invalidateCached } from '../utils/shortLivedCache';
 
 function parseTweetPostedAtFromLegacy(
 	legacy: Record<string, unknown> | null | undefined
@@ -530,6 +531,7 @@ export class TwitterApiService {
 			if (existingTweet && existingTweet.tweetId === tweetData.tweetId) {
 				if (tweetData.postedAt) {
 					await TweetService.setTweetPostedAt(tweetData.tweetId, tweetData.postedAt);
+					invalidateCached('widget:latest-tweet');
 				}
 				logger.info('Tweet is already up to date:', tweetData.tweetId);
 				this.consecutiveErrors = 0;
@@ -547,6 +549,7 @@ export class TwitterApiService {
 						logger.info(
 							`Removed ${pruned} tweet(s) no longer on timeline (deleted on X); new latest: ${tweetData.tweetId}`
 						);
+						invalidateCached('widget:latest-tweet');
 					}
 				}
 			}
@@ -556,6 +559,7 @@ export class TwitterApiService {
 
 			if (success) {
 				logger.info('Successfully updated tweet:', tweetData.tweetId);
+				invalidateCached('widget:latest-tweet');
 				this.consecutiveErrors = 0;
 			} else {
 				logger.error('Failed to save tweet to database');
@@ -827,6 +831,9 @@ export class TwitterApiService {
 			let pruned = 0;
 			if (pruneDeleted && fetchedIds.size > 0 && reachedEndOfTimeline) {
 				pruned = await TweetService.deleteTweetsNotIn(fetchedIds);
+				if (pruned > 0) {
+					invalidateCached('widget:latest-tweet');
+				}
 			} else if (pruneDeleted && fetchedIds.size > 0 && !reachedEndOfTimeline) {
 				logger.warn(
 					'TWITTER: skipped pruning deleted tweets — timeline pagination did not reach the end (increase TWITTER_FULL_BACKFILL_MAX_PAGES or check limits)'

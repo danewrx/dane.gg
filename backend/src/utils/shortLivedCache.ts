@@ -15,3 +15,7 @@ export async function getOrSetCached<T>(key: string, ttlMs: number, fn: () => Pr
 	buckets.set(key, { at: now, value });
 	return value;
 }
+
+export function invalidateCached(key: string): void {
+	buckets.delete(key);
+}
