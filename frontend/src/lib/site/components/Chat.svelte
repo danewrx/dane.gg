@@ -6,6 +6,14 @@
 	import EmojiPicker from './EmojiPicker.svelte';
 	import EmojiTooltip from './EmojiTooltip.svelte';
 	import { Smile } from 'lucide-svelte';
+	import { siteTheme } from '$lib/site/stores/theme';
+	import {
+		compositeOnWhite,
+		inferSurfaceTone,
+		parseCssColor,
+		relativeLuminance,
+		type SurfaceTone
+	} from '$lib/site/constants/statusSemantics';
 	import {
 		getAllDefaultEmojis,
 		getEmojiFromName,
@@ -222,6 +230,104 @@
 	function formatMessage(timestamp: string, nickname: string, message: string): string {
 		const timeStr = formatTimestamp(timestamp);
 		return `${timeStr} <${nickname}> ${message}`;
+	}
+
+	function contrastRatio(a: number, b: number): number {
+		const lighter = Math.max(a, b);
+		const darker = Math.min(a, b);
+		return (lighter + 0.05) / (darker + 0.05);
+	}
+
+	function mixChannel(from: number, to: number, ratio: number): number {
+		return Math.round(from + (to - from) * ratio);
+	}
+
+	function rgbToCss(r: number, g: number, b: number): string {
+		return `rgb(${r}, ${g}, ${b})`;
+	}
+
+	function ensureReadableNicknameColor(color: string, tone: SurfaceTone): string | null {
+		const parsed = parseCssColor(color);
+		if (!parsed) return null;
+
+		const base = compositeOnWhite(parsed);
+		const baseLuminance = relativeLuminance(base.r, base.g, base.b);
+		const backgroundLuminance = tone === 'light' ? 0.96 : 0.06;
+		const minContrast = 4.5;
+
+		if (contrastRatio(baseLuminance, backgroundLuminance) >= minContrast) {
+			return rgbToCss(base.r, base.g, base.b);
+		}
+
+		const target = tone === 'light' ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 };
+
+		for (let step = 1; step <= 12; step += 1) {
+			const ratio = step / 12;
+			const mixed = {
+				r: mixChannel(base.r, target.r, ratio),
+				g: mixChannel(base.g, target.g, ratio),
+				b: mixChannel(base.b, target.b, ratio)
+			};
+			const mixedLuminance = relativeLuminance(mixed.r, mixed.g, mixed.b);
+			if (contrastRatio(mixedLuminance, backgroundLuminance) >= minContrast) {
+				return rgbToCss(mixed.r, mixed.g, mixed.b);
+			}
+		}
+
+		return rgbToCss(target.r, target.g, target.b);
+	}
+
+	function fallbackNicknameColor(source?: ChatMessage['source']): string {
+		switch (source) {
+			case 'admin':
+				return '#f5b700';
+			case 'discord':
+				return '#5865f2';
+			default:
+				return $siteTheme.accentColor || $siteTheme.textSecondary || $siteTheme.textPrimary;
+		}
+	}
+
+	function nicknameColor(chatMsg: ChatMessage): string {
+		const tone = inferSurfaceTone($siteTheme.surfaceColor);
+		return (
+			ensureReadableNicknameColor(chatMsg.color || fallbackNicknameColor(chatMsg.source), tone) ||
+			$siteTheme.textSecondary ||
+			$siteTheme.textPrimary
+		);
+	}
+
+	function nicknameStyle(chatMsg: ChatMessage): string {
+		return `color: ${nicknameColor(chatMsg)}; font-weight: 600;`;
+	}
+
+	function systemPrefixColor(): string {
+		const tone = inferSurfaceTone($siteTheme.surfaceColor);
+		return (
+			ensureReadableNicknameColor(
+				$siteTheme.accentColor || $siteTheme.textSecondary || $siteTheme.textPrimary,
+				tone
+			) ||
+			$siteTheme.textSecondary ||
+			$siteTheme.textPrimary
+		);
+	}
+
+	function systemPrefixStyle(): string {
+		return `color: ${systemPrefixColor()}; font-weight: 600;`;
+	}
+
+	function systemMessageStyle(systemMsg: SystemMessage): string {
+		switch (systemMsg.messageType) {
+			case 'connected':
+				return 'color: var(--status-ok);';
+			case 'nickname':
+				return `color: ${systemPrefixColor()};`;
+			case 'disconnected':
+				return 'color: var(--status-down);';
+			default:
+				return 'color: var(--theme-text-primary, #e8e8e8);';
+		}
 	}
 
 	// Load saved nickname from localStorage
@@ -1329,8 +1435,8 @@
 						class:disconnected={systemMsg.messageType === 'disconnected'}
 					>
 						{#if parts}
-							<span class="system-prefix">{parts[1]}</span>
-							<span class="system-message">{parts[2]}</span>
+							<span class="system-prefix" style={systemPrefixStyle()}>{parts[1]}</span>
+							<span class="system-message" style={systemMessageStyle(systemMsg)}>{parts[2]}</span>
 						{:else}
 							{systemMsg.formatted}
 						{/if}
@@ -1341,7 +1447,7 @@
 						<span class="msg-time">{formatTimestamp(chatMsg.timestamp)}</span>
 						<span
 							class="msg-nickname"
-							style={chatMsg.color ? `color: ${chatMsg.color}; font-weight: bold;` : ''}
+							style={nicknameStyle(chatMsg)}
 						>
 							&lt;{chatMsg.nickname}{#if chatMsg.source === 'discord'}<span
 									class="discord-badge"
@@ -1350,14 +1456,14 @@
 									<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 										<path
 											d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"
-											fill="white"
+											fill="currentColor"
 										/>
 									</svg>
 								</span>{:else if chatMsg.source === 'admin'}<span class="crown-badge" title="Admin">
 									<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 										<path
 											d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v2h14v-2z"
-											fill="white"
+											fill="currentColor"
 										/>
 									</svg>
 								</span>{/if}&gt;
@@ -1496,8 +1602,8 @@
 	}
 
 	.msg-nickname {
-		color: var(--theme-text-primary, #e8e8e8);
-		font-weight: normal;
+		color: var(--theme-accent, #7c83ff);
+		font-weight: 600;
 	}
 
 	.msg-content {
@@ -1513,13 +1619,14 @@
 		margin-left: 4px;
 		margin-right: 0;
 		background: transparent;
-		border: 1px solid var(--theme-text-primary, white);
+		border: 1px solid currentColor;
 		border-radius: 2px;
 		vertical-align: middle;
 		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 		flex-shrink: 0;
 		overflow: hidden;
 		position: relative;
+		color: inherit;
 	}
 
 	.discord-badge svg {
@@ -1541,13 +1648,14 @@
 		margin-left: 4px;
 		margin-right: 0;
 		background: transparent;
-		border: 1px solid var(--theme-text-primary, white);
+		border: 1px solid currentColor;
 		border-radius: 2px;
 		vertical-align: middle;
 		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 		flex-shrink: 0;
 		overflow: hidden;
 		position: relative;
+		color: inherit;
 	}
 
 	.crown-badge svg {
@@ -1565,23 +1673,8 @@
 	}
 
 	.message-line.system .system-prefix {
-		color: var(--theme-text-primary, #e8e8e8);
-	}
-
-	.message-line.system.connected .system-message {
-		color: #22c55e;
-	}
-
-	.message-line.system.nickname .system-message {
-		color: #3b82f6;
-	}
-
-	.message-line.system.disconnected .system-message {
-		color: #ef4444;
-	}
-
-	.message-line.system:not(.connected):not(.nickname):not(.disconnected) .system-message {
-		color: var(--theme-text-primary, #e8e8e8);
+		color: var(--theme-accent, #7c83ff);
+		font-weight: 600;
 	}
 
 	.chat-input-container {
