@@ -46,6 +46,133 @@ function compareTweetIds(a: string, b: string): number | null {
 	return 0;
 }
 
+function asObject(value: unknown): Record<string, unknown> | null {
+	if (!value || typeof value !== 'object') return null;
+	return value as Record<string, unknown>;
+}
+
+function getTimelineInstructionEntries(instruction: unknown): unknown[] | null {
+	const entries = asObject(instruction)?.entries;
+	return Array.isArray(entries) ? entries : null;
+}
+
+function getTweetResultFromTimelineEntry(entry: unknown): any | null {
+	const itemContent = asObject(asObject(entry)?.content)?.itemContent;
+	if (!itemContent || typeof itemContent !== 'object') return null;
+	const ic = itemContent as Record<string, unknown>;
+	const tweetResults = ic.tweet_results ?? ic.tweetResults;
+	return asObject(tweetResults)?.result ?? null;
+}
+
+function tweetTextFromRecord(record: Record<string, unknown>): string | null {
+	const text = record.full_text ?? record.fullText ?? record.text;
+	if (typeof text !== 'string') return null;
+	return text;
+}
+
+function hasNumericTweetId(record: Record<string, unknown>): boolean {
+	for (const key of ['id_str', 'idStr', 'id'] as const) {
+		const id = record[key];
+		if (typeof id === 'string' && /^\d+$/.test(id)) return true;
+	}
+	return false;
+}
+
+function isTweetLikeObject(obj: unknown): boolean {
+	const record = asObject(obj);
+	if (!record) return false;
+
+	const legacy = asObject(record.legacy);
+	if (legacy && tweetTextFromRecord(legacy)) return true;
+
+	const topLevelText = tweetTextFromRecord(record);
+	if (topLevelText) {
+		if (legacy || record.__typename === 'Tweet' || hasNumericTweetId(record)) {
+			return true;
+		}
+	}
+
+	return record.__typename === 'Tweet';
+}
+
+function findTweetInResponse(obj: unknown, depth = 0): any | null {
+	if (depth > 10) return null;
+	if (isTweetLikeObject(obj)) return obj;
+
+	const record = asObject(obj);
+	if (!record) return null;
+
+	for (const key of Object.keys(record)) {
+		const found = findTweetInResponse(record[key], depth + 1);
+		if (found) return found;
+	}
+	return null;
+}
+
+function parseTweetIdFromEntry(key: string, value: string): string | null {
+	const isIdKey = key === 'id_str' || key === 'idStr' || key === 'id';
+	if (!isIdKey || !/^\d+$/.test(value)) return null;
+	return value;
+}
+
+function parseTweetTextFromEntry(key: string, value: string): string | null {
+	const isTextKey = key === 'full_text' || key === 'fullText' || key === 'text';
+	if (!isTextKey) return null;
+
+	const trimmed = value.trim();
+	if (trimmed.length === 0) return null;
+	if (trimmed.length < 2 && !trimmed.includes(' ')) return null;
+	return value;
+}
+
+function resolveUserLegacyFromTweet(tweetData: any, fallbackUser: any): any {
+	return (
+		tweetData.core?.userResults?.result?.legacy ??
+		tweetData.core?.user_results?.result?.legacy ??
+		tweetData.core?.userResults?.result ??
+		tweetData.core?.user_results?.result ??
+		fallbackUser?.legacy ??
+		fallbackUser
+	);
+}
+
+function profileImageFromUserLegacy(userLegacy: any): string | undefined {
+	if (!userLegacy) return undefined;
+	return (
+		userLegacy.profileImageUrlHttps ||
+		userLegacy.profile_image_url_https ||
+		userLegacy.profile_image_url ||
+		undefined
+	);
+}
+
+function extractIdAndTextFromObject(obj: unknown): { tweetId: string | null; tweetText: string | null } {
+	let tweetId: string | null = null;
+	let tweetText: string | null = null;
+
+	const visit = (cur: unknown, depth: number): boolean => {
+		if (tweetId && tweetText) return true;
+
+		const record = asObject(cur);
+		if (!record || depth > 10) return false;
+
+		for (const [key, value] of Object.entries(record)) {
+			if (!tweetId && typeof value === 'string') {
+				tweetId = parseTweetIdFromEntry(key, value);
+			}
+			if (!tweetText && typeof value === 'string') {
+				tweetText = parseTweetTextFromEntry(key, value);
+			}
+			if (visit(value, depth + 1)) return true;
+		}
+
+		return Boolean(tweetId && tweetText);
+	};
+
+	visit(obj, 0);
+	return { tweetId, tweetText };
+}
+
 export class TwitterApiService {
 	private static api: TwitterOpenApi | null = null;
 	private static client: any = null;
@@ -232,13 +359,10 @@ export class TwitterApiService {
 
 			if (Array.isArray(instructions)) {
 				for (const instruction of instructions) {
-					const entries = (instruction as any)?.entries;
-					if (!Array.isArray(entries)) continue;
+					const entries = getTimelineInstructionEntries(instruction);
+					if (!entries) continue;
 					for (const entry of entries) {
-						const result =
-							(entry as any)?.content?.itemContent?.tweet_results?.result ??
-							(entry as any)?.content?.itemContent?.tweetResults?.result ??
-							null;
+						const result = getTweetResultFromTimelineEntry(entry);
 						if (result && (result.__typename === 'Tweet' || result.legacy)) {
 							tweetData = pickNewerTweet(tweetData, result);
 						}
@@ -260,40 +384,7 @@ export class TwitterApiService {
 			}
 
 			if (!tweetData) {
-				function findTweet(obj: any, depth = 0): any {
-					if (depth > 10) return null;
-
-					if (obj && typeof obj === 'object') {
-						if (
-							obj.legacy &&
-							(obj.legacy.full_text || obj.legacy.fullText || obj.legacy.text)
-						) {
-							return obj;
-						}
-						if (
-							(obj.full_text || obj.fullText || obj.text) &&
-							typeof (obj.full_text || obj.fullText || obj.text) === 'string' &&
-							(obj.legacy ||
-								obj.__typename === 'Tweet' ||
-								(typeof obj.id_str === 'string' && /^\d+$/.test(obj.id_str)) ||
-								(typeof obj.idStr === 'string' && /^\d+$/.test(obj.idStr)) ||
-								(typeof obj.id === 'string' && /^\d+$/.test(obj.id)))
-						) {
-							return obj;
-						}
-
-						if (obj.__typename === 'Tweet') {
-							return obj;
-						}
-
-						for (const key in obj) {
-							const result = findTweet(obj[key], depth + 1);
-							if (result) return result;
-						}
-					}
-					return null;
-				}
-				tweetData = findTweet(responseData);
+				tweetData = findTweetInResponse(responseData);
 			}
 
 			if (!tweetData) {
@@ -346,63 +437,15 @@ export class TwitterApiService {
 					}
 				}
 
-				function extractIdAndText(obj: any): { tweetId: string | null; tweetText: string | null } {
-					let tweetId: string | null = null;
-					let tweetText: string | null = null;
-
-					function walk(cur: any, d: number): void {
-						if (tweetId && tweetText) return;
-						if (!cur || typeof cur !== 'object') return;
-						if (d > 10) return;
-
-						for (const [k, v] of Object.entries(cur)) {
-							if (tweetId == null && typeof v === 'string') {
-								if (
-									(k === 'id_str' || k === 'idStr' || k === 'id') &&
-									/^\d+$/.test(v)
-								) {
-									tweetId = v;
-								}
-							}
-
-							if (tweetText == null && typeof v === 'string') {
-								if (
-									(k === 'full_text' || k === 'fullText' || k === 'text') &&
-									v.trim().length > 0 &&
-									(v.trim().length >= 2 || v.includes(' '))
-								) {
-									tweetText = v;
-								}
-							}
-
-							walk(v, d + 1);
-							if (tweetId && tweetText) return;
-						}
-					}
-
-					walk(obj, 0);
-					return { tweetId, tweetText };
-				}
-
-				const { tweetId, tweetText } = extractIdAndText(tweetData);
+				const { tweetId, tweetText } = extractIdAndTextFromObject(tweetData);
 				if (tweetId && tweetText) {
-					const modernUserLegacy =
-						(tweetData.core?.userResults?.result?.legacy as any) ??
-						(tweetData.core?.user_results?.result?.legacy as any) ??
-						(tweetData.core?.userResults?.result as any) ??
-						(tweetData.core?.user_results?.result as any);
-
-					const userLegacy = modernUserLegacy ?? userData?.legacy ?? userData;
+					const userLegacy = resolveUserLegacyFromTweet(tweetData, userData);
 
 					const authorName = userLegacy?.name || '';
 					const authorUsername =
 						userLegacy?.screenName || userLegacy?.screen_name || username;
 
-					const profileImage =
-						userLegacy?.profileImageUrlHttps ||
-						userLegacy?.profile_image_url_https ||
-						userLegacy?.profile_image_url ||
-						null;
+					const profileImage = profileImageFromUserLegacy(userLegacy);
 
 					const tweetUrl = `https://x.com/${authorUsername}/status/${tweetId}`;
 					const profileUrl = `https://x.com/${authorUsername}`;
@@ -435,29 +478,8 @@ export class TwitterApiService {
 
 			logger.info('Successfully extracted tweet:', tweetId);
 
-			// Extract user information
-			let userLegacy = null;
-			let profileImage = null;
-
-			// Check if tweet has user data embedded
-			if (tweetData.core?.userResults?.result?.legacy) {
-				userLegacy = tweetData.core.userResults.result.legacy;
-				profileImage =
-					userLegacy.profileImageUrlHttps ||
-					userLegacy.profile_image_url_https ||
-					userLegacy.profile_image_url ||
-					null;
-			}
-
-			// Fall back to original user data if not found in tweet
-			if (!userLegacy) {
-				userLegacy = userData?.legacy || userData;
-				profileImage =
-					userLegacy?.profileImageUrlHttps ||
-					userLegacy?.profile_image_url_https ||
-					userLegacy?.profile_image_url ||
-					null;
-			}
+			const userLegacy = resolveUserLegacyFromTweet(tweetData, userData);
+			const profileImage = profileImageFromUserLegacy(userLegacy);
 
 			const authorName = userLegacy?.name || '';
 			const authorUsername = userLegacy?.screenName || userLegacy?.screen_name || username;
@@ -723,13 +745,10 @@ export class TwitterApiService {
 
 				if (Array.isArray(instructions)) {
 					for (const instruction of instructions) {
-						const entries = (instruction as any)?.entries;
-						if (!Array.isArray(entries)) continue;
+						const entries = getTimelineInstructionEntries(instruction);
+						if (!entries) continue;
 						for (const entry of entries) {
-							const result =
-								(entry as any)?.content?.itemContent?.tweet_results?.result ??
-								(entry as any)?.content?.itemContent?.tweetResults?.result ??
-								null;
+							const result = getTweetResultFromTimelineEntry(entry);
 							if (result) maybeAdd(result);
 						}
 					}
