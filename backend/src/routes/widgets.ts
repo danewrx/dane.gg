@@ -107,20 +107,12 @@ router.get('/latest-tweet', async (req, res) => {
 			});
 		}
 
-		// If profile image exists, convert to proxy URL
-		let profileImageUrl = latestTweet.authorProfileImage;
-		if (profileImageUrl && profileImageUrl.includes('pbs.twimg.com')) {
-			// Use proxy endpoint to bypass tracking protection
-			const imageUrl = encodeURIComponent(profileImageUrl);
-			profileImageUrl = `/api/widgets/tweet-profile-image?url=${imageUrl}`;
-		}
-
 		res.json({
 			tweetId: latestTweet.tweetId,
 			content: latestTweet.content,
 			authorName: latestTweet.authorName,
 			authorUsername: latestTweet.authorUsername,
-			authorProfileImage: profileImageUrl,
+			authorProfileImage: latestTweet.authorProfileImage,
 			authorProfileUrl: latestTweet.authorProfileUrl,
 			tweetUrl: latestTweet.tweetUrl,
 			createdAt: latestTweet.createdAt,
