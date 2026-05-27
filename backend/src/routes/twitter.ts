@@ -182,23 +182,10 @@ router.get('/tweets', requireSession, async (req: Request, res: Response) => {
 	try {
 		const tweets = await TweetService.getAllTweets();
 
-		const tweetsWithProxyImages = tweets.map((tweet) => {
-			let profileImageUrl = tweet.authorProfileImage;
-			if (profileImageUrl && profileImageUrl.includes('pbs.twimg.com')) {
-				const imageUrl = encodeURIComponent(profileImageUrl);
-				profileImageUrl = `/api/widgets/tweet-profile-image?url=${imageUrl}`;
-			}
-
-			return {
-				...tweet,
-				authorProfileImage: profileImageUrl
-			};
-		});
-
 		res.json({
 			success: true,
-			data: tweetsWithProxyImages,
-			count: tweetsWithProxyImages.length
+			data: tweets,
+			count: tweets.length
 		});
 	} catch (error: any) {
 		logger.error('Error fetching tweets:', error);
