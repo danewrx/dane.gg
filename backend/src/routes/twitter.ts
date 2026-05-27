@@ -14,7 +14,19 @@ function shouldProxyTwitterImages(): boolean {
 function proxiedTwitterImageUrl(url: string | null | undefined): string | null {
 	if (!url) return null;
 	if (!shouldProxyTwitterImages()) return url;
-	if (!url.includes('pbs.twimg.com') && !url.includes('twimg.com')) return url;
+
+	try {
+		const parsedUrl = new URL(url);
+		const protocol = parsedUrl.protocol.toLowerCase();
+		if (protocol !== 'http:' && protocol !== 'https:') return url;
+
+		const host = parsedUrl.hostname.toLowerCase();
+		const isAllowedHost = host === 'pbs.twimg.com' || host === 'twimg.com' || host.endsWith('.twimg.com');
+		if (!isAllowedHost) return url;
+	} catch {
+		return url;
+	}
+
 	return `/api/widgets/tweet-profile-image?url=${encodeURIComponent(url)}`;
 }
 
