@@ -184,6 +184,35 @@ export class TweetService {
 	}
 
 	/**
+	 * Delete tweets with a higher tweet ID than the given one (newer tweets on X).
+	 * Used when the latest tweet was deleted and the API returns an older tweet.
+	 * @returns Number of tweets deleted
+	 */
+	static async deleteTweetsNewerThan(tweetId: string): Promise<number> {
+		if (!/^\d+$/.test(tweetId)) {
+			return 0;
+		}
+
+		try {
+			const threshold = BigInt(tweetId);
+			const storedIds = await this.getAllTweetIds();
+			let deleted = 0;
+
+			for (const storedId of storedIds) {
+				if (!/^\d+$/.test(storedId)) continue;
+				if (BigInt(storedId) <= threshold) continue;
+				const ok = await this.deleteTweet(storedId);
+				if (ok) deleted++;
+			}
+
+			return deleted;
+		} catch (error) {
+			logger.error('Error deleting tweets newer than:', tweetId, error);
+			return 0;
+		}
+	}
+
+	/**
 	 * Delete tweets that are not in the provided set of tweet IDs.
 	 * @returns Number of tweets deleted
 	 */

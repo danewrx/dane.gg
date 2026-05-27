@@ -38,6 +38,16 @@ function parseTweetPostedAtFromLegacy(
 	return undefined;
 }
 
+/** Compare Twitter snowflake tweet IDs. Returns negative if a < b. */
+function compareTweetIds(a: string, b: string): number | null {
+	if (!/^\d+$/.test(a) || !/^\d+$/.test(b)) return null;
+	const aId = BigInt(a);
+	const bId = BigInt(b);
+	if (aId < bId) return -1;
+	if (aId > bId) return 1;
+	return 0;
+}
+
 export class TwitterApiService {
 	private static api: TwitterOpenApi | null = null;
 	private static client: any = null;
@@ -524,6 +534,21 @@ export class TwitterApiService {
 				logger.info('Tweet is already up to date:', tweetData.tweetId);
 				this.consecutiveErrors = 0;
 				return true;
+			}
+
+			// Fetched latest is older than DB latest
+			const pruneOnFetch =
+				(process.env.TWITTER_FETCH_PRUNE_DELETED ?? 'true').toLowerCase() === 'true';
+			if (existingTweet && pruneOnFetch) {
+				const idCompare = compareTweetIds(tweetData.tweetId, existingTweet.tweetId);
+				if (idCompare != null && idCompare < 0) {
+					const pruned = await TweetService.deleteTweetsNewerThan(tweetData.tweetId);
+					if (pruned > 0) {
+						logger.info(
+							`Removed ${pruned} tweet(s) no longer on timeline (deleted on X); new latest: ${tweetData.tweetId}`
+						);
+					}
+				}
 			}
 
 			// Save the new tweet
