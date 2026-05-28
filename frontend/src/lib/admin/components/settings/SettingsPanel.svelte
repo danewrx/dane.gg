@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import { Palette, Lock } from 'lucide-svelte';
+	import { fly, fade } from 'svelte/transition';
 	import FontSelector from './FontSelector.svelte';
 	import WeatherControls from './WeatherControls.svelte';
 	import ThemeSwitcherWindow from './ThemeSwitcherWindow.svelte';
@@ -10,8 +12,27 @@
 	let { isOpen = false, onClose }: { isOpen?: boolean; onClose?: () => void } = $props();
 	let themeWindowOpen = $state(false);
 
+	const SLIDE_MS = 300;
+	const slideDistance = 300;
+	const motionReduced =
+		browser && typeof matchMedia !== 'undefined'
+			? matchMedia('(prefers-reduced-motion: reduce)').matches
+			: false;
+	const panelFly = {
+		x: slideDistance,
+		duration: motionReduced ? 0 : SLIDE_MS,
+		opacity: 1
+	};
+	const backdropFade = { duration: motionReduced ? 0 : SLIDE_MS };
+
 	function handleClose() {
 		onClose?.();
+	}
+
+	function handleWindowKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape' && isOpen) {
+			handleClose();
+		}
 	}
 
 	function openThemeWindow() {
@@ -22,18 +43,25 @@
 <!-- Theme Switcher Window -->
 <ThemeSwitcherWindow bind:isOpen={themeWindowOpen} />
 
-<!-- Settings Panel -->
+<svelte:window onkeydown={handleWindowKeydown} />
+
+<!-- Settings Panel (one element per {#if} so Svelte runs enter/leave transitions) -->
 {#if isOpen}
 	<div
 		class="settings-backdrop"
+		transition:fade={backdropFade}
 		onclick={handleClose}
-		onkeydown={(e) => e.key === 'Escape' && handleClose()}
-		role="button"
-		tabindex="-1"
-		aria-label="Close settings"
+		role="presentation"
 	></div>
 {/if}
-<div class="settings-panel" class:open={isOpen}>
+{#if isOpen}
+	<div
+		class="settings-panel"
+		transition:fly={panelFly}
+		role="dialog"
+		aria-modal="true"
+		aria-label="Site settings"
+	>
 	<div class="settings-content">
 		<div class="settings-section">
 			<h3>Theme</h3>
@@ -81,15 +109,13 @@
 			<ChatNotificationControl />
 		</div>
 	</div>
-</div>
+	</div>
+{/if}
 
 <style>
 	.settings-backdrop {
 		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100vw;
-		height: 100vh;
+		inset: 0;
 		background: transparent;
 		z-index: 1000;
 		cursor: pointer;
@@ -111,15 +137,10 @@
 			-4px 0 12px rgba(0, 0, 0, 0.5),
 			0 0 30px var(--theme-accent, #90ee90);
 		z-index: 1001;
-		transform: translateX(100%);
-		transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
-	}
-
-	.settings-panel.open {
-		transform: translateX(0);
+		will-change: transform;
 	}
 
 	.settings-content {
@@ -224,16 +245,6 @@
 		line-height: 1.4;
 		color: var(--theme-text-muted, #71717a);
 		text-align: left;
-	}
-
-	/* Animations */
-	@keyframes fadeIn {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
-		}
 	}
 
 	/* Responsive design */
