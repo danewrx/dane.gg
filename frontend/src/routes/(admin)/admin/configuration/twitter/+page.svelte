@@ -72,8 +72,9 @@
 			loading = true;
 			error = '';
 
-			const response = await fetch('/api/twitter/status', {
-				credentials: 'include'
+			const response = await fetch(`/api/twitter/status?ts=${Date.now()}`, {
+				credentials: 'include',
+				cache: 'no-store'
 			});
 
 			if (!response.ok) {
@@ -105,8 +106,9 @@
 
 	async function loadLatestTweet() {
 		try {
-			const response = await fetch('/api/widgets/latest-tweet', {
-				credentials: 'include'
+			const response = await fetch(`/api/widgets/latest-tweet?ts=${Date.now()}`, {
+				credentials: 'include',
+				cache: 'no-store'
 			});
 
 			if (response.ok) {
@@ -143,8 +145,9 @@
 			// Add a small delay
 			await new Promise((resolve) => setTimeout(resolve, 500));
 
-			const response = await fetch('/api/twitter/tweets', {
-				credentials: 'include'
+			const response = await fetch(`/api/twitter/tweets?ts=${Date.now()}`, {
+				credentials: 'include',
+				cache: 'no-store'
 			});
 
 			if (!response.ok) {
@@ -180,8 +183,9 @@
 			error = '';
 			showRequestResponse = false;
 
-			const response = await fetch('/api/twitter/status', {
-				credentials: 'include'
+			const response = await fetch(`/api/twitter/status?ts=${Date.now()}`, {
+				credentials: 'include',
+				cache: 'no-store'
 			});
 
 			if (!response.ok) {
@@ -280,8 +284,9 @@
 		}
 
 		try {
-			const statusResponse = await fetch('/api/twitter/status', {
-				credentials: 'include'
+			const statusResponse = await fetch(`/api/twitter/status?ts=${Date.now()}`, {
+				credentials: 'include',
+				cache: 'no-store'
 			});
 
 			if (statusResponse.ok) {
@@ -298,8 +303,9 @@
 			}
 
 			// Check for new latest tweet
-			const tweetResponse = await fetch('/api/widgets/latest-tweet', {
-				credentials: 'include'
+			const tweetResponse = await fetch(`/api/widgets/latest-tweet?ts=${Date.now()}`, {
+				credentials: 'include',
+				cache: 'no-store'
 			});
 
 			if (tweetResponse.ok) {
@@ -363,7 +369,7 @@
 			}
 		}, 1000);
 
-		pollInterval = setInterval(pollForUpdates, 30000);
+		pollInterval = setInterval(pollForUpdates, 10000);
 
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 

@@ -7,6 +7,29 @@ import { ConfigService } from '../services/config';
 
 const router = Router();
 
+function shouldProxyTwitterImages(): boolean {
+	return (process.env.TWITTER_PROXY_PROFILE_IMAGES ?? 'true').toLowerCase() === 'true';
+}
+
+function proxiedTwitterImageUrl(url: string | null | undefined): string | null {
+	if (!url) return null;
+	if (!shouldProxyTwitterImages()) return url;
+
+	try {
+		const parsedUrl = new URL(url);
+		const protocol = parsedUrl.protocol.toLowerCase();
+		if (protocol !== 'http:' && protocol !== 'https:') return url;
+
+		const host = parsedUrl.hostname.toLowerCase();
+		const isAllowedHost = host === 'pbs.twimg.com' || host === 'twimg.com' || host.endsWith('.twimg.com');
+		if (!isAllowedHost) return url;
+	} catch {
+		return url;
+	}
+
+	return `/api/widgets/tweet-profile-image?url=${encodeURIComponent(url)}`;
+}
+
 /**
  * POST /api/twitter/fetch
  * Manually trigger fetching the latest tweet (authenticated users only)
@@ -182,10 +205,17 @@ router.get('/tweets', requireSession, async (req: Request, res: Response) => {
 	try {
 		const tweets = await TweetService.getAllTweets();
 
+		const tweetsWithProxyImages = shouldProxyTwitterImages()
+			? tweets.map((t) => ({
+					...t,
+					authorProfileImage: proxiedTwitterImageUrl(t.authorProfileImage)
+				}))
+			: tweets;
+
 		res.json({
 			success: true,
-			data: tweets,
-			count: tweets.length
+			data: tweetsWithProxyImages,
+			count: tweetsWithProxyImages.length
 		});
 	} catch (error: any) {
 		logger.error('Error fetching tweets:', error);

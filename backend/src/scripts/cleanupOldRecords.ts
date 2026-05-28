@@ -45,6 +45,14 @@ async function cleanupTweets() {
 	try {
 		logger.info('Cleaning up tweet records...');
 
+		const rawMax = process.env.TWITTER_MAX_STORED_TWEETS ?? '0';
+		const maxStoredTweets = Number.parseInt(rawMax, 10);
+
+		if (!Number.isFinite(maxStoredTweets) || maxStoredTweets <= 0) {
+			logger.info('TWITTER_MAX_STORED_TWEETS <= 0; keeping all tweet history');
+			return;
+		}
+
 		// Get all records ordered by createdAt
 		const allRecords = await db
 			.select({ id: tweets.id, createdAt: tweets.createdAt })
@@ -53,9 +61,8 @@ async function cleanupTweets() {
 
 		logger.info(`Found ${allRecords.length} tweet records`);
 
-		// If we have more than 30 records, delete the oldest ones
-		if (allRecords.length > 30) {
-			const recordsToDelete = allRecords.slice(30);
+		if (allRecords.length > maxStoredTweets) {
+			const recordsToDelete = allRecords.slice(maxStoredTweets);
 			logger.info(`Deleting ${recordsToDelete.length} old tweet records...`);
 
 			// Delete all old records
@@ -63,7 +70,9 @@ async function cleanupTweets() {
 				await db.delete(tweets).where(eq(tweets.id, record.id));
 			}
 
-			logger.info(`Cleaned up ${recordsToDelete.length} old tweet records (kept last 30)`);
+			logger.info(
+				`Cleaned up ${recordsToDelete.length} old tweet records (kept last ${maxStoredTweets})`
+			);
 		} else {
 			logger.info('No cleanup needed for tweet records');
 		}

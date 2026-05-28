@@ -82,6 +82,6 @@ describe('JWT helpers', () => {
 		});
 		expect(pair.accessToken.length).toBeGreaterThan(20);
 		expect(pair.refreshToken.length).toBeGreaterThan(20);
-		expect(pair.expiresIn).toBe(process.env.JWT_EXPIRES_IN);
+		expect(pair.expiresIn).toBe(process.env.JWT_EXPIRES_IN || '7d');
 	});
 });

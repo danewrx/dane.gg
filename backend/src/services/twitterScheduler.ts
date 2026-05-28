@@ -56,6 +56,16 @@ export class TwitterScheduler {
 				logger.error('Initial fetch failed:', err.message);
 			});
 
+			// Full history backfill once on startup
+			const fullBackfillEnabled =
+				(process.env.TWITTER_FULL_BACKFILL_ENABLED ?? 'true').toLowerCase() === 'true';
+			if (fullBackfillEnabled) {
+				logger.info('Starting one-time tweet history backfill on startup');
+				TwitterApiService.fetchAndBackfillAllTweets(username).catch((err) => {
+					logger.error('Startup full backfill failed:', err.message);
+				});
+			}
+
 			// Get cron expression from environment (Supports TWITTER_POLL_INTERVAL for backwards compatibility)
 			let fetchCronExpression: string;
 			if (process.env.TWITTER_FETCH_CRON) {

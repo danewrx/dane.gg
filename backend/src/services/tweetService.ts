@@ -65,7 +65,6 @@ export class TweetService {
 				logger.info(`Created new tweet: ${tweetData.tweetId}`);
 			}
 
-			// Clean up old records after each update
 			await this.cleanupOldRecords();
 
 			return true;
@@ -130,19 +129,28 @@ export class TweetService {
 	}
 
 	/**
-	 * Clean up old tweet records (keep only last 30)
+	 * Clean up old tweet records.
+	 * Controlled by TWITTER_MAX_STORED_TWEETS:
+	 * - <= 0 (default): keep all history
+	 * - > 0: keep only the most recent N tweets
 	 */
 	static async cleanupOldRecords(): Promise<boolean> {
 		try {
+			const rawMax = process.env.TWITTER_MAX_STORED_TWEETS ?? '0';
+			const maxStoredTweets = Number.parseInt(rawMax, 10);
+
+			if (!Number.isFinite(maxStoredTweets) || maxStoredTweets <= 0) {
+				return true;
+			}
+
 			// Get all records ordered by createdAt
 			const allRecords = await db
 				.select({ id: tweets.id })
 				.from(tweets)
 				.orderBy(desc(tweets.createdAt));
 
-			// If we have more than 30 records, delete the oldest ones
-			if (allRecords.length > 30) {
-				const recordsToDelete = allRecords.slice(30);
+			if (allRecords.length > maxStoredTweets) {
+				const recordsToDelete = allRecords.slice(maxStoredTweets);
 				const idsToDelete = recordsToDelete.map((record) => record.id);
 
 				// Delete all old records at once
@@ -150,13 +158,83 @@ export class TweetService {
 					await db.delete(tweets).where(eq(tweets.id, id));
 				}
 
-				logger.info(`Cleaned up ${recordsToDelete.length} old tweet records (kept last 30)`);
+				logger.info(
+					`Cleaned up ${recordsToDelete.length} old tweet records (kept last ${maxStoredTweets})`
+				);
 			}
 
 			return true;
 		} catch (error) {
 			logger.error('Error cleaning up tweet records:', error);
 			return false;
+		}
+	}
+
+	/**
+	 * Get all stored tweet IDs (used for backfilling missing tweets).
+	 */
+	static async getAllTweetIds(): Promise<string[]> {
+		try {
+			const rows = await db.select({ tweetId: tweets.tweetId }).from(tweets);
+			return rows.map((r) => r.tweetId);
+		} catch (error) {
+			logger.error('Error fetching tweet ids:', error);
+			return [];
+		}
+	}
+
+	/**
+	 * Delete tweets with a higher tweet ID than the given one (newer tweets on X).
+	 * Used when the latest tweet was deleted and the API returns an older tweet.
+	 * @returns Number of tweets deleted
+	 */
+	static async deleteTweetsNewerThan(tweetId: string): Promise<number> {
+		if (!/^\d+$/.test(tweetId)) {
+			return 0;
+		}
+
+		try {
+			const threshold = BigInt(tweetId);
+			const storedIds = await this.getAllTweetIds();
+			let deleted = 0;
+
+			for (const storedId of storedIds) {
+				if (!/^\d+$/.test(storedId)) continue;
+				if (BigInt(storedId) <= threshold) continue;
+				const ok = await this.deleteTweet(storedId);
+				if (ok) deleted++;
+			}
+
+			return deleted;
+		} catch (error) {
+			logger.error('Error deleting tweets newer than:', tweetId, error);
+			return 0;
+		}
+	}
+
+	/**
+	 * Delete tweets that are not in the provided set of tweet IDs.
+	 * @returns Number of tweets deleted
+	 */
+	static async deleteTweetsNotIn(keepTweetIds: Set<string>): Promise<number> {
+		if (keepTweetIds.size === 0) {
+			return 0;
+		}
+
+		try {
+			const storedIds = await this.getAllTweetIds();
+			let deleted = 0;
+
+			for (const tweetId of storedIds) {
+				if (keepTweetIds.has(tweetId)) continue;
+				const ok = await this.deleteTweet(tweetId);
+				if (ok) deleted++;
+			}
+
+			return deleted;
+		} catch (error) {
+			logger.error('Error deleting tweets not in backfill set:', error);
+			return 0;
 		}
 	}
 }
