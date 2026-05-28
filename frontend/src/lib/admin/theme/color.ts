@@ -127,8 +127,12 @@ export function resolveAccentFill(accent: string, surface: string, isDark: boole
 	return adjustTowardContrast(accent, surface, 3, isDark);
 }
 
-export function resolveAccentFillHover(fill: string, isDark: boolean): string {
-	return isDark ? lightenHex(fill, 0.08) : darkenHex(fill, 0.1);
+export function resolveAccentFillHoverForDarkTheme(fill: string): string {
+	return lightenHex(fill, 0.08);
+}
+
+export function resolveAccentFillHoverForLightTheme(fill: string): string {
+	return darkenHex(fill, 0.1);
 }
 
 export type AdminSurfaceColors = {
@@ -174,7 +178,9 @@ export function buildAccentTokens(accent: string, isDark: boolean): AccentTokens
 	const surfaces = getAdminSurfaces(isDark);
 	const onSurface = resolveAccentOnSurface(accent, surfaces.primary, isDark);
 	const fill = resolveAccentFill(accent, surfaces.primary, isDark);
-	const fillHover = resolveAccentFillHover(fill, isDark);
+	const fillHover = isDark
+		? resolveAccentFillHoverForDarkTheme(fill)
+		: resolveAccentFillHoverForLightTheme(fill);
 	const fillFg = pickForeground(fill);
 	const fillHoverFg = pickForeground(fillHover);
 	const mutedBg = mixHex(onSurface, surfaces.secondary, isDark ? 0.16 : 0.1);
