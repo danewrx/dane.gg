@@ -309,7 +309,7 @@
 
 	.speed-value {
 		margin-left: auto;
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		font-size: 13px;
 		white-space: nowrap;
 	}
@@ -475,7 +475,7 @@
 		width: 18px;
 		height: 18px;
 		border-radius: 50%;
-		background: var(--accent-color, #6366f1);
+		background: var(--accent-bg, var(--accent-color, #6366f1));
 		cursor: pointer;
 	}
 
@@ -483,7 +483,7 @@
 		width: 18px;
 		height: 18px;
 		border-radius: 50%;
-		background: var(--accent-color, #6366f1);
+		background: var(--accent-bg, var(--accent-color, #6366f1));
 		cursor: pointer;
 		border: none;
 	}
@@ -523,8 +523,8 @@
 	}
 
 	.save-button {
-		background: var(--accent-color, #6366f1);
-		color: white;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 8px;
 		padding: 12px 20px;

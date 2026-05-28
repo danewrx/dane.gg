@@ -863,13 +863,13 @@
 	}
 
 	.btn-primary {
-		background: var(--accent-color);
-		color: var(--accent-color-contrast, #ffffff);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 	}
 
 	.btn-primary:hover:not(:disabled) {
 		background: var(--accent-color-dark);
-		color: var(--accent-color-dark-contrast, #ffffff);
+		color: var(--accent-fg-hover, var(--accent-fg));
 	}
 
 	.btn:disabled {

@@ -242,11 +242,11 @@
 	}
 
 	.theme-option.active .theme-name {
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 	}
 
 	:global(.check-icon) {
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		flex-shrink: 0;
 	}
 </style>

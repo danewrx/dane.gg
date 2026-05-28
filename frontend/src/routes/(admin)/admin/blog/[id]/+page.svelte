@@ -507,7 +507,7 @@
 	}
 
 	.add-tag-button:hover {
-		background: var(--accent-color, #6366f1);
+		background: var(--accent-bg, var(--accent-color, #6366f1));
 		border-color: var(--accent-color, #6366f1);
 	}
 
@@ -609,13 +609,14 @@
 	}
 
 	.save-button {
-		background: var(--accent-color, #6366f1);
+		background: var(--accent-bg, var(--accent-color, #6366f1));
 		border: none;
-		color: white;
+		color: var(--accent-fg);
 	}
 
 	.save-button:hover:not(:disabled) {
-		background: var(--accent-hover, #5558e3);
+		background: var(--accent-bg-hover, var(--accent-color-dark, #4f46e5));
+		color: var(--accent-fg-hover, var(--accent-fg));
 	}
 
 	.save-button:disabled {

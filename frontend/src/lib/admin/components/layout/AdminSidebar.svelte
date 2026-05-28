@@ -158,7 +158,7 @@
 		position: relative;
 	}
 
-	:global(html:not(.dark)) .nav-link {
+	:global(html:not(.dark)) .nav-link:not(.active) {
 		color: #374151;
 	}
 
@@ -171,14 +171,14 @@
 	}
 
 	.nav-link.active {
-		background: var(--accent-color, #3b82f6);
-		color: var(--accent-color-contrast, white);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
 
 	.nav-link.active:hover {
-		background: var(--accent-color-dark, #2563eb);
-		color: var(--accent-color-dark-contrast, white);
+		background: var(--accent-bg-hover, var(--accent-color-dark, #2563eb));
+		color: var(--accent-fg-hover, var(--accent-fg));
 	}
 
 	.nav-link:focus {

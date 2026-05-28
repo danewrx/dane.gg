@@ -920,8 +920,8 @@
 	}
 
 	.username-source.database {
-		background: var(--accent-color-light);
-		color: var(--accent-color);
+		background: var(--accent-muted-bg, var(--accent-color-light));
+		color: var(--accent-muted-fg);
 	}
 
 	.username-source.environment {
@@ -1123,13 +1123,13 @@
 	}
 
 	.btn-primary {
-		background: var(--accent-color);
-		color: var(--accent-color-contrast, #ffffff);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 	}
 
 	.btn-primary:hover:not(:disabled) {
 		background: var(--accent-color-dark);
-		color: var(--accent-color-dark-contrast, #ffffff);
+		color: var(--accent-fg-hover, var(--accent-fg));
 	}
 
 	.btn:disabled {
@@ -1291,11 +1291,11 @@
 	}
 
 	.profile-image-placeholder {
-		background: var(--accent-color-light);
+		background: var(--accent-muted-bg, var(--accent-color-light));
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: var(--accent-color);
+		color: var(--accent-muted-fg);
 	}
 
 	.tweet-author {

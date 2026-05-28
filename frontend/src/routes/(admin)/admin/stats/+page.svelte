@@ -282,8 +282,8 @@
 	}
 
 	.retry-button {
-		background: var(--accent-color, #6366f1);
-		color: var(--accent-color-contrast, #ffffff);
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border: none;
 		padding: 10px 20px;
 		border-radius: 6px;
@@ -294,7 +294,7 @@
 	}
 
 	.retry-button:hover {
-		background: var(--accent-color-dark, #5b5bf6);
+		background: var(--accent-bg-hover, var(--accent-color-dark, #5b5bf6));
 	}
 
 	.stats-grid {
@@ -439,7 +439,7 @@
 	}
 
 	.stat-icon {
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		opacity: 0.8;
 	}
 

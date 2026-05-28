@@ -344,8 +344,8 @@
 		min-height: 2.75rem;
 		padding: 10px 20px;
 		box-sizing: border-box;
-		background: var(--accent-color, #6366f1);
-		color: white;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 8px;
 		font-size: 14px;
@@ -503,7 +503,7 @@
 	}
 
 	.action-icon.edit:hover {
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 	}
 
 	.action-icon.delete:hover {

@@ -11,6 +11,7 @@
 	import AdminMobileSidebar from '$lib/admin/components/layout/AdminMobileSidebar.svelte';
 	import { Toaster } from 'svelte-sonner';
 	import { ModeWatcher, mode } from 'mode-watcher';
+	import '$lib/admin/theme/admin-accent.css';
 
 	let { children } = $props();
 	let sidebarCollapsed = $state(false);
@@ -174,6 +175,13 @@
 		--text-secondary: #a1a1aa;
 		--border-color: #404040;
 		--accent-color: #3b82f6;
+		--accent-bg: #3b82f6;
+		--accent-fg: #ffffff;
+		--accent-bg-hover: #2563eb;
+		--accent-fg-hover: #ffffff;
+		--accent-on-surface: #3b82f6;
+		--accent-muted-bg: rgba(59, 130, 246, 0.1);
+		--accent-muted-fg: #3b82f6;
 		--accent-color-light: rgba(59, 130, 246, 0.1);
 		--accent-color-medium: rgba(59, 130, 246, 0.2);
 		--accent-color-dark: #2563eb;
@@ -192,50 +200,65 @@
 	}
 
 	/* Global accent color applications */
-	:global(.btn-primary) {
-		background: var(--accent-color, #3b82f6) !important;
-		border-color: var(--accent-color, #3b82f6) !important;
-		color: var(--accent-color-contrast, white) !important;
+	:global(.btn-primary),
+	:global(.create-button),
+	:global(.save-button--accent) {
+		background: var(--accent-bg, var(--accent-color, #3b82f6)) !important;
+		border-color: var(--accent-bg, var(--accent-color, #3b82f6)) !important;
+		color: var(--accent-fg) !important;
 	}
 
-	:global(.btn-primary:hover) {
-		background: var(--accent-color-dark, #2563eb) !important;
-		border-color: var(--accent-color-dark, #2563eb) !important;
-		color: var(--accent-color-dark-contrast, white) !important;
+	:global(.btn-primary:hover),
+	:global(.create-button:hover:not(:disabled)),
+	:global(.save-button--accent:hover:not(:disabled)) {
+		background: var(--accent-bg-hover, var(--accent-color-dark, #2563eb)) !important;
+		border-color: var(--accent-bg-hover, var(--accent-color-dark, #2563eb)) !important;
+		color: var(--accent-fg-hover, var(--accent-fg)) !important;
 	}
 
 	:global(.btn-primary:focus) {
-		box-shadow: 0 0 0 2px var(--accent-color-light, rgba(59, 130, 246, 0.2)) !important;
+		box-shadow: 0 0 0 2px var(--accent-color-medium, rgba(59, 130, 246, 0.2)) !important;
 	}
 
 	:global(.link-accent) {
-		color: var(--accent-color, #3b82f6) !important;
+		color: var(--accent-on-surface, var(--accent-color, #3b82f6)) !important;
 	}
 
 	:global(.link-accent:hover) {
-		color: var(--accent-color-dark, #2563eb) !important;
+		color: var(--accent-bg-hover, var(--accent-color-dark, #2563eb)) !important;
 	}
 
 	:global(.border-accent) {
-		border-color: var(--accent-color, #3b82f6) !important;
+		border-color: var(--accent-border, var(--accent-color, #3b82f6)) !important;
 	}
 
 	:global(.text-accent) {
-		color: var(--accent-color, #3b82f6) !important;
+		color: var(--accent-on-surface, var(--accent-color, #3b82f6)) !important;
 	}
 
 	:global(.bg-accent) {
-		background-color: var(--accent-color, #3b82f6) !important;
-		color: var(--accent-color-contrast, white) !important;
+		background-color: var(--accent-bg, var(--accent-color, #3b82f6)) !important;
+		color: var(--accent-fg) !important;
 	}
 
 	:global(.bg-accent-light) {
-		background-color: var(--accent-color-light, rgba(59, 130, 246, 0.1)) !important;
+		background-color: var(--accent-muted-bg, var(--accent-color-light, rgba(59, 130, 246, 0.1))) !important;
+		color: var(--accent-muted-fg, var(--accent-on-surface, #3b82f6)) !important;
+	}
+
+	/* Icons and chips that use raw accent on a surface */
+	:global(.accent-on-surface) {
+		color: var(--accent-on-surface, var(--accent-color, #3b82f6)) !important;
+	}
+
+	:global(.accent-muted-surface) {
+		background: var(--accent-muted-bg, var(--accent-color-light, rgba(59, 130, 246, 0.1))) !important;
+		color: var(--accent-muted-fg, var(--accent-on-surface, #3b82f6)) !important;
 	}
 
 	:global(.bg-accent-dark) {
-		background-color: var(--accent-color-dark, #2563eb) !important;
-		color: var(--accent-color-dark-contrast, white) !important;
+		background-color: var(--accent-bg-hover, var(--accent-color-dark, #2563eb)) !important;
+		color: var(--accent-fg-hover, var(--accent-fg)) !important;
 	}
 
 	/* Input focus states */
@@ -253,15 +276,15 @@
 		outline-offset: 2px;
 	}
 
-	/* General toast styling - ensure solid backgrounds */
-	:global([data-sonner-toast]) {
+	/* General toast styling - ensure solid backgrounds (non-accent success toasts) */
+	:global([data-sonner-toast]:not(.sonner-success-accent)) {
 		background: #1f2937 !important;
 		color: white !important;
 		border: 1px solid rgba(255, 255, 255, 0.1) !important;
 	}
 
 	/* Default toast types with solid backgrounds */
-	:global([data-sonner-toast][data-type='success']) {
+	:global([data-sonner-toast][data-type='success']:not(.sonner-success-accent)) {
 		background: #22c55e !important;
 		color: white !important;
 	}
@@ -281,16 +304,7 @@
 		color: white !important;
 	}
 
-	/* Sonner toast customization with accent colors */
-	:global(.sonner-success-accent[data-type='success']) {
-		background: var(--accent-color, #3b82f6) !important;
-		border-left: 4px solid var(--accent-color-dark, #2563eb) !important;
-		color: white !important;
-	}
-
-	:global(.sonner-success-accent[data-type='success'] [data-icon]) {
-		color: white !important;
-	}
+	/* Accent success toasts: see admin-accent.css (title + description use --accent-fg) */
 
 	/* Error toasts */
 	:global(.sonner-error[data-type='error']) {
@@ -326,19 +340,19 @@
 	}
 
 	:global(.sonner-action-accent) {
-		background: var(--accent-color, #3b82f6) !important;
-		color: var(--accent-color-contrast, white) !important;
+		background: var(--accent-bg, var(--accent-color, #3b82f6)) !important;
+		color: var(--accent-fg) !important;
 		border: 1px solid var(--accent-color, #3b82f6) !important;
 	}
 
 	:global(.sonner-action-accent:hover) {
-		background: var(--accent-color-dark, #2563eb) !important;
+		background: var(--accent-bg-hover, var(--accent-color-dark, #2563eb)) !important;
 		border-color: var(--accent-color-dark, #2563eb) !important;
 	}
 
 	:global(.sonner-cancel-accent) {
 		border: 1px solid var(--accent-color-light, rgba(59, 130, 246, 0.3)) !important;
-		color: var(--accent-color, #3b82f6) !important;
+		color: var(--accent-on-surface, var(--accent-color, #3b82f6)) !important;
 	}
 
 	:global(.sonner-cancel-accent:hover) {

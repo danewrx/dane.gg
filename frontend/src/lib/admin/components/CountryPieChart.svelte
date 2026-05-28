@@ -968,7 +968,7 @@
 	}
 
 	.tooltip-stat strong {
-		color: var(--accent-color, #60a5fa);
+		color: var(--accent-on-surface, var(--accent-color, #60a5fa));
 	}
 
 	.vpn-percentage {

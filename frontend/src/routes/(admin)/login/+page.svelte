@@ -472,8 +472,8 @@
 
 	.submit-button {
 		width: 100%;
-		background: var(--accent-color, #3b82f6);
-		color: var(--accent-color-contrast, white);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 10px;
 		padding: 1rem 1.5rem;
@@ -508,8 +508,8 @@
 	}
 
 	.submit-button:hover:not(:disabled) {
-		background: var(--accent-color-dark, #2563eb);
-		color: var(--accent-color-dark-contrast, white);
+		background: var(--accent-bg-hover, var(--accent-color-dark, #2563eb));
+		color: var(--accent-fg-hover, var(--accent-fg));
 		transform: translateY(-1px);
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 	}
@@ -680,7 +680,7 @@
 	.backup-link {
 		background: none;
 		border: none;
-		color: var(--accent-color, #3b82f6);
+		color: var(--accent-on-surface, var(--accent-color, #3b82f6));
 		font-size: 0.9rem;
 		font-weight: 600;
 		cursor: pointer;
@@ -812,7 +812,7 @@
 		}
 
 		.backup-link {
-			color: var(--accent-color, #3b82f6) !important;
+			color: var(--accent-on-surface, var(--accent-color, #3b82f6)) !important;
 		}
 
 		.backup-link:hover {

@@ -1416,7 +1416,7 @@
 	}
 
 	.message-nickname {
-		color: var(--accent-color, #3b82f6);
+		color: var(--accent-on-surface, var(--accent-color, #3b82f6));
 		font-weight: 600;
 		flex-shrink: 0;
 		display: inline-flex;
@@ -1777,16 +1777,16 @@
 		justify-content: center;
 		width: 44px;
 		height: 44px;
-		background: var(--accent-color, #3b82f6);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
 		border: none;
 		border-radius: 6px;
-		color: white;
+		color: var(--accent-fg);
 		cursor: pointer;
 		transition: background 0.2s;
 	}
 
 	.send-btn:hover:not(:disabled) {
-		background: var(--accent-color-dark, #2563eb);
+		background: var(--accent-bg-hover, var(--accent-color-dark, #2563eb));
 	}
 
 	.send-btn:disabled {

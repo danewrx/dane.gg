@@ -669,8 +669,8 @@
 		align-items: center;
 		gap: 8px;
 		padding: 10px 20px;
-		background: var(--accent-color, #6366f1);
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 8px;
 		font-size: 14px;
@@ -680,7 +680,7 @@
 	}
 
 	.create-button:hover:not(:disabled) {
-		background: var(--accent-color-dark, #4f46e5);
+		background: var(--accent-bg-hover, var(--accent-color-dark, #4f46e5));
 		transform: translateY(-1px);
 	}
 
@@ -704,8 +704,8 @@
 		justify-content: center;
 		width: 40px;
 		height: 40px;
-		background: var(--accent-color-light, rgba(99, 102, 241, 0.2));
-		color: var(--accent-color, #6366f1);
+		background: var(--accent-muted-bg, var(--accent-color-light, rgba(99, 102, 241, 0.2)));
+		color: var(--accent-muted-fg);
 		border-radius: 8px;
 		flex-shrink: 0;
 	}
@@ -800,8 +800,8 @@
 	.empty-state button {
 		margin-top: 16px;
 		padding: 10px 20px;
-		background: var(--accent-color, #6366f1);
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 8px;
 		cursor: pointer;
@@ -889,7 +889,7 @@
 
 	.permission-badge.full {
 		background: var(--accent-color-light, rgba(99, 102, 241, 0.2));
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 	}
 
 	.permission-badge.webhooks {
@@ -961,7 +961,7 @@
 	.action-button:hover:not(:disabled) {
 		background: var(--bg-tertiary, #3a3a3a);
 		border-color: var(--accent-color, #6366f1);
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 	}
 
 	.action-button.delete:hover:not(:disabled) {
@@ -1107,12 +1107,12 @@
 	}
 
 	.save-button {
-		background: var(--accent-color, #6366f1);
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 	}
 
 	.save-button:hover:not(:disabled) {
-		background: var(--accent-color-dark, #4f46e5);
+		background: var(--accent-bg-hover, var(--accent-color-dark, #4f46e5));
 	}
 
 	.save-button.confirm-copy {
@@ -1166,8 +1166,8 @@
 		align-items: center;
 		gap: 8px;
 		padding: 12px 20px;
-		background: var(--accent-color, #6366f1);
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 8px;
 		font-size: 14px;
@@ -1178,7 +1178,7 @@
 	}
 
 	.copy-button:hover {
-		background: var(--accent-color-dark, #4f46e5);
+		background: var(--accent-bg-hover, var(--accent-color-dark, #4f46e5));
 	}
 
 	.copy-button.copied {

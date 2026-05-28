@@ -406,8 +406,8 @@
 	}
 
 	.header-icon {
-		background: var(--accent-color-light, rgba(59, 130, 246, 0.1));
-		color: var(--accent-color);
+		background: var(--accent-muted-bg, var(--accent-color-light, rgba(59, 130, 246, 0.1)));
+		color: var(--accent-muted-fg, var(--accent-on-surface, #3b82f6));
 		padding: 1rem;
 		border-radius: 12px;
 		display: flex;
@@ -490,8 +490,8 @@
 	}
 
 	.step.active .step-number {
-		background: var(--accent-color);
-		color: var(--accent-color-contrast, white);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 	}
 
 	.step.completed .step-number {
@@ -573,7 +573,7 @@
 		position: absolute;
 		top: 0.5rem;
 		right: 0.5rem;
-		color: var(--accent-color, #3b82f6);
+		color: var(--accent-on-surface, var(--accent-color, #3b82f6));
 		font-size: 1.2rem;
 	}
 
@@ -582,7 +582,7 @@
 	}
 
 	.app-item.recommended strong {
-		color: var(--accent-color, #3b82f6);
+		color: var(--accent-on-surface, var(--accent-color, #3b82f6));
 	}
 
 	.qr-section {
@@ -751,8 +751,8 @@
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.75rem 1rem;
-		background: var(--accent-color);
-		color: var(--accent-color-contrast, white);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 8px;
 		font-weight: 500;
@@ -810,8 +810,8 @@
 		justify-content: center;
 		gap: 0.5rem;
 		padding: 1rem;
-		background: var(--accent-color);
-		color: var(--accent-color-contrast, white);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 10px;
 		font-size: 1rem;
@@ -854,8 +854,8 @@
 	}
 
 	.nav-button.primary {
-		background: var(--accent-color);
-		color: var(--accent-color-contrast, white);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 	}
 
 	.nav-button.primary:hover {
@@ -886,8 +886,8 @@
 	.retry-button {
 		margin-top: 1rem;
 		padding: 0.75rem 1.5rem;
-		background: var(--accent-color);
-		color: var(--accent-color-contrast, white);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 8px;
 		font-weight: 500;

@@ -1071,8 +1071,8 @@
 	}
 
 	.toolbar-btn.active {
-		background: var(--accent-color, #6366f1);
-		color: var(--text-primary, #ffffff);
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border-color: var(--accent-color, #6366f1);
 	}
 
@@ -1190,7 +1190,7 @@
 	}
 
 	.preview-content :global(a) {
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		text-decoration: underline;
 	}
 

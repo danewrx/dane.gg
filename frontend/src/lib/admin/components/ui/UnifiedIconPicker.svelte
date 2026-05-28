@@ -854,7 +854,7 @@
 	}
 
 	.category-tab.active {
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		border-bottom-color: var(--accent-color, #6366f1);
 	}
 
@@ -900,8 +900,8 @@
 
 	.icon-option.selected {
 		border-color: var(--accent-color, #6366f1);
-		background: var(--accent-color, #6366f1);
-		color: var(--accent-color-contrast, #ffffff);
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 	}
 
 	.icon-label {
@@ -1092,8 +1092,8 @@
 	}
 
 	.save-custom-button {
-		background: var(--accent-color, #6366f1);
-		color: white;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 	}
 
 	.save-custom-button:hover:not(:disabled) {

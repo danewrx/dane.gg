@@ -70,9 +70,9 @@
 						<div
 							class="sidebar-icon"
 							class:active={selectedCategoryId === category.id}
-							style="color: {selectedCategoryId === category.id
-								? 'var(--accent-color, #6366f1)'
-								: category.iconBgColor};"
+							style:color={selectedCategoryId === category.id
+								? null
+								: category.iconBgColor}
 						>
 							{#if category.icon === Palette}
 								<Palette size={20} stroke-width={1.5} />
@@ -119,9 +119,9 @@
 						<div
 							class="sidebar-icon"
 							class:active={selectedCategoryId === category.id}
-							style="color: {selectedCategoryId === category.id
-								? 'var(--accent-color, #6366f1)'
-								: category.iconBgColor};"
+							style:color={selectedCategoryId === category.id
+								? null
+								: category.iconBgColor}
 						>
 							{#if category.icon === CloudRain}
 								<CloudRain size={20} stroke-width={1.5} />
@@ -168,9 +168,9 @@
 						<div
 							class="sidebar-icon"
 							class:active={selectedCategoryId === category.id}
-							style="color: {selectedCategoryId === category.id
-								? 'var(--accent-color, #6366f1)'
-								: category.iconBgColor};"
+							style:color={selectedCategoryId === category.id
+								? null
+								: category.iconBgColor}
 						>
 							{#if category.icon === FileText}
 								<FileText size={20} stroke-width={1.5} />
@@ -211,9 +211,9 @@
 						<div
 							class="sidebar-icon"
 							class:active={selectedCategoryId === category.id}
-							style="color: {selectedCategoryId === category.id
-								? 'var(--accent-color, #6366f1)'
-								: category.iconBgColor};"
+							style:color={selectedCategoryId === category.id
+								? null
+								: category.iconBgColor}
 						>
 							{#if category.icon === Mail}
 								<Mail size={20} stroke-width={1.5} />
@@ -285,12 +285,17 @@
 	.menu-group {
 		display: flex;
 		flex-direction: column;
-		background: rgba(255, 255, 255, 0.05);
+		background: var(--bg-secondary, rgba(255, 255, 255, 0.05));
 		border-radius: 12px;
 		overflow: hidden;
-		border: 1px solid rgba(255, 255, 255, 0.1);
+		border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
 		width: 100%;
 		box-sizing: border-box;
+	}
+
+	:global(html:not(.dark)) .menu-group {
+		background: var(--bg-secondary, #f8fafc);
+		border-color: var(--border-color, #e5e7eb);
 	}
 
 	.sidebar-item {
@@ -331,9 +336,9 @@
 	}
 
 	.sidebar-item.active {
-		background: var(--bg-tertiary, #3a3a3a);
+		background: var(--accent-muted-bg, var(--bg-tertiary, #3a3a3a));
 		color: var(--text-primary, #ffffff);
-		border-left: 3px solid var(--accent-color, #6366f1);
+		border-left: 3px solid var(--accent-on-surface, var(--accent-color, #6366f1));
 	}
 
 	.sidebar-icon {
@@ -355,11 +360,8 @@
 	}
 
 	.sidebar-icon.active {
-		background: var(--bg-tertiary, #3a3a3a);
-	}
-
-	:global(html:not(.dark)) .sidebar-icon.active {
-		background: rgba(0, 0, 0, 0.05);
+		background: var(--accent-muted-bg, var(--accent-color-light, rgba(59, 130, 246, 0.1)));
+		color: var(--accent-muted-fg, var(--accent-on-surface, #6366f1));
 	}
 
 	.sidebar-title {
