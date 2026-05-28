@@ -115,7 +115,7 @@
 	}
 
 	.toggle-input:checked + .toggle-body .toggle-slider {
-		background: var(--accent-color, #6366f1);
+		background: var(--accent-bg, var(--accent-color, #6366f1));
 	}
 
 	.toggle-input:checked + .toggle-body .toggle-slider::after {

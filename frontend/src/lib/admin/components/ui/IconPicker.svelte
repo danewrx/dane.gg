@@ -445,8 +445,8 @@
 
 	.icon-option.selected {
 		border-color: var(--accent-color, #3b82f6);
-		background: var(--accent-color, #3b82f6);
-		color: var(--accent-color-contrast, #ffffff);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 	}
 
 	.icon-label {

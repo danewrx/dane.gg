@@ -2119,7 +2119,7 @@
 	}
 
 	.theme-enforcement-panel :global(.theme-enforcement-icon) {
-		color: var(--accent-color, #ef4444);
+		color: var(--accent-on-surface, var(--accent-color, #ef4444));
 		flex-shrink: 0;
 	}
 
@@ -2185,8 +2185,8 @@
 		padding: 10px 18px;
 		border: none;
 		border-radius: 6px;
-		background: var(--accent-color, #ef4444);
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #ef4444));
+		color: var(--accent-fg);
 		font-size: 14px;
 		font-weight: 600;
 		cursor: pointer;
@@ -2359,7 +2359,7 @@
 	.default-badge {
 		padding: 2px 8px;
 		background: rgba(99, 102, 241, 0.2);
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		border-radius: 4px;
 		font-size: 11px;
 		font-weight: 500;
@@ -2423,7 +2423,7 @@
 
 	.action-btn.edit:hover {
 		background: rgba(99, 102, 241, 0.2);
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 	}
 
 	.action-btn.duplicate:hover {
@@ -2467,7 +2467,7 @@
 
 	.manage-categories-btn:hover {
 		border-color: var(--accent-color, #6366f1);
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		background: rgba(99, 102, 241, 0.08);
 	}
 
@@ -2490,14 +2490,14 @@
 
 	.add-theme-btn:hover {
 		border-color: var(--accent-color, #6366f1);
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		background: rgba(99, 102, 241, 0.05);
 	}
 
 	.theme-category-label {
 		margin: 4px 0 0;
 		font-size: 12px;
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		font-weight: 500;
 	}
 
@@ -3066,7 +3066,7 @@
 	}
 
 	.opacity-num {
-		color: var(--accent-color, #ef4444);
+		color: var(--accent-on-surface, var(--accent-color, #ef4444));
 		font-weight: 600;
 		font-variant-numeric: tabular-nums;
 	}
@@ -3260,8 +3260,8 @@
 	}
 
 	.preview-toggle button.active {
-		background: var(--accent-color, #6366f1);
-		color: white;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 	}
 
 	.preview-container {
@@ -3343,8 +3343,8 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 8px;
-		background: var(--accent-color, #6366f1);
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border: none;
 		padding: 10px 20px;
 		border-radius: 6px;
@@ -3355,7 +3355,7 @@
 	}
 
 	.save-btn:hover:not(:disabled) {
-		background: var(--accent-color-dark, #4f46e5);
+		background: var(--accent-bg-hover, var(--accent-color-dark, #4f46e5));
 	}
 
 	.save-btn:disabled {

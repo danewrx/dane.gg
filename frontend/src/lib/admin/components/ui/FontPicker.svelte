@@ -175,7 +175,7 @@
 	}
 
 	.font-picker-manage:hover:not(:disabled) {
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		border-color: var(--accent-color, #6366f1);
 	}
 

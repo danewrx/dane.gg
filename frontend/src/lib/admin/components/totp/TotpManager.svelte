@@ -538,8 +538,8 @@
 	}
 
 	.header-icon.disabled {
-		background: var(--accent-color-light, rgba(59, 130, 246, 0.1));
-		color: var(--accent-color);
+		background: var(--accent-muted-bg, var(--accent-color-light, rgba(59, 130, 246, 0.1)));
+		color: var(--accent-muted-fg, var(--accent-on-surface, #3b82f6));
 	}
 
 	.header-content h2 {
@@ -620,8 +620,8 @@
 	}
 
 	.status-card.disabled .status-icon {
-		background: var(--accent-color-light, rgba(59, 130, 246, 0.1));
-		color: var(--accent-color);
+		background: var(--accent-muted-bg, var(--accent-color-light, rgba(59, 130, 246, 0.1)));
+		color: var(--accent-muted-fg, var(--accent-on-surface, #3b82f6));
 	}
 
 	.status-info h3 {
@@ -674,8 +674,8 @@
 	}
 
 	.action-button.enable {
-		background: var(--accent-color, #3b82f6);
-		color: white;
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 	}
 
 	.action-button.enable:hover {
@@ -886,8 +886,8 @@
 	}
 
 	.modal-button.primary {
-		background: var(--accent-color, #3b82f6);
-		color: white;
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 	}
 
 	.modal-button.primary:hover:not(:disabled) {

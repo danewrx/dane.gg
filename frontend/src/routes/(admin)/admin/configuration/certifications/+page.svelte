@@ -1131,7 +1131,7 @@
 
 	.icon-btn.edit:hover {
 		background: rgba(99, 102, 241, 0.2);
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 	}
 
 	.icon-btn.delete {
@@ -1208,8 +1208,8 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 8px;
-		background: var(--accent-color, #6366f1);
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border: none;
 		padding: 10px 20px;
 		border-radius: 6px;
@@ -1220,7 +1220,7 @@
 	}
 
 	.save-btn:hover:not(:disabled) {
-		background: var(--accent-color-dark, #4f46e5);
+		background: var(--accent-bg-hover, var(--accent-color-dark, #4f46e5));
 	}
 
 	.save-btn:disabled {
@@ -1263,7 +1263,7 @@
 
 	.add-certification-btn:hover {
 		border-color: var(--accent-color, #6366f1);
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		background: rgba(99, 102, 241, 0.05);
 	}
 

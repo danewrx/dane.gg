@@ -139,7 +139,7 @@
 		min-width: 0;
 	}
 
-	:global(html:not(.dark)) .tab {
+	:global(html:not(.dark)) .tab:not(.active) {
 		color: rgba(0, 0, 0, 0.7);
 	}
 
@@ -171,8 +171,8 @@
 	}
 
 	.tab.active {
-		background: var(--accent-color, #3b82f6);
-		color: var(--accent-color-contrast, white);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 	}
 
@@ -199,9 +199,9 @@
 	}
 
 	.variant-pills .tab.active {
-		background: var(--accent-color, #3b82f6);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
 		border-color: var(--accent-color, #3b82f6);
-		color: var(--accent-color-contrast, white);
+		color: var(--accent-fg);
 	}
 
 	/* Underline variant styles */
@@ -224,7 +224,7 @@
 	}
 
 	.variant-underline .tab.active {
-		color: var(--accent-color, #3b82f6);
+		color: var(--accent-on-surface, var(--accent-color, #3b82f6));
 		border-bottom-color: var(--accent-color, #3b82f6);
 		background: transparent;
 		box-shadow: none;

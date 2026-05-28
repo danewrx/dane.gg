@@ -1364,8 +1364,8 @@
 
 	.create-tag-button {
 		padding: 8px 16px;
-		background: var(--accent-color, #6366f1);
-		color: white;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 6px;
 		font-size: 13px;
@@ -1477,8 +1477,8 @@
 	}
 
 	.button-primary {
-		background: var(--accent-color, #6366f1);
-		color: white;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 	}
 
 	.button-primary:hover:not(:disabled) {
@@ -1513,7 +1513,7 @@
 
 	.status-indicator.saving {
 		flex-direction: row;
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 	}
 
 	.status-times {
@@ -1537,7 +1537,7 @@
 	}
 
 	.status-indicator.countdown {
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		font-weight: 500;
 	}
 

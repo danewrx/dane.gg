@@ -540,8 +540,8 @@
 		align-items: center;
 		gap: 8px;
 		padding: 10px 16px;
-		background: var(--accent-color, #6366f1);
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 6px;
 		font-size: 14px;
@@ -586,8 +586,8 @@
 	.empty-state button {
 		margin-top: 16px;
 		padding: 10px 20px;
-		background: var(--accent-color, #6366f1);
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 6px;
 		cursor: pointer;
@@ -686,7 +686,7 @@
 
 	.edit-button:hover {
 		border-color: var(--accent-color, #6366f1);
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		background: rgba(99, 102, 241, 0.1);
 	}
 
@@ -827,8 +827,8 @@
 	}
 
 	.save-button {
-		background: var(--accent-color, #6366f1);
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 	}
 
 	.save-button:hover:not(:disabled) {
