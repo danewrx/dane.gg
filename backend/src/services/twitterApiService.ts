@@ -40,6 +40,16 @@ function parseTweetPostedAtFromLegacy(legacy: unknown): Date | undefined {
 	return toValidDate(rawValue);
 }
 
+/** Coerce a tweet id field to string without `[object Object]` for plain objects. */
+function coerceTweetIdString(raw: unknown): string {
+	if (typeof raw === 'string') return raw;
+	if (raw == null) return '';
+	if (typeof raw === 'number' || typeof raw === 'bigint' || typeof raw === 'boolean') {
+		return String(raw);
+	}
+	return '';
+}
+
 /** Compare Twitter snowflake tweet IDs. Returns negative if a < b. */
 function compareTweetIds(a: string, b: string): number | null {
 	if (!/^\d+$/.test(a) || !/^\d+$/.test(b)) return null;
@@ -55,7 +65,7 @@ function getTimelineInstructionEntries(instruction: unknown): unknown[] | null {
 	return Array.isArray(entries) ? entries : null;
 }
 
-function getTweetResultFromTimelineEntry(entry: unknown): any | null {
+function getTweetResultFromTimelineEntry(entry: unknown): any {
 	const itemContent = asObject(asObject(entry)?.content)?.itemContent;
 	const ic = asObject(itemContent);
 	if (!ic) return null;
@@ -94,7 +104,7 @@ function isTweetLikeObject(obj: unknown): boolean {
 	return record.__typename === 'Tweet';
 }
 
-function findTweetInResponse(obj: unknown, depth = 0): any | null {
+function findTweetInResponse(obj: unknown, depth = 0): any {
 	if (depth > 10) return null;
 	if (isTweetLikeObject(obj)) return obj;
 
@@ -191,9 +201,7 @@ function pickNewerTweet(current: unknown, candidate: unknown): unknown {
 			record?.id_str ??
 			record?.idStr ??
 			null;
-		if (typeof raw === 'string') return raw;
-		if (raw == null) return '';
-		return String(raw);
+		return coerceTweetIdString(raw);
 	};
 
 	const byPostedAt = (() => {
@@ -216,43 +224,50 @@ function pickNewerTweet(current: unknown, candidate: unknown): unknown {
 	return current;
 }
 
-function extractNewestTweetFromTimeline(responseData: any): any | null {
-	let tweetData: any = null;
+function isTimelineTweetResult(result: any): boolean {
+	return Boolean(result && (result.__typename === 'Tweet' || result.legacy));
+}
 
-	const instructions =
-		responseData?.user?.result?.timeline?.timeline?.instructions ??
-		responseData?.data?.user?.result?.timeline?.timeline?.instructions ??
-		responseData?.raw?.instruction ??
-		null;
+function mergeNewestTweet(current: any, candidate: any): any {
+	if (!isTimelineTweetResult(candidate)) return current;
+	return pickNewerTweet(current, candidate);
+}
 
-	if (Array.isArray(instructions)) {
-		for (const instruction of instructions) {
-			const entries = getTimelineInstructionEntries(instruction);
-			if (!entries) continue;
-			for (const entry of entries) {
-				const result = getTweetResultFromTimelineEntry(entry);
-				if (result && (result.__typename === 'Tweet' || result.legacy)) {
-					tweetData = pickNewerTweet(tweetData, result);
-				}
-			}
-		}
-	} else if (responseData.raw?.instruction) {
-		for (const instruction of responseData.raw.instruction) {
-			if (instruction.entries) {
-				for (const entry of instruction.entries) {
-					if (entry.content?.itemContent?.tweetResults?.result) {
-						const result = entry.content.itemContent.tweetResults.result;
-						if (result && (result.__typename === 'Tweet' || result.legacy)) {
-							tweetData = pickNewerTweet(tweetData, result);
-						}
-					}
-				}
-			}
+function pickNewestFromStandardInstructions(instructions: unknown[], tweetData: any): any {
+	let newest = tweetData;
+	for (const instruction of instructions) {
+		const entries = getTimelineInstructionEntries(instruction);
+		if (!entries) continue;
+		for (const entry of entries) {
+			newest = mergeNewestTweet(newest, getTweetResultFromTimelineEntry(entry));
 		}
 	}
+	return newest;
+}
 
-	tweetData ??= findTweetInResponse(responseData);
-	return tweetData;
+function pickNewestFromRawInstructions(instructions: any[], tweetData: any): any {
+	let newest = tweetData;
+	for (const instruction of instructions) {
+		if (!instruction?.entries) continue;
+		for (const entry of instruction.entries) {
+			const result = entry?.content?.itemContent?.tweetResults?.result;
+			newest = mergeNewestTweet(newest, result);
+		}
+	}
+	return newest;
+}
+
+function extractNewestTweetFromTimeline(responseData: any): any {
+	let tweetData: any = null;
+	const instructions = getTimelineInstructions(responseData);
+
+	if (instructions) {
+		tweetData = pickNewestFromStandardInstructions(instructions, tweetData);
+	} else if (responseData?.raw?.instruction && Array.isArray(responseData.raw.instruction)) {
+		tweetData = pickNewestFromRawInstructions(responseData.raw.instruction, tweetData);
+	}
+
+	return tweetData ?? findTweetInResponse(responseData);
 }
 
 type BackfillAuthor = {
@@ -296,7 +311,7 @@ function pickBackfillTweetId(legacy: any, fallback: any): string | null {
 		fallback?.id;
 
 	if (idStr == null) return null;
-	const s = typeof idStr === 'string' ? idStr : String(idStr);
+	const s = coerceTweetIdString(idStr);
 	return /^\d+$/.test(s) ? s : null;
 }
 
