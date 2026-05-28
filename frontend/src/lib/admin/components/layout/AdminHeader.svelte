@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { LogOut, Menu, User, ChevronDown } from 'lucide-svelte';
+	import Logo from '../Logo.svelte';
 	import { user } from '$lib/admin/stores/auth';
 	import { goto } from '$app/navigation';
 
@@ -76,7 +77,9 @@
 				</button>
 			{/if}
 
-			<h1 class="site-title">DANEGG</h1>
+			<div class="site-title" aria-label="dane.gg">
+				<Logo animate={false} />
+			</div>
 		</div>
 
 		<!-- Right side - Account dropdown -->
@@ -139,7 +142,7 @@
 	.header-left {
 		display: flex;
 		align-items: center;
-		gap: 16px;
+		gap: 10px;
 	}
 
 	.menu-toggle {
@@ -175,17 +178,53 @@
 	}
 
 	.site-title {
-		margin: 0;
-		font-size: 18px;
-		font-weight: 600;
-		color: #ffffff;
-		letter-spacing: 0.5px;
-		text-transform: uppercase;
-		transition: color 0.2s ease;
+		display: flex;
+		align-items: center;
+		height: 36px;
+		width: 280px;
+		overflow: hidden;
+		padding-left: 2px;
 	}
 
-	:global(html:not(.dark)) .site-title {
-		color: #1f2937;
+	.site-title :global(.brand-logo) {
+		margin-bottom: 0;
+		transform: scale(0.58) translateY(1px);
+		transform-origin: left center;
+	}
+
+	.site-title :global(.logo-container) {
+		margin: 0;
+		gap: 0.8rem;
+		align-items: center;
+	}
+
+	.site-title :global(.ascii-art) {
+		font-size: 8px;
+		font-weight: 700;
+		color: #b8c0cc;
+		text-shadow:
+			0 0 0 currentColor,
+			0 0 8px rgba(184, 192, 204, 0.18);
+	}
+
+	.site-title :global(.ascii-text) {
+		font-size: 12px;
+		font-weight: 800;
+		color: #d7dde6;
+		text-shadow:
+			0 0 0 currentColor,
+			0 0 10px rgba(215, 221, 230, 0.24);
+		letter-spacing: 0.2px;
+	}
+
+	:global(html:not(.dark)) .site-title :global(.ascii-art) {
+		color: #4b5563;
+		text-shadow: none;
+	}
+
+	:global(html:not(.dark)) .site-title :global(.ascii-text) {
+		color: #111827;
+		text-shadow: none;
 	}
 
 	.header-right {
@@ -324,8 +363,18 @@
 			padding: 12px 16px;
 		}
 
+		.header-left {
+			gap: 8px;
+		}
+
 		.site-title {
-			font-size: 16px;
+			width: 220px;
+			height: 30px;
+			padding-left: 1px;
+		}
+
+		.site-title :global(.brand-logo) {
+			transform: scale(0.47) translateY(1px);
 		}
 	}
 
