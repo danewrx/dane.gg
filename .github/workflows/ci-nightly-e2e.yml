@@ -1,0 +1,95 @@
+name: CI Nightly E2E
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Playwright full regression (nightly/manual)
+  # ─────────────────────────────────────────────
+  e2e-full:
+    name: E2E Full
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+
+    env:
+      PW_CI_WORKERS: 2
+      DATABASE_URL: postgresql://dane_gg:testpassword@localhost:5432/danegg_test
+      JWT_SECRET: ci-test-jwt-secret
+      SESSION_SECRET: ci-test-session-secret
+      FRONTEND_PORT: 3000
+      PUBLIC_ORIGIN: http://localhost:3000
+      BACKEND_PORT: 3001
+      HOST: 0.0.0.0
+      COOKIE_SECURE: false
+      JWT_EXPIRES_IN: 7d
+      JWT_REFRESH_EXPIRES_IN: 30d
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: danegg_test
+          POSTGRES_USER: dane_gg
+          POSTGRES_PASSWORD: testpassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install && cd frontend && bun install && cd ../backend && bun install
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package.json', 'bun.lock', 'frontend/bun.lock', 'backend/bun.lock') }}
+          restore-keys: playwright-${{ runner.os }}-
+
+      - name: Install Playwright browser
+        run: bunx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Run database migrations
+        run: bun run db:migrate
+
+      - name: Seed test data
+        run: bun run db:seed
+
+      - name: Run E2E tests (${{ matrix.browser }})
+        run: bunx playwright test --project=${{ matrix.browser }}
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-full-${{ matrix.browser }}
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: test-results-full-${{ matrix.browser }}
+          path: test-results/
+          retention-days: 14

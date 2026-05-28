@@ -1,0 +1,159 @@
+name: CI PR
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Unit tests (no DB required)
+  # ─────────────────────────────────────────────
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    env:
+      # Required when tests import backend modules that initialize src/db/index.ts (no real DB calls in unit suite).
+      DATABASE_URL: postgresql://ci_unused:ci_unused@127.0.0.1:5432/ci_unused
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install && cd frontend && bun install && cd ../backend && bun install
+
+      - name: Frontend unit tests with coverage
+        working-directory: frontend
+        run: bun run test:coverage
+
+      - name: Backend unit tests with coverage
+        working-directory: backend
+        run: bun test --coverage --coverage-reporter=lcov --coverage-dir=coverage
+
+      - name: Align LCOV paths with monorepo (Sonar)
+        run: |
+          sed -i 's|^SF:src/|SF:backend/src/|g' backend/coverage/lcov.info
+          sed -i 's|^SF:src/|SF:frontend/src/|g' frontend/coverage/lcov.info
+
+      - name: Upload LCOV for SonarQube
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: |
+            frontend/coverage/lcov.info
+            backend/coverage/lcov.info
+          if-no-files-found: error
+
+  # ─────────────────────────────────────────────
+  # Playwright E2E smoke tests for PRs (Chromium only)
+  # ─────────────────────────────────────────────
+  e2e-smoke:
+    name: E2E Smoke (chromium)
+    runs-on: ubuntu-latest
+
+    env:
+      PW_CI_WORKERS: 2
+      DATABASE_URL: postgresql://dane_gg:testpassword@localhost:5432/danegg_test
+      JWT_SECRET: ci-test-jwt-secret
+      SESSION_SECRET: ci-test-session-secret
+      FRONTEND_PORT: 3000
+      PUBLIC_ORIGIN: http://localhost:3000
+      BACKEND_PORT: 3001
+      HOST: 0.0.0.0
+      COOKIE_SECURE: false
+      JWT_EXPIRES_IN: 7d
+      JWT_REFRESH_EXPIRES_IN: 30d
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: danegg_test
+          POSTGRES_USER: dane_gg
+          POSTGRES_PASSWORD: testpassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install && cd frontend && bun install && cd ../backend && bun install
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package.json', 'bun.lock', 'frontend/bun.lock', 'backend/bun.lock') }}
+          restore-keys: playwright-${{ runner.os }}-
+
+      - name: Install Playwright browser
+        run: bunx playwright install --with-deps chromium
+
+      - name: Run database migrations
+        run: bun run db:migrate
+
+      - name: Seed test data
+        run: bun run db:seed
+
+      - name: Run E2E tests
+        run: bunx playwright test --project=chromium
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-chromium
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: test-results-chromium
+          path: test-results/
+          retention-days: 14
+
+  # ─────────────────────────────────────────────
+  # SonarQube analysis
+  # ─────────────────────────────────────────────
+  sonarqube:
+    name: SonarQube
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download LCOV artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-lcov
+          path: coverage-reports
+
+      - uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      - uses: SonarSource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
