@@ -1,19 +1,15 @@
 import { test, expect, type Page } from '@playwright/test';
-import { gotoReady, openSettingsPanel } from './helpers';
+import { gotoReady, openSettingsPanel, clickInSettingsPanel } from './helpers';
 
 async function openThemeSwitcher(page: Page) {
 	await openSettingsPanel(page);
-
-	await page.locator('.settings-content').evaluate((el) => {
-		el.querySelector('.theme-button')?.scrollIntoView({ block: 'center' });
-	});
 
 	const themeButton = page.locator('.theme-button');
 	if (await themeButton.isDisabled()) {
 		test.skip(true, 'Theme is enforced by admin — switcher is locked');
 	}
 
-	await themeButton.click({ force: true });
+	await clickInSettingsPanel(page, '.theme-button');
 	await expect(page.locator('.theme-window')).toBeVisible();
 	await expect(page.locator('.theme-window .loading-state')).toHaveCount(0, {
 		timeout: 15_000
@@ -142,10 +138,7 @@ test.describe('Theme switcher', () => {
 
 		await openSettingsPanel(page);
 
-		await page.locator('.settings-content').evaluate((el) => {
-			el.querySelector('.theme-button')?.scrollIntoView({ block: 'center' });
-		});
-		await page.locator('.theme-button').click({ force: true });
+		await clickInSettingsPanel(page, '.theme-button');
 		await expect(page.locator('.theme-window')).toBeVisible();
 
 		const reOpenedActive = page.locator('.theme-card.active .theme-name');
@@ -159,10 +152,7 @@ test.describe('Theme switcher', () => {
 		await page.locator('.theme-window .close-button').click();
 		await expect(page.locator('.theme-window')).not.toBeVisible();
 
-		await page.locator('.settings-content').evaluate((el) => {
-			el.querySelector('.theme-button')?.scrollIntoView({ block: 'center' });
-		});
-		await page.locator('.theme-button').click({ force: true });
+		await clickInSettingsPanel(page, '.theme-button');
 		await expect(page.locator('.theme-window')).toBeVisible();
 
 		await page.locator('.window-backdrop').click({ position: { x: 5, y: 5 } });
