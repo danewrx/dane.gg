@@ -3,8 +3,7 @@ import {
 	accentHasLowContrast,
 	buildAccentTokens,
 	isDarkModeActive,
-	normalizeHex,
-	pickForeground
+	normalizeHex
 } from '$lib/admin/theme/color';
 import { settingsService } from './settings';
 import { user } from '$lib/admin/stores/auth';
