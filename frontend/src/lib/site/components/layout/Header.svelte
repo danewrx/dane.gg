@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import Logo from '$lib/admin/components/Logo.svelte';
 
 	const navigation = [
 		{ name: 'Home', path: '/' },
@@ -26,25 +27,8 @@
 			aria-label="Go to homepage"
 			data-sveltekit-preload-data="hover"
 		>
-			<div class="ascii-box">
-				<pre>
-　　　　 ／＞　 フ 
-　　　　| 　_　 _|
- 　　　／`ミ _x 彡
-　 　 /　　　 　 |
-　　 /　 ヽ　　 ﾉ
-／￣|　　 |　|　|
-|| (￣ヽ＿_ヽ_)_)
-＼二つ 
-				</pre>
-				<pre>
-     _                  
-    | |                 
-  __| | __ _ _ __   ___ 
- / _` |/ _` | '_ \ / _ \
-| (_| | (_| | | | |  __/
- \__,_|\__,_|_| |_|\___|
-				</pre>
+			<div class="ascii-box" aria-hidden="true">
+				<Logo animate={true} />
 			</div>
 		</a>
 	</div>
@@ -106,73 +90,98 @@
 		box-shadow: none;
 	}
 
-	.ascii-link:hover .ascii-box pre {
+	.ascii-link:hover .ascii-box :global(.ascii-art),
+	.ascii-link:hover .ascii-box :global(.ascii-text) {
 		color: var(--accent-color) !important;
+		text-shadow:
+			0 0 8px color-mix(in srgb, var(--theme-accent, #c6e4ff) 70%, transparent),
+			0 0 18px color-mix(in srgb, var(--theme-accent, #c6e4ff) 45%, transparent) !important;
 		animation: none !important;
-		transition: color 0.3s ease;
+		transition:
+			color 0.3s ease,
+			text-shadow 0.3s ease;
 	}
 
 	.ascii-box {
-		display: grid;
-		grid-template-columns: 45% 55%;
+		display: inline-flex;
 		justify-content: center;
 		align-items: center;
-		white-space: pre;
-		gap: 0;
-		font-size: 0;
-		width: fit-content;
 		margin: 0 auto;
+		transform: translateX(4px);
 	}
 
-	.ascii-box pre:first-child {
+	.ascii-box :global(.brand-logo) {
 		margin: 0;
-		padding: 0 15px 0 0;
+	}
+
+	.ascii-box :global(.logo-container) {
+		gap: 0.8rem;
+	}
+
+	.ascii-box :global(.ascii-art) {
+		color: var(--theme-text-primary) !important;
+		font-family: var(--ascii-font-family) !important;
+		font-size: clamp(calc(6px * var(--theme-font-scale, 1)), 0.85vw, calc(11px * var(--theme-font-scale, 1)));
+		text-shadow:
+			0 0 6px color-mix(in srgb, var(--theme-text-primary, #ffd5d5) 35%, transparent),
+			0 0 14px color-mix(in srgb, var(--theme-accent, #c6e4ff) 25%, transparent);
+		transition:
+			color 0.3s ease,
+			text-shadow 0.3s ease;
+	}
+
+	.ascii-box :global(.ascii-text) {
+		color: var(--theme-text-primary) !important;
+		font-family: var(--ascii-font-family) !important;
 		font-size: clamp(
 			calc(8px * var(--theme-font-scale, 1)),
 			1vw,
-			calc(16px * var(--theme-font-scale, 1))
+			calc(15px * var(--theme-font-scale, 1))
 		);
-		line-height: 1;
-		animation: softColorCycle 10s ease-in-out infinite;
-		display: inline-block;
-		vertical-align: top;
-		text-align: right;
-		transition: color 0.3s ease;
-		font-family: var(--ascii-font-family);
+		text-shadow:
+			0 0 7px color-mix(in srgb, var(--theme-text-primary, #ffd5d5) 40%, transparent),
+			0 0 18px color-mix(in srgb, var(--theme-accent, #c6e4ff) 30%, transparent);
+		transition:
+			color 0.3s ease,
+			text-shadow 0.3s ease;
 	}
 
-	.ascii-box pre:last-child {
-		margin: 0;
-		padding: 0;
-		font-size: clamp(
-			calc(8px * var(--theme-font-scale, 1)),
-			1vw,
-			calc(16px * var(--theme-font-scale, 1))
-		);
-		line-height: 1;
-		animation: softColorCycle 10s ease-in-out infinite;
-		display: inline-block;
-		vertical-align: top;
-		text-align: left;
-		transition: color 0.3s ease;
-		font-family: var(--ascii-font-family);
+
+	.ascii-box :global(.brand-logo.animated .ascii-art),
+	.ascii-box :global(.brand-logo.animated .ascii-text) {
+		animation: softColorCycleTheme 10s ease-in-out infinite !important;
 	}
 
-	@keyframes softColorCycle {
+	@keyframes softColorCycleTheme {
 		0% {
 			color: var(--theme-text-primary, #ffd5d5);
+			text-shadow:
+				0 0 6px color-mix(in srgb, var(--theme-text-primary, #ffd5d5) 45%, transparent),
+				0 0 14px color-mix(in srgb, var(--theme-accent, #c6e4ff) 25%, transparent);
 		}
 		25% {
 			color: var(--theme-accent, #c6e4ff);
+			text-shadow:
+				0 0 8px color-mix(in srgb, var(--theme-accent, #c6e4ff) 60%, transparent),
+				0 0 20px color-mix(in srgb, var(--theme-accent, #c6e4ff) 35%, transparent);
 		}
 		50% {
 			color: var(--theme-secondary, #d7c8ff);
+			text-shadow:
+				0 0 8px color-mix(in srgb, var(--theme-secondary, #d7c8ff) 58%, transparent),
+				0 0 20px color-mix(in srgb, var(--theme-accent, #c6e4ff) 28%, transparent);
 		}
 		75% {
 			color: var(--theme-accent, #c6e4ff);
+			text-shadow:
+				0 0 8px color-mix(in srgb, var(--theme-accent, #c6e4ff) 60%, transparent),
+				0 0 20px color-mix(in srgb, var(--theme-accent, #c6e4ff) 35%, transparent);
 		}
 		100% {
 			color: var(--theme-text-primary, #ffd5d5);
+			text-shadow:
+				0 0 6px color-mix(in srgb, var(--theme-text-primary, #ffd5d5) 45%, transparent),
+				0 0 14px color-mix(in srgb, var(--theme-accent, #c6e4ff) 25%, transparent);
 		}
 	}
 
@@ -247,17 +256,19 @@
 	/* Responsive design */
 	@media (max-width: 768px) {
 		.ascii-box {
-			flex-direction: column;
-			gap: 5px;
+			transform: translateX(2px);
 		}
 
-		.ascii-box pre:first-child,
-		.ascii-box pre:last-child {
-			font-size: clamp(
-				calc(6px * var(--theme-font-scale, 1)),
-				2vw,
-				calc(12px * var(--theme-font-scale, 1))
-			);
+		.ascii-box :global(.logo-container) {
+			gap: 0.45rem;
+		}
+
+		.ascii-box :global(.ascii-art) {
+			font-size: clamp(calc(4px * var(--theme-font-scale, 1)), 1.7vw, calc(8px * var(--theme-font-scale, 1)));
+		}
+
+		.ascii-box :global(.ascii-text) {
+			font-size: clamp(calc(6px * var(--theme-font-scale, 1)), 2vw, calc(11px * var(--theme-font-scale, 1)));
 		}
 
 		.nav-container {
