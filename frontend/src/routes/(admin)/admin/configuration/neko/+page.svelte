@@ -295,7 +295,7 @@
 
 	:global(.neko-page-icon) {
 		flex-shrink: 0;
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		margin-top: 2px;
 	}
 
@@ -314,7 +314,7 @@
 	}
 
 	.page-desc a {
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		text-decoration: underline;
 		text-underline-offset: 2px;
 	}
@@ -354,7 +354,7 @@
 	}
 
 	.neko-enforcement-panel :global(.neko-enforcement-icon) {
-		color: var(--accent-color, #ef4444);
+		color: var(--accent-on-surface, var(--accent-color, #ef4444));
 		flex-shrink: 0;
 	}
 
@@ -496,8 +496,8 @@
 		padding: 10px 18px;
 		border: none;
 		border-radius: 6px;
-		background: var(--accent-color, #6366f1);
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		font-size: 14px;
 		font-weight: 600;
 		cursor: pointer;
@@ -519,8 +519,8 @@
 		padding: 10px 18px;
 		border: none;
 		border-radius: 6px;
-		background: var(--accent-color, #ef4444);
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #ef4444));
+		color: var(--accent-fg);
 		font-size: 14px;
 		font-weight: 600;
 		cursor: pointer;

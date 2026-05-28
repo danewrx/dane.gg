@@ -1097,8 +1097,8 @@
 		align-items: center;
 		gap: 6px;
 		padding: 6px 12px;
-		background: var(--accent-color, #3b82f6);
-		color: white;
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 6px;
 		font-size: 13px;
@@ -1107,7 +1107,7 @@
 	}
 
 	.reconnect-btn:hover {
-		background: var(--accent-color-dark, #2563eb);
+		background: var(--accent-bg-hover, var(--accent-color-dark, #2563eb));
 	}
 
 	.right-column {
@@ -1174,7 +1174,7 @@
 	.identity-value {
 		font-size: 14px;
 		font-weight: 600;
-		color: var(--accent-color, #3b82f6);
+		color: var(--accent-on-surface, var(--accent-color, #3b82f6));
 	}
 
 	.edit-icon-btn {
@@ -1259,7 +1259,7 @@
 	.color-saving {
 		display: flex;
 		align-items: center;
-		color: var(--accent-color, #3b82f6);
+		color: var(--accent-on-surface, var(--accent-color, #3b82f6));
 	}
 
 	.identity-edit {
@@ -1419,7 +1419,7 @@
 	}
 
 	.discord-integration-spinner {
-		color: var(--accent-color, #3b82f6);
+		color: var(--accent-on-surface, var(--accent-color, #3b82f6));
 	}
 
 	.emojis-section {
@@ -1578,8 +1578,8 @@
 	}
 
 	.upload-btn {
-		background: #6366f1;
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 	}
 
 	.upload-btn:hover:not(:disabled) {

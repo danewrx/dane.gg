@@ -816,8 +816,8 @@
 	}
 
 	.section-action-button {
-		background: var(--accent-color, #3b82f6);
-		color: white;
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 8px;
 		padding: 10px 16px;
@@ -848,14 +848,14 @@
 	}
 
 	.section-action-button.secondary {
-		background: rgba(255, 255, 255, 0.1);
-		color: #ffffff;
-		border: 1px solid rgba(255, 255, 255, 0.2);
+		background: var(--bg-tertiary, #3a3a3a);
+		color: var(--text-primary, #ffffff);
+		border: 1px solid var(--border-color, #404040);
 	}
 
 	.section-action-button.secondary:hover {
-		background: rgba(255, 255, 255, 0.15);
-		border-color: rgba(255, 255, 255, 0.3);
+		background: var(--bg-hover, #404040);
+		border-color: var(--border-color, #404040);
 	}
 
 	.section-title {
@@ -939,8 +939,8 @@
 	}
 
 	.account-type.admin {
-		background: color-mix(in srgb, var(--accent-color, #6366f1) 10%, transparent);
-		color: var(--accent-color, #6366f1);
+		background: var(--accent-muted-bg, color-mix(in srgb, var(--accent-color, #6366f1) 10%, transparent));
+		color: var(--accent-muted-fg, var(--accent-on-surface, #6366f1));
 		border: 1px solid color-mix(in srgb, var(--accent-color, #6366f1) 20%, transparent);
 	}
 
@@ -974,8 +974,8 @@
 	}
 
 	:global(.totp-manager-container .status-card) {
-		background: rgba(255, 255, 255, 0.02);
-		border: 1px solid rgba(255, 255, 255, 0.1);
+		background: var(--bg-secondary, #2d2d2d);
+		border: 1px solid var(--border-color, #404040);
 		border-radius: 12px;
 		padding: 24px;
 		margin-bottom: 16px;
@@ -983,8 +983,8 @@
 	}
 
 	:global(.totp-manager-container .status-card:hover) {
-		background: rgba(255, 255, 255, 0.04);
-		border-color: rgba(255, 255, 255, 0.15);
+		background: var(--bg-tertiary, #3a3a3a);
+		border-color: var(--border-color, #404040);
 	}
 
 	/* Style the status info section */
@@ -996,19 +996,19 @@
 	}
 
 	:global(.totp-manager-container .status-icon) {
-		color: var(--accent-color, #3b82f6);
+		color: var(--accent-muted-fg, var(--accent-on-surface, #3b82f6));
 		margin-top: 4px;
 	}
 
 	:global(.totp-manager-container .status-info h3) {
 		font-size: 1.25rem;
 		font-weight: 600;
-		color: #ffffff;
+		color: var(--text-primary, #ffffff);
 		margin: 0 0 8px 0;
 	}
 
 	:global(.totp-manager-container .status-info p) {
-		color: rgba(255, 255, 255, 0.7);
+		color: var(--text-secondary, #a1a1aa);
 		margin: 0;
 		font-size: 0.9rem;
 		line-height: 1.5;
@@ -1016,8 +1016,8 @@
 
 	/* Style the action buttons */
 	:global(.totp-manager-container .action-button) {
-		background: var(--accent-color, #3b82f6);
-		color: white;
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 8px;
 		padding: 12px 20px;
@@ -1052,7 +1052,7 @@
 	:global(.totp-manager-container .loading-state) {
 		text-align: center;
 		padding: 40px 20px;
-		color: rgba(255, 255, 255, 0.7);
+		color: var(--text-secondary, #a1a1aa);
 	}
 
 	:global(.totp-manager-container .loading-state .spin) {
@@ -1270,8 +1270,8 @@
 	}
 
 	.edit-button {
-		background: var(--accent-color, #3b82f6);
-		color: white;
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 	}
 
 	.edit-button:hover {
@@ -1279,12 +1279,12 @@
 	}
 
 	.save-button {
-		background: var(--accent-color, #6366f1);
-		color: white;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 	}
 
 	.save-button:hover {
-		background: var(--accent-color-dark, #4f46e5);
+		background: var(--accent-bg-hover, var(--accent-color-dark, #4f46e5));
 	}
 
 	.cancel-button {

@@ -241,7 +241,7 @@
 		width: 20px;
 		height: 20px;
 		border-radius: 50%;
-		background: var(--accent-color, #6366f1);
+		background: var(--accent-bg, var(--accent-color, #6366f1));
 		cursor: pointer;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 	}
@@ -250,7 +250,7 @@
 		width: 20px;
 		height: 20px;
 		border-radius: 50%;
-		background: var(--accent-color, #6366f1);
+		background: var(--accent-bg, var(--accent-color, #6366f1));
 		cursor: pointer;
 		border: none;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -259,7 +259,7 @@
 	.range-value {
 		text-align: center;
 		font-weight: 500;
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		margin-top: 8px;
 		font-size: 14px;
 	}
@@ -305,8 +305,8 @@
 	}
 
 	.save-button {
-		background: var(--accent-color, #6366f1);
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border: none;
 		padding: 12px 24px;
 		border-radius: 6px;
@@ -318,7 +318,7 @@
 	}
 
 	.save-button:hover:not(:disabled) {
-		background: var(--accent-color-dark, #4f46e5);
+		background: var(--accent-bg-hover, var(--accent-color-dark, #4f46e5));
 	}
 
 	.save-button:disabled {

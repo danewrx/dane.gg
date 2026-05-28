@@ -559,8 +559,8 @@ function handleDragEnd() {
 		min-height: 2.75rem;
 		padding: 10px 20px;
 		box-sizing: border-box;
-		background: var(--accent-color, #6366f1);
-		color: white;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 8px;
 		font-size: 14px;
@@ -692,7 +692,7 @@ function handleDragEnd() {
 	.drag-handle:hover {
 		opacity: 1;
 		background: var(--bg-tertiary, #3a3a3a);
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		transform: scale(1.1);
 	}
 
@@ -712,7 +712,7 @@ function handleDragEnd() {
 
 	.projects-table tbody tr.project-row.dragging .drag-handle {
 		opacity: 1;
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 	}
 
 	.projects-table tbody tr.project-row:last-child {
@@ -764,7 +764,7 @@ function handleDragEnd() {
 	}
 
 	.featured-badge {
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		font-weight: 500;
 		font-size: 13px;
 	}
@@ -812,7 +812,7 @@ function handleDragEnd() {
 
 	.status-badge.active {
 		background: rgba(99, 102, 241, 0.1);
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		font-size: 10px;
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
@@ -842,7 +842,7 @@ function handleDragEnd() {
 	}
 
 	.action-icon.edit:hover {
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 	}
 
 	.action-icon.delete:hover {

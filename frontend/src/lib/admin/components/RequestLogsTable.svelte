@@ -387,7 +387,7 @@
 
 	.req-refresh:hover:not(:disabled) {
 		border-color: var(--accent-color, #6366f1);
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 	}
 
 	:global(.req-refresh .spin) {
@@ -659,7 +659,7 @@
 
 	.page-btn:hover:not(:disabled) {
 		border-color: var(--accent-color, #6366f1);
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 	}
 
 	.page-btn:disabled {

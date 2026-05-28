@@ -401,7 +401,7 @@
 
 	.upload-zone-btn:hover:not(:disabled) {
 		border-color: var(--accent-color, #6366f1);
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		background: color-mix(in srgb, var(--bg-primary, #1a1a1a) 95%, var(--accent-color, #6366f1) 5%);
 	}
 
@@ -494,7 +494,7 @@
 		padding: 2px 6px;
 		border-radius: 4px;
 		background: rgba(99, 102, 241, 0.2);
-		color: var(--accent-color, #a5b4fc);
+		color: var(--accent-on-surface, var(--accent-color, #a5b4fc));
 	}
 
 	.font-list-locked {

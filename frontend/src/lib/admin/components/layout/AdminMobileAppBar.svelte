@@ -270,7 +270,7 @@
 		min-height: 88px;
 	}
 
-	:global(html:not(.dark)) .more-grid-item {
+	:global(html:not(.dark)) .more-grid-item:not(.active) {
 		background: #f8fafc;
 		border-color: #e5e7eb;
 		color: #1f2937;
@@ -286,9 +286,9 @@
 	}
 
 	.more-grid-item.active {
-		background: var(--accent-color, #3b82f6);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
 		border-color: var(--accent-color-dark, #2563eb);
-		color: var(--accent-color-contrast, white);
+		color: var(--accent-fg);
 	}
 
 	.more-grid-icon {
@@ -354,7 +354,7 @@
 		border-radius: 8px;
 	}
 
-	:global(html:not(.dark)) .nav-item {
+	:global(html:not(.dark)) .nav-item:not(.active) {
 		color: #1f2937;
 	}
 
@@ -367,14 +367,14 @@
 	}
 
 	.nav-item.active {
-		background: var(--accent-color, #3b82f6);
-		color: var(--accent-color-contrast, white);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
 
 	.nav-item.active:hover {
-		background: var(--accent-color-dark, #2563eb);
-		color: var(--accent-color-dark-contrast, white);
+		background: var(--accent-bg-hover, var(--accent-color-dark, #2563eb));
+		color: var(--accent-fg-hover, var(--accent-fg));
 	}
 
 	.nav-item:focus-visible {
@@ -383,8 +383,8 @@
 	}
 
 	.nav-item-more.active {
-		background: var(--accent-color, #3b82f6);
-		color: var(--accent-color-contrast, white);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 	}
 
 	.nav-icon {

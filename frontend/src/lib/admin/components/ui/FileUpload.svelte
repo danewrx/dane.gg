@@ -524,8 +524,8 @@
 	}
 
 	.tab-button.active {
-		background: var(--accent-color, #6366f1);
-		color: var(--text-primary, #ffffff);
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 	}
 
 	.url-input-container {
@@ -567,9 +567,9 @@
 	}
 
 	.url-submit-button {
-		background: var(--accent-color, #6366f1);
+		background: var(--accent-bg, var(--accent-color, #6366f1));
 		border: none;
-		color: var(--text-primary, #ffffff);
+		color: var(--accent-fg);
 		padding: 8px 16px;
 		border-radius: 6px;
 		font-size: 14px;

@@ -695,7 +695,7 @@
 		left: 0;
 		right: 0;
 		height: 2px;
-		background: var(--accent-color, #3b82f6);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
 		border-radius: 0 0 6px 6px;
 	}
 

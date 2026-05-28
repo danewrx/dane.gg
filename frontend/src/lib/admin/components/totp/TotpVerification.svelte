@@ -211,8 +211,8 @@
 	}
 
 	.header-icon {
-		background: var(--accent-color-light, rgba(59, 130, 246, 0.1));
-		color: var(--accent-color);
+		background: var(--accent-muted-bg, var(--accent-color-light, rgba(59, 130, 246, 0.1)));
+		color: var(--accent-muted-fg, var(--accent-on-surface, #3b82f6));
 		padding: 1rem;
 		border-radius: 12px;
 		display: inline-flex;
@@ -332,8 +332,8 @@
 		justify-content: center;
 		gap: 0.5rem;
 		padding: 1rem;
-		background: var(--accent-color);
-		color: var(--accent-color-contrast, white);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 10px;
 		font-size: 1rem;

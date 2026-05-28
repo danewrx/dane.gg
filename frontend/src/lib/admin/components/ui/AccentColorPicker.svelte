@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
+	import { accentHasLowContrastInAnyTheme } from '$lib/admin/theme/color';
 
 	// Props
 	export let currentColor = '#3b82f6';
 	export let disabled = false;
+
+	$: showContrastWarning = accentHasLowContrastInAnyTheme(currentColor);
 
 	// Event dispatcher
 	const dispatch = createEventDispatcher<{
@@ -72,6 +75,13 @@
 		<div class="color-preview" style="background-color: {currentColor}"></div>
 		<span class="color-value">{currentColor.toUpperCase()}</span>
 	</div>
+
+	{#if showContrastWarning}
+		<p class="contrast-warning" role="status">
+			This color has low contrast in at least one admin theme (light or dark). Buttons and labels
+			are adjusted automatically for readability.
+		</p>
+	{/if}
 
 	<div class="preset-colors">
 		<h4>Presets</h4>
@@ -183,6 +193,23 @@
 		color: #6b7280;
 		background: rgba(0, 0, 0, 0.05);
 		border-color: rgba(0, 0, 0, 0.1);
+	}
+
+	.contrast-warning {
+		margin: 0 0 16px;
+		padding: 10px 12px;
+		border-radius: 8px;
+		font-size: 0.82rem;
+		line-height: 1.45;
+		color: #fbbf24;
+		background: rgba(251, 191, 36, 0.12);
+		border: 1px solid rgba(251, 191, 36, 0.35);
+	}
+
+	:global(html:not(.dark)) .contrast-warning {
+		color: #b45309;
+		background: rgba(245, 158, 11, 0.12);
+		border-color: rgba(245, 158, 11, 0.35);
 	}
 
 	.preset-colors h4,
@@ -297,9 +324,9 @@
 	}
 
 	.toggle-custom.active {
-		background: var(--accent-color, #3b82f6);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
 		border-color: var(--accent-color, #3b82f6);
-		color: var(--accent-color-contrast, white);
+		color: var(--accent-fg);
 	}
 
 	.custom-input-section {
@@ -375,9 +402,9 @@
 	}
 
 	.apply-btn {
-		background: var(--accent-color, #3b82f6);
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
 		border-color: var(--accent-color, #3b82f6);
-		color: var(--accent-color-contrast, white);
+		color: var(--accent-fg);
 	}
 
 	.apply-btn:hover {

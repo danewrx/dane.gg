@@ -263,12 +263,12 @@
 	}
 
 	.btn-confirm.default-variant {
-		background: var(--accent-color, #6366f1);
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 	}
 
 	.btn-confirm.default-variant:hover:not(:disabled) {
-		background: var(--accent-color-dark, #4f46e5);
+		background: var(--accent-bg-hover, var(--accent-color-dark, #4f46e5));
 	}
 
 	.btn-confirm.danger {

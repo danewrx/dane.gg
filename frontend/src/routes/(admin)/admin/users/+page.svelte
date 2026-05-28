@@ -699,8 +699,8 @@
 		align-items: center;
 		gap: 8px;
 		padding: 10px 20px;
-		background: var(--accent-color, #6366f1);
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 8px;
 		font-size: 14px;
@@ -710,7 +710,7 @@
 	}
 
 	.create-button:hover:not(:disabled) {
-		background: var(--accent-color-dark, #4f46e5);
+		background: var(--accent-bg-hover, var(--accent-color-dark, #4f46e5));
 		transform: translateY(-1px);
 	}
 
@@ -762,8 +762,8 @@
 	.empty-state button {
 		margin-top: 16px;
 		padding: 10px 20px;
-		background: var(--accent-color, #6366f1);
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 8px;
 		cursor: pointer;
@@ -843,7 +843,7 @@
 	.current-user-badge {
 		padding: 2px 8px;
 		background: var(--accent-color-light, rgba(99, 102, 241, 0.2));
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		border-radius: 4px;
 		font-size: 11px;
 		font-weight: 600;
@@ -863,7 +863,7 @@
 
 	.role-badge.admin {
 		background: var(--accent-color-light, rgba(99, 102, 241, 0.2));
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 	}
 
 	.totp-badge {
@@ -924,7 +924,7 @@
 	.action-button:hover:not(:disabled) {
 		background: var(--bg-tertiary, #3a3a3a);
 		border-color: var(--accent-color, #6366f1);
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 	}
 
 	.action-button.delete:hover:not(:disabled) {
@@ -989,7 +989,7 @@
 		height: 48px;
 		border-radius: 12px;
 		background: color-mix(in srgb, var(--accent-color, #6366f1) 15%, transparent);
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		flex-shrink: 0;
 	}
 
@@ -1083,7 +1083,7 @@
 
 	.user-role-badge.admin {
 		background: var(--accent-color-light, rgba(99, 102, 241, 0.2));
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 	}
 
 	.user-separator {
@@ -1236,13 +1236,13 @@
 	.change-password-button:hover:not(:disabled) {
 		background: var(--bg-secondary, #2d2d2d);
 		border-color: var(--accent-color, #6366f1);
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 	}
 
 	.change-password-button.active {
 		background: var(--accent-color-light, rgba(99, 102, 241, 0.2));
 		border-color: var(--accent-color, #6366f1);
-		color: var(--accent-color, #6366f1);
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 	}
 
 	.change-password-button.active:hover:not(:disabled) {
@@ -1376,12 +1376,12 @@
 	}
 
 	.save-button {
-		background: var(--accent-color, #6366f1);
-		color: #ffffff;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 	}
 
 	.save-button:hover:not(:disabled) {
-		background: var(--accent-color-dark, #4f46e5);
+		background: var(--accent-bg-hover, var(--accent-color-dark, #4f46e5));
 	}
 
 	.cancel-button:disabled,

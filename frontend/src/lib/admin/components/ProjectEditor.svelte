@@ -1348,8 +1348,8 @@
 	.create-tag-button {
 		margin-top: 12px;
 		padding: 8px 16px;
-		background: var(--accent-color, #6366f1);
-		color: white;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 6px;
 		cursor: pointer;
@@ -1430,8 +1430,8 @@
 	}
 
 	.button-primary {
-		background: var(--accent-color, #6366f1);
-		color: white;
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 	}
 
 	.button-primary:hover:not(:disabled) {

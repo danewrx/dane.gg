@@ -1,0 +1,321 @@
+/**
+ * Admin accent-filled controls: foreground always follows fill luminance.
+ * Overrides scoped light-theme text colors that beat var(--accent-fg).
+ */
+
+:root {
+	--admin-accent-fill-fallback: #3b82f6;
+	/* Sensible defaults until accentColorService runs */
+	--accent-bg: var(--accent-color, var(--admin-accent-fill-fallback));
+	--accent-fg: #ffffff;
+	--accent-bg-hover: var(--accent-color-dark, #2563eb);
+	--accent-fg-hover: #ffffff;
+}
+
+/* Shared list of filled accent surfaces */
+:is(
+	.btn-primary,
+	.create-button,
+	.save-button:not(.confirm-copy),
+	.save-btn,
+	.save-button--accent,
+	.button.button-primary,
+	.button-primary,
+	.nav-button.primary,
+	.modal-button.primary,
+	.preview-button.primary,
+	.submit-button,
+	.copy-button:not(.copied),
+	.apply-button,
+	.apply-btn,
+	.empty-state button,
+	.create-tag-button,
+	.save-custom-button,
+	.btn-confirm:not(.danger),
+	.section-action-button:not(.secondary):not(.disable):not(.danger),
+	.action-button:not(.delete):not(.danger),
+	.edit-button,
+	.reconnect-btn,
+	.verify-button,
+	.retry-button,
+	.backup-action-btn,
+	.add-link-btn,
+	.add-skill-btn,
+	.add-category-btn,
+	.add-certification-btn,
+	.add-theme-btn,
+	.manage-categories-btn,
+	.bg-accent,
+	.bg-accent-dark,
+	.url-submit-button,
+	.tab-button.active,
+	.nav-link.active,
+	.tab.active,
+	.variant-pills .tab.active,
+	.icon-option.selected,
+	.toolbar-btn.active,
+	.preview-toggle button.active,
+	.step.active .step-number,
+	.toggle-custom.active,
+	.send-btn,
+	.more-grid-item.active,
+	.nav-item.active,
+	.nav-item-more.active,
+	:global(.totp-manager-container) .action-button:not(.regenerate):not(.disable),
+	:global(.totp-manager-container) .modal-button.primary
+):not(:disabled) {
+	--admin-accent-fill: var(--accent-bg, var(--accent-color, var(--admin-accent-fill-fallback)));
+	background-color: var(--admin-accent-fill) !important;
+	border-color: var(--admin-accent-fill) !important;
+	color: var(
+		--accent-fg,
+		color-contrast(var(--admin-accent-fill) vs #ffffff, #000000)
+	) !important;
+}
+
+:is(
+	.btn-primary,
+	.create-button,
+	.save-button:not(.confirm-copy),
+	.save-btn,
+	.save-button--accent,
+	.button.button-primary,
+	.button-primary,
+	.nav-button.primary,
+	.modal-button.primary,
+	.preview-button.primary,
+	.submit-button,
+	.copy-button:not(.copied),
+	.apply-button,
+	.apply-btn,
+	.empty-state button,
+	.create-tag-button,
+	.save-custom-button,
+	.btn-confirm:not(.danger),
+	.section-action-button:not(.secondary):not(.disable):not(.danger),
+	.action-button:not(.delete):not(.danger),
+	.edit-button,
+	.reconnect-btn,
+	.verify-button,
+	.retry-button,
+	.backup-action-btn,
+	.add-link-btn,
+	.add-skill-btn,
+	.add-category-btn,
+	.add-certification-btn,
+	.add-theme-btn,
+	.manage-categories-btn,
+	.bg-accent,
+	.bg-accent-dark,
+	.url-submit-button,
+	.tab-button.active,
+	.nav-link.active,
+	.tab.active,
+	.variant-pills .tab.active,
+	.icon-option.selected,
+	.toolbar-btn.active,
+	.preview-toggle button.active,
+	.step.active .step-number,
+	.toggle-custom.active,
+	.send-btn,
+	.more-grid-item.active,
+	.nav-item.active,
+	.nav-item-more.active,
+	:global(.totp-manager-container) .action-button:not(.regenerate):not(.disable),
+	:global(.totp-manager-container) .modal-button.primary
+):hover:not(:disabled) {
+	--admin-accent-fill-hover: var(--accent-bg-hover, var(--accent-color-dark, #2563eb));
+	background-color: var(--admin-accent-fill-hover) !important;
+	border-color: var(--admin-accent-fill-hover) !important;
+	color: var(
+		--accent-fg-hover,
+		var(
+			--accent-fg,
+			color-contrast(var(--admin-accent-fill-hover) vs #ffffff, #000000)
+		)
+	) !important;
+}
+
+/* Icons and labels inside filled controls */
+:is(
+	.btn-primary,
+	.create-button,
+	.save-button:not(.confirm-copy),
+	.save-btn,
+	.button.button-primary,
+	.button-primary,
+	.nav-button.primary,
+	.modal-button.primary,
+	.preview-button.primary,
+	.submit-button,
+	.copy-button:not(.copied),
+	.apply-button,
+	.apply-btn,
+	.empty-state button,
+	.create-tag-button,
+	.btn-confirm:not(.danger),
+	.nav-link.active,
+	.tab.active,
+	.icon-option.selected,
+	.toolbar-btn.active,
+	.step.active .step-number,
+	.toggle-custom.active,
+	.send-btn,
+	.section-action-button:not(.secondary):not(.disable):not(.danger),
+	.action-button:not(.delete):not(.danger),
+	.edit-button,
+	.url-submit-button
+) :is(svg, [data-lucide], .lucide, span, p, label) {
+	color: inherit !important;
+	stroke: currentColor !important;
+}
+
+/* Light theme: beat html:not(.dark) nav/tab rules that force dark body text */
+html:not(.dark) :is(
+	.nav-link.active,
+	.nav-link.active:hover,
+	.tab.active,
+	.variant-pills .tab.active,
+	.btn-primary,
+	.create-button,
+	.save-button:not(.confirm-copy),
+	.save-btn,
+	.button.button-primary,
+	.button-primary,
+	.submit-button,
+	.copy-button:not(.copied),
+	.preview-button.primary,
+	.nav-button.primary,
+	.modal-button.primary,
+	.section-action-button:not(.secondary):not(.disable):not(.danger),
+	.action-button:not(.delete):not(.danger),
+	.edit-button,
+	.empty-state button,
+	.icon-option.selected,
+	.toolbar-btn.active,
+	.step.active .step-number,
+	.toggle-custom.active,
+	.apply-btn,
+	.send-btn,
+	.more-grid-item.active,
+	.nav-item.active
+) {
+	color: var(
+		--accent-fg,
+		color-contrast(var(--accent-bg, var(--accent-color, #3b82f6)) vs #ffffff, #000000)
+	) !important;
+}
+
+html:not(.dark) :is(
+	.nav-link.active,
+	.tab.active,
+	.btn-primary,
+	.create-button,
+	.save-button,
+	.save-btn,
+	.button-primary,
+	.submit-button
+) :is(svg, [data-lucide], .lucide) {
+	color: inherit !important;
+	stroke: currentColor !important;
+}
+
+/* Sonner: title inherits accent-fg; description uses theme-specific greys unless overridden */
+[data-sonner-toast].sonner-success-accent[data-type='success'] {
+	background: var(--accent-bg, var(--accent-color, var(--admin-accent-fill-fallback))) !important;
+	border-left: 4px solid var(--accent-bg-hover, var(--accent-color-dark, #2563eb)) !important;
+	color: var(
+		--accent-fg,
+		color-contrast(var(--accent-bg, #3b82f6) vs #ffffff, #000000)
+	) !important;
+}
+
+[data-sonner-toast].sonner-success-accent[data-type='success'] [data-title],
+[data-sonner-toast].sonner-success-accent[data-type='success'] [data-description],
+[data-sonner-toast].sonner-success-accent[data-type='success'] [data-content] {
+	color: var(
+		--accent-fg,
+		color-contrast(var(--accent-bg, #3b82f6) vs #ffffff, #000000)
+	) !important;
+	opacity: 1 !important;
+}
+
+[data-sonner-toast].sonner-success-accent[data-type='success'] [data-icon],
+[data-sonner-toast].sonner-success-accent[data-type='success'] [data-icon] svg {
+	color: var(--accent-fg) !important;
+	stroke: currentColor !important;
+}
+
+[data-sonner-toast].sonner-success-accent[data-type='success'] [data-close-button] {
+	color: var(--accent-fg) !important;
+	background: color-mix(in srgb, var(--accent-fg) 12%, transparent) !important;
+	border-color: color-mix(in srgb, var(--accent-fg) 28%, transparent) !important;
+}
+
+.sonner-action-accent {
+	background: var(--accent-bg, var(--accent-color, var(--admin-accent-fill-fallback))) !important;
+	color: var(--accent-fg) !important;
+}
+
+.sonner-action-accent [data-icon] {
+	color: var(--accent-fg) !important;
+}
+
+/* Muted accent chips (info icons, badges, 2FA header) — fg must contrast with muted fill */
+:is(
+	.info-icon,
+	.accent-muted-surface,
+	.header-icon.disabled,
+	.totp-manager .header-icon.disabled,
+	.totp-setup .header-icon,
+	.totp-verification .header-icon,
+	.status-card.disabled .status-icon,
+	.disabled-icon-container,
+	.permission-badge.full,
+	.role-badge.admin,
+	.user-role-badge.admin,
+	.current-user-badge,
+	.account-type.admin,
+	.change-password-button.active,
+	.username-source.database
+) {
+	background: var(--accent-muted-bg, var(--accent-color-light, rgba(59, 130, 246, 0.1))) !important;
+	color: var(
+		--accent-muted-fg,
+		color-contrast(
+			var(--accent-muted-bg, var(--accent-color-light, #e8e8e8)) vs #ffffff,
+			#000000
+		)
+	) !important;
+}
+
+:is(
+	.info-icon,
+	.accent-muted-surface,
+	.header-icon.disabled,
+	.totp-manager .header-icon.disabled,
+	.totp-setup .header-icon,
+	.totp-verification .header-icon,
+	.status-card.disabled .status-icon,
+	.disabled-icon-container,
+	.permission-badge.full,
+	.role-badge.admin,
+	.user-role-badge.admin,
+	.current-user-badge,
+	.account-type.admin,
+	.change-password-button.active
+) :is(svg, [data-lucide], .lucide) {
+	color: inherit !important;
+	stroke: currentColor !important;
+	fill: none !important;
+}
+
+.sidebar-item.active .sidebar-icon {
+	background: var(--accent-muted-bg, var(--accent-color-light, rgba(59, 130, 246, 0.1))) !important;
+	color: var(--accent-muted-fg, var(--accent-on-surface, #3b82f6)) !important;
+}
+
+.sidebar-item.active .sidebar-icon :is(svg, [data-lucide]) {
+	color: inherit !important;
+	stroke: currentColor !important;
+}

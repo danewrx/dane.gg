@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Admin login layout - completely independent from public site
 	import { Toaster } from 'svelte-sonner';
+	import '$lib/admin/theme/admin-accent.css';
 	import { browser } from '$app/environment';
 
 	// Detect device theme preference
