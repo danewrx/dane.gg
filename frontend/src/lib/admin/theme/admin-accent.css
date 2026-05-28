@@ -50,6 +50,7 @@
 	.url-submit-button,
 	.tab-button.active,
 	.nav-link.active,
+	.sidebar-item.active,
 	.tab.active,
 	.variant-pills .tab.active,
 	.icon-option.selected,
@@ -110,6 +111,7 @@
 	.url-submit-button,
 	.tab-button.active,
 	.nav-link.active,
+	.sidebar-item.active,
 	.tab.active,
 	.variant-pills .tab.active,
 	.icon-option.selected,
@@ -155,6 +157,7 @@
 	.create-tag-button,
 	.btn-confirm:not(.danger),
 	.nav-link.active,
+	.sidebar-item.active,
 	.tab.active,
 	.icon-option.selected,
 	.toolbar-btn.active,
@@ -174,6 +177,8 @@
 html:not(.dark) :is(
 	.nav-link.active,
 	.nav-link.active:hover,
+	.sidebar-item.active,
+	.sidebar-item.active:hover,
 	.tab.active,
 	.variant-pills .tab.active,
 	.btn-primary,
@@ -208,6 +213,7 @@ html:not(.dark) :is(
 
 html:not(.dark) :is(
 	.nav-link.active,
+	.sidebar-item.active,
 	.tab.active,
 	.btn-primary,
 	.create-button,
@@ -311,8 +317,10 @@ html:not(.dark) :is(
 }
 
 .sidebar-item.active .sidebar-icon {
-	background: var(--accent-muted-bg, var(--accent-color-light, rgba(59, 130, 246, 0.1))) !important;
-	color: var(--accent-muted-fg, var(--accent-on-surface, #3b82f6)) !important;
+	background: transparent !important;
+	color: inherit !important;
+	border: none !important;
+	box-shadow: none !important;
 }
 
 .sidebar-item.active .sidebar-icon :is(svg, [data-lucide]) {

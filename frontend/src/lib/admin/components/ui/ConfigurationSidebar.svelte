@@ -335,10 +335,20 @@
 		background: rgba(255, 255, 255, 0.05);
 	}
 
+	:global(html:not(.dark)) .sidebar-item:hover {
+		background: #f3f4f6;
+	}
+
 	.sidebar-item.active {
-		background: var(--accent-muted-bg, var(--bg-tertiary, #3a3a3a));
-		color: var(--text-primary, #ffffff);
-		border-left: 3px solid var(--accent-on-surface, var(--accent-color, #6366f1));
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg, #ffffff);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+		border-left: none;
+	}
+
+	.sidebar-item.active:hover {
+		background: var(--accent-bg-hover, var(--accent-color-dark, #2563eb));
+		color: var(--accent-fg-hover, var(--accent-fg, #ffffff));
 	}
 
 	.sidebar-icon {
@@ -360,8 +370,8 @@
 	}
 
 	.sidebar-icon.active {
-		background: var(--accent-muted-bg, var(--accent-color-light, rgba(59, 130, 246, 0.1)));
-		color: var(--accent-muted-fg, var(--accent-on-surface, #6366f1));
+		background: transparent;
+		color: inherit;
 	}
 
 	.sidebar-title {
@@ -376,8 +386,13 @@
 	}
 
 	.sidebar-item.active .sidebar-title {
-		color: var(--text-primary, #ffffff);
+		color: inherit;
 		font-weight: 600;
+	}
+
+	.sidebar-item.active .sidebar-chevron {
+		color: inherit;
+		opacity: 0.75;
 	}
 
 	.sidebar-chevron {

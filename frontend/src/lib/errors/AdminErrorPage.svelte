@@ -1,6 +1,9 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { ModeWatcher } from 'mode-watcher';
+	import { accentColorService } from '$lib/admin/services/accentColor';
+	import '$lib/admin/theme/admin-accent.css';
 
 	type ErrorContent = {
 		title: string;
@@ -66,6 +69,10 @@
 	const technicalMessage = $derived(
 		typeof $page.error?.message === 'string' ? $page.error.message : null
 	);
+
+	onMount(() => {
+		void accentColorService.init();
+	});
 </script>
 
 <ModeWatcher track={true} />
@@ -128,6 +135,17 @@
 		--text-primary: #ffffff;
 		--text-secondary: #a1a1aa;
 		--border-color: #404040;
+		--accent-color: #3b82f6;
+		--accent-bg: #3b82f6;
+		--accent-fg: #ffffff;
+		--accent-bg-hover: #2563eb;
+		--accent-fg-hover: #ffffff;
+		--accent-on-surface: #3b82f6;
+		--accent-muted-bg: rgba(59, 130, 246, 0.1);
+		--accent-muted-fg: #3b82f6;
+		--accent-border: rgba(59, 130, 246, 0.45);
+		--accent-color-light: rgba(59, 130, 246, 0.1);
+		--accent-color-contrast: #ffffff;
 	}
 
 	:global(html:not(.dark)) {
@@ -158,9 +176,9 @@
 			),
 			linear-gradient(
 				to bottom right,
-				color-mix(in srgb, var(--accent-color, #3b82f6) 14%, var(--bg-primary, #1a1a1a)),
+				color-mix(in srgb, var(--accent-on-surface, var(--accent-color, #3b82f6)) 14%, var(--bg-primary, #1a1a1a)),
 				var(--bg-primary, #1a1a1a) 48%,
-				color-mix(in srgb, var(--accent-color, #3b82f6) 7%, var(--bg-secondary, #2d2d2d))
+				color-mix(in srgb, var(--accent-on-surface, var(--accent-color, #3b82f6)) 7%, var(--bg-secondary, #2d2d2d))
 			);
 		background-size:
 			28px 28px,
@@ -205,10 +223,14 @@
 		line-height: 1;
 		font-family: var(--ascii-font-family, 'JetBrains Mono', 'Courier New', monospace);
 		font-size: clamp(7px, 1.65cqi, 9.5px);
-		color: color-mix(in srgb, var(--accent-color, #3b82f6) 48%, var(--text-secondary, #a1a1aa) 52%);
+		color: color-mix(
+			in srgb,
+			var(--accent-on-surface, var(--accent-color, #3b82f6)) 48%,
+			var(--text-secondary, #a1a1aa) 52%
+		);
 		text-shadow:
-			0 0 6px color-mix(in srgb, var(--accent-color, #3b82f6) 32%, transparent),
-			0 0 14px color-mix(in srgb, var(--accent-color, #3b82f6) 18%, transparent);
+			0 0 6px color-mix(in srgb, var(--accent-on-surface, var(--accent-color, #3b82f6)) 32%, transparent),
+			0 0 14px color-mix(in srgb, var(--accent-on-surface, var(--accent-color, #3b82f6)) 18%, transparent);
 		transition:
 			color 0.25s ease,
 			text-shadow 0.25s ease;
@@ -228,7 +250,7 @@
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		font-weight: 700;
-		color: var(--accent-color, #3b82f6);
+		color: var(--accent-on-surface, var(--accent-color, #3b82f6));
 	}
 
 	h1 {
@@ -294,10 +316,11 @@
 		transform: rotate(90deg);
 	}
 
-	.technical-details summary:hover {
-		color: var(--accent-color, #3b82f6);
-		border-color: color-mix(in srgb, var(--accent-color, #3b82f6) 45%, transparent);
-		background: color-mix(in srgb, var(--accent-color, #3b82f6) 10%, transparent);
+	.technical-details summary:hover,
+	.technical-details[open] summary {
+		color: var(--accent-muted-fg, var(--accent-on-surface, #3b82f6));
+		border-color: var(--accent-border, color-mix(in srgb, var(--accent-on-surface, #3b82f6) 45%, transparent));
+		background: var(--accent-muted-bg, color-mix(in srgb, var(--accent-on-surface, #3b82f6) 10%, transparent));
 	}
 
 	.technical-details[open] summary {
@@ -329,35 +352,44 @@
 		flex-wrap: wrap;
 	}
 
-	.back-link,
-	.secondary-link {
+	.back-link {
 		display: inline-flex;
 		align-items: center;
 		padding: 0.5rem 0.8rem;
 		border-radius: 6px;
-		border: 1px solid color-mix(in srgb, var(--accent-color, #3b82f6) 70%, transparent);
-		background: color-mix(in srgb, var(--accent-color, #3b82f6) 14%, transparent);
-		color: var(--accent-color, #3b82f6);
+		border: 1px solid var(--accent-border, color-mix(in srgb, var(--accent-on-surface, #3b82f6) 70%, transparent));
+		background: var(--accent-muted-bg, color-mix(in srgb, var(--accent-on-surface, #3b82f6) 14%, transparent));
+		color: var(--accent-muted-fg, var(--accent-on-surface, #3b82f6));
 		text-decoration: none;
 		font-weight: 600;
 		transition: all 0.2s ease;
 	}
 
-	.back-link:hover,
-	.secondary-link:hover {
-		background: var(--accent-color, #3b82f6);
-		color: var(--accent-color-contrast, #ffffff);
+	.back-link:hover {
+		background: var(--accent-bg, var(--accent-color, #3b82f6));
+		border-color: var(--accent-bg, var(--accent-color, #3b82f6));
+		color: var(--accent-fg, #ffffff);
 		transform: translateY(-1px);
 	}
 
 	.secondary-link {
-		border-color: color-mix(in srgb, var(--border-color, #4b5563) 75%, transparent);
+		display: inline-flex;
+		align-items: center;
+		padding: 0.5rem 0.8rem;
+		border-radius: 6px;
+		border: 1px solid color-mix(in srgb, var(--border-color, #4b5563) 75%, transparent);
 		background: color-mix(in srgb, var(--bg-tertiary, #2b313b) 60%, transparent);
 		color: var(--text-secondary, #c7d0da);
+		text-decoration: none;
+		font-weight: 600;
+		transition: all 0.2s ease;
 	}
 
 	.secondary-link:hover {
-		border-color: var(--accent-color, #3b82f6);
+		border-color: var(--accent-border, color-mix(in srgb, var(--accent-on-surface, #3b82f6) 45%, transparent));
+		color: var(--accent-muted-fg, var(--accent-on-surface, #3b82f6));
+		background: var(--accent-muted-bg, color-mix(in srgb, var(--accent-on-surface, #3b82f6) 10%, transparent));
+		transform: translateY(-1px);
 	}
 
 	@media (max-width: 640px) {
