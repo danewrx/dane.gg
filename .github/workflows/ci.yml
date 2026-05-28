@@ -145,7 +145,7 @@ jobs:
   # Playwright full regression (nightly/manual)
   # ─────────────────────────────────────────────
   e2e-full:
-    name: E2E Full (${{ matrix.browser }})
+    name: E2E Full
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     strategy:
@@ -208,7 +208,7 @@ jobs:
       - name: Seed test data
         run: bun run db:seed
 
-      - name: Run E2E tests
+      - name: Run E2E tests (${{ matrix.browser }})
         run: bunx playwright test --project=${{ matrix.browser }}
 
       - name: Upload Playwright report
