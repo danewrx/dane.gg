@@ -22,15 +22,16 @@ function isAdminRoute(pathname: string): boolean {
 	);
 }
 
+function setDaneAppRealm(pathname: string): void {
+	document.documentElement.dataset.daneApp = isAdminRoute(pathname) ? 'admin' : 'public';
+}
+
 // Initialize authentication when the app starts - ONLY for admin routes
 if (browser) {
-	document.documentElement.setAttribute(
-		'data-dane-app',
-		isAdminRoute(window.location.pathname) ? 'admin' : 'public'
-	);
+	setDaneAppRealm(globalThis.location.pathname);
 
 	// Check if we're on an admin route before initializing auth
-	const currentPath = window.location.pathname;
+	const currentPath = globalThis.location.pathname;
 
 	if (isAdminRoute(currentPath)) {
 		// Initialize auth service only for admin routes
@@ -97,7 +98,7 @@ if (browser) {
 		}
 	});
 
-	let prevAdminRoute = isAdminRoute(window.location.pathname);
+	let prevAdminRoute = isAdminRoute(globalThis.location.pathname);
 
 	// Listen for route changes to initialize auth when navigating to admin routes
 	page.subscribe((pageData) => {
@@ -109,7 +110,7 @@ if (browser) {
 		const currentPath = pageData.url.pathname;
 		const adminNow = isAdminRoute(currentPath);
 
-		document.documentElement.setAttribute('data-dane-app', adminNow ? 'admin' : 'public');
+		setDaneAppRealm(currentPath);
 
 		if (adminNow && !prevAdminRoute) {
 			clearSiteThemePresentation();

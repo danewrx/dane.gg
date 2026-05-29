@@ -375,7 +375,7 @@ export function clearSiteThemePresentation(): void {
 /** Apply active site theme to the document (only when `data-dane-app="public"`). */
 export function applyBrowserSiteThemeToDom(theme: SiteTheme): void {
 	if (!browser) return;
-	if (document.documentElement.getAttribute('data-dane-app') !== 'public') return;
+	if (document.documentElement.dataset.daneApp !== 'public') return;
 	applyThemeStyles(theme);
 	const fontsToLoad: string[] = [];
 	if (!theme.bodyFontUrl && theme.fontFamily) fontsToLoad.push(theme.fontFamily);

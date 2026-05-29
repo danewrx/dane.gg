@@ -40,7 +40,7 @@ const ADMIN_UI_FONT_STACK =
 /** Public site follows font mode; admin/login/logout always use a neutral system stack. */
 export function reapplyFontForCurrentRealm(): void {
 	if (!browser) return;
-	if (document.documentElement.getAttribute('data-dane-app') !== 'public') {
+	if (document.documentElement.dataset.daneApp !== 'public') {
 		document.documentElement.style.setProperty('--global-font-family', ADMIN_UI_FONT_STACK);
 		return;
 	}
