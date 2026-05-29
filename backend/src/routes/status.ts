@@ -1,6 +1,7 @@
 import { logger } from '../utils/logger';
 import { Router, Request, Response } from 'express';
 import { requireSession } from '../middleware/auth';
+import { getLoginLockoutMinutes, getLoginLockoutWindowMs } from '../middleware/rateLimiting';
 
 const router = Router();
 
@@ -16,9 +17,10 @@ router.get('/rate-limits', requireSession, (req: Request, res: Response) => {
 				description: 'General API requests per IP'
 			},
 			auth: {
-				windowMs: 15 * 60 * 1000, // 15 minutes
+				windowMs: getLoginLockoutWindowMs(),
 				max: 5,
-				description: 'Authentication attempts per IP'
+				lockoutMinutes: getLoginLockoutMinutes(),
+				description: 'Authentication attempts per IP (window = admin login lockout duration)'
 			},
 			passwordChange: {
 				windowMs: 60 * 60 * 1000, // 1 hour

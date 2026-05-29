@@ -43,12 +43,12 @@ export class TwitterScheduler {
 				return;
 			}
 
-			// Test connection on startup
-			const connectionTest = await TwitterApiService.testConnection(username);
-			if (connectionTest.connected) {
-				logger.info(`Connection test successful for @${username}`);
+			// Health check on startup
+			const healthy = await TwitterApiService.checkConnectionHealth(username);
+			if (healthy) {
+				logger.info(`Connection healthy for @${username}`);
 			} else {
-				logger.error(`Connection test failed: ${connectionTest.message}`);
+				logger.error(`Connection unhealthy for @${username}`);
 			}
 
 			// Perform initial fetch

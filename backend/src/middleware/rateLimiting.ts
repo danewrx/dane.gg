@@ -1,6 +1,7 @@
 import { logger } from '../utils/logger';
 import rateLimit from 'express-rate-limit';
 import slowDown from 'express-slow-down';
+import { NotificationService } from '../services/notificationService';
 
 // Store for tracking failed login attempts per IP
 const failedAttempts = new Map<
@@ -21,6 +22,69 @@ setInterval(
 	},
 	60 * 60 * 1000
 ); // Run every hour
+
+const DEFAULT_LOGIN_LOCKOUT_MINUTES = 15;
+const MIN_LOGIN_LOCKOUT_MINUTES = 1;
+const MAX_LOGIN_LOCKOUT_MINUTES = 24 * 60; // 24 hours
+
+const DEFAULT_LOGIN_MAX_FAILED_ATTEMPTS = 5;
+const MIN_LOGIN_MAX_FAILED_ATTEMPTS = 1;
+const MAX_LOGIN_MAX_FAILED_ATTEMPTS = 50;
+
+export function getLoginMaxFailedAttempts(): number {
+	const raw = process.env.ADMIN_LOGIN_MAX_FAILED_ATTEMPTS?.trim();
+	if (!raw) return DEFAULT_LOGIN_MAX_FAILED_ATTEMPTS;
+
+	const parsed = Number.parseInt(raw, 10);
+	if (
+		!Number.isFinite(parsed) ||
+		parsed < MIN_LOGIN_MAX_FAILED_ATTEMPTS ||
+		parsed > MAX_LOGIN_MAX_FAILED_ATTEMPTS
+	) {
+		logger.warn(
+			`Invalid ADMIN_LOGIN_MAX_FAILED_ATTEMPTS="${raw}" (expected ${MIN_LOGIN_MAX_FAILED_ATTEMPTS}-${MAX_LOGIN_MAX_FAILED_ATTEMPTS}), using ${DEFAULT_LOGIN_MAX_FAILED_ATTEMPTS}`
+		);
+		return DEFAULT_LOGIN_MAX_FAILED_ATTEMPTS;
+	}
+
+	return parsed;
+}
+
+export function getClientIp(req: {
+	ip?: string;
+	socket?: { remoteAddress?: string };
+	connection?: { remoteAddress?: string };
+}): string {
+	return req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress || 'unknown';
+}
+
+/** Minutes an IP stays locked out after too many failed admin logins (`ADMIN_LOGIN_LOCKOUT_MINUTES`). */
+export function getLoginLockoutMinutes(): number {
+	const raw = process.env.ADMIN_LOGIN_LOCKOUT_MINUTES?.trim();
+	if (!raw) return DEFAULT_LOGIN_LOCKOUT_MINUTES;
+
+	const parsed = Number.parseInt(raw, 10);
+	if (!Number.isFinite(parsed) || parsed < MIN_LOGIN_LOCKOUT_MINUTES || parsed > MAX_LOGIN_LOCKOUT_MINUTES) {
+		logger.warn(
+			`Invalid ADMIN_LOGIN_LOCKOUT_MINUTES="${raw}" (expected ${MIN_LOGIN_LOCKOUT_MINUTES}-${MAX_LOGIN_LOCKOUT_MINUTES}), using ${DEFAULT_LOGIN_LOCKOUT_MINUTES}`
+		);
+		return DEFAULT_LOGIN_LOCKOUT_MINUTES;
+	}
+
+	return parsed;
+}
+
+export function getLoginLockoutWindowMs(): number {
+	return getLoginLockoutMinutes() * 60 * 1000;
+}
+
+function loginLockoutRetryLabel(minutes = getLoginLockoutMinutes()): string {
+	return minutes === 1 ? '1 minute' : `${minutes} minutes`;
+}
+
+const loginLockoutWindowMs = getLoginLockoutWindowMs();
+const loginLockoutMinutesConfigured = getLoginLockoutMinutes();
+const loginLockoutRetryAfter = loginLockoutRetryLabel(loginLockoutMinutesConfigured);
 
 /**
  * General API rate limiting
@@ -45,25 +109,27 @@ export const generalLimiter = rateLimit({
 	}
 });
 
+const loginMaxFailedAttempts = getLoginMaxFailedAttempts();
+
 /**
- * Strict rate limiting for authentication endpoints
- * 5 attempts per 15 minutes per IP
+ * Strict rate limiting for authentication endpoints.
+ * Cap is above lockout threshold so the Nth failed attempt still reaches the handler.
  */
 export const authLimiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 minutes
-	max: 5,
+	windowMs: loginLockoutWindowMs,
+	max: loginMaxFailedAttempts + 15,
 	message: {
 		error: 'Too many authentication attempts',
-		message: 'Too many login attempts from this IP, please try again after 15 minutes',
-		retryAfter: '15 minutes'
+		message: `Too many login attempts from this IP, please try again after ${loginLockoutRetryAfter}`,
+		retryAfter: loginLockoutRetryAfter
 	},
 	standardHeaders: true,
 	legacyHeaders: false,
 	handler: (req, res) => {
 		res.status(429).json({
 			error: 'Too many authentication attempts',
-			message: 'Too many login attempts from this IP, please try again after 15 minutes',
-			retryAfter: '15 minutes'
+			message: `Too many login attempts from this IP, please try again after ${loginLockoutRetryAfter}`,
+			retryAfter: loginLockoutRetryAfter
 		});
 	}
 });
@@ -115,12 +181,11 @@ export const userCreationLimiter = rateLimit({
 });
 
 /**
- * Progressive delay for failed login attempts
- * Slows down responses after multiple failures
+ * Progressive delay for failed login attempts (window matches ADMIN_LOGIN_LOCKOUT_MINUTES)
  */
 export const loginSlowDown = slowDown({
-	windowMs: 15 * 60 * 1000, // 15 minutes
-	delayAfter: 2, // Allow 2 requests per 15 minutes, then...
+	windowMs: loginLockoutWindowMs,
+	delayAfter: 2, // Allow 2 requests per window, then...
 	delayMs: () => 500, // Add 500ms delay per request after delayAfter
 	maxDelayMs: 20000, // Maximum delay of 20 seconds
 	skipSuccessfulRequests: true, // Don't count successful requests
@@ -132,12 +197,13 @@ export const loginSlowDown = slowDown({
  * Tracks failed attempts per IP and locks out after too many failures
  */
 export function bruteForceProtection(req: any, res: any, next: any) {
-	const ip = req.ip || req.connection.remoteAddress;
+	const ip = getClientIp(req);
 	const now = Date.now();
+	const maxFailedAttempts = getLoginMaxFailedAttempts();
 
 	// Check if IP is currently locked out
 	const attempts = failedAttempts.get(ip);
-	if (attempts && attempts.lockedUntil && now < attempts.lockedUntil) {
+	if (attempts?.lockedUntil && now < attempts.lockedUntil) {
 		const lockTimeRemaining = Math.ceil((attempts.lockedUntil - now) / 1000 / 60);
 		return res.status(423).json({
 			error: 'Account temporarily locked',
@@ -147,15 +213,36 @@ export function bruteForceProtection(req: any, res: any, next: any) {
 	}
 
 	// Track failed attempts
-	req.trackFailedAttempt = () => {
-		const currentAttempts = failedAttempts.get(ip) || { count: 0, lastAttempt: 0 };
+	req.trackFailedAttempt = (context?: { username?: string }) => {
+		const prev = failedAttempts.get(ip);
+		const wasLocked = prev?.lockedUntil != null && now < prev.lockedUntil;
+		const currentAttempts = prev
+			? { ...prev }
+			: { count: 0, lastAttempt: 0 };
+
 		currentAttempts.count += 1;
 		currentAttempts.lastAttempt = now;
 
-		// Lock out after 5 failed attempts
-		if (currentAttempts.count >= 5) {
-			currentAttempts.lockedUntil = now + 15 * 60 * 1000; // 15 minutes
+		if (currentAttempts.count >= maxFailedAttempts) {
+			const lockoutMinutes = getLoginLockoutMinutes();
+			const enteringLockout = !wasLocked;
+			currentAttempts.lockedUntil = now + lockoutMinutes * 60 * 1000;
 			logger.warn(`IP ${ip} locked out due to ${currentAttempts.count} failed login attempts`);
+			if (enteringLockout) {
+				NotificationService.notifyAdminLoginLockout(
+					ip,
+					currentAttempts.count,
+					lockoutMinutes,
+					context?.username
+				);
+			}
+		} else {
+			NotificationService.notifyAdminLoginFailed(
+				ip,
+				currentAttempts.count,
+				maxFailedAttempts,
+				context?.username
+			);
 		}
 
 		failedAttempts.set(ip, currentAttempts);

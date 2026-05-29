@@ -1348,14 +1348,26 @@ export class TwitterApiService {
 						? `${connectionTest.message}\n\nDetails: ${connectionTest.details}\n\nFailure Type: ${connectionTest.failureType || 'unknown'}`
 						: connectionTest.message;
 
-					await this.sendConnectionFailureNotification(errorDetails);
-					this.lastNotificationTime = now;
+					const sent = await this.sendConnectionFailureNotification(errorDetails);
+					if (sent) {
+						this.lastNotificationTime = now;
+					}
 					this.lastConnectionStatus = 'disconnected';
 				} else {
-					await this.sendConnectionRestoredNotification();
-					this.lastNotificationTime = now;
+					const sent = await this.sendConnectionRestoredNotification();
+					if (sent) {
+						this.lastNotificationTime = now;
+					}
 					this.lastConnectionStatus = 'connected';
 				}
+			} else if (shouldNotify && canNotify && !NotificationService.isConfigured()) {
+				logger.warn(
+					'Twitter connection status changed but NTFY_TOPIC is not set; skipping push notification'
+				);
+			} else if (shouldNotify && !canNotify) {
+				logger.info(
+					'Twitter connection status changed but notification cooldown is active; skipping push notification'
+				);
 			} else if (connectionTest.connected) {
 				this.lastConnectionStatus = 'connected';
 			} else {
@@ -1386,7 +1398,7 @@ export class TwitterApiService {
 	private static async sendConnectionFailureNotification(error: string): Promise<boolean> {
 		return NotificationService.send(
 			`Twitter API connection failed: ${error}\n\nTime: ${new Date().toISOString()}`,
-			'⚠️ Twitter API Connection Failed',
+			'Twitter API connection failed',
 			4, // High priority
 			['warning', 'twitter', 'api']
 		);
@@ -1399,7 +1411,7 @@ export class TwitterApiService {
 	private static async sendConnectionRestoredNotification(): Promise<boolean> {
 		return NotificationService.send(
 			`Twitter API connection has been restored.\n\nTime: ${new Date().toISOString()}`,
-			'✅ Twitter API Connection Restored',
+			'Twitter API connection restored',
 			2, // Low priority
 			['success', 'twitter', 'api']
 		);
