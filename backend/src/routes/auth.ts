@@ -12,9 +12,11 @@ import {
 	passwordChangeLimiter,
 	tokenRefreshLimiter,
 	loginSlowDown,
-	bruteForceProtection
+	bruteForceProtection,
+	getClientIp
 } from '../middleware/rateLimiting';
 import { adminSessions } from '../services/adminSessions';
+import { NotificationService } from '../services/notificationService';
 
 const router = Router();
 
@@ -53,6 +55,7 @@ router.post(
 				.limit(1);
 
 			if (user.length === 0) {
+				(req as any).trackFailedAttempt?.({ username });
 				return res.status(401).json({
 					error: 'Authentication failed',
 					message: 'Invalid credentials'
@@ -64,8 +67,7 @@ router.post(
 			// Verify password
 			const isValidPassword = await verifyPassword(password, userData.passwordHash);
 			if (!isValidPassword) {
-				// Track failed attempt for brute force protection
-				(req as any).trackFailedAttempt();
+				(req as any).trackFailedAttempt?.({ username: userData.username });
 				return res.status(401).json({
 					error: 'Authentication failed',
 					message: 'Invalid credentials'
@@ -99,6 +101,7 @@ router.post(
 				}
 
 				if (!totpValid) {
+					(req as any).trackFailedAttempt?.({ username: userData.username });
 					return res.status(401).json({
 						error: 'Authentication failed',
 						message: 'Invalid two-factor authentication code'
@@ -151,6 +154,10 @@ router.post(
 				secure: process.env.NODE_ENV === 'production',
 				sameSite: 'strict',
 				maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
+			});
+
+			NotificationService.notifyAdminLoginSuccess(userData.username, getClientIp(req), {
+				totpUsed: !!userData.totpEnabled
 			});
 
 			res.json({

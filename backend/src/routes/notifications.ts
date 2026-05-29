@@ -89,6 +89,7 @@ router.get('/status', requireSession, async (req: Request, res: Response) => {
 			configured: isConfigured,
 			defaultTopic: defaultTopic,
 			ntfyUrl: ntfyUrl,
+			authConfigured: NotificationService.hasAuthConfigured(),
 			timestamp: new Date().toISOString()
 		});
 	} catch (error: any) {
