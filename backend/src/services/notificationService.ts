@@ -10,8 +10,8 @@ const NTFY_TOPIC_PATTERN = /^[a-zA-Z0-9_-]{1,64}$/;
 
 function sanitizeNtfyHeaderValue(value: string, maxLength = 200): string {
 	const ascii = value
-		.replace(/[^\x20-\x7E]/g, '')
-		.replace(/\s+/g, ' ')
+		.replaceAll(/[^\x20-\x7E]/g, '')
+		.replaceAll(/\s+/g, ' ')
 		.trim();
 	return (ascii.slice(0, maxLength) || 'Notification').trim();
 }
