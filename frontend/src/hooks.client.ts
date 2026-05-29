@@ -163,15 +163,6 @@ if (browser) {
 
 	const webNekoViewportQueries = ['(pointer: coarse)', '(max-width: 768px) and (hover: none)'];
 	for (const q of webNekoViewportQueries) {
-		try {
-			const mq = globalThis.matchMedia(q);
-			mq.addEventListener('change', syncWebNekoForViewport);
-		} catch {
-			try {
-				globalThis.matchMedia(q).addListener(syncWebNekoForViewport);
-			} catch {
-				/* ignore */
-			}
-		}
+		globalThis.matchMedia(q).addEventListener('change', syncWebNekoForViewport);
 	}
 }
