@@ -327,6 +327,13 @@ function buildThemeVarsStylesheet(theme: SiteTheme): string {
   --theme-text-primary: ${theme.textPrimary};
   --theme-text-secondary: ${theme.textSecondary};
   --theme-text-muted: ${theme.textMuted};
+  --text-primary: ${theme.textPrimary};
+  --text-secondary: ${theme.textSecondary};
+  --text-muted: ${theme.textMuted};
+  --accent-color: ${theme.accentColor};
+  --border-color: ${theme.borderColor};
+  --bg-primary: ${theme.surfaceColor};
+  --bg-secondary: ${theme.backgroundColor};
   --theme-bg-overlay: ${themeDarkenToRgba(theme.overlayDarkenOpacity, '0')};
   --theme-bg-blur: ${theme.backgroundBlur}px;
   --theme-bg-position: ${theme.backgroundPosition};

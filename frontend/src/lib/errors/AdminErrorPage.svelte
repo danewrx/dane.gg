@@ -128,7 +128,7 @@
 </main>
 
 <style>
-	:global(:root) {
+	:global(html[data-dane-app='admin']) {
 		--bg-primary: #1a1a1a;
 		--bg-secondary: #2d2d2d;
 		--bg-tertiary: #3a3a3a;
@@ -148,7 +148,7 @@
 		--accent-color-contrast: #ffffff;
 	}
 
-	:global(html:not(.dark)) {
+	:global(html[data-dane-app='admin']:not(.dark)) {
 		--bg-primary: #ffffff;
 		--bg-secondary: #f8fafc;
 		--bg-tertiary: #f1f5f9;

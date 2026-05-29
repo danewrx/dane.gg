@@ -213,7 +213,7 @@
 	.nav-link {
 		background: none;
 		border: none;
-		color: var(--text-primary);
+		color: var(--theme-text-primary, var(--text-primary));
 		font-size: calc(14 * 1em / 14);
 		cursor: pointer;
 		padding: 5px 0;
@@ -229,6 +229,8 @@
 	}
 
 	.nav-link.active {
+		background: none !important;
+		border: none !important;
 		color: var(--accent-color);
 		font-weight: 600;
 	}

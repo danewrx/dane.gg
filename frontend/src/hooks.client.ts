@@ -24,6 +24,11 @@ function isAdminRoute(pathname: string): boolean {
 
 // Initialize authentication when the app starts - ONLY for admin routes
 if (browser) {
+	document.documentElement.setAttribute(
+		'data-dane-app',
+		isAdminRoute(window.location.pathname) ? 'admin' : 'public'
+	);
+
 	// Check if we're on an admin route before initializing auth
 	const currentPath = window.location.pathname;
 
