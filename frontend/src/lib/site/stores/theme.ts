@@ -327,6 +327,13 @@ function buildThemeVarsStylesheet(theme: SiteTheme): string {
   --theme-text-primary: ${theme.textPrimary};
   --theme-text-secondary: ${theme.textSecondary};
   --theme-text-muted: ${theme.textMuted};
+  --text-primary: ${theme.textPrimary};
+  --text-secondary: ${theme.textSecondary};
+  --text-muted: ${theme.textMuted};
+  --accent-color: ${theme.accentColor};
+  --border-color: ${theme.borderColor};
+  --bg-primary: ${theme.surfaceColor};
+  --bg-secondary: ${theme.backgroundColor};
   --theme-bg-overlay: ${themeDarkenToRgba(theme.overlayDarkenOpacity, '0')};
   --theme-bg-blur: ${theme.backgroundBlur}px;
   --theme-bg-position: ${theme.backgroundPosition};
@@ -368,7 +375,7 @@ export function clearSiteThemePresentation(): void {
 /** Apply active site theme to the document (only when `data-dane-app="public"`). */
 export function applyBrowserSiteThemeToDom(theme: SiteTheme): void {
 	if (!browser) return;
-	if (document.documentElement.getAttribute('data-dane-app') !== 'public') return;
+	if (document.documentElement.dataset.daneApp !== 'public') return;
 	applyThemeStyles(theme);
 	const fontsToLoad: string[] = [];
 	if (!theme.bodyFontUrl && theme.fontFamily) fontsToLoad.push(theme.fontFamily);

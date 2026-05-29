@@ -22,10 +22,25 @@ function isAdminRoute(pathname: string): boolean {
 	);
 }
 
+function setDaneAppRealm(pathname: string): void {
+	document.documentElement.dataset.daneApp = isAdminRoute(pathname) ? 'admin' : 'public';
+}
+
+type DaneWindow = typeof globalThis & {
+	daneTeardownWebNeko?: () => void;
+	daneRestartWebNeko?: () => void;
+};
+
+function daneWindow(): DaneWindow {
+	return globalThis as DaneWindow;
+}
+
 // Initialize authentication when the app starts - ONLY for admin routes
 if (browser) {
+	setDaneAppRealm(globalThis.location.pathname);
+
 	// Check if we're on an admin route before initializing auth
-	const currentPath = window.location.pathname;
+	const currentPath = globalThis.location.pathname;
 
 	if (isAdminRoute(currentPath)) {
 		// Initialize auth service only for admin routes
@@ -47,7 +62,7 @@ if (browser) {
 	// Set up periodic token refresh (every 30 minutes) - only for admin routes
 	setInterval(
 		async () => {
-			const currentPath = window.location.pathname;
+			const currentPath = globalThis.location.pathname;
 			if (isAdminRoute(currentPath)) {
 				try {
 					await authService.refreshToken();
@@ -64,9 +79,9 @@ if (browser) {
 	); // 30 minutes
 
 	// Listen for storage changes (logout from another tab) - only for admin routes
-	window.addEventListener('storage', (event) => {
+	globalThis.addEventListener('storage', (event) => {
 		if (event.key === 'auth' && event.newValue === null) {
-			const currentPath = window.location.pathname;
+			const currentPath = globalThis.location.pathname;
 			// Only redirect to login if we're on an admin route
 			if (isAdminRoute(currentPath)) {
 				goto('/login');
@@ -77,7 +92,7 @@ if (browser) {
 	// Listen for visibility change (tab becomes active) - only for admin routes
 	document.addEventListener('visibilitychange', async () => {
 		if (!document.hidden) {
-			const currentPath = window.location.pathname;
+			const currentPath = globalThis.location.pathname;
 			if (isAdminRoute(currentPath)) {
 				try {
 					await authService.checkAuth();
@@ -92,7 +107,7 @@ if (browser) {
 		}
 	});
 
-	let prevAdminRoute = isAdminRoute(window.location.pathname);
+	let prevAdminRoute = isAdminRoute(globalThis.location.pathname);
 
 	// Listen for route changes to initialize auth when navigating to admin routes
 	page.subscribe((pageData) => {
@@ -104,7 +119,7 @@ if (browser) {
 		const currentPath = pageData.url.pathname;
 		const adminNow = isAdminRoute(currentPath);
 
-		document.documentElement.setAttribute('data-dane-app', adminNow ? 'admin' : 'public');
+		setDaneAppRealm(currentPath);
 
 		if (adminNow && !prevAdminRoute) {
 			clearSiteThemePresentation();
@@ -114,10 +129,7 @@ if (browser) {
 			reapplyFontForCurrentRealm();
 		}
 
-		const w = window as Window & {
-			daneTeardownWebNeko?: () => void;
-			daneRestartWebNeko?: () => void;
-		};
+		const w = daneWindow();
 		if (adminNow && !prevAdminRoute) {
 			if (typeof w.daneTeardownWebNeko === 'function') w.daneTeardownWebNeko();
 		} else if (!adminNow && prevAdminRoute) {
@@ -144,22 +156,13 @@ if (browser) {
 	});
 
 	function syncWebNekoForViewport() {
-		if (isAdminRoute(window.location.pathname)) return;
-		const w = window as Window & { daneRestartWebNeko?: () => void };
+		if (isAdminRoute(globalThis.location.pathname)) return;
+		const w = daneWindow();
 		if (typeof w.daneRestartWebNeko === 'function') w.daneRestartWebNeko();
 	}
 
 	const webNekoViewportQueries = ['(pointer: coarse)', '(max-width: 768px) and (hover: none)'];
 	for (const q of webNekoViewportQueries) {
-		try {
-			const mq = window.matchMedia(q);
-			mq.addEventListener('change', syncWebNekoForViewport);
-		} catch {
-			try {
-				window.matchMedia(q).addListener(syncWebNekoForViewport);
-			} catch {
-				/* ignore */
-			}
-		}
+		globalThis.matchMedia(q).addEventListener('change', syncWebNekoForViewport);
 	}
 }

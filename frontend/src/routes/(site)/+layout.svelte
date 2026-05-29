@@ -156,6 +156,17 @@
 		--content-bg: rgba(45, 45, 45, 0.95);
 	}
 
+	:global(html[data-dane-app='public']) {
+		--text-primary: var(--theme-text-primary);
+		--text-secondary: var(--theme-text-secondary);
+		--text-muted: var(--theme-text-muted);
+		--accent-color: var(--theme-accent);
+		--accent-hover: var(--theme-accent);
+		--border-color: var(--theme-border);
+		--bg-primary: var(--theme-surface);
+		--bg-secondary: var(--theme-background);
+	}
+
 	:global(html) {
 		background: var(--theme-background) !important;
 		transition: all 0.3s ease;
