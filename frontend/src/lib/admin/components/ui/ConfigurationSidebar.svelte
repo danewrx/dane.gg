@@ -14,7 +14,8 @@
 		FileText,
 		Zap,
 		Award,
-		Mail
+		Mail,
+		Bell
 	} from 'lucide-svelte';
 	import type { ComponentType } from 'svelte';
 
@@ -84,6 +85,8 @@
 								<Link size={20} stroke-width={1.5} />
 							{:else if category.icon === MessageSquare}
 								<MessageSquare size={20} stroke-width={1.5} />
+							{:else if category.icon === Bell}
+								<Bell size={20} stroke-width={1.5} />
 							{:else if category.icon === Server}
 								<Server size={20} stroke-width={1.5} />
 							{:else if category.icon === Twitter}

@@ -2,6 +2,7 @@ import { logger } from '../utils/logger';
 import { TwitterOpenApi } from 'twitter-openapi-typescript';
 import { TweetService, type TweetData } from './tweetService';
 import { NotificationService } from './notificationService';
+import { getNotificationSettings } from './notificationSettings';
 import { ConfigService } from './config';
 import { getKwargs } from 'twitter-openapi-typescript/dist/src/utils/api';
 import { invalidateCached } from '../utils/shortLivedCache';
@@ -1396,11 +1397,13 @@ export class TwitterApiService {
 	 * @private
 	 */
 	private static async sendConnectionFailureNotification(error: string): Promise<boolean> {
-		return NotificationService.send(
+		const settings = await getNotificationSettings();
+		if (!settings.twitter.enabled) return false;
+
+		const { failure } = settings.twitter;
+		return NotificationService.sendWithAppearance(
 			`Twitter API connection failed: ${error}\n\nTime: ${new Date().toISOString()}`,
-			'Twitter API connection failed',
-			4, // High priority
-			['warning', 'twitter', 'api']
+			failure
 		);
 	}
 
@@ -1409,11 +1412,13 @@ export class TwitterApiService {
 	 * @private
 	 */
 	private static async sendConnectionRestoredNotification(): Promise<boolean> {
-		return NotificationService.send(
+		const settings = await getNotificationSettings();
+		if (!settings.twitter.enabled) return false;
+
+		const { restored } = settings.twitter;
+		return NotificationService.sendWithAppearance(
 			`Twitter API connection has been restored.\n\nTime: ${new Date().toISOString()}`,
-			'Twitter API connection restored',
-			2, // Low priority
-			['success', 'twitter', 'api']
+			restored
 		);
 	}
 }

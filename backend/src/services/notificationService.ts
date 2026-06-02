@@ -1,20 +1,13 @@
 import { logger } from '../utils/logger';
+import { getNotificationSettings } from './notificationSettings';
+import { buildNtfyPublishHeaders, type NtfyEventAppearance } from './ntfyPublish';
 /**
  * Notification service for sending alerts via Ntfy
- * Ntfy is a simple HTTP-based notification service
- * Documentation: https://docs.ntfy.sh/
+ * Documentation: https://docs.ntfy.sh/publish/
  */
 
 /** Valid ntfy topic names: a-z, A-Z, 0-9, _, - (no dots). */
 const NTFY_TOPIC_PATTERN = /^[a-zA-Z0-9_-]{1,64}$/;
-
-function sanitizeNtfyHeaderValue(value: string, maxLength = 200): string {
-	const ascii = value
-		.replaceAll(/[^\x20-\x7E]/g, '')
-		.replaceAll(/\s+/g, ' ')
-		.trim();
-	return (ascii.slice(0, maxLength) || 'Notification').trim();
-}
 
 export class NotificationService {
 	private static buildAuthHeaders(): Record<string, string> {
@@ -38,18 +31,11 @@ export class NotificationService {
 	}
 
 	/**
-	 * Send a notification to Ntfy
-	 * @param message - Message to send
-	 * @param title - Optional title
-	 * @param priority - Priority level (1-5, default: 3)
-	 * @param tags - Optional tags
-	 * @param topic - Optional topic (defaults to NTFY_TOPIC env var)
+	 * Send a notification using a full ntfy appearance preset.
 	 */
-	static async send(
+	static async sendWithAppearance(
 		message: string,
-		title?: string,
-		priority: number = 3,
-		tags?: string[],
+		appearance: NtfyEventAppearance,
 		topic?: string
 	): Promise<boolean> {
 		try {
@@ -69,25 +55,13 @@ export class NotificationService {
 			const url = `${ntfyUrl}/${encodeURIComponent(finalTopic)}`;
 
 			const headers: Record<string, string> = {
-				'Content-Type': 'text/plain',
+				...buildNtfyPublishHeaders(appearance),
 				...this.buildAuthHeaders()
 			};
 
-			if (title) {
-				headers['Title'] = sanitizeNtfyHeaderValue(title);
-			}
-
-			if (priority) {
-				headers['Priority'] = priority.toString();
-			}
-
-			if (tags && tags.length > 0) {
-				headers['Tags'] = tags.join(',');
-			}
-
 			const response = await fetch(url, {
 				method: 'POST',
-				headers: headers,
+				headers,
 				body: message
 			});
 
@@ -114,13 +88,33 @@ export class NotificationService {
 	}
 
 	/**
-	 * Check if Ntfy is configured
+	 * @deprecated Prefer sendWithAppearance. Legacy positional args for manual API.
 	 */
+	static async send(
+		message: string,
+		title?: string,
+		priority: number = 3,
+		tags?: string[],
+		topic?: string
+	): Promise<boolean> {
+		return this.sendWithAppearance(
+			message,
+			{
+				title: title || 'Notification',
+				priority,
+				tags: tags ?? [],
+				markdown: false,
+				click: '',
+				icon: ''
+			},
+			topic
+		);
+	}
+
 	static isConfigured(): boolean {
 		return !!process.env.NTFY_TOPIC;
 	}
 
-	/** Push alert when an IP is brute-force locked out of admin login. */
 	static notifyAdminLoginLockout(
 		ip: string,
 		attemptCount: number,
@@ -129,20 +123,22 @@ export class NotificationService {
 	): void {
 		if (!this.isConfigured()) return;
 
-		const userLine = username ? `Username: ${username}\n` : '';
+		void getNotificationSettings().then((settings) => {
+			if (settings.adminLogin.failedMode === 'off') return;
 
-		void this.send(
-			`IP ${ip} was locked out after ${attemptCount} failed admin login attempts.\n` +
-				userLine +
-				`Lockout: ${lockoutMinutes} minutes.\n` +
-				`Time: ${new Date().toISOString()}`,
-			'Admin login lockout',
-			4,
-			['warning', 'security', 'auth', 'admin']
-		);
+			const { lockout } = settings.adminLogin;
+			const userLine = username ? `Username: ${username}\n` : '';
+
+			void this.sendWithAppearance(
+				`IP ${ip} was locked out after ${attemptCount} failed admin login attempts.\n` +
+					userLine +
+					`Lockout: ${lockoutMinutes} minutes.\n` +
+					`Time: ${new Date().toISOString()}`,
+				lockout
+			);
+		});
 	}
 
-	/** Push alert on a failed admin login attempt */
 	static notifyAdminLoginFailed(
 		ip: string,
 		attemptCount: number,
@@ -151,23 +147,22 @@ export class NotificationService {
 	): void {
 		if (!this.isConfigured()) return;
 
-		const mode = (process.env.ADMIN_LOGIN_NOTIFY_FAILED || 'lockout').trim().toLowerCase();
-		if (mode !== 'each') return;
+		void getNotificationSettings().then((settings) => {
+			if (settings.adminLogin.failedMode !== 'each') return;
 
-		const userLine = username ? `Username: ${username}\n` : 'Username: (unknown)\n';
+			const { failed } = settings.adminLogin;
+			const userLine = username ? `Username: ${username}\n` : 'Username: (unknown)\n';
 
-		void this.send(
-			`Failed admin login attempt ${attemptCount}/${maxAttempts}.\n` +
-				userLine +
-				`IP: ${ip}\n` +
-				`Time: ${new Date().toISOString()}`,
-			'Admin login failed',
-			3,
-			['warning', 'security', 'auth', 'admin']
-		);
+			void this.sendWithAppearance(
+				`Failed admin login attempt ${attemptCount}/${maxAttempts}.\n` +
+					userLine +
+					`IP: ${ip}\n` +
+					`Time: ${new Date().toISOString()}`,
+				failed
+			);
+		});
 	}
 
-	/** Push alert when a user completes admin login */
 	static notifyAdminLoginSuccess(
 		username: string,
 		ip: string,
@@ -175,16 +170,26 @@ export class NotificationService {
 	): void {
 		if (!this.isConfigured()) return;
 
-		const totpLine = options?.totpUsed ? '2FA: yes' : '2FA: no';
+		void getNotificationSettings().then((settings) => {
+			if (!settings.adminLogin.successEnabled) return;
 
-		void this.send(
-			`User ${username} signed in to the admin panel.\n` +
-				`${totpLine}\n` +
-				`IP: ${ip}\n` +
-				`Time: ${new Date().toISOString()}`,
-			'Admin login',
-			3,
-			['success', 'security', 'auth', 'admin']
-		);
+			const { success } = settings.adminLogin;
+			const totpLine = options?.totpUsed ? '2FA: yes' : '2FA: no';
+
+			void this.sendWithAppearance(
+				`User ${username} signed in to the admin panel.\n` +
+					`${totpLine}\n` +
+					`IP: ${ip}\n` +
+					`Time: ${new Date().toISOString()}`,
+				success
+			);
+		});
+	}
+
+	static async sendTestNotification(message: string): Promise<boolean> {
+		if (!this.isConfigured()) return false;
+
+		const settings = await getNotificationSettings();
+		return this.sendWithAppearance(message, settings.test);
 	}
 }
