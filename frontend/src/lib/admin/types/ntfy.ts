@@ -1,6 +1,7 @@
 /** Matches backend ntfy publish appearance — https://docs.ntfy.sh/publish/ */
 export interface NtfyEventAppearance {
 	title: string;
+	body: string;
 	priority: number;
 	tags: string[];
 	markdown: boolean;

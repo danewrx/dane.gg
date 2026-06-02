@@ -73,26 +73,26 @@ router.post('/send', requireSession, async (req: Request, res: Response) => {
 	try {
 		const { message, title, priority, tags, topic, useTestPreset, appearance } = req.body;
 
-		if (!message || typeof message !== 'string') {
-			return res.status(400).json({
-				error: 'Message is required and must be a string'
-			});
-		}
-
 		if (useTestPreset === true) {
 			if (!NotificationService.isConfigured()) {
 				return res.status(400).json({
 					error: 'NTFY_TOPIC environment variable is not set'
 				});
 			}
-			const success = await NotificationService.sendTestNotification(message);
+			const success = await NotificationService.sendTestNotification();
 			if (!success) {
 				return res.status(500).json({ error: 'Failed to send test notification' });
 			}
 			return res.json({
 				success: true,
-				message: 'Test notification sent using saved appearance preset',
+				message: 'Test notification sent using saved template',
 				topic: process.env.NTFY_TOPIC
+			});
+		}
+
+		if (!message || typeof message !== 'string') {
+			return res.status(400).json({
+				error: 'Message is required and must be a string'
 			});
 		}
 
@@ -124,6 +124,7 @@ router.post('/send', requireSession, async (req: Request, res: Response) => {
 			const resolvedAppearance = mergeNtfyAppearance(
 				{
 					title: typeof title === 'string' ? title : 'Notification',
+					body: message,
 					priority: typeof priority === 'number' ? priority : 3,
 					tags: Array.isArray(tags) ? tags : [],
 					...NTFY_APPEARANCE_OPTIONAL_DEFAULTS

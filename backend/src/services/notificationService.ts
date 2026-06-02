@@ -1,6 +1,11 @@
 import { logger } from '../utils/logger';
 import { getNotificationSettings } from './notificationSettings';
 import { buildNtfyPublishHeaders, type NtfyEventAppearance } from './ntfyPublish';
+import {
+	resolveTemplatedAppearance,
+	testNotificationTemplateVars,
+	type NotificationTemplateVars
+} from './ntfyTemplate';
 /**
  * Notification service for sending alerts via Ntfy
  * Documentation: https://docs.ntfy.sh/publish/
@@ -28,6 +33,14 @@ export class NotificationService {
 
 	static hasAuthConfigured(): boolean {
 		return Object.keys(this.buildAuthHeaders()).length > 0;
+	}
+
+	private static sendTemplated(
+		appearance: NtfyEventAppearance,
+		vars: NotificationTemplateVars
+	): Promise<boolean> {
+		const { message, appearance: resolved } = resolveTemplatedAppearance(appearance, vars);
+		return this.sendWithAppearance(message, resolved);
 	}
 
 	/**
@@ -101,6 +114,7 @@ export class NotificationService {
 			message,
 			{
 				title: title || 'Notification',
+				body: message,
 				priority,
 				tags: tags ?? [],
 				markdown: false,
@@ -127,15 +141,14 @@ export class NotificationService {
 			if (settings.adminLogin.failedMode === 'off') return;
 
 			const { lockout } = settings.adminLogin;
-			const userLine = username ? `Username: ${username}\n` : '';
 
-			void this.sendWithAppearance(
-				`IP ${ip} was locked out after ${attemptCount} failed admin login attempts.\n` +
-					userLine +
-					`Lockout: ${lockoutMinutes} minutes.\n` +
-					`Time: ${new Date().toISOString()}`,
-				lockout
-			);
+			void this.sendTemplated(lockout, {
+				ip,
+				attemptCount,
+				lockoutMinutes,
+				username: username ?? '(unknown)',
+				time: new Date().toISOString()
+			});
 		});
 	}
 
@@ -151,15 +164,14 @@ export class NotificationService {
 			if (settings.adminLogin.failedMode !== 'each') return;
 
 			const { failed } = settings.adminLogin;
-			const userLine = username ? `Username: ${username}\n` : 'Username: (unknown)\n';
 
-			void this.sendWithAppearance(
-				`Failed admin login attempt ${attemptCount}/${maxAttempts}.\n` +
-					userLine +
-					`IP: ${ip}\n` +
-					`Time: ${new Date().toISOString()}`,
-				failed
-			);
+			void this.sendTemplated(failed, {
+				ip,
+				attemptCount,
+				maxAttempts,
+				username: username ?? '(unknown)',
+				time: new Date().toISOString()
+			});
 		});
 	}
 
@@ -174,22 +186,20 @@ export class NotificationService {
 			if (!settings.adminLogin.successEnabled) return;
 
 			const { success } = settings.adminLogin;
-			const totpLine = options?.totpUsed ? '2FA: yes' : '2FA: no';
 
-			void this.sendWithAppearance(
-				`User ${username} signed in to the admin panel.\n` +
-					`${totpLine}\n` +
-					`IP: ${ip}\n` +
-					`Time: ${new Date().toISOString()}`,
-				success
-			);
+			void this.sendTemplated(success, {
+				username,
+				ip,
+				totp: options?.totpUsed ? 'yes' : 'no',
+				time: new Date().toISOString()
+			});
 		});
 	}
 
-	static async sendTestNotification(message: string): Promise<boolean> {
+	static async sendTestNotification(): Promise<boolean> {
 		if (!this.isConfigured()) return false;
 
 		const settings = await getNotificationSettings();
-		return this.sendWithAppearance(message, settings.test);
+		return this.sendTemplated(settings.test, testNotificationTemplateVars());
 	}
 }

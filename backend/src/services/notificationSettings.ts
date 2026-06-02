@@ -13,11 +13,13 @@ export type { NtfyEventAppearance };
 
 function createAppearance(
 	title: string,
+	body: string,
 	priority: number,
 	tags: string[]
 ): NtfyEventAppearance {
 	return {
 		title,
+		body,
 		priority,
 		tags,
 		...NTFY_APPEARANCE_OPTIONAL_DEFAULTS
@@ -41,21 +43,42 @@ export interface NotificationSettings {
 }
 
 const DEFAULT_APPEARANCE = {
-	adminLoginSuccess: createAppearance('Admin login', 3, [
-		'white_check_mark',
-		'security',
-		'auth',
-		'admin'
-	]),
-	adminLoginLockout: createAppearance('Admin login lockout', 4, ['warning', 'security', 'auth', 'admin']),
-	adminLoginFailed: createAppearance('Admin login failed', 3, ['warning', 'security', 'auth', 'admin']),
-	twitterFailure: createAppearance('Twitter API connection failed', 4, ['warning', 'twitter', 'api']),
-	twitterRestored: createAppearance('Twitter API connection restored', 2, [
-		'white_check_mark',
-		'twitter',
-		'api'
-	]),
-	test: createAppearance('Test notification', 3, ['test', 'admin'])
+	adminLoginSuccess: createAppearance(
+		'Admin login',
+		'User {username} signed in to the admin panel.\n2FA: {totp}\nIP: {ip}\nTime: {time}',
+		3,
+		['white_check_mark', 'security', 'auth', 'admin']
+	),
+	adminLoginLockout: createAppearance(
+		'Admin login lockout',
+		'IP {ip} was locked out after {attemptCount} failed admin login attempts.\nUsername: {username}\nLockout: {lockoutMinutes} minutes.\nTime: {time}',
+		4,
+		['warning', 'security', 'auth', 'admin']
+	),
+	adminLoginFailed: createAppearance(
+		'Admin login failed',
+		'Failed admin login attempt {attemptCount}/{maxAttempts}.\nUsername: {username}\nIP: {ip}\nTime: {time}',
+		3,
+		['warning', 'security', 'auth', 'admin']
+	),
+	twitterFailure: createAppearance(
+		'Twitter API connection failed',
+		'Twitter API connection failed: {error}\n\nTime: {time}',
+		4,
+		['warning', 'twitter', 'api']
+	),
+	twitterRestored: createAppearance(
+		'Twitter API connection restored',
+		'Twitter API connection has been restored.\n\nTime: {time}',
+		2,
+		['white_check_mark', 'twitter', 'api']
+	),
+	test: createAppearance(
+		'Test notification',
+		'Test notification from dane.gg admin\nTime: {time}',
+		3,
+		['test', 'admin']
+	)
 };
 
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {

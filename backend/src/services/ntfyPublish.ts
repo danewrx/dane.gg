@@ -5,6 +5,7 @@
 
 export interface NtfyEventAppearance {
 	title: string;
+	body: string;
 	priority: number;
 	tags: string[];
 	markdown: boolean;
@@ -24,6 +25,11 @@ function sanitizeNtfyHeaderValue(value: string, maxLength = 200): string {
 		.replaceAll(/\s+/g, ' ')
 		.trim();
 	return ascii.slice(0, maxLength);
+}
+
+function sanitizeBodyTemplate(value: unknown, maxLength = 4000): string {
+	if (typeof value !== 'string') return '';
+	return value.replaceAll('\0', '').slice(0, maxLength);
 }
 
 function sanitizeOptionalUrl(value: unknown, maxLength = 2048): string {
@@ -75,6 +81,7 @@ export function mergeNtfyAppearance(
 			typeof raw.title === 'string' && raw.title.trim()
 				? sanitizeNtfyHeaderValue(raw.title, 200)
 				: base.title,
+		body: 'body' in raw ? sanitizeBodyTemplate(raw.body) || base.body : base.body,
 		priority: clampPriority(raw.priority, base.priority),
 		tags: 'tags' in raw ? sanitizeTags(raw.tags, base.tags) : base.tags,
 		markdown: typeof raw.markdown === 'boolean' ? raw.markdown : base.markdown,

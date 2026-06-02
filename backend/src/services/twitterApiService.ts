@@ -3,6 +3,7 @@ import { TwitterOpenApi } from 'twitter-openapi-typescript';
 import { TweetService, type TweetData } from './tweetService';
 import { NotificationService } from './notificationService';
 import { getNotificationSettings } from './notificationSettings';
+import { resolveTemplatedAppearance } from './ntfyTemplate';
 import { ConfigService } from './config';
 import { getKwargs } from 'twitter-openapi-typescript/dist/src/utils/api';
 import { invalidateCached } from '../utils/shortLivedCache';
@@ -1401,10 +1402,11 @@ export class TwitterApiService {
 		if (!settings.twitter.enabled) return false;
 
 		const { failure } = settings.twitter;
-		return NotificationService.sendWithAppearance(
-			`Twitter API connection failed: ${error}\n\nTime: ${new Date().toISOString()}`,
-			failure
-		);
+		const { message, appearance } = resolveTemplatedAppearance(failure, {
+			error,
+			time: new Date().toISOString()
+		});
+		return NotificationService.sendWithAppearance(message, appearance);
 	}
 
 	/**
@@ -1416,9 +1418,9 @@ export class TwitterApiService {
 		if (!settings.twitter.enabled) return false;
 
 		const { restored } = settings.twitter;
-		return NotificationService.sendWithAppearance(
-			`Twitter API connection has been restored.\n\nTime: ${new Date().toISOString()}`,
-			restored
-		);
+		const { message, appearance } = resolveTemplatedAppearance(restored, {
+			time: new Date().toISOString()
+		});
+		return NotificationService.sendWithAppearance(message, appearance);
 	}
 }

@@ -92,10 +92,7 @@
 				method: 'POST',
 				credentials: 'include',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					message: `Test notification from dane.gg admin\nTime: ${new Date().toISOString()}`,
-					useTestPreset: true
-				})
+				body: JSON.stringify({ useTestPreset: true })
 			});
 
 			if (!response.ok) {
@@ -133,11 +130,8 @@
 	{:else if settings}
 		<div class="settings-description">
 			<p>
-				Configure ntfy push alerts per event. Appearance options follow the
-				<a href="https://docs.ntfy.sh/publish/" target="_blank" rel="noopener noreferrer"
-					>ntfy publish API</a
-				>
-				(title, priority, tags, icon, and click URL).
+				Configure ntfy push alerts per event. Customize the message body with placeholders like
+				<code>{'{username}'}</code>, and set title, priority, tags, icon, and click URL.
 			</p>
 		</div>
 
@@ -205,15 +199,24 @@
 
 			<div class="appearance-stack">
 				<div class="appearance-block">
-					<NtfyAppearanceFields bind:appearance={settings.adminLogin.success} heading="Successful login" />
+					<NtfyAppearanceFields
+						bind:appearance={settings.adminLogin.success}
+						heading="Successful login"
+						placeholders={['username', 'ip', 'totp', 'time']}
+					/>
 				</div>
 				<div class="appearance-block">
-					<NtfyAppearanceFields bind:appearance={settings.adminLogin.lockout} heading="Lockout" />
+					<NtfyAppearanceFields
+						bind:appearance={settings.adminLogin.lockout}
+						heading="Lockout"
+						placeholders={['ip', 'attemptCount', 'lockoutMinutes', 'username', 'time']}
+					/>
 				</div>
 				<div class="appearance-block">
 					<NtfyAppearanceFields
 						bind:appearance={settings.adminLogin.failed}
 						heading="Each failed attempt"
+						placeholders={['ip', 'attemptCount', 'maxAttempts', 'username', 'time']}
 					/>
 				</div>
 			</div>
@@ -233,12 +236,17 @@
 
 			<div class="appearance-stack">
 				<div class="appearance-block">
-					<NtfyAppearanceFields bind:appearance={settings.twitter.failure} heading="Connection failed" />
+					<NtfyAppearanceFields
+						bind:appearance={settings.twitter.failure}
+						heading="Connection failed"
+						placeholders={['error', 'time']}
+					/>
 				</div>
 				<div class="appearance-block">
 					<NtfyAppearanceFields
 						bind:appearance={settings.twitter.restored}
 						heading="Connection restored"
+						placeholders={['time']}
 					/>
 				</div>
 			</div>
@@ -246,9 +254,23 @@
 
 		<section class="card">
 			<h2 class="section-title">Test notification</h2>
-			<p class="form-help">Used by the “Send test notification” button above.</p>
+			<p class="form-help">
+				Used by the “Send test notification” button above. Test sends use sample placeholder values.
+			</p>
 			<div class="appearance-block">
-				<NtfyAppearanceFields bind:appearance={settings.test} />
+				<NtfyAppearanceFields
+					bind:appearance={settings.test}
+					placeholders={[
+						'time',
+						'username',
+						'ip',
+						'totp',
+						'attemptCount',
+						'maxAttempts',
+						'lockoutMinutes',
+						'error'
+					]}
+				/>
 			</div>
 		</section>
 
