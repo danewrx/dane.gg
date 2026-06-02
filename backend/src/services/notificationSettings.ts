@@ -9,7 +9,7 @@ export const NTFY_SETTINGS_KEY = 'ntfy_settings';
 
 export type AdminLoginFailedMode = 'lockout' | 'each' | 'off';
 
-export type { NtfyEventAppearance };
+export type { NtfyEventAppearance } from './ntfyPublish';
 
 function createAppearance(
 	title: string,
