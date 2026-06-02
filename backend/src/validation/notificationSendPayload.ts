@@ -83,22 +83,19 @@ export function parseSendNotificationRequest(body: unknown): ParseSendNotificati
 async function sendCustomNotification(request: CustomSendRequest): Promise<boolean> {
 	const { message, title, priority, tags, topic, appearance } = request;
 
-	if (appearance) {
-		const resolvedAppearance = mergeNtfyAppearance(
-			{
-				enabled: true,
-				title: title ?? 'Notification',
-				body: message,
-				priority,
-				tags: tags ?? [],
-				...NTFY_APPEARANCE_OPTIONAL_DEFAULTS
-			},
-			appearance
-		);
-		return NotificationService.sendWithAppearance(message, resolvedAppearance, topic);
-	}
+	const resolvedAppearance = mergeNtfyAppearance(
+		{
+			enabled: true,
+			title: title ?? 'Notification',
+			body: message,
+			priority,
+			tags: tags ?? [],
+			...NTFY_APPEARANCE_OPTIONAL_DEFAULTS
+		},
+		appearance
+	);
 
-	return NotificationService.send(message, title, priority, tags, topic);
+	return NotificationService.sendWithAppearance(message, resolvedAppearance, topic);
 }
 
 export async function executeTestPresetSend(): Promise<SendHandlerResult> {
