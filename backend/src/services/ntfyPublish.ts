@@ -47,16 +47,25 @@ function sanitizeOptionalUrl(value: unknown, maxLength = 2048): string {
 }
 
 function clampPriority(value: unknown, fallback: number): number {
-	const n = typeof value === 'number' ? value : Number.parseInt(String(value ?? ''), 10);
-	if (!Number.isFinite(n)) return fallback;
-	return Math.min(5, Math.max(1, Math.round(n)));
+	if (typeof value === 'number') {
+		if (!Number.isFinite(value)) return fallback;
+		return Math.min(5, Math.max(1, Math.round(value)));
+	}
+
+	if (typeof value === 'string' && value.trim()) {
+		const n = Number.parseInt(value.trim(), 10);
+		if (!Number.isFinite(n)) return fallback;
+		return Math.min(5, Math.max(1, Math.round(n)));
+	}
+
+	return fallback;
 }
 
 function sanitizeTags(value: unknown, fallback: string[]): string[] {
 	if (!Array.isArray(value)) return [...fallback];
 	const tags = value
 		.filter((t): t is string => typeof t === 'string')
-		.map((t) => t.trim().toLowerCase().replace(/[^a-z0-9_]/g, ''))
+		.map((t) => t.trim().toLowerCase().replaceAll(/[^a-z0-9_]/g, ''))
 		.filter((t) => t.length > 0 && t.length <= 32);
 	return tags.length > 0 ? tags.slice(0, 8) : [...fallback];
 }

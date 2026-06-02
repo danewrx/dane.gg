@@ -1,6 +1,6 @@
 import type { NtfyEventAppearance } from './ntfyPublish';
 
-const PLACEHOLDER_PATTERN = /\{([a-zA-Z][a-zA-Z0-9_]*)\}/g;
+const PLACEHOLDER_PATTERN = /\{([a-zA-Z]\w*)\}/g;
 
 export type NotificationTemplateVars = Record<string, string | number | undefined | null>;
 
