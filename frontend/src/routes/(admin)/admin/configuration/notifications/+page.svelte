@@ -3,6 +3,7 @@
 	import { adminPageTitle } from '$lib/site/pageTitle';
 	import { onMount } from 'svelte';
 	import NotificationCard from '$lib/admin/components/notifications/NotificationCard.svelte';
+	import TestNotificationPanel from '$lib/admin/components/notifications/TestNotificationPanel.svelte';
 	import NotificationEditModal from '$lib/admin/components/notifications/NotificationEditModal.svelte';
 	import type { NotificationSettings } from '$lib/admin/types/ntfy';
 	import { toast } from 'svelte-sonner';
@@ -198,23 +199,16 @@
 				</p>
 			</section>
 
-			<section class="card category-card test-section">
+			<section class="card test-section">
 				<h2 class="section-title">Test notification</h2>
 				<p class="category-help">
-					Send a fixed test push to verify your ntfy connection. Uses the site favicon, links to
-					dane.gg, and sample placeholder values for <code>{'{time}'}</code>.
+					Verify your ntfy connection with a fixed preset message before configuring event alerts.
 				</p>
-
-				<div class="notification-grid notification-grid--single">
-					<NotificationCard
-						title="Test notification"
-						description="Plain-text test message with title, tags, icon, and click URL preconfigured."
-						showEnableToggle={false}
-						onsend={sendTestNotification}
-						sendDisabled={!configured}
-						sending={sendingTest}
-					/>
-				</div>
+				<TestNotificationPanel
+					onSend={sendTestNotification}
+					sendDisabled={!configured}
+					sending={sendingTest}
+				/>
 			</section>
 
 			<section class="card category-card">
@@ -343,6 +337,10 @@
 		margin-bottom: 20px;
 	}
 
+	.test-section .category-help {
+		margin-bottom: 16px;
+	}
+
 	.section-title {
 		margin: 0;
 		font-size: 16px;
@@ -403,10 +401,6 @@
 		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 		gap: 14px;
 		margin-top: 16px;
-	}
-
-	.notification-grid--single {
-		grid-template-columns: minmax(260px, 480px);
 	}
 
 	.form-actions {

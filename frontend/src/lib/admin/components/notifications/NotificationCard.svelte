@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { NtfyEventAppearance } from '$lib/admin/types/ntfy';
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
-	import { Pencil, Send } from 'lucide-svelte';
+	import { Pencil } from 'lucide-svelte';
 
 	interface Props {
 		appearance?: NtfyEventAppearance;
@@ -9,9 +9,6 @@
 		description: string;
 		showEnableToggle?: boolean;
 		onedit?: () => void;
-		onsend?: () => void;
-		sendDisabled?: boolean;
-		sending?: boolean;
 	}
 
 	let {
@@ -19,10 +16,7 @@
 		title,
 		description,
 		showEnableToggle = true,
-		onedit,
-		onsend,
-		sendDisabled = false,
-		sending = false
+		onedit
 	}: Props = $props();
 </script>
 
@@ -44,17 +38,6 @@
 		{/if}
 
 		<div class="card-actions">
-			{#if onsend}
-				<button
-					type="button"
-					class="send-button"
-					disabled={sendDisabled || sending}
-					onclick={() => onsend()}
-				>
-					<Send size={15} />
-					<span>{sending ? 'Sending…' : 'Send test'}</span>
-				</button>
-			{/if}
 			{#if onedit}
 				<button type="button" class="edit-button" onclick={() => onedit()} aria-label="Edit {title}">
 					<Pencil size={15} />
@@ -157,32 +140,7 @@
 			background 0.15s ease;
 	}
 
-	.send-button {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-		padding: 7px 12px;
-		border: none;
-		border-radius: 6px;
-		background: var(--accent-bg, #6366f1);
-		color: var(--accent-fg, #fff);
-		font-size: 13px;
-		font-weight: 500;
-		cursor: pointer;
-		transition: filter 0.15s ease;
-	}
-
-	.send-button:hover:not(:disabled) {
-		filter: brightness(1.06);
-	}
-
-	.send-button:disabled,
-	.edit-button:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-	}
-
-	.edit-button:hover:not(:disabled) {
+	.edit-button:hover {
 		border-color: var(--accent-color, #6366f1);
 		background: rgba(99, 102, 241, 0.12);
 	}
