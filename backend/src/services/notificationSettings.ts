@@ -18,6 +18,7 @@ function createAppearance(
 	tags: string[]
 ): NtfyEventAppearance {
 	return {
+		enabled: true,
 		title,
 		body,
 		priority,
@@ -28,14 +29,12 @@ function createAppearance(
 
 export interface NotificationSettings {
 	adminLogin: {
-		successEnabled: boolean;
 		failedMode: AdminLoginFailedMode;
 		success: NtfyEventAppearance;
 		lockout: NtfyEventAppearance;
 		failed: NtfyEventAppearance;
 	};
 	twitter: {
-		enabled: boolean;
 		failure: NtfyEventAppearance;
 		restored: NtfyEventAppearance;
 	};
@@ -83,14 +82,12 @@ const DEFAULT_APPEARANCE = {
 
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
 	adminLogin: {
-		successEnabled: true,
 		failedMode: 'lockout',
 		success: DEFAULT_APPEARANCE.adminLoginSuccess,
 		lockout: DEFAULT_APPEARANCE.adminLoginLockout,
 		failed: DEFAULT_APPEARANCE.adminLoginFailed
 	},
 	twitter: {
-		enabled: true,
 		failure: DEFAULT_APPEARANCE.twitterFailure,
 		restored: DEFAULT_APPEARANCE.twitterRestored
 	},
@@ -107,8 +104,16 @@ function envFailedMode(): AdminLoginFailedMode {
 	return 'lockout';
 }
 
-function sanitizeAppearance(input: unknown, fallback: NtfyEventAppearance): NtfyEventAppearance {
-	return mergeNtfyAppearance(fallback, input);
+function sanitizeAppearance(
+	input: unknown,
+	fallback: NtfyEventAppearance,
+	legacyEnabled?: boolean
+): NtfyEventAppearance {
+	const merged = mergeNtfyAppearance(fallback, input);
+	if (legacyEnabled !== undefined && !(input && typeof input === 'object' && 'enabled' in input)) {
+		merged.enabled = legacyEnabled;
+	}
+	return merged;
 }
 
 export function validateNotificationSettings(input: unknown): NotificationSettings {
@@ -126,14 +131,19 @@ export function validateNotificationSettings(input: unknown): NotificationSettin
 		if (mode === 'lockout' || mode === 'each' || mode === 'off') failedMode = mode;
 	}
 
+	const legacySuccessEnabled =
+		typeof adminRaw.successEnabled === 'boolean' ? adminRaw.successEnabled : undefined;
+	const legacyTwitterEnabled =
+		typeof twitterRaw.enabled === 'boolean' ? twitterRaw.enabled : undefined;
+
 	return {
 		adminLogin: {
-			successEnabled:
-				typeof adminRaw.successEnabled === 'boolean'
-					? adminRaw.successEnabled
-					: DEFAULT_NOTIFICATION_SETTINGS.adminLogin.successEnabled,
 			failedMode,
-			success: sanitizeAppearance(adminRaw.success, DEFAULT_NOTIFICATION_SETTINGS.adminLogin.success),
+			success: sanitizeAppearance(
+				adminRaw.success,
+				DEFAULT_NOTIFICATION_SETTINGS.adminLogin.success,
+				legacySuccessEnabled
+			),
 			lockout: sanitizeAppearance(
 				adminRaw.lockout,
 				DEFAULT_NOTIFICATION_SETTINGS.adminLogin.lockout
@@ -141,12 +151,16 @@ export function validateNotificationSettings(input: unknown): NotificationSettin
 			failed: sanitizeAppearance(adminRaw.failed, DEFAULT_NOTIFICATION_SETTINGS.adminLogin.failed)
 		},
 		twitter: {
-			enabled:
-				typeof twitterRaw.enabled === 'boolean'
-					? twitterRaw.enabled
-					: DEFAULT_NOTIFICATION_SETTINGS.twitter.enabled,
-			failure: sanitizeAppearance(twitterRaw.failure, DEFAULT_NOTIFICATION_SETTINGS.twitter.failure),
-			restored: sanitizeAppearance(twitterRaw.restored, DEFAULT_NOTIFICATION_SETTINGS.twitter.restored)
+			failure: sanitizeAppearance(
+				twitterRaw.failure,
+				DEFAULT_NOTIFICATION_SETTINGS.twitter.failure,
+				legacyTwitterEnabled
+			),
+			restored: sanitizeAppearance(
+				twitterRaw.restored,
+				DEFAULT_NOTIFICATION_SETTINGS.twitter.restored,
+				legacyTwitterEnabled
+			)
 		},
 		test: sanitizeAppearance(raw.test, DEFAULT_NOTIFICATION_SETTINGS.test)
 	};

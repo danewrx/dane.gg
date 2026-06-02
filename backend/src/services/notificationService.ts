@@ -113,6 +113,7 @@ export class NotificationService {
 		return this.sendWithAppearance(
 			message,
 			{
+				enabled: true,
 				title: title || 'Notification',
 				body: message,
 				priority,
@@ -141,6 +142,7 @@ export class NotificationService {
 			if (settings.adminLogin.failedMode === 'off') return;
 
 			const { lockout } = settings.adminLogin;
+			if (!lockout.enabled) return;
 
 			void this.sendTemplated(lockout, {
 				ip,
@@ -164,6 +166,7 @@ export class NotificationService {
 			if (settings.adminLogin.failedMode !== 'each') return;
 
 			const { failed } = settings.adminLogin;
+			if (!failed.enabled) return;
 
 			void this.sendTemplated(failed, {
 				ip,
@@ -183,9 +186,8 @@ export class NotificationService {
 		if (!this.isConfigured()) return;
 
 		void getNotificationSettings().then((settings) => {
-			if (!settings.adminLogin.successEnabled) return;
-
 			const { success } = settings.adminLogin;
+			if (!success.enabled) return;
 
 			void this.sendTemplated(success, {
 				username,

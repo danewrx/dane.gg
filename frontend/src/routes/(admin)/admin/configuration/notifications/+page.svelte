@@ -2,7 +2,6 @@
 	import { logger } from '$lib/logger';
 	import { adminPageTitle } from '$lib/site/pageTitle';
 	import { onMount } from 'svelte';
-	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
 	import NtfyAppearanceFields from '$lib/admin/components/notifications/NtfyAppearanceFields.svelte';
 	import type { NotificationSettings } from '$lib/admin/types/ntfy';
 	import { toast } from 'svelte-sonner';
@@ -187,13 +186,6 @@
 		<section class="card">
 			<h2 class="section-title">Admin login alerts</h2>
 
-			<div class="form-group toggle-group">
-				<div class="toggle-wrapper">
-					<Toggle bind:checked={settings.adminLogin.successEnabled} />
-					<span class="toggle-label">Notify on successful login</span>
-				</div>
-			</div>
-
 			<div class="form-group">
 				<label for="failed-mode">Failed login alerts</label>
 				<select id="failed-mode" class="form-select" bind:value={settings.adminLogin.failedMode}>
@@ -201,6 +193,10 @@
 					<option value="each">Every failed attempt</option>
 					<option value="off">Off</option>
 				</select>
+				<p class="form-help">
+					Controls when failed-login notifications can fire. Each alert below can still be enabled or
+					disabled individually.
+				</p>
 			</div>
 
 			<h3 class="subsection-title">Appearance</h3>
@@ -233,13 +229,6 @@
 		<section class="card">
 			<h2 class="section-title">Twitter connection alerts</h2>
 
-			<div class="form-group toggle-group">
-				<div class="toggle-wrapper">
-					<Toggle bind:checked={settings.twitter.enabled} />
-					<span class="toggle-label">Notify when Twitter API connection fails or is restored</span>
-				</div>
-			</div>
-
 			<h3 class="subsection-title">Appearance</h3>
 
 			<div class="appearance-stack">
@@ -268,6 +257,8 @@
 			<div class="appearance-block">
 				<NtfyAppearanceFields
 					bind:appearance={settings.test}
+					heading="Test notification"
+					showEnableToggle={false}
 					placeholders={[
 						'time',
 						'username',
@@ -414,17 +405,6 @@
 		color: var(--text-secondary, #a1a1aa);
 		margin: 8px 0 0;
 		line-height: 1.4;
-	}
-
-	.toggle-group .toggle-wrapper {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-	}
-
-	.toggle-label {
-		font-size: 14px;
-		color: var(--text-primary, #fff);
 	}
 
 	.appearance-stack {

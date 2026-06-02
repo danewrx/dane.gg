@@ -4,6 +4,7 @@
  */
 
 export interface NtfyEventAppearance {
+	enabled: boolean;
 	title: string;
 	body: string;
 	priority: number;
@@ -77,6 +78,7 @@ export function mergeNtfyAppearance(
 	if (!input || typeof input !== 'object') return { ...base };
 	const raw = input as Record<string, unknown>;
 	return {
+		enabled: typeof raw.enabled === 'boolean' ? raw.enabled : base.enabled,
 		title:
 			typeof raw.title === 'string' && raw.title.trim()
 				? sanitizeNtfyHeaderValue(raw.title, 200)

@@ -1399,9 +1399,8 @@ export class TwitterApiService {
 	 */
 	private static async sendConnectionFailureNotification(error: string): Promise<boolean> {
 		const settings = await getNotificationSettings();
-		if (!settings.twitter.enabled) return false;
-
 		const { failure } = settings.twitter;
+		if (!failure.enabled) return false;
 		const { message, appearance } = resolveTemplatedAppearance(failure, {
 			error,
 			time: new Date().toISOString()
@@ -1415,9 +1414,8 @@ export class TwitterApiService {
 	 */
 	private static async sendConnectionRestoredNotification(): Promise<boolean> {
 		const settings = await getNotificationSettings();
-		if (!settings.twitter.enabled) return false;
-
 		const { restored } = settings.twitter;
+		if (!restored.enabled) return false;
 		const { message, appearance } = resolveTemplatedAppearance(restored, {
 			time: new Date().toISOString()
 		});

@@ -123,6 +123,7 @@ router.post('/send', requireSession, async (req: Request, res: Response) => {
 		if (appearance && typeof appearance === 'object') {
 			const resolvedAppearance = mergeNtfyAppearance(
 				{
+					enabled: true,
 					title: typeof title === 'string' ? title : 'Notification',
 					body: message,
 					priority: typeof priority === 'number' ? priority : 3,

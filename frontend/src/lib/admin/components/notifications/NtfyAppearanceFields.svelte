@@ -9,9 +9,15 @@
 		appearance: NtfyEventAppearance;
 		heading?: string;
 		placeholders?: string[];
+		showEnableToggle?: boolean;
 	}
 
-	let { appearance = $bindable(), heading = '', placeholders = [] }: Props = $props();
+	let {
+		appearance = $bindable(),
+		heading = '',
+		placeholders = [],
+		showEnableToggle = true
+	}: Props = $props();
 
 	let previewVars = $derived(buildPreviewVars(placeholders));
 
@@ -41,10 +47,20 @@
 </script>
 
 {#if heading}
-	<h4 class="appearance-heading">{heading}</h4>
+	{#if showEnableToggle}
+		<div class="appearance-header">
+			<h4 class="appearance-heading">{heading}</h4>
+			<div class="enable-toggle">
+				<Toggle bind:checked={appearance.enabled} />
+				<span class="toggle-label">{appearance.enabled ? 'Enabled' : 'Disabled'}</span>
+			</div>
+		</div>
+	{:else}
+		<h4 class="appearance-heading standalone">{heading}</h4>
+	{/if}
 {/if}
 
-<div class="appearance-fields">
+<div class="appearance-fields" class:disabled={showEnableToggle && !appearance.enabled}>
 	<label class="body-label">
 		<div class="body-label-row">
 			<span>Message body</span>
@@ -123,11 +139,42 @@
 </div>
 
 <style>
+	.appearance-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		margin-bottom: 12px;
+	}
+
 	.appearance-heading {
-		margin: 0 0 12px;
+		margin: 0;
 		font-size: 13px;
 		font-weight: 600;
 		color: var(--text-secondary, #a1a1aa);
+	}
+
+	.appearance-heading.standalone {
+		margin-bottom: 12px;
+	}
+
+	.enable-toggle {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-shrink: 0;
+	}
+
+	.enable-toggle .toggle-label {
+		font-size: 12px;
+		font-weight: 500;
+		color: var(--text-secondary, #a1a1aa);
+		min-width: 52px;
+	}
+
+	.appearance-fields.disabled {
+		opacity: 0.55;
+		pointer-events: none;
 	}
 
 	.appearance-fields {

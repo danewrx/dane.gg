@@ -1,5 +1,6 @@
 /** Matches backend ntfy publish appearance — https://docs.ntfy.sh/publish/ */
 export interface NtfyEventAppearance {
+	enabled: boolean;
 	title: string;
 	body: string;
 	priority: number;
@@ -13,14 +14,12 @@ export type AdminLoginFailedMode = 'lockout' | 'each' | 'off';
 
 export interface NotificationSettings {
 	adminLogin: {
-		successEnabled: boolean;
 		failedMode: AdminLoginFailedMode;
 		success: NtfyEventAppearance;
 		lockout: NtfyEventAppearance;
 		failed: NtfyEventAppearance;
 	};
 	twitter: {
-		enabled: boolean;
 		failure: NtfyEventAppearance;
 		restored: NtfyEventAppearance;
 	};
