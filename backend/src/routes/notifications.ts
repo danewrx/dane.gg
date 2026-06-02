@@ -30,7 +30,7 @@ router.get('/settings', requireSession, async (_req: Request, res: Response) => 
 			envNote:
 				'Topic, server URL, and auth tokens are set via environment variables on the server (not stored in the database).',
 			settings,
-			defaults: DEFAULT_NOTIFICATION_SETTINGS,
+			defaults: structuredClone(DEFAULT_NOTIFICATION_SETTINGS),
 			timestamp: new Date().toISOString()
 		});
 	} catch (error: unknown) {

@@ -27,7 +27,10 @@
 	let ntfyUrl = $state('');
 	let envNote = $state('');
 	let settings = $state<NotificationSettings | null>(null);
-	let defaults = $state<NotificationSettings | null>(null);
+	let settingsRevision = $state(0);
+
+	let defaults: NotificationSettings | null = null;
+	let hasDefaults = $state(false);
 
 	async function loadSettings() {
 		try {
@@ -48,7 +51,9 @@
 			ntfyUrl = data.ntfyUrl;
 			envNote = data.envNote;
 			settings = structuredClone(data.settings);
-			defaults = data.defaults;
+			defaults = structuredClone(data.defaults);
+			hasDefaults = true;
+			settingsRevision += 1;
 		} catch (err) {
 			logger.error('Error loading notification settings:', err);
 			toast.error(err instanceof Error ? err.message : 'Failed to load settings');
@@ -76,6 +81,7 @@
 
 			const data = await response.json();
 			settings = structuredClone(data.settings);
+			settingsRevision += 1;
 			toast.success('Notification settings saved');
 		} catch (err) {
 			logger.error('Error saving notification settings:', err);
@@ -112,6 +118,7 @@
 	function resetToDefaults() {
 		if (!defaults) return;
 		settings = structuredClone(defaults);
+		settingsRevision += 1;
 		toast.message('Restored default values — click Save to apply');
 	}
 
@@ -128,6 +135,7 @@
 	{#if loading}
 		<p class="loading-text">Loading notification settings…</p>
 	{:else if settings}
+		{#key settingsRevision}
 		<div class="settings-description">
 			<p>
 				Configure ntfy push alerts per event. Customize the message body with placeholders like
@@ -275,7 +283,7 @@
 		</section>
 
 		<div class="form-actions">
-			<button type="button" class="secondary-button" onclick={resetToDefaults} disabled={!defaults}>
+			<button type="button" class="secondary-button" onclick={resetToDefaults} disabled={!hasDefaults}>
 				<RotateCcw size={16} />
 				Reset to defaults
 			</button>
@@ -283,6 +291,7 @@
 				{saving ? 'Saving…' : 'Save settings'}
 			</button>
 		</div>
+		{/key}
 	{:else}
 		<p class="loading-text">Unable to load settings.</p>
 	{/if}
