@@ -1,0 +1,131 @@
+<script lang="ts">
+	import type { NtfyEventAppearance } from '$lib/admin/types/ntfy';
+	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
+	import { Pencil } from 'lucide-svelte';
+
+	interface Props {
+		appearance: NtfyEventAppearance;
+		title: string;
+		description: string;
+		showEnableToggle?: boolean;
+		onedit?: () => void;
+	}
+
+	let {
+		appearance = $bindable(),
+		title,
+		description,
+		showEnableToggle = true,
+		onedit
+	}: Props = $props();
+</script>
+
+<article class="notification-card" class:disabled={showEnableToggle && !appearance.enabled}>
+	<div class="card-body">
+		<h3 class="card-title">{title}</h3>
+		<p class="card-description">{description}</p>
+	</div>
+
+	<div class="card-footer">
+		{#if showEnableToggle}
+			<div class="enable-control">
+				<Toggle bind:checked={appearance.enabled} />
+				<span class="enable-label">{appearance.enabled ? 'Enabled' : 'Disabled'}</span>
+			</div>
+		{/if}
+		<button type="button" class="edit-button" onclick={() => onedit?.()} aria-label="Edit {title}">
+			<Pencil size={15} />
+			<span>Edit</span>
+		</button>
+	</div>
+</article>
+
+<style>
+	.notification-card {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		min-height: 168px;
+		background: var(--bg-tertiary, #3a3a3a);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 8px;
+		padding: 16px;
+		transition:
+			border-color 0.15s ease,
+			opacity 0.15s ease;
+	}
+
+	.notification-card:hover {
+		border-color: rgba(129, 140, 248, 0.45);
+	}
+
+	.notification-card.disabled {
+		opacity: 0.72;
+	}
+
+	.card-body {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.card-title {
+		margin: 0 0 8px;
+		font-size: 15px;
+		font-weight: 600;
+		color: var(--text-primary, #fff);
+		line-height: 1.3;
+	}
+
+	.card-description {
+		margin: 0;
+		font-size: 13px;
+		line-height: 1.45;
+		color: var(--text-secondary, #a1a1aa);
+	}
+
+	.card-footer {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 10px;
+		margin-top: 16px;
+		padding-top: 12px;
+		border-top: 1px solid var(--border-color, #3a3a3a);
+	}
+
+	.enable-control {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-right: auto;
+	}
+
+	.enable-label {
+		font-size: 12px;
+		font-weight: 500;
+		color: var(--text-secondary, #a1a1aa);
+		min-width: 52px;
+	}
+
+	.edit-button {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 7px 12px;
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		background: var(--bg-secondary, #2d2d2d);
+		color: var(--text-primary, #fff);
+		font-size: 13px;
+		font-weight: 500;
+		cursor: pointer;
+		transition:
+			border-color 0.15s ease,
+			background 0.15s ease;
+	}
+
+	.edit-button:hover {
+		border-color: var(--accent-color, #6366f1);
+		background: rgba(99, 102, 241, 0.12);
+	}
+</style>

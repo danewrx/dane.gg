@@ -2,7 +2,8 @@
 	import { logger } from '$lib/logger';
 	import { adminPageTitle } from '$lib/site/pageTitle';
 	import { onMount } from 'svelte';
-	import NtfyAppearanceFields from '$lib/admin/components/notifications/NtfyAppearanceFields.svelte';
+	import NotificationCard from '$lib/admin/components/notifications/NotificationCard.svelte';
+	import NotificationEditModal from '$lib/admin/components/notifications/NotificationEditModal.svelte';
 	import type { NotificationSettings } from '$lib/admin/types/ntfy';
 	import { toast } from 'svelte-sonner';
 	import { CheckCircle2, XCircle, Send, RotateCcw } from 'lucide-svelte';
@@ -30,6 +31,42 @@
 
 	let defaults: NotificationSettings | null = null;
 	let hasDefaults = $state(false);
+
+	let editOpen = $state(false);
+	let editTitle = $state('');
+	let editPlaceholders = $state<string[]>([]);
+	let editShowFailedLoginMode = $state(false);
+	let editingAppearance = $state<NotificationSettings['test'] | null>(null);
+
+	const testPlaceholders = [
+		'time',
+		'username',
+		'ip',
+		'totp',
+		'attemptCount',
+		'maxAttempts',
+		'lockoutMinutes',
+		'error'
+	];
+
+	function openEditor(
+		title: string,
+		appearance: NotificationSettings['test'],
+		placeholders: string[],
+		showFailedLoginMode = false
+	) {
+		editTitle = title;
+		editingAppearance = appearance;
+		editPlaceholders = placeholders;
+		editShowFailedLoginMode = showFailedLoginMode;
+		editOpen = true;
+	}
+
+	function closeEditor() {
+		editOpen = false;
+		editShowFailedLoginMode = false;
+		editingAppearance = null;
+	}
 
 	async function loadSettings() {
 		try {
@@ -135,154 +172,162 @@
 		<p class="loading-text">Loading notification settings…</p>
 	{:else if settings}
 		{#key settingsRevision}
-		<div class="settings-description">
-			<p>
-				Configure ntfy push alerts per event. Customize the message body with placeholders like
-				<code>{'{username}'}</code>, and set title, priority, tags, icon, and click URL.
-			</p>
-		</div>
-
-		<section class="card status-card">
-			<h2 class="section-title">Server connection</h2>
-			<p class="env-note">{envNote}</p>
-			<ul class="status-list">
-				<li>
-					{#if configured}
-						<CheckCircle2 size={16} class="status-ok" />
-					{:else}
-						<XCircle size={16} class="status-bad" />
-					{/if}
-					<span>Topic: <code>{defaultTopic ?? 'not set'}</code></span>
-				</li>
-				<li>
-					<span>Server: <code>{ntfyUrl}</code></span>
-				</li>
-				<li>
-					{#if authConfigured}
-						<CheckCircle2 size={16} class="status-ok" />
-					{:else}
-						<XCircle size={16} class="status-bad" />
-					{/if}
-					<span>Auth token / credentials configured</span>
-				</li>
-			</ul>
-			<p class="form-help">
-				Set <code>NTFY_TOPIC</code>, <code>NTFY_URL</code>, and <code>NTFY_TOKEN</code> in server
-				<code>.env</code>, then restart the backend.
-			</p>
-			<div class="test-row">
-				<button
-					type="button"
-					class="secondary-button"
-					disabled={!configured || sendingTest}
-					onclick={sendTestNotification}
-				>
-					<Send size={16} />
-					{sendingTest ? 'Sending…' : 'Send test notification'}
-				</button>
-			</div>
-		</section>
-
-		<section class="card">
-			<h2 class="section-title">Admin login alerts</h2>
-
-			<div class="form-group">
-				<label for="failed-mode">Failed login alerts</label>
-				<select id="failed-mode" class="form-select" bind:value={settings.adminLogin.failedMode}>
-					<option value="lockout">Only when IP is locked out (default)</option>
-					<option value="each">Every failed attempt</option>
-					<option value="off">Off</option>
-				</select>
-				<p class="form-help">
-					Controls when failed-login notifications can fire. Each alert below can still be enabled or
-					disabled individually.
+			<div class="settings-description">
+				<p>
+					Configure ntfy push alerts per event. Use each card’s toggle to enable or disable alerts,
+					or Edit to customize message, title, tags, and appearance.
 				</p>
 			</div>
 
-			<h3 class="subsection-title">Appearance</h3>
+			<section class="card status-card">
+				<h2 class="section-title">Server connection</h2>
+				<p class="env-note">{envNote}</p>
+				<ul class="status-list">
+					<li>
+						{#if configured}
+							<CheckCircle2 size={16} class="status-ok" />
+						{:else}
+							<XCircle size={16} class="status-bad" />
+						{/if}
+						<span>Topic: <code>{defaultTopic ?? 'not set'}</code></span>
+					</li>
+					<li>
+						<span>Server: <code>{ntfyUrl}</code></span>
+					</li>
+					<li>
+						{#if authConfigured}
+							<CheckCircle2 size={16} class="status-ok" />
+						{:else}
+							<XCircle size={16} class="status-bad" />
+						{/if}
+						<span>Auth token / credentials configured</span>
+					</li>
+				</ul>
+				<p class="form-help">
+					Set <code>NTFY_TOPIC</code>, <code>NTFY_URL</code>, and <code>NTFY_TOKEN</code> in server
+					<code>.env</code>, then restart the backend.
+				</p>
+				<div class="test-row">
+					<button
+						type="button"
+						class="secondary-button"
+						disabled={!configured || sendingTest}
+						onclick={sendTestNotification}
+					>
+						<Send size={16} />
+						{sendingTest ? 'Sending…' : 'Send test notification'}
+					</button>
+				</div>
+			</section>
 
-			<div class="appearance-stack">
-				<div class="appearance-block">
-					<NtfyAppearanceFields
+			<section class="card category-card">
+				<h2 class="section-title">Admin login alerts</h2>
+
+				<div class="notification-grid">
+					<NotificationCard
 						bind:appearance={settings.adminLogin.success}
-						heading="Successful login"
-						placeholders={['username', 'ip', 'totp', 'time']}
+						title="Successful login"
+						description="Sent when an admin user signs in successfully, including IP and 2FA status."
+						onedit={() =>
+							openEditor('Successful login', settings!.adminLogin.success, [
+								'username',
+								'ip',
+								'totp',
+								'time'
+							])}
 					/>
-				</div>
-				<div class="appearance-block">
-					<NtfyAppearanceFields
+					<NotificationCard
 						bind:appearance={settings.adminLogin.lockout}
-						heading="Lockout"
-						placeholders={['ip', 'attemptCount', 'lockoutMinutes', 'username', 'time']}
+						title="Login lockout"
+						description="Sent when an IP is locked out after too many failed admin login attempts."
+						onedit={() =>
+							openEditor('Login lockout', settings!.adminLogin.lockout, [
+								'ip',
+								'attemptCount',
+								'lockoutMinutes',
+								'username',
+								'time'
+							])}
 					/>
-				</div>
-				<div class="appearance-block">
-					<NtfyAppearanceFields
+					<NotificationCard
 						bind:appearance={settings.adminLogin.failed}
-						heading="Each failed attempt"
-						placeholders={['ip', 'attemptCount', 'maxAttempts', 'username', 'time']}
+						title="Failed login attempt"
+						description="Sent on failed logins. Edit to configure alert timing and appearance."
+						onedit={() =>
+							openEditor(
+								'Failed login attempt',
+								settings!.adminLogin.failed,
+								['ip', 'attemptCount', 'maxAttempts', 'username', 'time'],
+								true
+							)}
 					/>
 				</div>
-			</div>
-		</section>
+			</section>
 
-		<section class="card">
-			<h2 class="section-title">Twitter connection alerts</h2>
+			<section class="card category-card">
+				<h2 class="section-title">Twitter connection alerts</h2>
+				<p class="category-help">
+					Notifies you when the Twitter API connection fails or is restored during health checks.
+				</p>
 
-			<h3 class="subsection-title">Appearance</h3>
-
-			<div class="appearance-stack">
-				<div class="appearance-block">
-					<NtfyAppearanceFields
+				<div class="notification-grid">
+					<NotificationCard
 						bind:appearance={settings.twitter.failure}
-						heading="Connection failed"
-						placeholders={['error', 'time']}
+						title="Connection failed"
+						description="Sent when the Twitter API connection drops or returns an error."
+						onedit={() =>
+							openEditor('Connection failed', settings!.twitter.failure, ['error', 'time'])}
 					/>
-				</div>
-				<div class="appearance-block">
-					<NtfyAppearanceFields
+					<NotificationCard
 						bind:appearance={settings.twitter.restored}
-						heading="Connection restored"
-						placeholders={['time']}
+						title="Connection restored"
+						description="Sent when the Twitter API connection recovers after a failure."
+						onedit={() =>
+							openEditor('Connection restored', settings!.twitter.restored, ['time'])}
 					/>
 				</div>
-			</div>
-		</section>
+			</section>
 
-		<section class="card">
-			<h2 class="section-title">Test notification</h2>
-			<p class="form-help">
-				Used by the “Send test notification” button above. Test sends use sample placeholder values.
-			</p>
-			<div class="appearance-block">
-				<NtfyAppearanceFields
-					bind:appearance={settings.test}
-					heading="Test notification"
-					showEnableToggle={false}
-					placeholders={[
-						'time',
-						'username',
-						'ip',
-						'totp',
-						'attemptCount',
-						'maxAttempts',
-						'lockoutMinutes',
-						'error'
-					]}
-				/>
-			</div>
-		</section>
+			<section class="card category-card">
+				<h2 class="section-title">Test notification</h2>
+				<p class="category-help">
+					Template used by the “Send test notification” button. Test sends use sample placeholder
+					values.
+				</p>
 
-		<div class="form-actions">
-			<button type="button" class="secondary-button" onclick={resetToDefaults} disabled={!hasDefaults}>
-				<RotateCcw size={16} />
-				Reset to defaults
-			</button>
-			<button type="button" class="save-button" onclick={saveSettings} disabled={saving}>
-				{saving ? 'Saving…' : 'Save settings'}
-			</button>
-		</div>
+				<div class="notification-grid notification-grid--single">
+					<NotificationCard
+						bind:appearance={settings.test}
+						title="Test notification"
+						description="Manual test push to verify your ntfy topic, server, and appearance settings."
+						showEnableToggle={false}
+						onedit={() => openEditor('Test notification', settings!.test, testPlaceholders)}
+					/>
+				</div>
+			</section>
+
+			<div class="form-actions">
+				<button type="button" class="secondary-button" onclick={resetToDefaults} disabled={!hasDefaults}>
+					<RotateCcw size={16} />
+					Reset to defaults
+				</button>
+				<button type="button" class="save-button" onclick={saveSettings} disabled={saving}>
+					{saving ? 'Saving…' : 'Save settings'}
+				</button>
+			</div>
 		{/key}
+
+		{#if editingAppearance && settings}
+			<NotificationEditModal
+				bind:open={editOpen}
+				title={editTitle}
+				bind:appearance={editingAppearance}
+				placeholders={editPlaceholders}
+				showFailedLoginMode={editShowFailedLoginMode}
+				bind:failedMode={settings.adminLogin.failedMode}
+				onclose={closeEditor}
+			/>
+		{/if}
 	{:else}
 		<p class="loading-text">Unable to load settings.</p>
 	{/if}
@@ -311,10 +356,6 @@
 		line-height: 1.5;
 	}
 
-	.settings-description a {
-		color: var(--accent-color, #818cf8);
-	}
-
 	.card {
 		background: var(--bg-secondary, #2d2d2d);
 		border: 1px solid var(--border-color, #3a3a3a);
@@ -324,15 +365,8 @@
 	}
 
 	.section-title {
-		margin: 0 0 16px;
+		margin: 0;
 		font-size: 16px;
-		font-weight: 600;
-		color: var(--text-primary, #fff);
-	}
-
-	.subsection-title {
-		margin: 20px 0 12px;
-		font-size: 14px;
 		font-weight: 600;
 		color: var(--text-primary, #fff);
 	}
@@ -377,46 +411,23 @@
 		border-radius: 4px;
 	}
 
-	.form-group {
-		margin-bottom: 16px;
-	}
-
-	.form-group label {
-		display: block;
-		font-size: 13px;
-		font-weight: 500;
-		color: var(--text-primary, #fff);
-		margin-bottom: 8px;
-	}
-
-	.form-select {
-		width: 100%;
-		padding: 10px 12px;
-		border: 1px solid var(--border-color, #3a3a3a);
-		border-radius: 6px;
-		font-size: 14px;
-		background: var(--bg-tertiary, #3a3a3a);
-		color: var(--text-primary, #fff);
-		box-sizing: border-box;
-	}
-
-	.form-help {
+	.form-help,
+	.category-help {
 		font-size: 12px;
 		color: var(--text-secondary, #a1a1aa);
 		margin: 8px 0 0;
 		line-height: 1.4;
 	}
 
-	.appearance-stack {
-		display: flex;
-		flex-direction: column;
-		gap: 16px;
+	.notification-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+		gap: 14px;
+		margin-top: 16px;
 	}
 
-	.appearance-block {
-		background: var(--bg-tertiary, #3a3a3a);
-		border-radius: 6px;
-		padding: 14px;
+	.notification-grid--single {
+		grid-template-columns: minmax(260px, 420px);
 	}
 
 	.test-row {
