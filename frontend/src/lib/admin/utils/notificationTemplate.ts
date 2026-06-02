@@ -1,4 +1,4 @@
-const PLACEHOLDER_PATTERN = /\{([a-zA-Z][a-zA-Z0-9_]*)\}/g;
+const PLACEHOLDER_PATTERN = /\{([a-zA-Z]\w*)\}/g;
 
 export type NotificationTemplateVars = Record<string, string | number | undefined | null>;
 
@@ -6,7 +6,7 @@ export function renderNotificationTemplate(
 	template: string,
 	vars: NotificationTemplateVars
 ): string {
-	return template.replace(PLACEHOLDER_PATTERN, (_, key: string) => {
+	return template.replaceAll(PLACEHOLDER_PATTERN, (_, key: string) => {
 		const value = vars[key];
 		if (value === undefined || value === null) return `{${key}}`;
 		return String(value);
