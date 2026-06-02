@@ -10,7 +10,11 @@ import {
 	NTFY_SETTINGS_KEY,
 	validateNotificationSettings
 } from '../services/notificationSettings';
-import { mergeNtfyAppearance, NTFY_APPEARANCE_OPTIONAL_DEFAULTS } from '../services/ntfyPublish';
+import {
+	executeCustomSend,
+	executeTestPresetSend,
+	parseSendNotificationRequest
+} from '../validation/notificationSendPayload';
 
 const router = Router();
 
@@ -71,87 +75,21 @@ router.put('/settings', requireSession, async (req: Request, res: Response) => {
  */
 router.post('/send', requireSession, async (req: Request, res: Response) => {
 	try {
-		const { message, title, priority, tags, topic, useTestPreset, appearance } = req.body;
-
-		if (useTestPreset === true) {
-			if (!NotificationService.isConfigured()) {
-				return res.status(400).json({
-					error: 'NTFY_TOPIC environment variable is not set'
-				});
-			}
-			const success = await NotificationService.sendTestNotification();
-			if (!success) {
-				return res.status(500).json({ error: 'Failed to send test notification' });
-			}
-			return res.json({
-				success: true,
-				message: 'Test notification sent using saved template',
-				topic: process.env.NTFY_TOPIC
-			});
+		const parsed = parseSendNotificationRequest(req.body);
+		if (!parsed.ok) {
+			return res.status(400).json({ error: parsed.error });
 		}
 
-		if (!message || typeof message !== 'string') {
-			return res.status(400).json({
-				error: 'Message is required and must be a string'
-			});
+		const result =
+			parsed.request.kind === 'test'
+				? await executeTestPresetSend()
+				: await executeCustomSend(parsed.request);
+
+		if (result.status === 200) {
+			return res.json(result.body);
 		}
 
-		if (priority !== undefined) {
-			if (typeof priority !== 'number' || priority < 1 || priority > 5) {
-				return res.status(400).json({
-					error: 'Priority must be a number between 1 and 5'
-				});
-			}
-		}
-
-		if (tags !== undefined) {
-			if (!Array.isArray(tags) || !tags.every((tag) => typeof tag === 'string')) {
-				return res.status(400).json({
-					error: 'Tags must be an array of strings'
-				});
-			}
-		}
-
-		const finalTopic = topic || process.env.NTFY_TOPIC;
-		if (!finalTopic) {
-			return res.status(400).json({
-				error: 'No topic provided and NTFY_TOPIC environment variable is not set'
-			});
-		}
-
-		let success: boolean;
-		if (appearance && typeof appearance === 'object') {
-			const resolvedAppearance = mergeNtfyAppearance(
-				{
-					enabled: true,
-					title: typeof title === 'string' ? title : 'Notification',
-					body: message,
-					priority: typeof priority === 'number' ? priority : 3,
-					tags: Array.isArray(tags) ? tags : [],
-					...NTFY_APPEARANCE_OPTIONAL_DEFAULTS
-				},
-				appearance
-			);
-			success = await NotificationService.sendWithAppearance(
-				message,
-				resolvedAppearance,
-				finalTopic
-			);
-		} else {
-			success = await NotificationService.send(message, title, priority || 3, tags, finalTopic);
-		}
-
-		if (success) {
-			res.json({
-				success: true,
-				message: 'Notification sent successfully',
-				topic: finalTopic
-			});
-		} else {
-			res.status(500).json({
-				error: 'Failed to send notification'
-			});
-		}
+		return res.status(result.status).json({ error: result.error });
 	} catch (error: unknown) {
 		logger.error('Error sending notification:', error);
 		res.status(500).json({
