@@ -134,9 +134,9 @@ describe('renderNotificationTemplate', () => {
 	test('replaces known placeholders', () => {
 		const result = renderNotificationTemplate(
 			'User {username} from {ip} at {time}',
-			{ username: 'alice', ip: '10.0.0.1', time: '2026-01-01T00:00:00.000Z' }
+			{ username: 'alice', ip: '192.0.2.1', time: '2026-01-01T00:00:00.000Z' }
 		);
-		expect(result).toBe('User alice from 10.0.0.1 at 2026-01-01T00:00:00.000Z');
+		expect(result).toBe('User alice from 192.0.2.1 at 2026-01-01T00:00:00.000Z');
 	});
 
 	test('leaves unknown placeholders empty', () => {
