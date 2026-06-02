@@ -1,5 +1,5 @@
 import { logger } from '../utils/logger';
-import { getNotificationSettings } from './notificationSettings';
+import { getNotificationSettings, TEST_NOTIFICATION_PRESET } from './notificationSettings';
 import { buildNtfyPublishHeaders, type NtfyEventAppearance } from './ntfyPublish';
 import {
 	resolveTemplatedAppearance,
@@ -201,7 +201,6 @@ export class NotificationService {
 	static async sendTestNotification(): Promise<boolean> {
 		if (!this.isConfigured()) return false;
 
-		const settings = await getNotificationSettings();
-		return this.sendTemplated(settings.test, testNotificationTemplateVars());
+		return this.sendTemplated(TEST_NOTIFICATION_PRESET, testNotificationTemplateVars());
 	}
 }

@@ -72,12 +72,20 @@ const DEFAULT_APPEARANCE = {
 		2,
 		['white_check_mark', 'twitter', 'api']
 	),
-	test: createAppearance(
-		'Test notification',
-		'Test notification from dane.gg admin\nTime: {time}',
-		3,
-		['test', 'admin']
-	)
+	test: {
+		...createAppearance(
+			'Test notification',
+			'Test notification from dane.gg admin\nTime: {time}',
+			3,
+			['test', 'admin']
+		),
+		click: 'https://dane.gg',
+		icon: 'https://dane.gg/favicon/web-app-manifest-512x512.png'
+	}
+};
+
+export const TEST_NOTIFICATION_PRESET: NtfyEventAppearance = {
+	...DEFAULT_APPEARANCE.test
 };
 
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
@@ -91,7 +99,7 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
 		failure: DEFAULT_APPEARANCE.twitterFailure,
 		restored: DEFAULT_APPEARANCE.twitterRestored
 	},
-	test: DEFAULT_APPEARANCE.test
+	test: TEST_NOTIFICATION_PRESET
 };
 
 let cachedSettings: NotificationSettings | null = null;

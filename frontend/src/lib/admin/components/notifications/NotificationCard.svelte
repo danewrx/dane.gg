@@ -4,7 +4,7 @@
 	import { Pencil, Send } from 'lucide-svelte';
 
 	interface Props {
-		appearance: NtfyEventAppearance;
+		appearance?: NtfyEventAppearance;
 		title: string;
 		description: string;
 		showEnableToggle?: boolean;
@@ -15,7 +15,7 @@
 	}
 
 	let {
-		appearance = $bindable(),
+		appearance = $bindable(undefined),
 		title,
 		description,
 		showEnableToggle = true,
@@ -26,14 +26,17 @@
 	}: Props = $props();
 </script>
 
-<article class="notification-card" class:disabled={showEnableToggle && !appearance.enabled}>
+<article
+	class="notification-card"
+	class:disabled={appearance && showEnableToggle && !appearance.enabled}
+>
 	<div class="card-body">
 		<h3 class="card-title">{title}</h3>
 		<p class="card-description">{description}</p>
 	</div>
 
 	<div class="card-footer">
-		{#if showEnableToggle}
+		{#if appearance && showEnableToggle}
 			<div class="enable-control">
 				<Toggle bind:checked={appearance.enabled} />
 				<span class="enable-label">{appearance.enabled ? 'Enabled' : 'Disabled'}</span>
@@ -52,10 +55,12 @@
 					<span>{sending ? 'Sending…' : 'Send test'}</span>
 				</button>
 			{/if}
-			<button type="button" class="edit-button" onclick={() => onedit?.()} aria-label="Edit {title}">
-				<Pencil size={15} />
-				<span>Edit</span>
-			</button>
+			{#if onedit}
+				<button type="button" class="edit-button" onclick={() => onedit()} aria-label="Edit {title}">
+					<Pencil size={15} />
+					<span>Edit</span>
+				</button>
+			{/if}
 		</div>
 	</div>
 </article>

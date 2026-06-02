@@ -36,22 +36,11 @@
 	let editTitle = $state('');
 	let editPlaceholders = $state<string[]>([]);
 	let editShowFailedLoginMode = $state(false);
-	let editingAppearance = $state<NotificationSettings['test'] | null>(null);
-
-	const testPlaceholders = [
-		'time',
-		'username',
-		'ip',
-		'totp',
-		'attemptCount',
-		'maxAttempts',
-		'lockoutMinutes',
-		'error'
-	];
+	let editingAppearance = $state<NotificationSettings['adminLogin']['success'] | null>(null);
 
 	function openEditor(
 		title: string,
-		appearance: NotificationSettings['test'],
+		appearance: NotificationSettings['adminLogin']['success'],
 		placeholders: string[],
 		showFailedLoginMode = false
 	) {
@@ -212,20 +201,18 @@
 			<section class="card category-card test-section">
 				<h2 class="section-title">Test notification</h2>
 				<p class="category-help">
-					Send a test push using the template below. Sample placeholder values are used for the
-					preview message.
+					Send a fixed test push to verify your ntfy connection. Uses the site favicon, links to
+					dane.gg, and sample placeholder values for <code>{'{time}'}</code>.
 				</p>
 
 				<div class="notification-grid notification-grid--single">
 					<NotificationCard
-						bind:appearance={settings.test}
 						title="Test notification"
-						description="Verify your ntfy topic, server connection, and notification appearance."
+						description="Plain-text test message with title, tags, icon, and click URL preconfigured."
 						showEnableToggle={false}
 						onsend={sendTestNotification}
 						sendDisabled={!configured}
 						sending={sendingTest}
-						onedit={() => openEditor('Test notification', settings!.test, testPlaceholders)}
 					/>
 				</div>
 			</section>
