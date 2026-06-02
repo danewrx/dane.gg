@@ -6,7 +6,7 @@
 	import NotificationEditModal from '$lib/admin/components/notifications/NotificationEditModal.svelte';
 	import type { NotificationSettings } from '$lib/admin/types/ntfy';
 	import { toast } from 'svelte-sonner';
-	import { CheckCircle2, XCircle, Send, RotateCcw } from 'lucide-svelte';
+	import { CheckCircle2, XCircle, RotateCcw } from 'lucide-svelte';
 
 	interface SettingsResponse {
 		configured: boolean;
@@ -207,16 +207,26 @@
 					Set <code>NTFY_TOPIC</code>, <code>NTFY_URL</code>, and <code>NTFY_TOKEN</code> in server
 					<code>.env</code>, then restart the backend.
 				</p>
-				<div class="test-row">
-					<button
-						type="button"
-						class="secondary-button"
-						disabled={!configured || sendingTest}
-						onclick={sendTestNotification}
-					>
-						<Send size={16} />
-						{sendingTest ? 'Sending…' : 'Send test notification'}
-					</button>
+			</section>
+
+			<section class="card category-card test-section">
+				<h2 class="section-title">Test notification</h2>
+				<p class="category-help">
+					Send a test push using the template below. Sample placeholder values are used for the
+					preview message.
+				</p>
+
+				<div class="notification-grid notification-grid--single">
+					<NotificationCard
+						bind:appearance={settings.test}
+						title="Test notification"
+						description="Verify your ntfy topic, server connection, and notification appearance."
+						showEnableToggle={false}
+						onsend={sendTestNotification}
+						sendDisabled={!configured}
+						sending={sendingTest}
+						onedit={() => openEditor('Test notification', settings!.test, testPlaceholders)}
+					/>
 				</div>
 			</section>
 
@@ -284,24 +294,6 @@
 						description="Sent when the Twitter API connection recovers after a failure."
 						onedit={() =>
 							openEditor('Connection restored', settings!.twitter.restored, ['time'])}
-					/>
-				</div>
-			</section>
-
-			<section class="card category-card">
-				<h2 class="section-title">Test notification</h2>
-				<p class="category-help">
-					Template used by the “Send test notification” button. Test sends use sample placeholder
-					values.
-				</p>
-
-				<div class="notification-grid notification-grid--single">
-					<NotificationCard
-						bind:appearance={settings.test}
-						title="Test notification"
-						description="Manual test push to verify your ntfy topic, server, and appearance settings."
-						showEnableToggle={false}
-						onedit={() => openEditor('Test notification', settings!.test, testPlaceholders)}
 					/>
 				</div>
 			</section>
@@ -427,11 +419,7 @@
 	}
 
 	.notification-grid--single {
-		grid-template-columns: minmax(260px, 420px);
-	}
-
-	.test-row {
-		margin-top: 12px;
+		grid-template-columns: minmax(260px, 480px);
 	}
 
 	.form-actions {

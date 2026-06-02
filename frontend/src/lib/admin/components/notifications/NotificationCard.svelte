@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { NtfyEventAppearance } from '$lib/admin/types/ntfy';
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
-	import { Pencil } from 'lucide-svelte';
+	import { Pencil, Send } from 'lucide-svelte';
 
 	interface Props {
 		appearance: NtfyEventAppearance;
@@ -9,6 +9,9 @@
 		description: string;
 		showEnableToggle?: boolean;
 		onedit?: () => void;
+		onsend?: () => void;
+		sendDisabled?: boolean;
+		sending?: boolean;
 	}
 
 	let {
@@ -16,7 +19,10 @@
 		title,
 		description,
 		showEnableToggle = true,
-		onedit
+		onedit,
+		onsend,
+		sendDisabled = false,
+		sending = false
 	}: Props = $props();
 </script>
 
@@ -33,10 +39,24 @@
 				<span class="enable-label">{appearance.enabled ? 'Enabled' : 'Disabled'}</span>
 			</div>
 		{/if}
-		<button type="button" class="edit-button" onclick={() => onedit?.()} aria-label="Edit {title}">
-			<Pencil size={15} />
-			<span>Edit</span>
-		</button>
+
+		<div class="card-actions">
+			{#if onsend}
+				<button
+					type="button"
+					class="send-button"
+					disabled={sendDisabled || sending}
+					onclick={() => onsend()}
+				>
+					<Send size={15} />
+					<span>{sending ? 'Sending…' : 'Send test'}</span>
+				</button>
+			{/if}
+			<button type="button" class="edit-button" onclick={() => onedit?.()} aria-label="Edit {title}">
+				<Pencil size={15} />
+				<span>Edit</span>
+			</button>
+		</div>
 	</div>
 </article>
 
@@ -85,12 +105,20 @@
 
 	.card-footer {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		justify-content: flex-end;
 		gap: 10px;
 		margin-top: 16px;
 		padding-top: 12px;
 		border-top: 1px solid var(--border-color, #3a3a3a);
+	}
+
+	.card-actions {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-left: auto;
 	}
 
 	.enable-control {
@@ -124,7 +152,32 @@
 			background 0.15s ease;
 	}
 
-	.edit-button:hover {
+	.send-button {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 7px 12px;
+		border: none;
+		border-radius: 6px;
+		background: var(--accent-bg, #6366f1);
+		color: var(--accent-fg, #fff);
+		font-size: 13px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: filter 0.15s ease;
+	}
+
+	.send-button:hover:not(:disabled) {
+		filter: brightness(1.06);
+	}
+
+	.send-button:disabled,
+	.edit-button:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+
+	.edit-button:hover:not(:disabled) {
 		border-color: var(--accent-color, #6366f1);
 		background: rgba(99, 102, 241, 0.12);
 	}
