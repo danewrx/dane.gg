@@ -22,7 +22,7 @@ export function renderNotificationTemplate(
 	template: string,
 	vars: NotificationTemplateVars
 ): string {
-	return template.replace(PLACEHOLDER_PATTERN, (_, key: string) => {
+	return template.replaceAll(PLACEHOLDER_PATTERN, (_, key: string) => {
 		const value = vars[key];
 		if (value === undefined || value === null) return '';
 		return String(value);
