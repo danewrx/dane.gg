@@ -2,6 +2,7 @@
 	import type { NtfyEventAppearance } from '$lib/admin/types/ntfy';
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
 	import TemplateTextarea from '$lib/admin/components/notifications/TemplateTextarea.svelte';
+	import TagsInput from '$lib/admin/components/notifications/TagsInput.svelte';
 	import { buildPreviewVars } from '$lib/admin/utils/notificationTemplate';
 	import { toast } from 'svelte-sonner';
 
@@ -20,20 +21,6 @@
 	}: Props = $props();
 
 	let previewVars = $derived(buildPreviewVars(placeholders));
-
-	let tagsInput = $state('');
-
-	$effect(() => {
-		tagsInput = appearance.tags.join(', ');
-	});
-
-	function onTagsInput(value: string) {
-		tagsInput = value;
-		appearance.tags = value
-			.split(/[,\s]+/)
-			.map((t) => t.trim().toLowerCase())
-			.filter(Boolean);
-	}
 
 	async function copyPlaceholder(key: string) {
 		const token = `{${key}}`;
@@ -103,16 +90,11 @@
 	</div>
 
 	<label>
-		Tags (comma-separated)
-		<input
-			class="form-input"
-			value={tagsInput}
-			oninput={(e) => onTagsInput((e.currentTarget as HTMLInputElement).value)}
-			placeholder="warning, lock, skull"
-		/>
+		Tags
+		<TagsInput bind:tags={appearance.tags} placeholder="warning, lock, skull" />
 	</label>
-	<p class="field-help">
-		Tags pick emoji/icons in the ntfy app — see
+	<p class="field-help tags-help">
+		Press <kbd>Enter</kbd> or <kbd>,</kbd> to add a tag. Tags pick emoji/icons in the ntfy app — see
 		<a href="https://docs.ntfy.sh/emojis/" target="_blank" rel="noopener noreferrer">ntfy emojis</a>.
 	</p>
 
@@ -294,5 +276,16 @@
 
 	.field-help a {
 		color: var(--accent-color, #818cf8);
+	}
+
+	.tags-help kbd {
+		display: inline-block;
+		padding: 1px 5px;
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 4px;
+		background: var(--bg-secondary, #2d2d2d);
+		font-size: 11px;
+		font-family: inherit;
+		color: var(--text-secondary, #a1a1aa);
 	}
 </style>
