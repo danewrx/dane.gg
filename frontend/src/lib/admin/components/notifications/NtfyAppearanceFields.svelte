@@ -2,6 +2,7 @@
 	import type { NtfyEventAppearance } from '$lib/admin/types/ntfy';
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
 	import TemplateTextarea from '$lib/admin/components/notifications/TemplateTextarea.svelte';
+	import { buildPreviewVars } from '$lib/admin/utils/notificationTemplate';
 	import { toast } from 'svelte-sonner';
 
 	interface Props {
@@ -11,6 +12,8 @@
 	}
 
 	let { appearance = $bindable(), heading = '', placeholders = [] }: Props = $props();
+
+	let previewVars = $derived(buildPreviewVars(placeholders));
 
 	let tagsInput = $state('');
 
@@ -42,9 +45,20 @@
 {/if}
 
 <div class="appearance-fields">
-	<label>
-		Message body
-		<TemplateTextarea bind:value={appearance.body} rows={4} />
+	<label class="body-label">
+		<div class="body-label-row">
+			<span>Message body</span>
+			<div class="markdown-toggle">
+				<Toggle bind:checked={appearance.markdown} />
+				<span class="toggle-label">Markdown</span>
+			</div>
+		</div>
+		<TemplateTextarea
+			bind:value={appearance.body}
+			rows={4}
+			markdown={appearance.markdown}
+			{previewVars}
+		/>
 	</label>
 
 	{#if placeholders.length > 0}
@@ -85,11 +99,6 @@
 		Tags pick emoji/icons in the ntfy app — see
 		<a href="https://docs.ntfy.sh/emojis/" target="_blank" rel="noopener noreferrer">ntfy emojis</a>.
 	</p>
-
-	<div class="field-row toggle-row">
-		<Toggle bind:checked={appearance.markdown} />
-		<span class="toggle-label">Markdown body</span>
-	</div>
 
 	<div class="field-row">
 		<label>
@@ -133,15 +142,23 @@
 		gap: 12px;
 	}
 
-	.toggle-row {
+	.body-label-row {
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
 		gap: 12px;
 	}
 
-	.toggle-label {
-		font-size: 14px;
-		color: var(--text-primary, #fff);
+	.markdown-toggle {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.body-label-row .toggle-label {
+		font-size: 13px;
+		font-weight: 500;
+		color: var(--text-secondary, #a1a1aa);
 	}
 
 	label {
