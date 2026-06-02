@@ -4,7 +4,7 @@
 	import { Bold, Italic, Code, Link, List, Eye, EyeOff } from 'lucide-svelte';
 	import { renderNotificationTemplate } from '$lib/admin/utils/notificationTemplate';
 
-	const PLACEHOLDER_PATTERN = /\{([a-zA-Z][a-zA-Z0-9_]*)\}/g;
+	const PLACEHOLDER_PATTERN = /\{([a-zA-Z]\w*)\}/g;
 
 	interface Props {
 		value: string;
@@ -45,7 +45,7 @@
 
 	function highlightTemplate(text: string): string {
 		const escaped = escapeHtml(text);
-		const highlighted = escaped.replace(
+		const highlighted = escaped.replaceAll(
 			PLACEHOLDER_PATTERN,
 			(match) => `<code class="template-var">${match}</code>`
 		);
