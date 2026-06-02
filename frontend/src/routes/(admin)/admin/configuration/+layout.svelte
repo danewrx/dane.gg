@@ -18,7 +18,8 @@
 		Award,
 		User,
 		Mail,
-		Palette
+		Palette,
+		Bell
 	} from 'lucide-svelte';
 
 	let { children } = $props();
@@ -70,6 +71,18 @@
 			borderColor: 'rgba(34, 197, 94, 0.2)',
 			iconBgColor: '#22c55e', // Green
 			path: '/admin/configuration/banner',
+			section: 'general'
+		},
+		{
+			id: 'notifications',
+			title: 'Push Notifications',
+			description: 'Configure ntfy alerts and appearance',
+			icon: Bell,
+			color: 'from-teal-500 to-cyan-500',
+			bgColor: 'rgba(20, 184, 166, 0.1)',
+			borderColor: 'rgba(20, 184, 166, 0.2)',
+			iconBgColor: '#14b8a6',
+			path: '/admin/configuration/notifications',
 			section: 'general'
 		},
 		{
@@ -258,6 +271,8 @@
 						<Link size={18} />
 					{:else if selectedCategory.icon === MessageSquare}
 						<MessageSquare size={18} />
+					{:else if selectedCategory.icon === Bell}
+						<Bell size={18} />
 					{:else if selectedCategory.icon === Server}
 						<Server size={18} />
 					{:else if selectedCategory.icon === Twitter}
