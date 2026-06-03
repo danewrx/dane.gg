@@ -1,36 +1,32 @@
 <script lang="ts">
-	import { logger } from '$lib/logger';
 	import { publicPageTitle } from '$lib/site/pageTitle';
 
-	import { onMount, onDestroy } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { Calendar, Rss } from 'lucide-svelte';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 	import RainbowText from '$lib/site/components/RainbowText.svelte';
+	import type { PageData } from './$types';
 
-	interface BlogPost {
-		id: string;
-		title: string;
-		slug: string;
-		content: string;
-		thumbnail: string | null;
-		publishedAt: string;
-		tags: { id: string; name: string }[];
-	}
+	let { data }: { data: PageData } = $props();
 
 	const POSTS_PER_BATCH = 8;
 
-	let allPosts = $state<BlogPost[]>([]);
-	let visiblePosts = $state<BlogPost[]>([]);
-	let loading = $state(true);
+	let allPosts = $state(data.posts);
+	let visiblePosts = $state(data.posts.slice(0, POSTS_PER_BATCH));
+	let loading = $state(false);
 	let loadingMore = $state(false);
-	let error = $state('');
-	let hasMore = $state(true);
+	let error = $state(data.loadError === 'server' ? 'Failed to load blog posts' : '');
+	let hasMore = $state(data.posts.length > POSTS_PER_BATCH);
 	let loadMoreTrigger = $state<HTMLDivElement | null>(null);
 	let observer: IntersectionObserver | null = null;
 
-	onMount(async () => {
-		await loadAllPosts();
+	$effect(() => {
+		allPosts = data.posts;
+		visiblePosts = data.posts.slice(0, POSTS_PER_BATCH);
+		hasMore = data.posts.length > POSTS_PER_BATCH;
+		loading = false;
+		error = data.loadError === 'server' ? 'Failed to load blog posts' : '';
 	});
 
 	onDestroy(() => {
@@ -38,30 +34,6 @@
 			observer.disconnect();
 		}
 	});
-
-	async function loadAllPosts() {
-		try {
-			loading = true;
-			error = '';
-			const response = await fetch('/api/blog');
-
-			if (!response.ok) {
-				throw new Error('Failed to load blog posts');
-			}
-
-			const result = await response.json();
-			allPosts = result.data || [];
-
-			// Load initial batch
-			visiblePosts = allPosts.slice(0, POSTS_PER_BATCH);
-			hasMore = visiblePosts.length < allPosts.length;
-		} catch (err) {
-			logger.error('Error loading blog posts:', err);
-			error = 'Failed to load blog posts';
-		} finally {
-			loading = false;
-		}
-	}
 
 	function loadMorePosts() {
 		if (loadingMore || !hasMore) return;
@@ -96,7 +68,7 @@
 				}
 			},
 			{
-				rootMargin: '200px' // Start loading 200px before reaching trigger
+				rootMargin: '200px'
 			}
 		);
 
@@ -124,11 +96,9 @@
 
 	function getThumbnailUrl(path: string | null): string {
 		if (!path) return '';
-		// If it's external URL, just return it
 		if (path.startsWith('http://') || path.startsWith('https://')) {
 			return path;
 		}
-		// If starts with /uploads/, serve through the API
 		if (path.startsWith('/uploads/')) {
 			const filename = path.replace('/uploads/', '');
 			return `/api/upload/file/${filename}`;
@@ -350,8 +320,6 @@
 		padding-top: 12px;
 		border-top: 1px solid var(--theme-border, var(--border-color, #4a4a4a));
 	}
-
-	/* .tag colors — global rules in app.css (--theme-code-* + data-theme-code-tone) */
 
 	.read-more {
 		margin-top: auto;
