@@ -40,6 +40,13 @@ function createAuthStore() {
 			}));
 		},
 
+		patchUser: (partial: Partial<User>) => {
+			update((state) => {
+				if (!state.user) return state;
+				return { ...state, user: { ...state.user, ...partial } };
+			});
+		},
+
 		// Set loading state
 		setLoading: (isLoading: boolean) => {
 			update((state) => ({ ...state, isLoading }));

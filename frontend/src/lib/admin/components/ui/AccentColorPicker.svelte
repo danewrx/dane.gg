@@ -37,9 +37,12 @@
 	let customColor = currentColor;
 	let showCustomInput = false;
 
+	$: if (!showCustomInput) {
+		customColor = currentColor;
+	}
+
 	// Handle preset color selection
 	function selectPresetColor(color: string) {
-		currentColor = color;
 		customColor = color;
 		showCustomInput = false;
 		dispatch('colorChange', { color });
@@ -50,7 +53,6 @@
 		// Validate hex color format
 		const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
 		if (hexColorRegex.test(customColor)) {
-			currentColor = customColor;
 			dispatch('colorChange', { color: customColor });
 		}
 	}

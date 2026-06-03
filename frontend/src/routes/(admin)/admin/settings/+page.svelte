@@ -26,6 +26,7 @@
 	import { user } from '$lib/admin/stores/auth';
 	import { toast } from 'svelte-sonner';
 	import { onMount } from 'svelte';
+	import { afterNavigate } from '$app/navigation';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
 	interface ApiKey {
@@ -82,27 +83,30 @@
 		addForm.permissions = value;
 	}
 
-	// Initialize theme from db (for authenticated users) or localStorage
-	onMount(async () => {
+	async function loadAppearanceSettings() {
 		if ($user) {
-			// Load from db if user is authenticated
 			try {
-				const dbTheme = await settingsService.getThemePreference();
+				const [dbTheme, dbAccentColor] = await Promise.all([
+					settingsService.getThemePreference(),
+					settingsService.getAccentColor()
+				]);
 				currentTheme = dbTheme;
 				setMode(dbTheme as 'light' | 'dark' | 'system');
-
-				// Load accent color from user data or API
-				const dbAccentColor = $user.accentColor || (await settingsService.getAccentColor());
 				currentAccentColor = dbAccentColor;
 			} catch (error) {
 				logger.error('Failed to load settings from database:', error);
 				loadFromLocalStorage();
+				currentAccentColor = accentColorService.getCurrentColor();
 			}
 		} else {
-			// Fallback for non-authenticated users
 			loadFromLocalStorage();
+			currentAccentColor = accentColorService.getCurrentColor();
 		}
+	}
 
+	// Initialize theme from db (for authenticated users) or localStorage
+	onMount(async () => {
+		await loadAppearanceSettings();
 		isInitialized = true;
 
 		await loadApiKeys();
@@ -112,6 +116,12 @@
 				description: 'Your preferences are ready to customize'
 			});
 		}, 500);
+	});
+
+	afterNavigate(({ to }) => {
+		if (to?.url.pathname === '/admin/settings') {
+			void loadAppearanceSettings();
+		}
 	});
 
 	async function loadApiKeys() {
