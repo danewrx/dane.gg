@@ -6,7 +6,7 @@ import {
 	normalizeHex
 } from '$lib/admin/theme/color';
 import { settingsService } from './settings';
-import { user } from '$lib/admin/stores/auth';
+import { auth, user } from '$lib/admin/stores/auth';
 import { browser } from '$app/environment';
 import { get } from 'svelte/store';
 class AccentColorService {
@@ -157,6 +157,13 @@ class AccentColorService {
 
 		// Save to database if user is authenticated
 		await this.saveAccentColor(color);
+
+		const currentUser = get(user);
+		if (currentUser) {
+			const accentColor = this.currentColor;
+			auth.patchUser({ accentColor });
+			auth.persist({ ...currentUser, accentColor });
+		}
 	}
 
 	/**

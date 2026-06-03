@@ -109,26 +109,10 @@
 	}
 
 	function statusClass(code: number): string {
-		if (code < 300) return 'status-2xx';
-		if (code < 400) return 'status-3xx';
-		if (code < 500) return 'status-4xx';
-		return 'status-5xx';
-	}
-
-	function methodClass(m: string): string {
-		switch (m.toUpperCase()) {
-			case 'GET':
-				return 'method-get';
-			case 'POST':
-				return 'method-post';
-			case 'PUT':
-			case 'PATCH':
-				return 'method-put';
-			case 'DELETE':
-				return 'method-delete';
-			default:
-				return 'method-other';
-		}
+		if (code < 300) return 'badge-status badge-status--success';
+		if (code < 400) return 'badge-status badge-status--warn';
+		if (code < 500) return 'badge-status badge-status--error';
+		return 'badge-status badge-status--error-strong';
 	}
 
 	function truncate(s: string | null | undefined, n: number): string {
@@ -237,7 +221,7 @@
 							title="Click to expand"
 						>
 							<td class="cell-time">{fmtTime(row.timestamp)}</td>
-							<td><span class="badge {methodClass(row.method)}">{row.method}</span></td>
+							<td><span class="badge badge-method">{row.method}</span></td>
 							<td class="cell-path" title={row.path + (row.query ? '?' + row.query : '')}>
 								{truncate(row.path, 42)}
 							</td>
@@ -345,6 +329,44 @@
 		border-radius: 12px;
 		overflow: hidden;
 		margin-top: 32px;
+
+		--req-badge-method-bg: var(
+			--accent-muted-bg,
+			color-mix(in srgb, var(--accent-color, #6366f1) 14%, var(--bg-tertiary, #3a3a3a))
+		);
+		--req-badge-method-fg: var(
+			--accent-muted-fg,
+			var(--accent-on-surface, var(--accent-color, #6366f1))
+		);
+		--req-badge-method-border: color-mix(
+			in srgb,
+			var(--accent-color, #6366f1) 28%,
+			var(--border-color, #3a3a3a)
+		);
+
+		--req-badge-success-bg: color-mix(in srgb, #22c55e 20%, var(--bg-tertiary, #3a3a3a));
+		--req-badge-success-fg: #bbf7d0;
+		--req-badge-success-border: color-mix(in srgb, #22c55e 38%, var(--border-color, #3a3a3a));
+
+		--req-badge-warn-bg: color-mix(in srgb, #f59e0b 20%, var(--bg-tertiary, #3a3a3a));
+		--req-badge-warn-fg: #fde68a;
+		--req-badge-warn-border: color-mix(in srgb, #f59e0b 38%, var(--border-color, #3a3a3a));
+
+		--req-badge-error-bg: color-mix(in srgb, #ef4444 22%, var(--bg-tertiary, #3a3a3a));
+		--req-badge-error-fg: #fecaca;
+		--req-badge-error-border: color-mix(in srgb, #ef4444 42%, var(--border-color, #3a3a3a));
+
+		--req-badge-error-strong-bg: color-mix(in srgb, #ef4444 32%, var(--bg-tertiary, #3a3a3a));
+		--req-badge-error-strong-fg: #fee2e2;
+		--req-badge-error-strong-border: color-mix(in srgb, #ef4444 50%, var(--border-color, #3a3a3a));
+
+		--req-badge-neutral-bg: color-mix(
+			in srgb,
+			var(--text-secondary, #a1a1aa) 14%,
+			var(--bg-tertiary, #3a3a3a)
+		);
+		--req-badge-neutral-fg: var(--text-secondary, #a1a1aa);
+		--req-badge-neutral-border: var(--border-color, #3a3a3a);
 	}
 
 	.req-table-header {
@@ -534,44 +556,37 @@
 		font-weight: 700;
 		letter-spacing: 0.3px;
 		line-height: 1.6;
+		border: 1px solid transparent;
 	}
 
-	.method-get {
-		background: rgba(34, 197, 94, 0.15);
-		color: #4ade80;
-	}
-	.method-post {
-		background: rgba(59, 130, 246, 0.15);
-		color: #60a5fa;
-	}
-	.method-put {
-		background: rgba(245, 158, 11, 0.15);
-		color: #fbbf24;
-	}
-	.method-delete {
-		background: rgba(239, 68, 68, 0.15);
-		color: #f87171;
-	}
-	.method-other {
-		background: rgba(161, 161, 170, 0.15);
-		color: #a1a1aa;
+	.badge-method {
+		background: var(--req-badge-method-bg);
+		color: var(--req-badge-method-fg);
+		border-color: var(--req-badge-method-border);
 	}
 
-	.status-2xx {
-		background: rgba(34, 197, 94, 0.15);
-		color: #4ade80;
+	.badge-status--success {
+		background: var(--req-badge-success-bg);
+		color: var(--req-badge-success-fg);
+		border-color: var(--req-badge-success-border);
 	}
-	.status-3xx {
-		background: rgba(245, 158, 11, 0.15);
-		color: #fbbf24;
+
+	.badge-status--warn {
+		background: var(--req-badge-warn-bg);
+		color: var(--req-badge-warn-fg);
+		border-color: var(--req-badge-warn-border);
 	}
-	.status-4xx {
-		background: rgba(239, 68, 68, 0.15);
-		color: #f87171;
+
+	.badge-status--error {
+		background: var(--req-badge-error-bg);
+		color: var(--req-badge-error-fg);
+		border-color: var(--req-badge-error-border);
 	}
-	.status-5xx {
-		background: rgba(239, 68, 68, 0.25);
-		color: #fca5a5;
+
+	.badge-status--error-strong {
+		background: var(--req-badge-error-strong-bg);
+		color: var(--req-badge-error-strong-fg);
+		border-color: var(--req-badge-error-strong-border);
 	}
 
 	.vpn-badge {
@@ -583,18 +598,25 @@
 		font-size: 11px;
 		font-weight: 600;
 		white-space: nowrap;
+		border: 1px solid transparent;
+	}
+
+	.vpn-badge :global(svg) {
+		stroke: currentColor;
+		fill: none;
+		flex-shrink: 0;
 	}
 
 	.vpn-badge--yes {
-		background: rgba(99, 102, 241, 0.2);
-		color: #818cf8;
-		border: 1px solid rgba(99, 102, 241, 0.3);
+		background: var(--req-badge-success-bg);
+		color: var(--req-badge-success-fg);
+		border-color: var(--req-badge-success-border);
 	}
 
 	.vpn-badge--no {
-		background: rgba(161, 161, 170, 0.1);
-		color: #71717a;
-		border: 1px solid rgba(161, 161, 170, 0.15);
+		background: var(--req-badge-neutral-bg);
+		color: var(--req-badge-neutral-fg);
+		border-color: var(--req-badge-neutral-border);
 	}
 
 	/* ── Cell helpers ───────────────────────────────────────────────────────── */
@@ -720,6 +742,26 @@
 	:global(html:not(.dark)) .req-table-wrap {
 		background: #ffffff;
 		border-color: #e5e7eb;
+
+		--req-badge-success-bg: color-mix(in srgb, #16a34a 12%, #f3f4f6);
+		--req-badge-success-fg: #166534;
+		--req-badge-success-border: color-mix(in srgb, #16a34a 28%, #e5e7eb);
+
+		--req-badge-warn-bg: color-mix(in srgb, #d97706 12%, #f3f4f6);
+		--req-badge-warn-fg: #92400e;
+		--req-badge-warn-border: color-mix(in srgb, #d97706 28%, #e5e7eb);
+
+		--req-badge-error-bg: color-mix(in srgb, #dc2626 12%, #f3f4f6);
+		--req-badge-error-fg: #991b1b;
+		--req-badge-error-border: color-mix(in srgb, #dc2626 28%, #e5e7eb);
+
+		--req-badge-error-strong-bg: color-mix(in srgb, #dc2626 18%, #f3f4f6);
+		--req-badge-error-strong-fg: #7f1d1d;
+		--req-badge-error-strong-border: color-mix(in srgb, #dc2626 34%, #e5e7eb);
+
+		--req-badge-neutral-bg: #f3f4f6;
+		--req-badge-neutral-fg: #6b7280;
+		--req-badge-neutral-border: #e5e7eb;
 	}
 
 	:global(html:not(.dark)) .req-table th {
@@ -751,12 +793,6 @@
 	:global(html:not(.dark)) .req-refresh {
 		border-color: #e5e7eb;
 		color: #6b7280;
-	}
-
-	:global(html:not(.dark)) .vpn-badge--no {
-		background: rgba(0, 0, 0, 0.04);
-		color: #9ca3af;
-		border-color: rgba(0, 0, 0, 0.08);
 	}
 
 	:global(html:not(.dark)) .cell-time,

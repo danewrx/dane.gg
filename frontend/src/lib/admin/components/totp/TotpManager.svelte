@@ -530,16 +530,26 @@
 		align-items: center;
 		justify-content: center;
 		transition: all 0.3s ease;
+		background: var(--bg-tertiary, #3a3a3a);
+		border: 1px solid var(--border-color, #3a3a3a);
+		color: var(--text-secondary, #a1a1aa);
+	}
+
+	.header-icon :global(svg) {
+		stroke: currentColor;
+		fill: none;
 	}
 
 	.header-icon.enabled {
-		background: rgba(34, 197, 94, 0.1);
+		background: rgba(34, 197, 94, 0.12);
+		border-color: rgba(34, 197, 94, 0.35);
 		color: #22c55e;
 	}
 
 	.header-icon.disabled {
-		background: var(--accent-muted-bg, var(--accent-color-light, rgba(59, 130, 246, 0.1)));
-		color: var(--accent-muted-fg, var(--accent-on-surface, #3b82f6));
+		background: var(--bg-tertiary, #3a3a3a);
+		border-color: var(--border-color, #3a3a3a);
+		color: var(--text-secondary, #a1a1aa);
 	}
 
 	.header-content h2 {
@@ -605,23 +615,32 @@
 	}
 
 	.status-icon {
-		background: var(--bg-tertiary);
+		background: var(--bg-tertiary, #3a3a3a);
+		border: 1px solid var(--border-color, #3a3a3a);
 		padding: 0.75rem;
 		border-radius: 10px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		flex-shrink: 0;
+		color: var(--text-secondary, #a1a1aa);
+	}
+
+	.status-icon :global(svg) {
+		stroke: currentColor;
+		fill: none;
 	}
 
 	.status-card.enabled .status-icon {
-		background: rgba(34, 197, 94, 0.1);
+		background: rgba(34, 197, 94, 0.12);
+		border-color: rgba(34, 197, 94, 0.35);
 		color: #22c55e;
 	}
 
 	.status-card.disabled .status-icon {
-		background: var(--accent-muted-bg, var(--accent-color-light, rgba(59, 130, 246, 0.1)));
-		color: var(--accent-muted-fg, var(--accent-on-surface, #3b82f6));
+		background: var(--bg-tertiary, #3a3a3a);
+		border-color: var(--border-color, #3a3a3a);
+		color: var(--text-secondary, #a1a1aa);
 	}
 
 	.status-info h3 {
@@ -876,13 +895,14 @@
 	}
 
 	.modal-button.cancel {
-		background: rgba(255, 255, 255, 0.1);
-		color: rgba(255, 255, 255, 0.8);
-		border: 1px solid rgba(255, 255, 255, 0.2);
+		background: var(--bg-tertiary, #3a3a3a);
+		color: var(--text-secondary, #a1a1aa);
+		border: 1px solid var(--border-color, #3a3a3a);
 	}
 
 	.modal-button.cancel:hover:not(:disabled) {
-		opacity: 0.9;
+		background: var(--bg-hover, #404040);
+		color: var(--text-primary, #ffffff);
 	}
 
 	.modal-button.primary {
