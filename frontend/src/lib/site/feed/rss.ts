@@ -42,10 +42,9 @@ async function buildRssItem(post: RssBlogPost, origin: string, authorName: strin
 		.join('\n      ');
 
 	const thumbnailUrl = resolvePublicAssetUrl(post.thumbnail, origin);
-	const media =
-		thumbnailUrl !== ''
-			? `<media:content url="${escapeXml(thumbnailUrl)}" medium="image" />`
-			: '';
+	const media = thumbnailUrl
+		? `<media:content url="${escapeXml(thumbnailUrl)}" medium="image" />`
+		: '';
 
 	return `<item>
       <title>${escapeXml(post.title)}</title>
