@@ -40,7 +40,7 @@ export function buildStaticSitemapUrls(origin: string): SitemapUrl[] {
 	return STATIC_SITEMAP_PATHS.map((path) => ({
 		loc: path === '/' ? `${origin}/` : `${origin}${path}`,
 		changefreq: path === '/blog' ? 'daily' : 'monthly',
-		priority: path === '/' ? 1.0 : 0.8
+		priority: path === '/' ? 1 : 0.8
 	}));
 }
 
