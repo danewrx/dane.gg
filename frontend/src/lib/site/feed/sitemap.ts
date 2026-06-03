@@ -21,7 +21,7 @@ function renderUrlEntry(entry: SitemapUrl): string {
 		? `\n    <changefreq>${entry.changefreq}</changefreq>`
 		: '';
 	const priority =
-		entry.priority !== undefined ? `\n    <priority>${entry.priority.toFixed(1)}</priority>` : '';
+		entry.priority === undefined ? '' : `\n    <priority>${entry.priority.toFixed(1)}</priority>`;
 
 	return `  <url>
     <loc>${escapeXml(entry.loc)}</loc>${lastmod}${changefreq}${priority}
