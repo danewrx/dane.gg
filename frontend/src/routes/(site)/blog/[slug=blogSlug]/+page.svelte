@@ -168,7 +168,7 @@
 	.blog-post-page {
 		max-width: 900px;
 		margin: 0 auto;
-		padding: 0 0.5rem 2rem 0.5rem;
+		padding: 0 0.5rem 0.5rem;
 	}
 
 	.blog-post-toolbar {
