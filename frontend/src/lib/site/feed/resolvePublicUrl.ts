@@ -15,7 +15,7 @@ export function resolvePublicAssetUrl(path: string | null | undefined, origin: s
 }
 
 export function absolutizeRelativeUrlsInHtml(html: string, origin: string): string {
-	return html.replace(
+	return html.replaceAll(
 		/(\b(?:src|href))="(\/(?!\/)[^"]*)"/gi,
 		(_match, attr: string, path: string) => `${attr}="${resolvePublicAssetUrl(path, origin)}"`
 	);
