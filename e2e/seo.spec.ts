@@ -15,4 +15,20 @@ test.describe('SEO basics', () => {
 			await expect(canonical).toHaveCount(1);
 		}
 	});
+
+	test('blog page advertises RSS feed', async ({ page }) => {
+		await gotoReady(page, '/blog');
+		const feedLink = page.locator('link[rel="alternate"][type="application/rss+xml"]');
+		await expect(feedLink).toHaveCount(1);
+		await expect(feedLink).toHaveAttribute('href', '/blog/rss.xml');
+	});
+
+	test('blog RSS feed returns valid XML', async ({ request }) => {
+		const response = await request.get('/blog/rss.xml');
+		expect(response.ok()).toBeTruthy();
+		expect(response.headers()['content-type']).toContain('application/xml');
+		const body = await response.text();
+		expect(body).toContain('<rss version="2.0"');
+		expect(body).toContain('<channel>');
+	});
 });

@@ -4,7 +4,7 @@
 
 	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { Calendar } from 'lucide-svelte';
+	import { Calendar, Rss } from 'lucide-svelte';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 	import RainbowText from '$lib/site/components/RainbowText.svelte';
 
@@ -142,7 +142,13 @@
 </svelte:head>
 
 <div class="blog-page">
-	<TypingHeader text="Blog" />
+	<div class="blog-header">
+		<TypingHeader text="Blog" />
+		<a class="rss-link" href="/blog/rss.xml" title="Subscribe via RSS" data-sveltekit-reload>
+			<Rss size={18} aria-hidden="true" />
+			<span>RSS Feed</span>
+		</a>
+	</div>
 
 	{#if loading}
 		<div class="loading">
@@ -204,6 +210,32 @@
 	.blog-page {
 		max-width: 1200px;
 		margin: 0 auto;
+	}
+
+	.blog-header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px 16px;
+		margin-bottom: 8px;
+	}
+
+	.rss-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 6px 12px;
+		border: 1px solid var(--border-color, #ffffff);
+		color: var(--text-secondary, #a1a1aa);
+		text-decoration: none;
+		font-size: 0.875rem;
+		transition: color 0.2s ease, border-color 0.2s ease;
+	}
+
+	.rss-link:hover {
+		color: var(--accent-color, #6366f1);
+		border-color: var(--accent-color, #6366f1);
 	}
 
 	.loading,
