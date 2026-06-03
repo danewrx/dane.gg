@@ -34,6 +34,9 @@
 	const isThemePreviewEmbed = $derived($page.url.searchParams.has(THEME_PREVIEW_SEARCH_PARAM));
 
 	const staticRouteSeo = $derived(getStaticRouteSeo($page.url.pathname));
+	const isBlogSection = $derived(
+		$page.url.pathname === '/blog' || $page.url.pathname.startsWith('/blog/')
+	);
 
 	function handleSettingsToggle() {
 		settingsOpen = !settingsOpen;
@@ -45,6 +48,16 @@
 </script>
 
 <CanonicalLink />
+<svelte:head>
+	{#if isBlogSection}
+		<link
+			rel="alternate"
+			type="application/rss+xml"
+			title="dane.gg Blog"
+			href="/blog/rss.xml"
+		/>
+	{/if}
+</svelte:head>
 {#if staticRouteSeo}
 	<OpenGraphTags title={staticRouteSeo.title} description={staticRouteSeo.description} />
 {/if}
