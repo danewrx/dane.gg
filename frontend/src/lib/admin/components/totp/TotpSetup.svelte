@@ -208,7 +208,8 @@
 					<p>You'll need a TOTP authenticator app on your mobile device. We recommend:</p>
 					<div class="app-list">
 						<div class="app-item recommended">
-							<strong>Ente Auth (recommended)</strong> - Open source, privacy-focused
+							<strong>Ente Auth (recommended)</strong> - Open source, privacy-focused, with cloud
+							sync and cross-device support
 						</div>
 						<div class="app-item">
 							<strong>2FAS Authenticator</strong> - Free, secure, and user-friendly
@@ -406,13 +407,19 @@
 	}
 
 	.header-icon {
-		background: var(--accent-muted-bg, var(--accent-color-light, rgba(59, 130, 246, 0.1)));
-		color: var(--accent-muted-fg, var(--accent-on-surface, #3b82f6));
+		background: var(--bg-tertiary, #3a3a3a);
+		border: 1px solid var(--border-color, #3a3a3a);
+		color: var(--text-secondary, #a1a1aa);
 		padding: 1rem;
 		border-radius: 12px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+	}
+
+	.header-icon :global(svg) {
+		stroke: currentColor;
+		fill: none;
 	}
 
 	.header-content h2 {
@@ -468,8 +475,9 @@
 	}
 
 	.step.active {
-		background: var(--accent-color-light, rgba(59, 130, 246, 0.1));
-		border: 1px solid var(--accent-color);
+		background: var(--bg-tertiary, #3a3a3a);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-left: 3px solid var(--accent-color, #6366f1);
 	}
 
 	.step.completed {
@@ -535,7 +543,7 @@
 	}
 
 	.step-section h3 :global(svg) {
-		color: var(--accent-color);
+		color: var(--text-secondary, #a1a1aa);
 	}
 
 	.step-section > p {
@@ -562,10 +570,11 @@
 	}
 
 	.app-item.recommended {
-		background: var(--accent-color-light, rgba(59, 130, 246, 0.1));
-		border-color: var(--accent-color, #3b82f6);
-		border-width: 2px;
+		background: var(--bg-tertiary, #3a3a3a);
+		border-color: var(--border-color, #3a3a3a);
+		border-left: 3px solid var(--accent-color, #6366f1);
 		position: relative;
+		padding-right: 2.25rem;
 	}
 
 	.app-item.recommended::before {
@@ -582,7 +591,7 @@
 	}
 
 	.app-item.recommended strong {
-		color: var(--accent-on-surface, var(--accent-color, #3b82f6));
+		color: var(--text-primary, #ffffff);
 	}
 
 	.qr-section {
@@ -997,7 +1006,9 @@
 	}
 
 	:global(html:not(.dark)) .step.active {
-		background: rgba(59, 130, 246, 0.1);
+		background: var(--bg-tertiary, #f1f5f9);
+		border-color: var(--border-color, #e5e7eb);
+		border-left-color: var(--accent-color, #6366f1);
 	}
 
 	:global(html:not(.dark)) .qr-code {

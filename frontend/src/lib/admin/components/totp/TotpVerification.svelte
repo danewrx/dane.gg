@@ -211,14 +211,20 @@
 	}
 
 	.header-icon {
-		background: var(--accent-muted-bg, var(--accent-color-light, rgba(59, 130, 246, 0.1)));
-		color: var(--accent-muted-fg, var(--accent-on-surface, #3b82f6));
+		background: var(--bg-tertiary, #3a3a3a);
+		border: 1px solid var(--border-color, #3a3a3a);
+		color: var(--text-secondary, #a1a1aa);
 		padding: 1rem;
 		border-radius: 12px;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 		margin-bottom: 1rem;
+	}
+
+	.header-icon :global(svg) {
+		stroke: currentColor;
+		fill: none;
 	}
 
 	.header-content h2 {

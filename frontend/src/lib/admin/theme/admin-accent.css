@@ -259,11 +259,6 @@ html[data-dane-app='admin'] .sonner-action-accent [data-icon] {
 html[data-dane-app='admin'] :is(
 	.info-icon,
 	.accent-muted-surface,
-	.header-icon.disabled,
-	.totp-manager .header-icon.disabled,
-	.totp-setup .header-icon,
-	.totp-verification .header-icon,
-	.status-card.disabled .status-icon,
 	.disabled-icon-container,
 	.permission-badge.full,
 	.role-badge.admin,
@@ -286,11 +281,6 @@ html[data-dane-app='admin'] :is(
 html[data-dane-app='admin'] :is(
 	.info-icon,
 	.accent-muted-surface,
-	.header-icon.disabled,
-	.totp-manager .header-icon.disabled,
-	.totp-setup .header-icon,
-	.totp-verification .header-icon,
-	.status-card.disabled .status-icon,
 	.disabled-icon-container,
 	.permission-badge.full,
 	.role-badge.admin,
