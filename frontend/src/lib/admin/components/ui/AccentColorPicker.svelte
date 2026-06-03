@@ -53,6 +53,7 @@
 		// Validate hex color format
 		const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
 		if (hexColorRegex.test(customColor)) {
+			showCustomInput = false;
 			dispatch('colorChange', { color: customColor });
 		}
 	}
