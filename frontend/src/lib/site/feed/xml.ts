@@ -1,13 +1,13 @@
 export function escapeXml(text: string): string {
 	return text
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&apos;');
+		.replaceAll('&', '&amp;')
+		.replaceAll('<', '&lt;')
+		.replaceAll('>', '&gt;')
+		.replaceAll('"', '&quot;')
+		.replaceAll("'", '&apos;');
 }
 
 export function wrapCdata(content: string): string {
-	const safe = content.replace(/]]>/g, ']]]]><![CDATA[>');
+	const safe = content.replaceAll(']]>', ']]]]><![CDATA[>');
 	return `<![CDATA[${safe}]]>`;
 }
