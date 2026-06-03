@@ -173,8 +173,15 @@
 		</div>
 	{:else if posts.length === 0}
 		<div class="empty-state">
-			<p>No blog posts yet</p>
-			<button onclick={createPost}>Create your first post</button>
+			<div class="empty-state-icon" aria-hidden="true">
+				<FileText size={36} />
+			</div>
+			<h2>No blog posts yet</h2>
+			<p>Write your first post to start publishing articles on the blog.</p>
+			<button type="button" class="create-button empty-state-cta" onclick={createPost}>
+				<Plus size={20} />
+				Create your first post
+			</button>
 		</div>
 	{:else}
 		<div class="table-container">
@@ -361,14 +368,62 @@
 		transform: translateY(-1px);
 	}
 
-	.loading,
-	.empty-state {
+	.loading {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 		padding: 64px 24px;
 		text-align: center;
+	}
+
+	.empty-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 64px 32px;
+		text-align: center;
+		border: 2px dashed var(--border-color, #3a3a3a);
+		border-radius: 12px;
+		background: var(--bg-secondary, #2d2d2d);
+	}
+
+	.empty-state-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 72px;
+		height: 72px;
+		margin-bottom: 20px;
+		border-radius: 16px;
+		background: var(--bg-tertiary, #3a3a3a);
+		border: 1px solid var(--border-color, #3a3a3a);
+		color: var(--text-secondary, #a1a1aa);
+	}
+
+	.empty-state-icon :global(svg) {
+		stroke: currentColor;
+		fill: none;
+	}
+
+	.empty-state h2 {
+		margin: 0 0 8px;
+		font-size: 20px;
+		font-weight: 600;
+		color: var(--text-primary, #ffffff);
+	}
+
+	.empty-state p {
+		margin: 0;
+		max-width: 360px;
+		font-size: 14px;
+		line-height: 1.5;
+		color: var(--text-secondary, #a1a1aa);
+	}
+
+	.empty-state-cta {
+		margin-top: 24px;
 	}
 
 	.spinner {
