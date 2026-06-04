@@ -32,7 +32,7 @@ type DaneWindow = typeof globalThis & {
 };
 
 function daneWindow(): DaneWindow {
-	return globalThis as DaneWindow;
+	return globalThis;
 }
 
 // Initialize authentication when the app starts - ONLY for admin routes
