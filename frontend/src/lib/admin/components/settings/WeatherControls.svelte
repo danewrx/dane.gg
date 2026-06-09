@@ -10,11 +10,14 @@
 
 	let { class: className = '' } = $props();
 
-	// Watch for enforcement changes and restore user preferences when turned off
+	// Restore user preferences only when enforcement transitions from on → off
+	let prevEnforced: boolean | undefined;
 	$effect(() => {
-		if (!$enforceWeatherEffects) {
+		const enforced = $enforceWeatherEffects;
+		if (prevEnforced === true && enforced === false) {
 			restoreUserPreferences();
 		}
+		prevEnforced = enforced;
 	});
 
 	// Weather type options
