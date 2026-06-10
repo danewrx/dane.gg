@@ -15,7 +15,9 @@
 		Check,
 		X,
 		Wifi,
-		WifiOff
+		WifiOff,
+		ChevronUp,
+		ChevronDown
 	} from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 
@@ -234,6 +236,15 @@
 		}
 	}
 
+	function moveMonitor(index: number, direction: -1 | 1) {
+		const newIndex = index + direction;
+		if (newIndex < 0 || newIndex >= selectedMonitorIds.length) return;
+
+		const updated = [...selectedMonitorIds];
+		[updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
+		selectedMonitorIds = updated;
+	}
+
 	function getStatusColor(status: string) {
 		switch (status) {
 			case 'up':
@@ -396,8 +407,12 @@
 						{#if selectedMonitorIds.length > 0}
 							<div class="selected-monitors-section">
 								<h3 class="subsection-title">Selected Monitors</h3>
+								<p class="help-text selected-monitors-help">
+									This is the order services will be displayed in on the public site. Use the arrows
+									to reorder.
+								</p>
 								<div class="selected-monitors-list">
-									{#each selectedMonitorIds as monitorId}
+									{#each selectedMonitorIds as monitorId, index}
 										{@const monitor = allMonitors.find((m) => m.id === monitorId)}
 										{#if monitor}
 											<div class="selected-monitor-item">
@@ -445,6 +460,26 @@
 															<X size={16} />
 														</button>
 													{:else}
+														<button
+															type="button"
+															class="icon-button"
+															onclick={() => moveMonitor(index, -1)}
+															disabled={index === 0}
+															title="Move up"
+															aria-label="Move up"
+														>
+															<ChevronUp size={16} />
+														</button>
+														<button
+															type="button"
+															class="icon-button"
+															onclick={() => moveMonitor(index, 1)}
+															disabled={index === selectedMonitorIds.length - 1}
+															title="Move down"
+															aria-label="Move down"
+														>
+															<ChevronDown size={16} />
+														</button>
 														<button
 															type="button"
 															class="icon-button"
@@ -1007,6 +1042,10 @@
 		margin: 0 0 12px 0;
 	}
 
+	.selected-monitors-help {
+		margin: -8px 0 12px 0;
+	}
+
 	.selected-monitors-list {
 		display: flex;
 		flex-direction: column;
@@ -1113,10 +1152,15 @@
 		transition: all 0.2s;
 	}
 
-	.icon-button:hover {
+	.icon-button:hover:not(:disabled) {
 		background: var(--bg-secondary, #2d2d2d);
 		border-color: var(--accent-color);
 		color: var(--accent-color);
+	}
+
+	.icon-button:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
 	}
 
 	.icon-button:active {

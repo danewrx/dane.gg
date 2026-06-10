@@ -292,7 +292,10 @@ export class UptimeKumaService {
 						allMonitors = this.parseRestApiMonitors(data.data);
 					}
 
-					monitors = allMonitors.filter((monitor) => monitorIds.includes(monitor.id));
+					monitors = this.sortByMonitorOrder(
+						allMonitors.filter((monitor) => monitorIds.includes(monitor.id)),
+						monitorIds
+					);
 					if (monitors.length > 0) {
 						// Load custom names from cache and merge them
 						await this.mergeCustomNames(monitors);
@@ -324,7 +327,10 @@ export class UptimeKumaService {
 			if (response.ok) {
 				const metricsText = await response.text();
 				const allMonitors = this.parsePrometheusMetrics(metricsText);
-				monitors = allMonitors.filter((monitor) => monitorIds.includes(monitor.id));
+				monitors = this.sortByMonitorOrder(
+					allMonitors.filter((monitor) => monitorIds.includes(monitor.id)),
+					monitorIds
+				);
 				if (monitors.length > 0) {
 					// Load custom names from cache and merge them
 					await this.mergeCustomNames(monitors);
@@ -339,7 +345,10 @@ export class UptimeKumaService {
 		// If API fails, try to load from cache
 		try {
 			const cachedMonitors = await this.loadMonitorsFromCache();
-			monitors = cachedMonitors.filter((monitor) => monitorIds.includes(monitor.id));
+			monitors = this.sortByMonitorOrder(
+				cachedMonitors.filter((monitor) => monitorIds.includes(monitor.id)),
+				monitorIds
+			);
 			if (monitors.length > 0) {
 				logger.info(
 					`Loaded ${monitors.length} selected monitors from database cache`
@@ -356,6 +365,16 @@ export class UptimeKumaService {
 		}
 
 		return monitors;
+	}
+
+	/**
+	 * Sort monitors to match the admin-configured display order
+	 */
+	private static sortByMonitorOrder(
+		monitors: UptimeKumaMonitor[],
+		order: number[]
+	): UptimeKumaMonitor[] {
+		return [...monitors].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
 	}
 
 	/**
