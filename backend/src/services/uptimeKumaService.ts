@@ -71,14 +71,8 @@ export class UptimeKumaService {
 				if (response.ok) {
 					const data = await response.json();
 					logger.info(`REST API endpoint success`);
-					logger.info(
-						`REST API response type:`,
-						Array.isArray(data) ? 'array' : typeof data
-					);
-					logger.info(
-						`REST API response keys:`,
-						Array.isArray(data) ? 'array' : Object.keys(data)
-					);
+					logger.info(`REST API response type:`, Array.isArray(data) ? 'array' : typeof data);
+					logger.info(`REST API response keys:`, Array.isArray(data) ? 'array' : Object.keys(data));
 
 					// REST API returns full monitor objects with group information
 					if (Array.isArray(data)) {
@@ -97,9 +91,7 @@ export class UptimeKumaService {
 					errors.push(
 						`REST API endpoint failed (${response.status}): ${errorText.substring(0, 100)}`
 					);
-					logger.info(
-						`REST API endpoint failed: ${response.status} ${response.statusText}`
-					);
+					logger.info(`REST API endpoint failed: ${response.status} ${response.statusText}`);
 				}
 			} catch (error: any) {
 				errors.push(`REST API endpoint error: ${error.message}`);
@@ -137,9 +129,7 @@ export class UptimeKumaService {
 			} else {
 				const errorText = await response.text();
 				errors.push(`Metrics endpoint failed (${response.status}): ${errorText.substring(0, 100)}`);
-				logger.info(
-					`Metrics endpoint failed: ${response.status} ${response.statusText}`
-				);
+				logger.info(`Metrics endpoint failed: ${response.status} ${response.statusText}`);
 			}
 		} catch (error: any) {
 			errors.push(`Metrics endpoint error: ${error.message}`);
@@ -153,9 +143,7 @@ export class UptimeKumaService {
 
 		for (const slug of statusPageSlugs) {
 			try {
-				logger.info(
-					`Attempting status page at ${this.baseUrl}/api/status-page/${slug}`
-				);
+				logger.info(`Attempting status page at ${this.baseUrl}/api/status-page/${slug}`);
 				const response = await fetch(`${this.baseUrl}/api/status-page/${slug}`, {
 					method: 'GET',
 					headers: {
@@ -190,9 +178,7 @@ export class UptimeKumaService {
 
 		// Try 3: Legacy heartbeat endpoint
 		try {
-			logger.info(
-				`Attempting heartbeat endpoint at ${this.baseUrl}/api/status-page/heartbeat`
-			);
+			logger.info(`Attempting heartbeat endpoint at ${this.baseUrl}/api/status-page/heartbeat`);
 			const response = await fetch(`${this.baseUrl}/api/status-page/heartbeat`, {
 				method: 'GET',
 				headers: {
@@ -224,9 +210,7 @@ export class UptimeKumaService {
 
 		// If all attempts failed, try to load from database cache
 		if (monitors.length === 0) {
-			logger.info(
-				'All API attempts failed, attempting to load from database cache...'
-			);
+			logger.info('All API attempts failed, attempting to load from database cache...');
 			try {
 				monitors = await this.loadMonitorsFromCache();
 				if (monitors.length > 0) {
@@ -268,9 +252,7 @@ export class UptimeKumaService {
 		// Try 1: REST API endpoint
 		if (this.apiKey) {
 			try {
-				logger.info(
-					`Attempting REST API endpoint for ${monitorIds.length} selected monitors`
-				);
+				logger.info(`Attempting REST API endpoint for ${monitorIds.length} selected monitors`);
 				const authHeader = `Basic ${Buffer.from(`api:${this.apiKey}`).toString('base64')}`;
 				const response = await fetch(`${this.baseUrl}/api/monitor`, {
 					method: 'GET',
@@ -350,9 +332,7 @@ export class UptimeKumaService {
 				monitorIds
 			);
 			if (monitors.length > 0) {
-				logger.info(
-					`Loaded ${monitors.length} selected monitors from database cache`
-				);
+				logger.info(`Loaded ${monitors.length} selected monitors from database cache`);
 				return monitors;
 			}
 		} catch (cacheError: any) {
@@ -538,9 +518,7 @@ export class UptimeKumaService {
 					})
 					.where(eq(uptimeKumaMonitors.monitorId, monitorId));
 			}
-			logger.info(
-				`Updated custom names for ${Object.keys(customNames).length} monitors`
-			);
+			logger.info(`Updated custom names for ${Object.keys(customNames).length} monitors`);
 		} catch (error: any) {
 			logger.error('Error updating custom names:', error.message);
 			throw error;
@@ -600,14 +578,10 @@ export class UptimeKumaService {
 		}
 
 		const groupedCount = monitors.filter((m) => m.group).length;
-		logger.info(
-			`Parsed ${monitors.length} monitors from REST API, ${groupedCount} with groups`
-		);
+		logger.info(`Parsed ${monitors.length} monitors from REST API, ${groupedCount} with groups`);
 
 		if (groupedCount === 0 && monitors.length > 0) {
-			logger.info(
-				`No groups assigned from REST API, falling back to type-based grouping`
-			);
+			logger.info(`No groups assigned from REST API, falling back to type-based grouping`);
 			const typeMap: Record<string, string> = {
 				http: 'Websites',
 				https: 'Websites',
@@ -741,31 +715,14 @@ export class UptimeKumaService {
 
 	/**
 	 * Parse Prometheus metrics format
-	 * Handles Uptime Kuma's format with monitor_name, monitor_type, monitor_url labels
-	 * Also collects groups and tries to infer relationships
+	 * Handles Uptime Kuma's format with monitor_name, monitor_type, monitor_url labels.
+	 * Groups monitors by their Uptime Kuma monitor type
 	 */
 	private static parsePrometheusMetrics(metricsText: string): UptimeKumaMonitor[] {
 		const monitors: UptimeKumaMonitor[] = [];
 		const lines = metricsText.split('\n');
 
 		const monitorData: Map<string, Partial<UptimeKumaMonitor>> = new Map();
-		const groupNames = new Set<string>();
-
-		for (const line of lines) {
-			const trimmedLine = line.trim();
-			if (trimmedLine.startsWith('#') || !trimmedLine) continue;
-
-			const metricMatch = trimmedLine.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\{([^}]+)\}\s+(.+)$/);
-			if (!metricMatch) continue;
-
-			const [, , labelsStr] = metricMatch;
-			const nameMatch = labelsStr.match(/monitor_name="([^"]+)"/);
-			const typeMatch = labelsStr.match(/monitor_type="([^"]+)"/);
-
-			if (nameMatch && typeMatch && typeMatch[1] === 'group') {
-				groupNames.add(nameMatch[1]);
-			}
-		}
 
 		for (const line of lines) {
 			const trimmedLine = line.trim();
@@ -791,50 +748,12 @@ export class UptimeKumaService {
 			}
 
 			if (!monitorData.has(monitorName)) {
-				let inferredGroup: string | undefined;
-
-				const monitorLower = monitorName.toLowerCase();
-
-				const sortedGroups = Array.from(groupNames).sort((a, b) => b.length - a.length);
-
-				for (const groupName of sortedGroups) {
-					const groupLower = groupName.toLowerCase();
-
-					if (monitorLower.includes(groupLower) || groupLower.includes(monitorLower)) {
-						inferredGroup = groupName;
-						break;
-					}
-
-					const groupWords = groupLower.split(/\s+/);
-					const monitorWords = monitorLower.split(/\s+/);
-
-					if (
-						groupWords.some((word) => {
-							if (word.length <= 2) return false;
-							return monitorWords.some((mw) => {
-								// Direct match
-								if (mw.includes(word) || word.includes(mw)) return true;
-								// Singular/plural variations
-								if (word.endsWith('s') && mw === word.slice(0, -1)) return true;
-								if (mw.endsWith('s') && word === mw.slice(0, -1)) return true;
-								// Check if monitor word contains group word (e.g., "website" in "portainer (website)")
-								if (mw.includes(word)) return true;
-								return false;
-							});
-						})
-					) {
-						inferredGroup = groupName;
-						break;
-					}
-				}
-
 				monitorData.set(monitorName, {
 					id: monitorData.size + 1,
 					name: monitorName,
 					url: monitorUrl === 'null' || monitorUrl === 'https://' ? undefined : monitorUrl,
 					type: monitorType === 'null' ? 'http' : monitorType,
-					status: 'pending',
-					group: inferredGroup
+					status: 'pending'
 				});
 			}
 
@@ -863,10 +782,67 @@ export class UptimeKumaService {
 			}
 		}
 
+		// Group monitors by their Uptime Kuma monitor type
+		const typeMap: Record<string, string> = {
+			http: 'Websites',
+			https: 'Websites',
+			keyword: 'Websites', // HTTP(s) - Keyword
+			'json-query': 'Websites', // HTTP(s) - Json Query
+			'http-keyword': 'Websites',
+			'https-keyword': 'Websites',
+			'http-json-query': 'Websites',
+			'https-json-query': 'Websites',
+			browser: 'Websites', // HTTP(s) - Browser Engine
+
+			// Network protocols
+			tcp: 'Network Services',
+			udp: 'Network Services',
+			ping: 'Network Services',
+			port: 'Network Services',
+			dns: 'DNS Services',
+
+			// gRPC
+			grpc: 'gRPC Services',
+			grpcs: 'gRPC Services',
+			'grpc-keyword': 'gRPC Services',
+			'grpcs-keyword': 'gRPC Services',
+
+			// Containers
+			docker: 'Docker Containers',
+
+			// Passive monitoring
+			push: 'Push Monitors',
+
+			// Game servers
+			steam: 'Game Services',
+			gamedig: 'Game Services',
+
+			// Message queues
+			mqtt: 'Message Queue Services',
+			kafka: 'Message Queue Services',
+			'kafka-producer': 'Message Queue Services',
+
+			// Databases
+			mssql: 'Database Services',
+			sqlserver: 'Database Services',
+			postgres: 'Database Services',
+			postgresql: 'Database Services',
+			mysql: 'Database Services',
+			mariadb: 'Database Services',
+			mongodb: 'Database Services',
+
+			// Authentication
+			radius: 'Authentication Services',
+
+			// Cache
+			redis: 'Cache Services'
+		};
+
 		// Convert map to array and ensure all required fields
 		let idCounter = 1;
 		for (const [name, data] of monitorData) {
 			if (data.status) {
+				const type = data.type?.toLowerCase() || 'unknown';
 				monitors.push({
 					id: data.id || idCounter++,
 					name: data.name || name,
@@ -875,145 +851,12 @@ export class UptimeKumaService {
 					status: data.status,
 					uptime: data.uptime,
 					avgResponseTime: data.avgResponseTime,
-					group: data.group
+					group: typeMap[type] || type.charAt(0).toUpperCase() + type.slice(1)
 				});
 			}
 		}
 
 		logger.info(`Parsed ${monitors.length} monitors from metrics`);
-		logger.info(`Found ${groupNames.size} groups:`, Array.from(groupNames));
-		const groupedCount = monitors.filter((m) => m.group).length;
-		logger.info(`${groupedCount} monitors assigned to groups`);
-
-		if (groupedCount === 0 && monitors.length > 0) {
-			logger.info(`No groups assigned, falling back to type-based grouping`);
-			const typeMap: Record<string, string> = {
-				http: 'Websites',
-				https: 'Websites',
-				keyword: 'Websites', // HTTP(s) - Keyword
-				'json-query': 'Websites', // HTTP(s) - Json Query
-				'http-keyword': 'Websites',
-				'https-keyword': 'Websites',
-				'http-json-query': 'Websites',
-				'https-json-query': 'Websites',
-				browser: 'Websites', // HTTP(s) - Browser Engine
-
-				// Network protocols
-				tcp: 'Network Services',
-				udp: 'Network Services',
-				ping: 'Network Services',
-				port: 'Network Services',
-				dns: 'DNS Services',
-
-				// gRPC
-				grpc: 'gRPC Services',
-				grpcs: 'gRPC Services',
-				'grpc-keyword': 'gRPC Services',
-				'grpcs-keyword': 'gRPC Services',
-
-				// Containers
-				docker: 'Docker Containers',
-
-				// Passive monitoring
-				push: 'Push Monitors',
-
-				// Game servers
-				steam: 'Game Services',
-				gamedig: 'Game Services',
-
-				// Message queues
-				mqtt: 'Message Queue Services',
-				kafka: 'Message Queue Services',
-				'kafka-producer': 'Message Queue Services',
-
-				// Databases
-				mssql: 'Database Services',
-				sqlserver: 'Database Services',
-				postgres: 'Database Services',
-				postgresql: 'Database Services',
-				mysql: 'Database Services',
-				mariadb: 'Database Services',
-				mongodb: 'Database Services',
-
-				// Authentication
-				radius: 'Authentication Services',
-
-				// Cache
-				redis: 'Cache Services'
-			};
-
-			for (const monitor of monitors) {
-				const type = monitor.type?.toLowerCase() || 'unknown';
-				monitor.group = typeMap[type] || type.charAt(0).toUpperCase() + type.slice(1);
-			}
-			logger.info(`Assigned all monitors to type-based groups`);
-		} else if (groupedCount < monitors.length) {
-			logger.info(
-				`${monitors.length - groupedCount} monitors without groups, assigning type-based groups`
-			);
-			const typeMap: Record<string, string> = {
-				http: 'Websites',
-				https: 'Websites',
-				keyword: 'Websites', // HTTP(s) - Keyword
-				'json-query': 'Websites', // HTTP(s) - Json Query
-				'http-keyword': 'Websites',
-				'https-keyword': 'Websites',
-				'http-json-query': 'Websites',
-				'https-json-query': 'Websites',
-				browser: 'Websites', // HTTP(s) - Browser Engine
-
-				// Network protocols
-				tcp: 'Network Services',
-				udp: 'Network Services',
-				ping: 'Network Services',
-				port: 'Network Services',
-				dns: 'DNS Services',
-
-				// gRPC
-				grpc: 'gRPC Services',
-				grpcs: 'gRPC Services',
-				'grpc-keyword': 'gRPC Services',
-				'grpcs-keyword': 'gRPC Services',
-
-				// Containers
-				docker: 'Docker Containers',
-
-				// Passive monitoring
-				push: 'Push Monitors',
-
-				// Game servers
-				steam: 'Game Services',
-				gamedig: 'Game Services',
-
-				// Message queues
-				mqtt: 'Message Queue Services',
-				kafka: 'Message Queue Services',
-				'kafka-producer': 'Message Queue Services',
-
-				// Databases
-				mssql: 'Database Services',
-				sqlserver: 'Database Services',
-				postgres: 'Database Services',
-				postgresql: 'Database Services',
-				mysql: 'Database Services',
-				mariadb: 'Database Services',
-				mongodb: 'Database Services',
-
-				// Authentication
-				radius: 'Authentication Services',
-
-				// Cache
-				redis: 'Cache Services'
-			};
-
-			for (const monitor of monitors) {
-				if (!monitor.group) {
-					const type = monitor.type?.toLowerCase() || 'unknown';
-					monitor.group = typeMap[type] || type.charAt(0).toUpperCase() + type.slice(1);
-				}
-			}
-			logger.info(`Assigned type-based groups to ungrouped monitors`);
-		}
 
 		return monitors;
 	}
