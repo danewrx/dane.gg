@@ -72,7 +72,7 @@ describe('Emoji Sync Logic', () => {
 
 		// Filter: only mark as deleted if discordEmojiId is set AND not in incoming
 		const toMarkDeleted = emojisInDb
-			.filter((e) => e.discordEmojiId !== null && !incomingIds.has(e.discordEmojiId!))
+			.filter((e) => e.discordEmojiId !== null && !incomingIds.has(e.discordEmojiId))
 			.map((e) => e.id);
 
 		expect(toMarkDeleted).toEqual([]);
