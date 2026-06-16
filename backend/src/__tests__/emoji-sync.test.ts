@@ -95,10 +95,10 @@ describe('Emoji Sync Logic', () => {
 	});
 
 	it('should handle empty incoming emoji list (all should be marked deleted)', () => {
-		const incomingIds: string[] = [];
+		const incomingIds = new Set<string>();
 		const existingIds = ['emoji-1', 'emoji-2', 'emoji-3'];
 
-		const toDelete = existingIds.filter((id) => !incomingIds.includes(id));
+		const toDelete = existingIds.filter((id) => !incomingIds.has(id));
 
 		expect(toDelete).toEqual(existingIds);
 		expect(toDelete.length).toBe(existingIds.length);
