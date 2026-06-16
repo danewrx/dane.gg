@@ -34,6 +34,9 @@ export interface Project {
 	repoUrl: string | null;
 	repoText: string;
 	repoIcon: string | null;
+	logoUrl: string | null;
+	logoBgColor: string | null;
+	logoBorder: boolean;
 	displayOrder: number;
 	createdAt: string;
 	updatedAt: string;
@@ -54,6 +57,9 @@ export interface CreateProject {
 	repoUrl?: string;
 	repoText?: string;
 	repoIcon?: string | null;
+	logoUrl?: string | null;
+	logoBgColor?: string | null;
+	logoBorder?: boolean;
 	displayOrder?: number;
 	featured?: boolean;
 	tagIds?: string[];
@@ -72,6 +78,9 @@ export interface UpdateProject {
 	repoUrl?: string;
 	repoText?: string;
 	repoIcon?: string | null;
+	logoUrl?: string | null;
+	logoBgColor?: string | null;
+	logoBorder?: boolean;
 	displayOrder?: number;
 	featured?: boolean;
 	tagIds?: string[];

@@ -37,6 +37,9 @@
 		repoUrl: string | null;
 		repoText: string;
 		repoIcon: string | null;
+		logoUrl: string | null;
+		logoBgColor: string | null;
+		logoBorder: boolean;
 		displayOrder: number;
 		createdAt: string;
 		updatedAt: string;
@@ -131,6 +134,21 @@
 
 					<div class="project-content">
 						<div class="project-header">
+							{#if project.logoUrl}
+								<div
+									class="project-logo"
+									class:project-logo--border={project.logoBorder}
+									style={project.logoBgColor
+										? `background-color: ${project.logoBgColor};`
+										: ''}
+								>
+									<img
+										src={getImageUrl(project.logoUrl)}
+										alt="{project.title} logo"
+										loading="lazy"
+									/>
+								</div>
+							{/if}
 							<h3 class="project-title">
 								<RainbowText text={project.title} />
 							</h3>
@@ -321,12 +339,33 @@
 
 	.project-header {
 		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		gap: 1rem;
+		align-items: center;
+		gap: 0.75rem;
 		flex-wrap: wrap;
 		width: 100%;
 		min-width: 0;
+	}
+
+	.project-logo {
+		width: 28px;
+		height: 28px;
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 4px;
+		overflow: hidden;
+	}
+
+	.project-logo--border {
+		border: 1px solid var(--theme-border, #ffffff);
+	}
+
+	.project-logo img {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		display: block;
 	}
 
 	.project-title {
@@ -337,8 +376,6 @@
 		line-height: 1.2;
 		flex: 1;
 		min-width: 0;
-		max-width: 100%;
-		width: 100%;
 		word-wrap: break-word;
 		overflow-wrap: break-word;
 		display: -webkit-box;
@@ -355,6 +392,7 @@
 		align-items: center;
 		gap: 0.5rem;
 		flex-shrink: 0;
+		margin-left: auto;
 		padding: 0.25rem 0.75rem;
 		background: var(--theme-background, #0a0a0a);
 		border: 1px solid var(--theme-border, #ffffff);
