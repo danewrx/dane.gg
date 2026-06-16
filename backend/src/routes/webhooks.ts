@@ -108,7 +108,7 @@ router.post('/discord-emojis/sync', requireAuth, requireWebhookAccess, async (re
 				continue;
 			}
 
-			const name = String(e.name).toLowerCase().trim();
+			const name = String(e.name).trim();
 			const discordId = String(e.id);
 			const imageUrl = String(e.imageUrl);
 

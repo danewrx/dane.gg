@@ -632,7 +632,7 @@
 						</div>
 					{:else}
 						<div class="emojis-grid">
-							{#each customEmojis as emoji}
+							{#each customEmojis.filter((e) => !e.deleted) as emoji}
 								<div class="emoji-item" class:emoji-item--hidden={emoji.hidden}>
 									<img src={emoji.imageUrl} alt={`:${emoji.name}:`} class="emoji-preview" />
 									<div class="emoji-info">
@@ -837,7 +837,7 @@
 		min-width: 0;
 	}
 
-	@media (max-width: 768px) {
+	@media (max-width: 1100px) {
 		.content-columns {
 			grid-template-columns: 1fr;
 			overflow: visible;
@@ -956,6 +956,11 @@
 		display: flex;
 		flex-direction: column;
 		gap: 16px;
+		overflow-y: auto;
+	}
+
+	.right-column > * {
+		flex-shrink: 0;
 	}
 
 	.identity-section {
@@ -1807,6 +1812,12 @@
 
 		.right-column {
 			flex: 0 0 auto;
+		}
+	}
+
+	@media (max-width: 1100px) {
+		.right-column {
+			overflow-y: visible;
 		}
 	}
 
