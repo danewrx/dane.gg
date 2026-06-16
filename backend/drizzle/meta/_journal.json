@@ -54,13 +54,6 @@
     {
       "idx": 7,
       "version": "7",
-      "when": 1750089600000,
-      "tag": "0007_add_emoji_animated",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
       "when": 1781650527067,
       "tag": "0008_lively_nocturne",
       "breakpoints": true
