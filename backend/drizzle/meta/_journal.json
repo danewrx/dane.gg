@@ -50,6 +50,13 @@
       "when": 1781618300516,
       "tag": "0006_good_the_spike",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781650527067,
+      "tag": "0008_lively_nocturne",
+      "breakpoints": true
     }
   ]
 }

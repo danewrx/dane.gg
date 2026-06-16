@@ -276,6 +276,7 @@ export const emojis = websiteSchema.table('emojis', {
 	discordEmojiId: varchar('discord_emoji_id', { length: 30 }).unique(), // Set for Discord-synced emojis
 	hidden: boolean('hidden').default(false).notNull(), // Manually hidden by admin
 	deleted: boolean('deleted').default(false).notNull(), // Soft-delete (Discord removed or admin deleted)
+	animated: boolean('animated').default(false).notNull(), // True for animated Discord emojis (GIF)
 	createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
 	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
 });

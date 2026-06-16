@@ -9,11 +9,11 @@ import { chatService } from '../services/chatService';
 
 const router = Router();
 
-async function processIncomingEmoji(name: string, discordId: string, imageUrl: string): Promise<{ synced: boolean; reason?: string }> {
+async function processIncomingEmoji(name: string, discordId: string, imageUrl: string, animated: boolean): Promise<{ synced: boolean; reason?: string }> {
 	const [existing] = await db.select().from(emojis).where(eq(emojis.discordEmojiId, discordId)).limit(1);
 
 	if (existing) {
-		await db.update(emojis).set({ name, imageUrl }).where(eq(emojis.discordEmojiId, discordId));
+		await db.update(emojis).set({ name, imageUrl, animated }).where(eq(emojis.discordEmojiId, discordId));
 		return { synced: true };
 	}
 
@@ -26,10 +26,10 @@ async function processIncomingEmoji(name: string, discordId: string, imageUrl: s
 
 	await db
 		.insert(emojis)
-		.values({ name, imageUrl, isCustom: true, discordEmojiId: discordId })
+		.values({ name, imageUrl, isCustom: true, discordEmojiId: discordId, animated })
 		.onConflictDoUpdate({
 			target: emojis.name,
-			set: { imageUrl, discordEmojiId: discordId }
+			set: { imageUrl, discordEmojiId: discordId, animated }
 		});
 
 	return { synced: true };
@@ -111,13 +111,14 @@ router.post('/discord-emojis/sync', requireAuth, requireWebhookAccess, async (re
 			const name = String(e.name).trim();
 			const discordId = String(e.id);
 			const imageUrl = String(e.imageUrl);
+			const animated = e.animated === true;
 
 			if (!nameRegex.test(name)) {
 				skipped++;
 				continue;
 			}
 
-			const result = await processIncomingEmoji(name, discordId, imageUrl);
+			const result = await processIncomingEmoji(name, discordId, imageUrl, animated);
 			if (result.synced) {
 				synced++;
 			} else {
