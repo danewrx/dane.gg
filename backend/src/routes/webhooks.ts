@@ -9,6 +9,50 @@ import { chatService } from '../services/chatService';
 
 const router = Router();
 
+async function processIncomingEmoji(name: string, discordId: string, imageUrl: string): Promise<{ synced: boolean; reason?: string }> {
+	const [existing] = await db.select().from(emojis).where(eq(emojis.discordEmojiId, discordId)).limit(1);
+
+	if (existing) {
+		await db.update(emojis).set({ name, imageUrl }).where(eq(emojis.discordEmojiId, discordId));
+		return { synced: true };
+	}
+
+	const [nameConflict] = await db.select().from(emojis).where(eq(emojis.name, name)).limit(1);
+
+	if (nameConflict && !nameConflict.discordEmojiId) {
+		logger.warn(`Discord emoji "${name}" skipped: conflicts with site-uploaded emoji`);
+		return { synced: false, reason: 'name_conflict' };
+	}
+
+	await db
+		.insert(emojis)
+		.values({ name, imageUrl, isCustom: true, discordEmojiId: discordId })
+		.onConflictDoUpdate({
+			target: emojis.name,
+			set: { imageUrl, discordEmojiId: discordId }
+		});
+
+	return { synced: true };
+}
+
+async function updateEmojiDeletionStatus(incomingIds: string[]): Promise<void> {
+	if (incomingIds.length > 0) {
+		await db
+			.update(emojis)
+			.set({ deleted: true })
+			.where(and(isNotNull(emojis.discordEmojiId), notInArray(emojis.discordEmojiId, incomingIds)));
+	} else {
+		await db.update(emojis).set({ deleted: true }).where(isNotNull(emojis.discordEmojiId));
+	}
+
+	if (incomingIds.length > 0) {
+		await db
+			.update(emojis)
+			.set({ deleted: false })
+			.where(and(isNotNull(emojis.discordEmojiId), inArray(emojis.discordEmojiId, incomingIds)));
+	}
+}
+
 /**
  * POST /webhooks/discord-status/update
  */
@@ -73,56 +117,16 @@ router.post('/discord-emojis/sync', requireAuth, requireWebhookAccess, async (re
 				continue;
 			}
 
-			const [existing] = await db
-				.select()
-				.from(emojis)
-				.where(eq(emojis.discordEmojiId, discordId))
-				.limit(1);
-
-			if (existing) {
-				await db.update(emojis).set({ name, imageUrl }).where(eq(emojis.discordEmojiId, discordId));
+			const result = await processIncomingEmoji(name, discordId, imageUrl);
+			if (result.synced) {
 				synced++;
 			} else {
-				const [nameConflict] = await db.select().from(emojis).where(eq(emojis.name, name)).limit(1);
-
-				if (nameConflict && !nameConflict.discordEmojiId) {
-					logger.warn(`Discord emoji "${name}" skipped: conflicts with site-uploaded emoji`);
-					skipped++;
-					continue;
-				}
-
-				await db
-					.insert(emojis)
-					.values({ name, imageUrl, isCustom: true, discordEmojiId: discordId })
-					.onConflictDoUpdate({
-						target: emojis.name,
-						set: { imageUrl, discordEmojiId: discordId }
-					});
-				synced++;
+				skipped++;
 			}
 		}
 
-		// Mark Discord emojis that no longer exist as deleted
 		const incomingIds = incoming.map((e) => String(e.id)).filter(Boolean);
-		if (incomingIds.length > 0) {
-			await db
-				.update(emojis)
-				.set({ deleted: true })
-				.where(
-					and(isNotNull(emojis.discordEmojiId), notInArray(emojis.discordEmojiId, incomingIds))
-				);
-		} else {
-			await db.update(emojis).set({ deleted: true }).where(isNotNull(emojis.discordEmojiId));
-		}
-
-		// Un-delete any Discord emojis that are back
-		const undeleteIds = incomingIds.filter(Boolean);
-		if (undeleteIds.length > 0) {
-			await db
-				.update(emojis)
-				.set({ deleted: false })
-				.where(and(isNotNull(emojis.discordEmojiId), inArray(emojis.discordEmojiId, undeleteIds)));
-		}
+		await updateEmojiDeletionStatus(incomingIds);
 
 		chatService.broadcastEmojiUpdate();
 
