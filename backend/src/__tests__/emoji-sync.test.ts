@@ -1,25 +1,23 @@
 import { describe, it, expect } from 'bun:test';
 
+/**
+ * Simulates the sync logic: process incoming emojis and return what should be marked as deleted
+ */
+function simulateSyncLogic(incomingEmojis: Array<{ id: string; name: string; imageUrl: string }>): {
+	toInsertOrUpdate: Array<{ id: string; name: string; imageUrl: string }>;
+	toMarkDeleted: string[];
+	toUndelete: string[];
+} {
+	const incomingIds = incomingEmojis.map((e) => e.id);
+
+	return {
+		toInsertOrUpdate: incomingEmojis,
+		toMarkDeleted: incomingIds.length > 0 ? [] : [],
+		toUndelete: incomingIds
+	};
+}
+
 describe('Emoji Sync Logic', () => {
-	/**
-	 * Simulates the sync logic: process incoming emojis and return what should be marked as deleted
-	 */
-	function simulateSyncLogic(
-		incomingEmojis: Array<{ id: string; name: string; imageUrl: string }>
-	): {
-		toInsertOrUpdate: Array<{ id: string; name: string; imageUrl: string }>;
-		toMarkDeleted: string[];
-		toUndelete: string[];
-	} {
-		const incomingIds = incomingEmojis.map((e) => e.id);
-
-		return {
-			toInsertOrUpdate: incomingEmojis,
-			toMarkDeleted: incomingIds.length > 0 ? [] : [], // Would be IDs NOT in incomingIds
-			toUndelete: incomingIds
-		};
-	}
-
 	it('should identify emojis to insert or update from incoming list', () => {
 		const incoming = [
 			{ id: 'emoji-1', name: 'test1', imageUrl: 'https://example.com/1.png' },
