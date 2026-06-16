@@ -1,0 +1,2 @@
+ALTER TABLE "website"."emojis" ADD COLUMN "discord_emoji_id" varchar(30);--> statement-breakpoint
+ALTER TABLE "website"."emojis" ADD CONSTRAINT "emojis_discord_emoji_id_unique" UNIQUE("discord_emoji_id");

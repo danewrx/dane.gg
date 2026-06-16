@@ -271,8 +271,11 @@ export const apiKeys = websiteSchema.table('api_keys', {
 export const emojis = websiteSchema.table('emojis', {
 	id: uuid('id').primaryKey().defaultRandom(),
 	name: varchar('name', { length: 50 }).notNull().unique(), // :emojiname: format (without colons)
-	imageUrl: varchar('image_url', { length: 500 }).notNull(), // Path to emoji image
+	imageUrl: varchar('image_url', { length: 500 }).notNull(), // Path to emoji image or Discord CDN URL
 	isCustom: boolean('is_custom').default(true), // true for custom, false for default Unicode emojis
+	discordEmojiId: varchar('discord_emoji_id', { length: 30 }).unique(), // Set for Discord-synced emojis
+	hidden: boolean('hidden').default(false).notNull(), // Manually hidden by admin
+	deleted: boolean('deleted').default(false).notNull(), // Soft-delete (Discord removed or admin deleted)
 	createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
 	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
 });

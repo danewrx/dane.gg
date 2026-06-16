@@ -986,10 +986,7 @@
 					if (imageUrl) {
 						const escapedName = emoji.name.replace(/"/g, '&quot;');
 						const escapedUrl = imageUrl.replace(/"/g, '&quot;');
-						return `<span class="emoji-hover" data-tooltip=":${escapedName}:" data-emoji-url="${escapedUrl}">
-							<img src="${escapedUrl}" alt=":${escapedName}:" class="custom-emoji-inline">
-							<span class="emoji-tooltip-popup"><img src="${escapedUrl}" class="tooltip-emoji-img"><span class="tooltip-name">:${escapedName}:</span></span>
-						</span>`;
+						return `<span class="emoji-hover" data-tooltip=":${escapedName}:" data-emoji-url="${escapedUrl}"><img src="${escapedUrl}" alt=":${escapedName}:" class="custom-emoji-inline"><span class="emoji-tooltip-popup"><img src="${escapedUrl}" class="tooltip-emoji-img"><span class="tooltip-name">:${escapedName}:</span></span></span>`;
 					}
 				}
 				const escapedName = emoji.name.replace(/"/g, '&quot;');

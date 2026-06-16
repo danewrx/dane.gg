@@ -125,7 +125,7 @@
 	>([]);
 	let emojiAutocompleteIndex = $state(0);
 	let allEmojis = $state<EmojiData[]>([]);
-
+	let allEmojisIncludingHidden = $state<EmojiData[]>([]);
 	let { userCount = $bindable(0) }: { userCount?: number } = $props();
 
 	function getInputText(): string {
@@ -750,19 +750,31 @@
 		try {
 			const defaultEmojis = getAllDefaultEmojis();
 
-			// Load custom emojis
-			const response = await fetch('/api/emojis');
+			// Load custom emojis 
+			const response = await fetch('/api/emojis?includeDeleted=true');
 			if (response.ok) {
 				const data = await response.json();
-				const customEmojis: EmojiData[] = (data.data || []).map((e: any) => ({
+				const allCustomEmojis: EmojiData[] = (data.data || []).map((e: any) => ({
 					name: e.name,
 					emoji: `:${e.name}:`,
 					isCustom: true,
 					imageUrl: e.imageUrl
 				}));
-				allEmojis = [...defaultEmojis, ...customEmojis];
+
+				allEmojisIncludingHidden = [...defaultEmojis, ...allCustomEmojis];
+
+				const visibleCustomEmojis = (data.data || [])
+					.filter((e: any) => !e.hidden && !e.deleted)
+					.map((e: any) => ({
+						name: e.name,
+						emoji: `:${e.name}:`,
+						isCustom: true,
+						imageUrl: e.imageUrl
+					}));
+				allEmojis = [...defaultEmojis, ...visibleCustomEmojis];
 			} else {
 				allEmojis = defaultEmojis;
+				allEmojisIncludingHidden = defaultEmojis;
 			}
 		} catch (error) {
 			logger.error('Failed to load emojis:', error);
@@ -1279,17 +1291,14 @@
 			.replace(/'/g, '&#039;');
 
 		html = html.replace(/:([a-zA-Z0-9_-]+):/g, (match, name) => {
-			const emoji = allEmojis.find((e) => e.name.toLowerCase() === name.toLowerCase());
+			const emoji = allEmojisIncludingHidden.find((e) => e.name.toLowerCase() === name.toLowerCase());
 			if (emoji) {
 				if (emoji.isCustom && emoji.imageUrl) {
 					const imageUrl = emoji.imageUrl.trim();
 					if (imageUrl) {
 						const escapedName = emoji.name.replace(/"/g, '&quot;');
 						const escapedUrl = imageUrl.replace(/"/g, '&quot;');
-						return `<span class="emoji-hover" data-tooltip=":${escapedName}:" data-emoji-url="${escapedUrl}">
-							<img src="${escapedUrl}" alt=":${escapedName}:" class="custom-emoji-inline">
-							<span class="emoji-tooltip-popup"><img src="${escapedUrl}" class="tooltip-emoji-img"><span class="tooltip-name">:${escapedName}:</span></span>
-						</span>`;
+						return `<span class="emoji-hover" data-tooltip=":${escapedName}:" data-emoji-url="${escapedUrl}"><img src="${escapedUrl}" alt=":${escapedName}:" class="custom-emoji-inline"><span class="emoji-tooltip-popup"><img src="${escapedUrl}" class="tooltip-emoji-img"><span class="tooltip-name">:${escapedName}:</span></span></span>`;
 					}
 				}
 			const escapedName = emoji.name.replace(/"/g, '&quot;');
@@ -1299,7 +1308,7 @@
 		});
 
 		const emojiCharMap = new Map<string, string>();
-		for (const emoji of allEmojis) {
+		for (const emoji of allEmojisIncludingHidden) {
 			if (!emoji.isCustom && emoji.emoji) {
 				emojiCharMap.set(emoji.emoji, emoji.name);
 			}

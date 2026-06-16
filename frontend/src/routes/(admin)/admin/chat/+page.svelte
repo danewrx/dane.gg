@@ -16,7 +16,9 @@
 		Image as ImageIcon,
 		Trash,
 		Play,
-		Square
+		Square,
+		Eye,
+		EyeOff
 	} from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import AdminChat from '$lib/admin/components/AdminChat.svelte';
@@ -61,18 +63,16 @@
 	let allEmojis = $state<
 		Array<{ name: string; emoji: string; isCustom: boolean; imageUrl?: string }>
 	>([]);
+	let allEmojisIncludingHidden = $state<
+		Array<{ name: string; emoji: string; isCustom: boolean; imageUrl?: string }>
+	>([]);
 	let emojiPickerReloadTrigger = $state(0);
 	let isEditingNickname = $state(false);
 	let nicknameInput = $state('');
 	let isSavingNickname = $state(false);
 	let isSavingColor = $state(false);
 
-	// Emoji upload state
-	let showEmojiUpload = $state(false);
-	let emojiFile: File | null = $state(null);
-	let emojiName = $state('');
-	let isUploadingEmoji = $state(false);
-	let customEmojis = $state<Array<{ id: string; name: string; imageUrl: string }>>([]);
+	let customEmojis = $state<Array<{ id: string; name: string; imageUrl: string; hidden: boolean; deleted: boolean }>>([]);
 	let isLoadingEmojis = $state(false);
 
 	// Chat notification sounds
@@ -87,8 +87,6 @@
 	let previewPlayingId = $state<string | null>(null);
 	let previewAudio: HTMLAudioElement | null = null;
 
-	let showDeleteEmojiDialog = $state(false);
-	let pendingEmojiDelete = $state<{ id: string; name: string } | null>(null);
 	let showDeleteSoundDialog = $state(false);
 	let pendingSoundDelete = $state<{ id: string; label: string } | null>(null);
 
@@ -152,7 +150,7 @@
 
 		try {
 			isLoadingEmojis = true;
-			const response = await fetch('/api/emojis', {
+			const response = await fetch('/api/emojis?includeDeleted=true', {
 				credentials: 'include'
 			});
 
@@ -174,131 +172,44 @@
 
 		const defaultEmojis = getAllDefaultEmojis();
 
-		// Add custom emojis
-		const customEmojiList = customEmojis.map((e) => ({
+		// All custom emojis for rendering
+		const allCustomEmojiList = customEmojis.map((e) => ({
 			name: e.name,
 			emoji: `:${e.name}:`,
 			isCustom: true,
 			imageUrl: e.imageUrl
 		}));
+		allEmojisIncludingHidden = [...defaultEmojis, ...allCustomEmojiList];
+
+		const customEmojiList = customEmojis
+			.filter((e) => !e.hidden)
+			.map((e) => ({
+				name: e.name,
+				emoji: `:${e.name}:`,
+				isCustom: true,
+				imageUrl: e.imageUrl
+			}));
 
 		allEmojis = [...defaultEmojis, ...customEmojiList];
 	}
 
-	// Handle emoji file selection
-	function handleEmojiFileSelect(event: Event) {
-		const input = event.target as HTMLInputElement;
-		if (input.files && input.files[0]) {
-			const file = input.files[0];
-			const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-
-			if (!allowedTypes.includes(file.type)) {
-				toast.error('Invalid file type', {
-					description: 'Only JPG, PNG, and GIF files are allowed'
-				});
-				return;
-			}
-
-			if (file.size > 2 * 1024 * 1024) {
-				toast.error('File too large', {
-					description: 'Emoji files must be less than 2MB'
-				});
-				return;
-			}
-
-			emojiFile = file;
-			const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
-			emojiName = nameWithoutExt.toLowerCase().replace(/[^a-z0-9_-]/g, '_');
-		}
-	}
-
-	// Upload emoji
-	async function uploadEmoji() {
-		if (!emojiFile || !emojiName.trim()) {
-			toast.error('Missing information', {
-				description: 'Please select a file and enter an emoji name'
-			});
-			return;
-		}
-
-		// Validate name format
-		const nameRegex = /^[a-zA-Z0-9_-]+$/;
-		if (!nameRegex.test(emojiName.trim())) {
-			toast.error('Invalid emoji name', {
-				description: 'Name can only contain letters, numbers, underscores, and hyphens'
-			});
-			return;
-		}
-
-		try {
-			isUploadingEmoji = true;
-			const formData = new FormData();
-			formData.append('file', emojiFile);
-			formData.append('name', emojiName.trim().toLowerCase());
-
-			const response = await fetch('/api/emojis', {
-				method: 'POST',
-				credentials: 'include',
-				body: formData
-			});
-
-			if (!response.ok) {
-				const error = await response.json();
-				throw new Error(error.error || 'Failed to upload emoji');
-			}
-
-			toast.success('Emoji uploaded', {
-				description: `:${emojiName.trim()}: is now available`
-			});
-
-			emojiFile = null;
-			emojiName = '';
-			showEmojiUpload = false;
-
-			await loadCustomEmojis();
-		} catch (error) {
-			logger.error('Error uploading emoji:', error);
-			toast.error('Failed to upload emoji', {
-				description: error instanceof Error ? error.message : 'Please try again'
-			});
-		} finally {
-			isUploadingEmoji = false;
-		}
-	}
-
-	function requestDeleteEmoji(emojiId: string, emojiName: string) {
-		pendingEmojiDelete = { id: emojiId, name: emojiName };
-		showDeleteEmojiDialog = true;
-	}
-
-	function cancelDeleteEmoji() {
-		showDeleteEmojiDialog = false;
-		pendingEmojiDelete = null;
-	}
-
-	async function confirmDeleteEmoji() {
-		if (!pendingEmojiDelete) return;
-		const { id: emojiId, name: emojiName } = pendingEmojiDelete;
+	async function toggleEmojiVisibility(emojiId: string, currentHidden: boolean) {
 		try {
 			const response = await fetch(`/api/emojis/${emojiId}`, {
-				method: 'DELETE',
-				credentials: 'include'
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ hidden: !currentHidden })
 			});
 
 			if (!response.ok) {
-				throw new Error('Failed to delete emoji');
+				throw new Error('Failed to update emoji');
 			}
-
-			toast.success('Emoji deleted', {
-				description: `:${emojiName}: has been removed`
-			});
 
 			await loadCustomEmojis();
 		} catch (error) {
-			logger.error('Error deleting emoji:', error);
-			toast.error('Failed to delete emoji');
-		} finally {
-			cancelDeleteEmoji();
+			logger.error('Error toggling emoji visibility:', error);
+			toast.error('Failed to update emoji');
 		}
 	}
 
@@ -539,18 +450,6 @@
 </svelte:head>
 
 <ConfirmDialog
-	bind:open={showDeleteEmojiDialog}
-	title="Delete emoji"
-	message={pendingEmojiDelete ? `Remove :${pendingEmojiDelete.name}: from the picker?` : ''}
-	detail="This cannot be undone."
-	variant="danger"
-	confirmLabel="Delete emoji"
-	cancelLabel="Cancel"
-	onConfirm={confirmDeleteEmoji}
-	onCancel={cancelDeleteEmoji}
-/>
-
-<ConfirmDialog
 	bind:open={showDeleteSoundDialog}
 	title="Delete notification sound"
 	message={pendingSoundDelete ? `Remove “${pendingSoundDelete.label}”?` : ''}
@@ -604,7 +503,7 @@
 		<!-- Left Column - Chat -->
 		<AdminChat
 			bind:this={adminChatComponent}
-			bind:allEmojis
+			bind:allEmojis={allEmojisIncludingHidden}
 			bind:emojiPickerReloadTrigger
 			bind:userCount
 			bind:messageCount
@@ -718,71 +617,8 @@
 			<div class="emojis-section">
 				<div class="emojis-header">
 					<h3>Custom Emojis</h3>
-					<button
-						class="add-emoji-btn"
-						onclick={() => (showEmojiUpload = !showEmojiUpload)}
-						title="Upload emoji"
-					>
-						<Upload size={16} />
-					</button>
 				</div>
 				<div class="emojis-content">
-					{#if showEmojiUpload}
-						<div class="emoji-upload-form">
-							<div class="upload-form-group">
-								<label for="emoji-file">Image File (JPG, PNG, GIF)</label>
-								<input
-									id="emoji-file"
-									type="file"
-									accept="image/jpeg,image/jpg,image/png,image/gif"
-									onchange={handleEmojiFileSelect}
-									disabled={isUploadingEmoji}
-								/>
-								{#if emojiFile}
-									<span class="file-name">{emojiFile.name}</span>
-								{/if}
-							</div>
-							<div class="upload-form-group">
-								<label for="emoji-name">Emoji Name</label>
-								<input
-									id="emoji-name"
-									type="text"
-									bind:value={emojiName}
-									placeholder="e.g., myemoji"
-									pattern="[a-zA-Z0-9_-]+"
-									disabled={isUploadingEmoji}
-								/>
-								<span class="form-hint">Use :{emojiName || 'name'}: in chat</span>
-							</div>
-							<div class="upload-form-actions">
-								<button
-									class="upload-btn"
-									onclick={uploadEmoji}
-									disabled={!emojiFile || !emojiName.trim() || isUploadingEmoji}
-								>
-									{#if isUploadingEmoji}
-										<Loader2 size={14} class="spin" />
-										Uploading...
-									{:else}
-										<Upload size={14} />
-										Upload
-									{/if}
-								</button>
-								<button
-									class="cancel-btn"
-									onclick={() => {
-										showEmojiUpload = false;
-										emojiFile = null;
-										emojiName = '';
-									}}
-									disabled={isUploadingEmoji}
-								>
-									Cancel
-								</button>
-							</div>
-						</div>
-					{/if}
-
 					{#if isLoadingEmojis}
 						<div class="emojis-loading">
 							<Loader2 size={16} class="spin" />
@@ -792,22 +628,27 @@
 						<div class="emojis-empty">
 							<ImageIcon size={24} />
 							<p>No custom emojis yet</p>
-							<span>Upload an emoji to get started</span>
+							<span>Add emojis to your Discord server to sync them here</span>
 						</div>
 					{:else}
 						<div class="emojis-grid">
 							{#each customEmojis as emoji}
-								<div class="emoji-item">
+								<div class="emoji-item" class:emoji-item--hidden={emoji.hidden}>
 									<img src={emoji.imageUrl} alt={`:${emoji.name}:`} class="emoji-preview" />
 									<div class="emoji-info">
 										<span class="emoji-name">:{emoji.name}:</span>
 									</div>
 									<button
-										class="emoji-delete-btn"
-										onclick={() => requestDeleteEmoji(emoji.id, emoji.name)}
-										title="Delete emoji"
+										class="emoji-toggle-btn"
+										onclick={() => toggleEmojiVisibility(emoji.id, emoji.hidden)}
+										title={emoji.hidden ? 'Show in picker' : 'Hide from picker'}
+										type="button"
 									>
-										<Trash size={12} />
+										{#if emoji.hidden}
+											<EyeOff size={14} />
+										{:else}
+											<Eye size={14} />
+										{/if}
 									</button>
 								</div>
 							{/each}
@@ -1700,32 +1541,51 @@
 		color: #6b7280;
 	}
 
-	.emoji-delete-btn {
+	.emoji-item--hidden {
+		opacity: 0.5;
+	}
+
+	.emoji-item--hidden .emoji-preview {
+		filter: grayscale(1);
+	}
+
+	.emoji-toggle-btn {
 		position: absolute;
 		top: 4px;
 		right: 4px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 20px;
-		height: 20px;
+		width: 22px;
+		height: 22px;
 		padding: 0;
-		background: rgba(239, 68, 68, 0.2);
-		border: 1px solid rgba(239, 68, 68, 0.4);
+		background: rgba(99, 102, 241, 0.2);
+		border: 1px solid rgba(99, 102, 241, 0.4);
 		border-radius: 4px;
-		color: #ef4444;
+		color: #6366f1;
 		cursor: pointer;
 		opacity: 0;
 		transition: all 0.2s;
 	}
 
-	.emoji-item:hover .emoji-delete-btn {
+	.emoji-item:hover .emoji-toggle-btn {
 		opacity: 1;
 	}
 
-	.emoji-delete-btn:hover {
-		background: rgba(239, 68, 68, 0.3);
-		border-color: rgba(239, 68, 68, 0.6);
+	.emoji-toggle-btn:hover {
+		background: rgba(99, 102, 241, 0.3);
+		border-color: rgba(99, 102, 241, 0.6);
+	}
+
+	:global(html:not(.dark)) .emoji-toggle-btn {
+		background: rgba(79, 70, 229, 0.1);
+		border-color: rgba(79, 70, 229, 0.3);
+		color: #4f46e5;
+	}
+
+	:global(html:not(.dark)) .emoji-toggle-btn:hover {
+		background: rgba(79, 70, 229, 0.2);
+		border-color: rgba(79, 70, 229, 0.5);
 	}
 
 	.sounds-intro {
