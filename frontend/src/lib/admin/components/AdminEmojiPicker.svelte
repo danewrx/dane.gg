@@ -6,7 +6,11 @@
 	import { browser } from '$app/environment';
 	import { onDestroy } from 'svelte';
 	import { getEmojiCategories } from '$lib/shared/utils/emojiData';
-	import { trackEmojiUsage, getRecentEmojis } from '$lib/shared/utils/recentEmojis';
+	import {
+		trackEmojiUsage,
+		getRecentEmojis,
+		filterRecentEmojis
+	} from '$lib/shared/utils/recentEmojis';
 
 	const dispatch = createEventDispatcher<{
 		select: { emoji: string; isCustom?: boolean; imageUrl?: string };
@@ -59,7 +63,11 @@
 			const response = await fetch('/api/emojis');
 			if (response.ok) {
 				const data = await response.json();
-				customEmojis = data.data || [];
+				customEmojis = (data.data || []).filter((e: any) => !e.hidden);
+				const available = emojiCategories
+					.flatMap((c) => c.emojis)
+					.concat(customEmojis.map((e) => ({ emoji: `:${e.name}:`, name: e.name })));
+				filterRecentEmojis(available);
 			}
 		} catch (error) {
 			logger.error('Failed to load custom emojis:', error);

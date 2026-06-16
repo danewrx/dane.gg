@@ -77,6 +77,35 @@ export function getRecentEmojis(): Array<{ emoji: string; name: string }> {
 }
 
 /**
+ * Filter recent emojis to remove any that are no longer available
+ */
+export function filterRecentEmojis(
+	availableEmojis: Array<{ emoji: string; name: string }>
+): void {
+	if (!browser) return;
+
+	try {
+		const stored = localStorage.getItem(STORAGE_KEY);
+		if (!stored) return;
+
+		const usage: EmojiUsage[] = JSON.parse(stored);
+		const availableSet = new Set(availableEmojis.map((e) => e.emoji));
+
+		const filtered = usage.filter((u) => availableSet.has(u.emoji));
+
+		if (filtered.length !== usage.length) {
+			if (filtered.length === 0) {
+				localStorage.removeItem(STORAGE_KEY);
+			} else {
+				localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+			}
+		}
+	} catch (error) {
+		logger.error('Error filtering recent emojis:', error);
+	}
+}
+
+/**
  * Clear recent emojis data
  */
 export function clearRecentEmojis(): void {

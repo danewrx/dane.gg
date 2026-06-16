@@ -1,61 +1,29 @@
 import { logger } from '../utils/logger';
 import { Router, Request, Response } from 'express';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import { requireSession, requireAdmin } from '../middleware/auth';
 import { db } from '../db';
 import { emojis } from '../db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { desc, eq, not } from 'drizzle-orm';
+import { requireSession } from '../middleware/auth';
 import { chatService } from '../services/chatService';
 
 const router = Router();
 
-const emojiStorage = multer.diskStorage({
-	destination: (req, file, cb) => {
-		const uploadDir = path.join(process.cwd(), 'static', 'emojis');
-
-		if (!fs.existsSync(uploadDir)) {
-			fs.mkdirSync(uploadDir, { recursive: true });
-		}
-
-		cb(null, uploadDir);
-	},
-	filename: (req, file, cb) => {
-		// Generate filename
-		const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-		const ext = path.extname(file.originalname);
-		cb(null, `emoji-${uniqueSuffix}${ext}`);
-	}
-});
-
-// File filter for emojis (jpg, png, gif)
-const emojiUpload = multer({
-	storage: emojiStorage,
-	limits: {
-		fileSize: 2 * 1024 * 1024 // 2MB max for emojis
-	},
-	fileFilter: (req, file, cb) => {
-		const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-		const allowedExts = ['.jpg', '.jpeg', '.png', '.gif'];
-
-		const fileExt = path.extname(file.originalname).toLowerCase();
-		const isValidType = allowedTypes.includes(file.mimetype) || allowedExts.includes(fileExt);
-
-		if (isValidType) {
-			cb(null, true);
-		} else {
-			cb(new Error('Only JPG, PNG, and GIF files are allowed for emojis'));
-		}
-	}
-});
-
 /**
- * GET /api/emojis - Get all emojis (public endpoint)
+ * GET /api/emojis - Get active and hidden emojis
+ * Query params:
+ *   includeDeleted=true - also include deleted emojis
  */
 router.get('/', async (req: Request, res: Response) => {
 	try {
-		const allEmojis = await db.select().from(emojis).orderBy(desc(emojis.createdAt));
+		const includeDeleted = req.query.includeDeleted === 'true';
+
+		const allEmojis = await (includeDeleted
+			? db.select().from(emojis).orderBy(desc(emojis.createdAt))
+			: db
+					.select()
+					.from(emojis)
+					.where(not(emojis.deleted))
+					.orderBy(desc(emojis.createdAt)));
 
 		res.json({
 			success: true,
@@ -71,110 +39,19 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 /**
- * POST /api/emojis - Upload a new custom emoji (admin only)
+ * PATCH /api/emojis/:id - Toggle hidden status
  */
-router.post(
-	'/',
-	requireSession,
-	requireAdmin,
-	emojiUpload.single('file'),
-	async (req: Request, res: Response) => {
-		try {
-			if (!req.file) {
-				return res.status(400).json({
-					success: false,
-					error: 'No file uploaded'
-				});
-			}
-
-			if (!req.user) {
-				return res.status(401).json({
-					success: false,
-					error: 'User not authenticated'
-				});
-			}
-
-			const { name } = req.body;
-
-			if (!name || typeof name !== 'string' || name.trim().length === 0) {
-				if (fs.existsSync(req.file.path)) {
-					fs.unlinkSync(req.file.path);
-				}
-				return res.status(400).json({
-					success: false,
-					error: 'Emoji name is required'
-				});
-			}
-
-			const nameRegex = /^[a-zA-Z0-9_-]+$/;
-			const sanitizedName = name.trim().toLowerCase();
-
-			if (!nameRegex.test(sanitizedName)) {
-				if (fs.existsSync(req.file.path)) {
-					fs.unlinkSync(req.file.path);
-				}
-				return res.status(400).json({
-					success: false,
-					error: 'Emoji name can only contain letters, numbers, underscores, and hyphens'
-				});
-			}
-
-			// Check if emoji name already exists
-			const existing = await db
-				.select()
-				.from(emojis)
-				.where(eq(emojis.name, sanitizedName))
-				.limit(1);
-
-			if (existing.length > 0) {
-				if (fs.existsSync(req.file.path)) {
-					fs.unlinkSync(req.file.path);
-				}
-				return res.status(409).json({
-					success: false,
-					error: 'An emoji with this name already exists'
-				});
-			}
-
-			// Save emoji to database
-			const imageUrl = `/emojis/${req.file.filename}`;
-			const [newEmoji] = await db
-				.insert(emojis)
-				.values({
-					name: sanitizedName,
-					imageUrl: imageUrl,
-					isCustom: true,
-					createdBy: req.user.id
-				})
-				.returning();
-
-			chatService.broadcastEmojiUpdate();
-
-			res.json({
-				success: true,
-				data: newEmoji
-			});
-		} catch (error: any) {
-			logger.error('Error uploading emoji:', error);
-
-			if (req.file && fs.existsSync(req.file.path)) {
-				fs.unlinkSync(req.file.path);
-			}
-
-			res.status(500).json({
-				success: false,
-				error: error.message || 'Failed to upload emoji'
-			});
-		}
-	}
-);
-
-/**
- * DELETE /api/emojis/:id - Delete a custom emoji (admin only)
- */
-router.delete('/:id', requireSession, requireAdmin, async (req: Request, res: Response) => {
+router.patch('/:id', requireSession, async (req: Request, res: Response) => {
 	try {
 		const { id } = req.params;
+		const { hidden } = req.body;
+
+		if (typeof hidden !== 'boolean') {
+			return res.status(400).json({
+				success: false,
+				error: 'hidden must be a boolean'
+			});
+		}
 
 		const [emoji] = await db.select().from(emojis).where(eq(emojis.id, id)).limit(1);
 
@@ -185,31 +62,23 @@ router.delete('/:id', requireSession, requireAdmin, async (req: Request, res: Re
 			});
 		}
 
-		if (!emoji.isCustom) {
-			return res.status(400).json({
-				success: false,
-				error: 'Cannot delete default emojis'
-			});
-		}
-
-		const filePath = path.join(process.cwd(), 'static', emoji.imageUrl);
-		if (fs.existsSync(filePath)) {
-			fs.unlinkSync(filePath);
-		}
-
-		await db.delete(emojis).where(eq(emojis.id, id));
+		const [updated] = await db
+			.update(emojis)
+			.set({ hidden })
+			.where(eq(emojis.id, id))
+			.returning();
 
 		chatService.broadcastEmojiUpdate();
 
 		res.json({
 			success: true,
-			message: 'Emoji deleted successfully'
+			data: updated
 		});
 	} catch (error: any) {
-		logger.error('Error deleting emoji:', error);
+		logger.error('Error updating emoji:', error);
 		res.status(500).json({
 			success: false,
-			error: error.message || 'Failed to delete emoji'
+			error: error.message || 'Failed to update emoji'
 		});
 	}
 });
