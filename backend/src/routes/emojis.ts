@@ -3,7 +3,7 @@ import { Router, Request, Response } from 'express';
 import { db } from '../db';
 import { emojis } from '../db/schema';
 import { desc, eq, not } from 'drizzle-orm';
-import { requireSession, requireAdmin } from '../middleware/auth';
+import { requireSession } from '../middleware/auth';
 import { chatService } from '../services/chatService';
 
 const router = Router();
