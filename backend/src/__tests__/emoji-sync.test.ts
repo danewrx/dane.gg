@@ -12,7 +12,7 @@ function simulateSyncLogic(incomingEmojis: Array<{ id: string; name: string; ima
 
 	return {
 		toInsertOrUpdate: incomingEmojis,
-		toMarkDeleted: incomingIds.length > 0 ? [] : [],
+		toMarkDeleted: [],
 		toUndelete: incomingIds
 	};
 }
