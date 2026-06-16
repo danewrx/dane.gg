@@ -1,0 +1,1 @@
+ALTER TABLE "website"."emojis" ADD COLUMN "animated" boolean DEFAULT false NOT NULL;
