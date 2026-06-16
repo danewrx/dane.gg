@@ -95,10 +95,9 @@ describe('Emoji Sync Logic', () => {
 	});
 
 	it('should handle empty incoming emoji list (all should be marked deleted)', () => {
-		const incomingIds = new Set<string>();
 		const existingIds = ['emoji-1', 'emoji-2', 'emoji-3'];
 
-		const toDelete = existingIds.filter((id) => !incomingIds.has(id));
+		const toDelete = existingIds.filter((id) => !new Set<string>().has(id));
 
 		expect(toDelete).toEqual(existingIds);
 		expect(toDelete.length).toBe(existingIds.length);
@@ -114,7 +113,7 @@ describe('Emoji Sync Logic', () => {
 		// Default: exclude deleted
 		const active = allEmojis.filter((e) => !e.deleted);
 		expect(active.length).toBe(2);
-		expect(active.map((e) => e.name).sort()).toEqual(['active', 'hidden']);
+		expect(active.map((e) => e.name).sort((a, b) => a.localeCompare(b))).toEqual(['active', 'hidden']);
 
 		// With includeDeleted=true
 		const all = allEmojis;
