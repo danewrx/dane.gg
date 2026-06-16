@@ -36,10 +36,10 @@ describe('Emoji Sync Logic', () => {
 		// Incoming: only emoji-1
 		// Expected: mark emoji-2 as deleted
 
-		const incomingIds = ['emoji-1'];
+		const incomingIds = new Set(['emoji-1']);
 		const existingIds = ['emoji-1', 'emoji-2'];
 
-		const toDelete = existingIds.filter((id) => !incomingIds.includes(id));
+		const toDelete = existingIds.filter((id) => !incomingIds.has(id));
 
 		expect(toDelete).toEqual(['emoji-2']);
 		expect(toDelete.length).toBe(1);
@@ -50,10 +50,10 @@ describe('Emoji Sync Logic', () => {
 		// Now incoming: emoji-1, emoji-2
 		// Expected: un-delete emoji-2
 
-		const incomingIds = ['emoji-1', 'emoji-2'];
+		const incomingIds = new Set(['emoji-1', 'emoji-2']);
 		const previouslyDeleted = ['emoji-2'];
 
-		const toUndelete = previouslyDeleted.filter((id) => incomingIds.includes(id));
+		const toUndelete = previouslyDeleted.filter((id) => incomingIds.has(id));
 
 		expect(toUndelete).toEqual(['emoji-2']);
 	});
@@ -68,11 +68,11 @@ describe('Emoji Sync Logic', () => {
 			{ id: 'uuid-2', name: 'siteupload', discordEmojiId: null }
 		];
 
-		const incomingIds = ['emoji-1']; // emoji-1 still exists in Discord
+		const incomingIds = new Set(['emoji-1']); // emoji-1 still exists in Discord
 
 		// Filter: only mark as deleted if discordEmojiId is set AND not in incoming
 		const toMarkDeleted = emojisInDb
-			.filter((e) => e.discordEmojiId !== null && !incomingIds.includes(e.discordEmojiId!))
+			.filter((e) => e.discordEmojiId !== null && !incomingIds.has(e.discordEmojiId!))
 			.map((e) => e.id);
 
 		expect(toMarkDeleted).toEqual([]);
@@ -114,7 +114,7 @@ describe('Emoji Sync Logic', () => {
 		// Default: exclude deleted
 		const active = allEmojis.filter((e) => !e.deleted);
 		expect(active.length).toBe(2);
-		expect(active.map((e) => e.name)).toEqual(['active', 'hidden']);
+		expect(active.map((e) => e.name).sort()).toEqual(['active', 'hidden']);
 
 		// With includeDeleted=true
 		const all = allEmojis;
