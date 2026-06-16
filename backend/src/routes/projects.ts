@@ -39,6 +39,9 @@ router.get('/', generalLimiter, async (req, res) => {
 				repoUrl: projects.repoUrl,
 				repoText: projects.repoText,
 				repoIcon: projects.repoIcon,
+				logoUrl: projects.logoUrl,
+				logoBgColor: projects.logoBgColor,
+				logoBorder: projects.logoBorder,
 				displayOrder: projects.displayOrder,
 				createdAt: projects.createdAt,
 				updatedAt: projects.updatedAt,
@@ -109,6 +112,9 @@ router.get('/', generalLimiter, async (req, res) => {
 					repoUrl: project.repoUrl,
 					repoText: project.repoText,
 					repoIcon: project.repoIcon,
+					logoUrl: project.logoUrl,
+					logoBgColor: project.logoBgColor,
+					logoBorder: project.logoBorder,
 					displayOrder: project.displayOrder,
 					createdAt: project.createdAt,
 					updatedAt: project.updatedAt,
@@ -166,6 +172,9 @@ router.get('/admin/all', requireSession, async (req, res) => {
 				repoUrl: projects.repoUrl,
 				repoText: projects.repoText,
 				repoIcon: projects.repoIcon,
+				logoUrl: projects.logoUrl,
+				logoBgColor: projects.logoBgColor,
+				logoBorder: projects.logoBorder,
 				displayOrder: projects.displayOrder,
 				createdAt: projects.createdAt,
 				updatedAt: projects.updatedAt,
@@ -244,6 +253,9 @@ router.get('/admin/:id', requireSession, async (req, res) => {
 				repoUrl: projects.repoUrl,
 				repoText: projects.repoText,
 				repoIcon: projects.repoIcon,
+				logoUrl: projects.logoUrl,
+				logoBgColor: projects.logoBgColor,
+				logoBorder: projects.logoBorder,
 				displayOrder: projects.displayOrder,
 				createdAt: projects.createdAt,
 				updatedAt: projects.updatedAt,
@@ -310,6 +322,9 @@ router.post('/admin', requireSession, async (req, res) => {
 			repoUrl,
 			repoText,
 			repoIcon,
+			logoUrl,
+			logoBgColor,
+			logoBorder,
 			displayOrder,
 			featured,
 			tagIds
@@ -368,6 +383,12 @@ router.post('/admin', requireSession, async (req, res) => {
 				repoUrl: repoUrl || null,
 				repoText: repoText || 'View Repository',
 				repoIcon: repoIcon || null,
+				logoUrl: logoUrl || null,
+				logoBgColor: (() => {
+					const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+					return logoBgColor && hexColorRegex.test(logoBgColor) ? logoBgColor : null;
+				})(),
+				logoBorder: logoBorder || false,
 				displayOrder: displayOrder ?? 0,
 				featured: featured || false,
 				updatedAt: now
@@ -391,6 +412,9 @@ router.post('/admin', requireSession, async (req, res) => {
 				repoUrl: projects.repoUrl,
 				repoText: projects.repoText,
 				repoIcon: projects.repoIcon,
+				logoUrl: projects.logoUrl,
+				logoBgColor: projects.logoBgColor,
+				logoBorder: projects.logoBorder,
 				displayOrder: projects.displayOrder,
 				createdAt: projects.createdAt,
 				updatedAt: projects.updatedAt,
@@ -507,6 +531,9 @@ router.put('/admin/:id', requireSession, async (req, res) => {
 			repoUrl,
 			repoText,
 			repoIcon,
+			logoUrl,
+			logoBgColor,
+			logoBorder,
 			displayOrder,
 			featured,
 			createdAt,
@@ -563,6 +590,15 @@ router.put('/admin/:id', requireSession, async (req, res) => {
 		if (repoUrl !== undefined) updateData.repoUrl = repoUrl || null;
 		if (repoText !== undefined) updateData.repoText = repoText || 'View Repository';
 		if (repoIcon !== undefined) updateData.repoIcon = repoIcon || null;
+		if (logoUrl !== undefined) updateData.logoUrl = logoUrl || null;
+		if (logoBgColor !== undefined) {
+			const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+			if (logoBgColor && !hexColorRegex.test(logoBgColor)) {
+				return res.status(400).json({ success: false, error: 'logoBgColor must be a valid hex color (e.g. #ff0000)' });
+			}
+			updateData.logoBgColor = logoBgColor || null;
+		}
+		if (logoBorder !== undefined) updateData.logoBorder = logoBorder ?? false;
 		if (displayOrder !== undefined) updateData.displayOrder = displayOrder;
 		if (featured !== undefined) updateData.featured = featured;
 		if (createdAt !== undefined) updateData.createdAt = new Date(createdAt);
@@ -586,6 +622,9 @@ router.put('/admin/:id', requireSession, async (req, res) => {
 				repoUrl: projects.repoUrl,
 				repoText: projects.repoText,
 				repoIcon: projects.repoIcon,
+				logoUrl: projects.logoUrl,
+				logoBgColor: projects.logoBgColor,
+				logoBorder: projects.logoBorder,
 				displayOrder: projects.displayOrder,
 				createdAt: projects.createdAt,
 				updatedAt: projects.updatedAt,
@@ -716,6 +755,9 @@ router.get('/category/:categoryId', generalLimiter, async (req, res) => {
 				repoUrl: projects.repoUrl,
 				repoText: projects.repoText,
 				repoIcon: projects.repoIcon,
+				logoUrl: projects.logoUrl,
+				logoBgColor: projects.logoBgColor,
+				logoBorder: projects.logoBorder,
 				displayOrder: projects.displayOrder,
 				createdAt: projects.createdAt,
 				updatedAt: projects.updatedAt,
@@ -764,6 +806,9 @@ router.get('/category/:categoryId', generalLimiter, async (req, res) => {
 					repoUrl: project.repoUrl,
 					repoText: project.repoText,
 					repoIcon: project.repoIcon,
+					logoUrl: project.logoUrl,
+					logoBgColor: project.logoBgColor,
+					logoBorder: project.logoBorder,
 					displayOrder: project.displayOrder,
 					createdAt: project.createdAt,
 					updatedAt: project.updatedAt,

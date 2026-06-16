@@ -46,6 +46,11 @@
 	let imageUrl = $state('');
 	let imageUrlIsExternal = $state(false);
 	let imageUrlFilename = $state<string | null>(null);
+	let logoUrl = $state('');
+	let logoUrlIsExternal = $state(false);
+	let logoUrlFilename = $state<string | null>(null);
+	let logoBgColor = $state('');
+	let logoBorder = $state(false);
 	let active = $state('Active');
 	let published = $state(false);
 	let featured = $state(false);
@@ -161,6 +166,11 @@
 				imageUrl = '';
 				imageUrlIsExternal = false;
 				imageUrlFilename = null;
+				logoUrl = '';
+				logoUrlIsExternal = false;
+				logoUrlFilename = null;
+				logoBgColor = '';
+				logoBorder = false;
 				active = 'Active';
 				published = false;
 				featured = false;
@@ -247,6 +257,17 @@
 			} else {
 				imageUrlFilename = null;
 			}
+			logoUrl = project.logoUrl || '';
+			logoUrlIsExternal = logoUrl
+				? logoUrl.startsWith('http://') || logoUrl.startsWith('https://')
+				: false;
+			if (!logoUrlIsExternal && logoUrl && logoUrl.startsWith('/uploads/')) {
+				logoUrlFilename = logoUrl.replace('/uploads/', '');
+			} else {
+				logoUrlFilename = null;
+			}
+			logoBgColor = project.logoBgColor || '';
+			logoBorder = project.logoBorder || false;
 			active = project.active;
 			published = project.published;
 			featured = project.featured;
@@ -365,6 +386,38 @@
 		imageUrlFilename = null;
 	}
 
+	function handleLogoUpload(file: UploadedFile | UploadedFile[]) {
+		const uploadedFile = Array.isArray(file) ? file[0] : file;
+		if (uploadedFile) {
+			logoUrl = uploadedFile.path;
+			logoUrlIsExternal = uploadedFile.isExternal || false;
+			if (!logoUrlIsExternal && uploadedFile.path.startsWith('/uploads/')) {
+				logoUrlFilename = uploadedFile.path.replace('/uploads/', '');
+			} else {
+				logoUrlFilename = null;
+			}
+		}
+	}
+
+	async function handleRemoveLogo() {
+		if (!logoUrlIsExternal && logoUrlFilename) {
+			try {
+				const response = await fetch(`/api/upload/${logoUrlFilename}`, {
+					method: 'DELETE',
+					credentials: 'include'
+				});
+				if (!response.ok) {
+					logger.error('Failed to delete uploaded logo file');
+				}
+			} catch (error) {
+				logger.error('Error deleting uploaded logo file:', error);
+			}
+		}
+		logoUrl = '';
+		logoUrlIsExternal = false;
+		logoUrlFilename = null;
+	}
+
 	function getImageUrl(path: string): string {
 		if (path.startsWith('http://') || path.startsWith('https://')) {
 			return path;
@@ -418,6 +471,9 @@
 				repoUrl: repoUrl.trim() || undefined,
 				repoText: repoText.trim() || 'View Repository',
 				repoIcon: iconOptionToName(repoIconOption),
+				logoUrl: logoUrl.trim() || null,
+				logoBgColor: logoBgColor.trim() || null,
+				logoBorder: logoBorder,
 				tagIds: tagIds.length > 0 ? tagIds : undefined
 			};
 
@@ -612,6 +668,81 @@
 							label="Upload Project Image"
 							showPreview={false}
 							onUpload={handleImageUpload}
+						/>
+					{/if}
+				</div>
+			</div>
+
+			<!-- Project Logo -->
+			<div class="form-group">
+				<label for="logo">Project Logo</label>
+				<p class="help-text">
+					Small icon displayed inline to the left of the project title. Recommended: square image,
+					64×64px or higher. PNG with transparency works well.
+				</p>
+				<div class="image-input-group">
+					{#if logoUrl}
+						<div class="logo-preview-container">
+							<div
+								class="logo-preview"
+								style={logoBgColor ? `background-color: ${logoBgColor};` : ''}
+							>
+								<img
+									src={getImageUrl(logoUrl)}
+									alt="Logo preview"
+									onerror={(e) => {
+										logger.error('Failed to load logo:', logoUrl);
+										(e.target as HTMLImageElement).style.display = 'none';
+									}}
+								/>
+								<button
+									type="button"
+									class="remove-image"
+									onclick={handleRemoveLogo}
+									aria-label="Remove logo"
+								>
+									<X size={16} />
+								</button>
+							</div>
+							<div class="logo-options">
+								<div class="logo-option-row">
+									<label class="logo-option-label" for="logo-bg-color">Background color</label>
+									<p class="help-text">Optional. Useful for transparent logos.</p>
+									<div class="color-input-row">
+										<input
+											type="color"
+											id="logo-bg-color"
+											value={logoBgColor || '#000000'}
+											oninput={(e) => (logoBgColor = (e.target as HTMLInputElement).value)}
+											class="color-swatch-input"
+											title="Pick background color"
+										/>
+										{#if logoBgColor}
+											<button
+												type="button"
+												class="clear-color-button"
+												onclick={() => (logoBgColor = '')}
+											>
+												<X size={14} /> Clear
+											</button>
+										{/if}
+									</div>
+								</div>
+								<label class="logo-option-row checkbox-row">
+									<input type="checkbox" bind:checked={logoBorder} />
+									<span>Add themed border</span>
+									<span class="help-text inline">Uses the site's current theme border color</span>
+								</label>
+							</div>
+						</div>
+					{:else}
+						<FileUpload
+							acceptedTypes={['image']}
+							maxSize={5 * 1024 * 1024}
+							multiple={false}
+							label="Upload Project Logo"
+							showPreview={false}
+							onUpload={handleLogoUpload}
 						/>
 					{/if}
 				</div>
@@ -1231,6 +1362,109 @@
 
 	.remove-image:hover {
 		background: rgba(239, 68, 68, 0.9);
+	}
+
+	.logo-preview-container {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	.logo-preview {
+		position: relative;
+		width: 80px;
+		height: 80px;
+		border-radius: 8px;
+		overflow: hidden;
+		border: 1px solid var(--border-color, #3a3a3a);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.logo-preview img {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		display: block;
+	}
+
+	.logo-options {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	.logo-option-row {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.logo-option-label {
+		color: var(--text-primary, #ffffff);
+		font-size: 13px;
+		font-weight: 500;
+	}
+
+	.color-input-row {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-top: 4px;
+	}
+
+	.color-swatch-input {
+		width: 40px;
+		height: 40px;
+		padding: 2px;
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		background: var(--bg-secondary, #2d2d2d);
+		cursor: pointer;
+	}
+
+	.clear-color-button {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 6px 10px;
+		background: var(--bg-tertiary, #3a3a3a);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 6px;
+		color: var(--text-secondary, #a1a1aa);
+		font-size: 12px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.clear-color-button:hover {
+		border-color: var(--accent-color, #6366f1);
+		color: var(--text-primary, #ffffff);
+	}
+
+	.checkbox-row {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: 8px;
+		cursor: pointer;
+		color: var(--text-primary, #ffffff);
+		font-size: 13px;
+		font-weight: 500;
+	}
+
+	.checkbox-row input[type='checkbox'] {
+		margin: 0;
+		cursor: pointer;
+		width: 16px;
+		height: 16px;
+	}
+
+	.help-text.inline {
+		display: inline;
+		margin: 0;
+		font-size: 11px;
 	}
 
 	.category-header,
