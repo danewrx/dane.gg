@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { toast } from 'svelte-sonner';
 
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
-	import { MessageSquare, Send, Trash2, Smile, Loader2 } from 'lucide-svelte';
+	import { MessageSquare, Send, Trash, Smile, Loader2 } from 'lucide-svelte';
 	import AdminEmojiPicker from '$lib/admin/components/AdminEmojiPicker.svelte';
 	import AdminEmojiTooltip from '$lib/admin/components/AdminEmojiTooltip.svelte';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
@@ -429,6 +430,7 @@
 						});
 					} else if (data.type === 'error' && data.message) {
 						logger.error('Server error:', data.message);
+						toast.error(data.message);
 					} else if (data.type === 'adminConfig' && data.data) {
 						const config = data.data as { nickname?: string; color?: string };
 						if (config.nickname) {
@@ -1194,7 +1196,7 @@
 									onclick={() => requestDeleteMessage(chatMsg.id)}
 									title="Delete message"
 								>
-									<Trash2 size={14} />
+									<Trash size={14} />
 								</button>
 							{/if}
 						</div>
