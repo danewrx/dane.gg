@@ -498,7 +498,8 @@ export class ChatService {
 		// Log command attempts for debugging
 		if (
 			message.startsWith('/set_discord_message_id') ||
-			message.startsWith('/delete_discord_message')
+			message.startsWith('/delete_discord_message') ||
+			message.startsWith('/delete_from_discord')
 		) {
 			const isAdmin = this.adminClients.has(ws);
 			logger.info(
@@ -653,6 +654,21 @@ export class ChatService {
 					message: 'Invalid format. Use: /set_discord_message_id <messageId> <discordMessageId>'
 				});
 			}
+			return;
+		}
+
+		// /delete_from_discord <discordMessageId> - Delete site message by Discord message ID
+		if (message.startsWith('/delete_from_discord ')) {
+			if (!this.adminClients.has(ws)) {
+				this.sendToClient(ws, { type: 'error', message: 'Unauthorized' });
+				return;
+			}
+			const discordMessageId = message.substring(21).trim();
+			if (!discordMessageId || !/^\d+$/.test(discordMessageId)) {
+				this.sendToClient(ws, { type: 'error', message: 'Invalid Discord message ID' });
+				return;
+			}
+			await this.handleDeleteByDiscordMessageId(discordMessageId);
 			return;
 		}
 	}
@@ -1002,6 +1018,33 @@ export class ChatService {
 			this.broadcastDelete(messageId);
 		} catch (error) {
 			logger.error('Error deleting message:', error);
+		}
+	}
+
+	/**
+	 * Delete a site message by its Discord message ID
+	 */
+	private async handleDeleteByDiscordMessageId(discordMessageId: string): Promise<void> {
+		try {
+			const messageResult = await db
+				.select({ id: messages.id })
+				.from(messages)
+				.where(eq(messages.discordMessageId, discordMessageId))
+				.limit(1);
+
+			const siteMessage = messageResult[0];
+			if (!siteMessage) {
+				logger.info(`No site message found for Discord message ID: ${discordMessageId}`);
+				return;
+			}
+
+			await db.delete(messages).where(eq(messages.id, siteMessage.id));
+			this.broadcastDelete(siteMessage.id);
+			logger.info(
+				`Deleted site message ${siteMessage.id} via Discord deletion ${discordMessageId}`
+			);
+		} catch (error) {
+			logger.error('Error deleting message by Discord ID:', error);
 		}
 	}
 
