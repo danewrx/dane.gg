@@ -4,7 +4,7 @@
 
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
-	import { MessageSquare, Send, Trash, Smile, Loader2 } from 'lucide-svelte';
+	import { MessageSquare, Send, Smile, Loader2, Trash2 } from 'lucide-svelte';
 	import AdminEmojiPicker from '$lib/admin/components/AdminEmojiPicker.svelte';
 	import AdminEmojiTooltip from '$lib/admin/components/AdminEmojiTooltip.svelte';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
@@ -1196,7 +1196,7 @@
 									onclick={() => requestDeleteMessage(chatMsg.id)}
 									title="Delete message"
 								>
-									<Trash size={14} />
+									<Trash2 size={14} />
 								</button>
 							{/if}
 						</div>
@@ -1550,6 +1550,7 @@
 		justify-content: center;
 		width: 24px;
 		height: 24px;
+		padding: 0;
 		background: transparent;
 		border: none;
 		border-radius: 4px;
