@@ -1052,10 +1052,9 @@ export class ChatService {
 	 * Notify Discord bot to delete a message in Discord
 	 */
 	private notifyDiscordBotDelete(discordMessageId: string): void {
-		// Send command to all admin clients (Discord bot should be an admin client)
 		const command = `/delete_discord_message ${discordMessageId}`;
 		this.adminClients.forEach((client) => {
-			if (client.readyState === WebSocket.OPEN) {
+			if (client.readyState === WebSocket.OPEN && this.apiKeyConnections.has(client)) {
 				try {
 					client.send(command);
 					logger.info(`Sent Discord delete command to bot: ${discordMessageId}`);
