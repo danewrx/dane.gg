@@ -9,6 +9,8 @@
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 	import RainbowText from '$lib/site/components/RainbowText.svelte';
 	import SiteBackNav from '$lib/site/components/layout/SiteBackNav.svelte';
+	import { siteTheme } from '$lib/site/stores/theme';
+	import { getReadableTagColors } from '$lib/site/constants/tagContrast';
 	import type { PageData } from './$types';
 
 	interface ProjectTag {
@@ -164,9 +166,10 @@
 						{#if project.tags && project.tags.length > 0}
 							<div class="project-tags">
 								{#each project.tags as tag (tag.id)}
+									{@const tagColors = getReadableTagColors(tag.color, $siteTheme.surfaceColor)}
 									<span
 										class="tag"
-										style="background-color: {tag.color}20; color: {tag.color}; border-color: {tag.color}40;"
+										style="background-color: {tagColors.background}; color: {tagColors.text}; border-color: {tagColors.border};"
 									>
 										{tag.title}
 									</span>
