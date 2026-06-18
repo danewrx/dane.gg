@@ -17,10 +17,8 @@ test.describe('Site navigation', () => {
 				.getByRole('navigation')
 				.getByRole('link', { name: route.name, exact: true });
 			const urlGlob = route.path === '/' ? '**/' : `**${route.path}`;
-			await Promise.all([
-				page.waitForURL(urlGlob, { timeout: 20_000 }),
-				navLink.click()
-			]);
+			await navLink.click();
+			await page.waitForURL(urlGlob, { timeout: 20_000, waitUntil: 'domcontentloaded' });
 
 			if (route.selector) {
 				await expect(page.locator(route.selector)).toBeVisible();
