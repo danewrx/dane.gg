@@ -6,6 +6,7 @@ FROM oven/bun:1 AS builder
 WORKDIR /build
 
 COPY backend/package.json backend/bun.lock ./
+COPY backend/patches patches/
 RUN bun install --frozen-lockfile
 
 FROM node:22-alpine
