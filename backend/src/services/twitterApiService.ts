@@ -17,10 +17,7 @@ function parseTweetPostedAtFromLegacy(legacy: unknown): Date | undefined {
 	const record = asObject(legacy);
 	if (!record) return undefined;
 	const rawValue =
-		record.created_at ??
-		record.createdAt ??
-		record.timestamp_ms ??
-		record.timestampMs;
+		record.created_at ?? record.createdAt ?? record.timestamp_ms ?? record.timestampMs;
 	if (rawValue == null) return undefined;
 
 	const toValidDate = (value: string | number): Date | undefined => {
@@ -62,9 +59,14 @@ function compareTweetIds(a: string, b: string): number | null {
 	return 0;
 }
 
-function getTimelineInstructionEntries(instruction: unknown): unknown[] | null {
-	const entries = asObject(instruction)?.entries;
-	return Array.isArray(entries) ? entries : null;
+export function getTimelineInstructionEntries(instruction: unknown): unknown[] | null {
+	const instr = asObject(instruction);
+	if (!instr) return null;
+	// TimelineAddEntries: has `entries` array
+	if (Array.isArray(instr.entries)) return instr.entries;
+	// TimelinePinEntry: has single `entry` object
+	if (instr.entry && typeof instr.entry === 'object') return [instr.entry as unknown];
+	return null;
 }
 
 function getTweetResultFromTimelineEntry(entry: unknown): any {
@@ -157,7 +159,10 @@ function profileImageFromUserLegacy(userLegacy: any): string | undefined {
 	);
 }
 
-function extractIdAndTextFromObject(obj: unknown): { tweetId: string | null; tweetText: string | null } {
+function extractIdAndTextFromObject(obj: unknown): {
+	tweetId: string | null;
+	tweetText: string | null;
+} {
 	let tweetId: string | null = null;
 	let tweetText: string | null = null;
 
@@ -230,8 +235,19 @@ function isTimelineTweetResult(result: any): boolean {
 	return Boolean(result && (result.__typename === 'Tweet' || result.legacy));
 }
 
-function mergeNewestTweet(current: any, candidate: any): any {
+export function isRetweetOrReply(candidate: any): boolean {
+	const legacy = asObject(candidate?.legacy);
+	if (!legacy) return false;
+	const text = legacy.full_text ?? legacy.fullText ?? legacy.text ?? '';
+	if (typeof text === 'string' && text.trimStart().startsWith('RT @')) return true;
+	const inReplyTo =
+		legacy.in_reply_to_status_id_str ?? legacy.inReplyToStatusIdStr ?? legacy.in_reply_to_status_id;
+	return !!inReplyTo;
+}
+
+export function mergeNewestTweet(current: any, candidate: any): any {
 	if (!isTimelineTweetResult(candidate)) return current;
+	if (isRetweetOrReply(candidate)) return current;
 	return pickNewerTweet(current, candidate);
 }
 
@@ -259,7 +275,7 @@ function pickNewestFromRawInstructions(instructions: any[], tweetData: any): any
 	return newest;
 }
 
-function extractNewestTweetFromTimeline(responseData: any): any {
+export function extractNewestTweetFromTimeline(responseData: any): any {
 	let tweetData: any = null;
 	const instructions = getTimelineInstructions(responseData);
 
@@ -294,15 +310,21 @@ type BackfillPageResult = {
 
 function parseBackfillConfig(): BackfillConfig {
 	return {
-		batchSize: Math.max(Number.parseInt(process.env.TWITTER_FULL_BACKFILL_BATCH_SIZE ?? '20', 10), 1),
-		maxPages: Math.max(Number.parseInt(process.env.TWITTER_FULL_BACKFILL_MAX_PAGES ?? '200', 10), 1),
+		batchSize: Math.max(
+			Number.parseInt(process.env.TWITTER_FULL_BACKFILL_BATCH_SIZE ?? '20', 10),
+			1
+		),
+		maxPages: Math.max(
+			Number.parseInt(process.env.TWITTER_FULL_BACKFILL_MAX_PAGES ?? '200', 10),
+			1
+		),
 		maxNewTweets: Number.parseInt(process.env.TWITTER_FULL_BACKFILL_MAX_NEW_TWEETS ?? '0', 10),
 		pruneDeleted:
 			(process.env.TWITTER_FULL_BACKFILL_PRUNE_DELETED ?? 'true').toLowerCase() === 'true'
 	};
 }
 
-function pickBackfillTweetId(legacy: any, fallback: any): string | null {
+export function pickBackfillTweetId(legacy: any, fallback: any): string | null {
 	const idStr =
 		legacy?.id_str ??
 		legacy?.idStr ??
@@ -317,7 +339,7 @@ function pickBackfillTweetId(legacy: any, fallback: any): string | null {
 	return /^\d+$/.test(s) ? s : null;
 }
 
-function extractBottomCursor(obj: any, depth = 0): string | null {
+export function extractBottomCursor(obj: any, depth = 0): string | null {
 	if (!obj || typeof obj !== 'object' || depth > 25) return null;
 
 	if (obj.cursorType === 'Bottom' || obj.cursor_type === 'Bottom') {
@@ -440,6 +462,19 @@ function buildBackfillAuthor(userData: any, username: string): BackfillAuthor {
 	};
 }
 
+export function extractProfileImageFromTweetResult(tweetResult: any): string | null {
+	const userLegacy =
+		tweetResult?.core?.user_results?.result?.legacy ||
+		tweetResult?.core?.userResults?.result?.legacy;
+	if (!userLegacy) return null;
+	return (
+		userLegacy.profile_image_url_https ||
+		userLegacy.profileImageUrlHttps ||
+		userLegacy.profile_image_url ||
+		null
+	);
+}
+
 async function upsertNewBackfillTweets(
 	tweets: any[],
 	author: BackfillAuthor,
@@ -454,14 +489,20 @@ async function upsertNewBackfillTweets(
 		if (!tweetId || typeof tweetText !== 'string' || !tweetText.trim()) continue;
 
 		fetchedIds.add(tweetId);
-		if (existingIds.has(tweetId)) continue;
+		if (existingIds.has(tweetId)) {
+			const profileImage = extractProfileImageFromTweetResult(t) || author.profileImage;
+			if (profileImage) {
+				await TweetService.updateProfileImageIfMissing(tweetId, profileImage);
+			}
+			continue;
+		}
 
 		await TweetService.upsertTweet({
 			tweetId,
 			content: tweetText,
 			authorName: author.authorName,
 			authorUsername: author.authorUsername,
-			authorProfileImage: author.profileImage || undefined,
+			authorProfileImage: extractProfileImageFromTweetResult(t) || author.profileImage || undefined,
 			authorProfileUrl: author.profileUrl || undefined,
 			tweetUrl: `https://x.com/${author.authorUsername}/status/${tweetId}`,
 			postedAt: parseTweetPostedAtFromLegacy(legacy)
@@ -596,10 +637,7 @@ export class TwitterApiService {
 
 			if (!userId) {
 				logger.error('Could not get user ID for:', username);
-				logger.error(
-					'Response structure:',
-					JSON.stringify(userResult.data, null, 2)
-				);
+				logger.error('Response structure:', JSON.stringify(userResult.data, null, 2));
 				return null;
 			}
 
@@ -680,8 +718,7 @@ export class TwitterApiService {
 					const userLegacy = resolveUserLegacyFromTweet(tweetData, userData);
 
 					const authorName = userLegacy?.name || '';
-					const authorUsername =
-						userLegacy?.screenName || userLegacy?.screen_name || username;
+					const authorUsername = userLegacy?.screenName || userLegacy?.screen_name || username;
 
 					const profileImage = profileImageFromUserLegacy(userLegacy);
 
@@ -757,9 +794,7 @@ export class TwitterApiService {
 
 			if (timeSinceLastFetch < this.MIN_FETCH_INTERVAL) {
 				const waitTime = this.MIN_FETCH_INTERVAL - timeSinceLastFetch;
-				logger.info(
-					`waiting ${Math.ceil(waitTime / 1000)}s before next fetch`
-				);
+				logger.info(`waiting ${Math.ceil(waitTime / 1000)}s before next fetch`);
 				return false;
 			}
 
@@ -884,9 +919,7 @@ export class TwitterApiService {
 	private static async resolveBackfillUser(
 		username: string
 	): Promise<{ userId: string; userData: any } | null> {
-		const userResult = await this.client
-			.getUserApi()
-			.getUserByScreenName({ screenName: username });
+		const userResult = await this.client.getUserApi().getUserByScreenName({ screenName: username });
 
 		let userId: string | null = null;
 		let userData: any = null;
@@ -933,12 +966,17 @@ export class TwitterApiService {
 			const tweets = collectTweetsFromTimeline(rawJson, config.batchSize);
 			if (tweets.length === 0) break;
 
+			const prevFetchedSize = fetchedIds.size;
 			const batchNew = await upsertNewBackfillTweets(tweets, author, existingIds, fetchedIds);
 			inserted += batchNew;
 			pages++;
 
-			const nextCursor =
-				extractBottomCursor(rawJson) ?? extractBottomCursor(timelineResult);
+			if (fetchedIds.size === prevFetchedSize) {
+				reachedEndOfTimeline = true;
+				break;
+			}
+
+			const nextCursor = extractBottomCursor(rawJson) ?? extractBottomCursor(timelineResult);
 			if (!nextCursor) {
 				reachedEndOfTimeline = true;
 				break;
