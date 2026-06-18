@@ -9,9 +9,9 @@ COPY backend/package.json backend/bun.lock ./
 COPY backend/patches patches/
 RUN bun install --frozen-lockfile
 
-FROM node:22-alpine
+FROM node:22-slim
 
-RUN apk add --no-cache tini && npm install -g tsx
+RUN apt-get update && apt-get install -y --no-install-recommends tini && rm -rf /var/lib/apt/lists/* && npm install -g tsx
 
 WORKDIR /repo/backend
 
