@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
 
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
 	import { RefreshCw } from 'lucide-svelte';
 
 	function monitorStatusClass(status: string): string {
@@ -116,18 +116,72 @@
 		}
 	}
 
+	let listEl = $state<HTMLDivElement | null>(null);
+	let columns = $state(2);
+	let resizeObserver: ResizeObserver | null = null;
+
+	const COLUMN_GAP = 16;
+	const MAX_COLUMNS = 2;
+
+	function recomputeColumns() {
+		if (!listEl) return;
+
+		const items = listEl.querySelectorAll<HTMLElement>('.status-item');
+		if (items.length === 0) return;
+
+		let widestItem = 0;
+		for (const item of items) {
+			const name = item.querySelector<HTMLElement>('.status-name');
+			const indicator = item.querySelector<HTMLElement>('.status-indicator');
+			if (!name || !indicator) continue;
+			const itemGap = parseFloat(getComputedStyle(item).columnGap) || 12;
+			const required = name.offsetWidth + indicator.offsetWidth + itemGap + 1;
+			if (required > widestItem) widestItem = required;
+		}
+
+		if (widestItem === 0) return;
+
+		const available = listEl.clientWidth;
+		const fit = Math.floor((available + COLUMN_GAP) / (widestItem + COLUMN_GAP));
+		columns = Math.max(1, Math.min(MAX_COLUMNS, items.length, fit));
+	}
+
 	onMount(() => {
 		loadStatus();
 
 		updateInterval = setInterval(() => {
 			loadStatus();
 		}, UPDATE_INTERVAL);
+
+		// Recompute once web fonts settle, since glyph widths affect the measurement
+		if (typeof document !== 'undefined' && document.fonts?.ready) {
+			void document.fonts.ready.then(() => recomputeColumns());
+		}
+	});
+
+	// Re-measure when list element mounts or monitor set changes
+	$effect(() => {
+		void allMonitors;
+		const el = listEl;
+		if (!el) return;
+
+		void tick().then(() => recomputeColumns());
+
+		if (typeof ResizeObserver !== 'undefined') {
+			if (!resizeObserver) {
+				resizeObserver = new ResizeObserver(() => recomputeColumns());
+			}
+			resizeObserver.disconnect();
+			resizeObserver.observe(el);
+		}
 	});
 
 	onDestroy(() => {
 		if (updateInterval) {
 			clearInterval(updateInterval);
 		}
+		resizeObserver?.disconnect();
+		resizeObserver = null;
 	});
 </script>
 
@@ -147,7 +201,11 @@
 		</div>
 	{:else}
 		<div class="status-container">
-			<div class="status-list">
+			<div
+				class="status-list"
+				bind:this={listEl}
+				style:grid-template-columns={`repeat(${columns}, minmax(0, 1fr))`}
+			>
 				{#each allMonitors as monitor (monitor.id)}
 					<div class="status-item">
 						<span class="status-name">{monitor.customName || monitor.name}</span>
@@ -200,15 +258,9 @@
 
 	.status-list {
 		display: grid;
-		grid-template-columns: repeat(2, 1fr);
+		/* Column count is computed in JS (see recomputeColumns); SSR fallback */
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 6px 16px;
-	}
-
-	@media (max-width: 768px) {
-		.status-list {
-			grid-template-columns: 1fr;
-			gap: 2px;
-		}
 	}
 
 	.status-item {
