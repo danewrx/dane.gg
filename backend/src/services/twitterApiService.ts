@@ -18,7 +18,7 @@ function isReply(tweet: any): boolean {
 function parseTweetPostedAt(createdAt: string | undefined): Date | undefined {
 	if (!createdAt) return undefined;
 	const d = new Date(createdAt);
-	return isNaN(d.getTime()) ? undefined : d;
+	return Number.isNaN(d.getTime()) ? undefined : d;
 }
 
 function tweetToTweetData(tweet: any, fallbackUsername: string): TweetData {
@@ -141,7 +141,7 @@ export class TwitterApiService {
 				return null;
 			}
 
-			const newest = candidates.reduce(pickNewest);
+			const newest = candidates.reduce<any>((a, b) => pickNewest(a, b), undefined);
 			logger.info('Successfully extracted tweet:', newest.id);
 			return tweetToTweetData(newest, username);
 		} catch (error: any) {
