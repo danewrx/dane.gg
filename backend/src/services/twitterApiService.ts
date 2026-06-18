@@ -230,8 +230,18 @@ function isTimelineTweetResult(result: any): boolean {
 	return Boolean(result && (result.__typename === 'Tweet' || result.legacy));
 }
 
+function isRetweetOrReply(candidate: any): boolean {
+	const legacy = asObject(candidate?.legacy);
+	if (!legacy) return false;
+	const text = legacy.full_text ?? legacy.fullText ?? legacy.text ?? '';
+	if (typeof text === 'string' && text.trimStart().startsWith('RT @')) return true;
+	const inReplyTo = legacy.in_reply_to_status_id_str ?? legacy.inReplyToStatusIdStr ?? legacy.in_reply_to_status_id;
+	return !!inReplyTo;
+}
+
 function mergeNewestTweet(current: any, candidate: any): any {
 	if (!isTimelineTweetResult(candidate)) return current;
+	if (isRetweetOrReply(candidate)) return current;
 	return pickNewerTweet(current, candidate);
 }
 

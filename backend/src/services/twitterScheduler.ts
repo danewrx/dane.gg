@@ -73,7 +73,7 @@ export class TwitterScheduler {
 				fetchCronExpression = process.env.TWITTER_FETCH_CRON;
 			} else if (process.env.TWITTER_POLL_INTERVAL) {
 				// Backwards compatibility - converts milliseconds to cron expression (deprecated)
-				const pollIntervalMs = Math.max(parseInt(process.env.TWITTER_POLL_INTERVAL, 10), 30000);
+				const pollIntervalMs = Math.max(Number.parseInt(process.env.TWITTER_POLL_INTERVAL, 10), 30000);
 				const pollIntervalMinutes = Math.floor(pollIntervalMs / 60000);
 				fetchCronExpression = `*/${pollIntervalMinutes} * * * *`;
 				logger.info(
