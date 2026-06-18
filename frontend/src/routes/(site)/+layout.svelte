@@ -7,6 +7,7 @@
 	import SiteAdminShortcut from '$lib/site/components/layout/SiteAdminShortcut.svelte';
 	import WeatherEffects from '$lib/site/components/effects/WeatherEffects.svelte';
 	import ScrollingBanner from '$lib/site/components/ScrollingBanner.svelte';
+	import BlogRssDock from '$lib/site/components/blog/BlogRssDock.svelte';
 	import ThemeProvider from '$lib/site/components/ThemeProvider.svelte';
 	import '$lib/site/oneko/variants';
 	import { bannerLabelPosition } from '$lib/site/stores/bannerLabelPosition';
@@ -98,8 +99,10 @@
 
 	<div class="content-window">
 		<div class="content-area">
-			<!-- Header -->
-			<Header />
+			<!-- Sticky header -->
+			<div class="content-header">
+				<Header />
+			</div>
 
 			<!-- Scrolling Banner -->
 			<ScrollingBanner />
@@ -107,6 +110,12 @@
 			<!-- Page content -->
 			{@render children?.()}
 		</div>
+
+		{#if isBlogSection}
+			<div class="blog-rss-dock-bar">
+				<BlogRssDock />
+			</div>
+		{/if}
 	</div>
 
 	{#if !isThemePreviewEmbed}
@@ -216,16 +225,42 @@
 		position: relative;
 		overflow: hidden;
 		z-index: 1;
+		display: flex;
+		flex-direction: column;
 	}
 
 	.content-area {
 		background: var(--theme-surface, var(--bg-primary));
-		height: 100%;
-		padding: 1rem 1rem 3rem 1rem;
+		flex: 1 1 auto;
+		min-height: 0;
 		overflow-y: auto;
+		scrollbar-gutter: stable;
+		padding: 0 1rem 3rem 1rem;
 		transition: all 0.3s ease;
 		position: relative;
 		line-height: var(--theme-body-line-height, 1.65);
+	}
+
+	.blog-rss-dock-bar {
+		flex-shrink: 0;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		padding: 8px 0;
+		border-top: 1px solid var(--theme-border, var(--border-color, #ffffff));
+		background: var(--theme-surface, var(--bg-primary));
+	}
+
+	.content-header {
+		position: sticky;
+		top: 0;
+		z-index: 5;
+		background: var(--theme-surface, var(--bg-primary));
+		padding: 1rem 0;
+	}
+
+	:global(.content-header .header) {
+		margin-bottom: 0;
 	}
 
 	/* Scanline effect */
@@ -350,7 +385,11 @@
 		}
 
 		.content-area {
-			padding: 0.75rem 1rem 2rem 1rem;
+			padding: 0 1rem 2rem 1rem;
+		}
+
+		.content-header {
+			padding: 0.75rem 0;
 		}
 	}
 
@@ -361,7 +400,11 @@
 		}
 
 		.content-area {
-			padding: 0.5rem 0.75rem 1.5rem 0.75rem;
+			padding: 0 0.75rem 1.5rem 0.75rem;
+		}
+
+		.content-header {
+			padding: 0.5rem 0;
 		}
 	}
 
