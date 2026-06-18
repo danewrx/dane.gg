@@ -9,6 +9,8 @@
 	import { getProjectStatusColor } from '$lib/shared/constants/projectConstants';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 	import RainbowText from '$lib/site/components/RainbowText.svelte';
+	import { siteTheme } from '$lib/site/stores/theme';
+	import { getReadableTagColors } from '$lib/site/constants/tagContrast';
 	interface ProjectTag {
 		id: string;
 		title: string;
@@ -209,9 +211,13 @@
 									{#if project.tags && project.tags.length > 0}
 										<div class="project-tags">
 											{#each project.tags as tag (tag.id)}
+												{@const tagColors = getReadableTagColors(
+													tag.color,
+													$siteTheme.surfaceColor
+												)}
 												<span
 													class="tag"
-													style="background-color: {tag.color}20; color: {tag.color}; border-color: {tag.color}40;"
+													style="background-color: {tagColors.background}; color: {tagColors.text}; border-color: {tagColors.border};"
 												>
 													{tag.title}
 												</span>
@@ -568,7 +574,7 @@
 		font-weight: 500;
 		transition: all 0.2s ease;
 		flex: 1;
-		min-width: 0;
+		white-space: nowrap;
 	}
 
 	.action-button:hover {
@@ -606,13 +612,9 @@
 		}
 
 		.project-header {
-			flex-direction: column;
-			align-items: flex-start;
+			flex-wrap: nowrap;
+			align-items: center;
 			width: 100%;
-		}
-
-		.project-status {
-			align-self: flex-start;
 		}
 	}
 

@@ -314,7 +314,7 @@
 		box-shadow:
 			0 0 0 1px rgba(0, 0, 0, 0.1),
 			0 8px 32px rgba(0, 0, 0, 0.6),
-			0 0 40px var(--theme-accent, #90ee90);
+			0 0 16px color-mix(in srgb, var(--theme-accent, #90ee90) 28%, transparent);
 		width: 90%;
 		max-width: min(720px, calc(100vw - 32px));
 		max-height: min(80vh, 80dvh);
@@ -347,9 +347,7 @@
 		justify-content: space-between;
 		border-bottom: 2px solid var(--theme-border, #ffffff);
 		user-select: none;
-		text-shadow:
-			0 0 10px var(--theme-accent, #90ee90),
-			0 0 20px var(--theme-accent, #90ee90);
+		text-shadow: 0 0 8px color-mix(in srgb, var(--theme-accent, #90ee90) 35%, transparent);
 	}
 
 	.titlebar-left {
@@ -485,15 +483,13 @@
 		transform: translateY(-4px);
 		box-shadow:
 			0 8px 16px rgba(0, 0, 0, 0.4),
-			0 0 20px var(--theme-accent, #90ee90);
+			0 0 12px color-mix(in srgb, var(--theme-accent, #90ee90) 25%, transparent);
 		border-color: var(--theme-accent, #90ee90);
 	}
 
 	.theme-card.active {
 		border-color: var(--theme-accent, #90ee90);
-		box-shadow:
-			0 0 20px var(--theme-accent, #90ee90),
-			0 0 40px var(--theme-accent, #90ee90);
+		box-shadow: 0 0 14px color-mix(in srgb, var(--theme-accent, #90ee90) 30%, transparent);
 	}
 
 	.theme-card.active::before {
@@ -602,7 +598,7 @@
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
 		border: 1px solid var(--theme-border, #ffffff);
-		text-shadow: 0 0 10px var(--theme-accent, #90ee90);
+		text-shadow: 0 0 6px color-mix(in srgb, var(--theme-accent, #90ee90) 30%, transparent);
 	}
 
 	/* Window Footer */

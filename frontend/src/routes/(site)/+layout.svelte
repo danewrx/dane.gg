@@ -7,6 +7,7 @@
 	import SiteAdminShortcut from '$lib/site/components/layout/SiteAdminShortcut.svelte';
 	import WeatherEffects from '$lib/site/components/effects/WeatherEffects.svelte';
 	import ScrollingBanner from '$lib/site/components/ScrollingBanner.svelte';
+	import BlogRssDock from '$lib/site/components/blog/BlogRssDock.svelte';
 	import ThemeProvider from '$lib/site/components/ThemeProvider.svelte';
 	import '$lib/site/oneko/variants';
 	import { bannerLabelPosition } from '$lib/site/stores/bannerLabelPosition';
@@ -50,12 +51,7 @@
 <CanonicalLink />
 <svelte:head>
 	{#if isBlogSection}
-		<link
-			rel="alternate"
-			type="application/rss+xml"
-			title="dane.gg Blog"
-			href="/blog/rss.xml"
-		/>
+		<link rel="alternate" type="application/rss+xml" title="dane.gg Blog" href="/blog/rss.xml" />
 	{/if}
 </svelte:head>
 {#if staticRouteSeo}
@@ -67,13 +63,7 @@
 	<ThemeProvider />
 
 	<div class="lain-ambient-deco" aria-hidden="true">
-		<img
-			src="/assets/themes/lain/misc/lain.gif"
-			alt=""
-			width="480"
-			height="720"
-			decoding="async"
-		/>
+		<img src="/assets/themes/lain/misc/lain.gif" alt="" width="480" height="720" decoding="async" />
 	</div>
 
 	<!-- Weather Effects -->
@@ -87,19 +77,17 @@
 	<div class="bg-overlay bg-overlay--vignette" aria-hidden="true"></div>
 	<div class="bg-overlay bg-overlay--glare" aria-hidden="true"></div>
 
-	<div
-		class="banner-side-label"
-		style={bannerLabelStyle}
-		aria-hidden="true"
-	>
+	<div class="banner-side-label" style={bannerLabelStyle} aria-hidden="true">
 		<span class="banner-side-text">cool sites<br />+ friends</span>
 		<span class="banner-side-arrow">&rarr;</span>
 	</div>
 
 	<div class="content-window">
 		<div class="content-area">
-			<!-- Header -->
-			<Header />
+			<!-- Sticky header -->
+			<div class="content-header">
+				<Header />
+			</div>
 
 			<!-- Scrolling Banner -->
 			<ScrollingBanner />
@@ -107,6 +95,12 @@
 			<!-- Page content -->
 			{@render children?.()}
 		</div>
+
+		{#if isBlogSection}
+			<div class="blog-rss-dock-bar">
+				<BlogRssDock />
+			</div>
+		{/if}
 	</div>
 
 	{#if !isThemePreviewEmbed}
@@ -216,16 +210,42 @@
 		position: relative;
 		overflow: hidden;
 		z-index: 1;
+		display: flex;
+		flex-direction: column;
 	}
 
 	.content-area {
 		background: var(--theme-surface, var(--bg-primary));
-		height: 100%;
-		padding: 1rem 1rem 3rem 1rem;
+		flex: 1 1 auto;
+		min-height: 0;
 		overflow-y: auto;
+		scrollbar-gutter: stable;
+		padding: 0 1rem 3rem 1rem;
 		transition: all 0.3s ease;
 		position: relative;
 		line-height: var(--theme-body-line-height, 1.65);
+	}
+
+	.blog-rss-dock-bar {
+		flex-shrink: 0;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		padding: 8px 0;
+		border-top: 1px solid var(--theme-border, var(--border-color, #ffffff));
+		background: var(--theme-surface, var(--bg-primary));
+	}
+
+	.content-header {
+		position: sticky;
+		top: 0;
+		z-index: 5;
+		background: var(--theme-surface, var(--bg-primary));
+		padding: 1rem 0;
+	}
+
+	:global(.content-header .header) {
+		margin-bottom: 0;
 	}
 
 	/* Scanline effect */
@@ -270,7 +290,10 @@
 	.bg-overlay--grid {
 		opacity: var(--theme-overlay-grid-opacity, 0);
 		background-image:
-			linear-gradient(var(--theme-overlay-grid-line, rgba(255, 255, 255, 0.05)) 1px, transparent 1px),
+			linear-gradient(
+				var(--theme-overlay-grid-line, rgba(255, 255, 255, 0.05)) 1px,
+				transparent 1px
+			),
 			linear-gradient(
 				90deg,
 				var(--theme-overlay-grid-line, rgba(255, 255, 255, 0.05)) 1px,
@@ -350,7 +373,11 @@
 		}
 
 		.content-area {
-			padding: 0.75rem 1rem 2rem 1rem;
+			padding: 0 1rem 3.75rem 1rem;
+		}
+
+		.content-header {
+			padding: 0.75rem 0;
 		}
 	}
 
@@ -361,7 +388,11 @@
 		}
 
 		.content-area {
-			padding: 0.5rem 0.75rem 1.5rem 0.75rem;
+			padding: 0 0.75rem 3.5rem 0.75rem;
+		}
+
+		.content-header {
+			padding: 0.5rem 0;
 		}
 	}
 
@@ -372,7 +403,7 @@
 
 	.banner-side-label {
 		position: fixed;
-		top: calc(var(--banner-label-anchor-top, 0px) + 18px);
+		top: calc(var(--banner-label-anchor-top, 0px) + 4px);
 		right: calc(100vw - var(--banner-label-anchor-left, 0px) + 34px);
 		display: inline-flex;
 		align-items: center;
@@ -425,7 +456,8 @@
 	}
 
 	@keyframes banner-shimmer {
-		0%, 100% {
+		0%,
+		100% {
 			background-position: 0% 50%;
 		}
 		50% {
@@ -434,7 +466,8 @@
 	}
 
 	@keyframes banner-arrow-pulse {
-		0%, 100% {
+		0%,
+		100% {
 			opacity: 0.35;
 			transform: translateX(0);
 		}

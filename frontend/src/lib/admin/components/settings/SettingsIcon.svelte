@@ -98,7 +98,7 @@
 	@media (max-width: 768px) {
 		.settings-icon {
 			bottom: max(15px, env(safe-area-inset-bottom, 0px));
-			right: max(12px, env(safe-area-inset-right, 0px));
+			right: max(0px, env(safe-area-inset-right, 0px));
 			width: 44px;
 			height: 44px;
 		}
@@ -112,9 +112,14 @@
 	@media (max-width: 360px) {
 		.settings-icon {
 			bottom: max(10px, env(safe-area-inset-bottom, 0px));
-			right: max(8px, env(safe-area-inset-right, 0px));
-			width: 42px;
-			height: 42px;
+			right: max(0px, env(safe-area-inset-right, 0px));
+			width: 40px;
+			height: 40px;
+		}
+
+		.gear-icon {
+			width: 18px;
+			height: 18px;
 		}
 	}
 </style>

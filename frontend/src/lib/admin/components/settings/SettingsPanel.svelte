@@ -135,7 +135,7 @@
 		border-radius: 0;
 		box-shadow:
 			-4px 0 12px rgba(0, 0, 0, 0.5),
-			0 0 30px var(--theme-accent, #90ee90);
+			0 0 14px color-mix(in srgb, var(--theme-accent, #90ee90) 26%, transparent);
 		z-index: 1001;
 		display: flex;
 		flex-direction: column;
@@ -211,9 +211,7 @@
 		background: var(--theme-accent, #90ee90);
 		border-color: var(--theme-accent, #90ee90);
 		color: var(--theme-background, #0a0a0a);
-		box-shadow:
-			0 0 15px var(--theme-accent, #90ee90),
-			0 0 30px var(--theme-accent, #90ee90);
+		box-shadow: 0 0 12px color-mix(in srgb, var(--theme-accent, #90ee90) 28%, transparent);
 		transform: translateY(-2px);
 	}
 

@@ -309,7 +309,7 @@
 		width: 100%;
 		overflow: hidden;
 		background: transparent;
-		padding: 16px 0;
+		padding: 2px 0;
 		margin: 0;
 	}
 
@@ -368,7 +368,7 @@
 
 	@media (max-width: 768px) {
 		.button-banner {
-			padding: 12px 0;
+			padding: 2px 0;
 		}
 
 		.button-row {
@@ -390,7 +390,7 @@
 
 	@media (max-width: 480px) {
 		.button-banner {
-			padding: 8px 0;
+			padding: 1px 0;
 		}
 
 		.button-row {
