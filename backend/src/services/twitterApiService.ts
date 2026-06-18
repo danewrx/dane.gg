@@ -59,7 +59,7 @@ function compareTweetIds(a: string, b: string): number | null {
 	return 0;
 }
 
-function getTimelineInstructionEntries(instruction: unknown): unknown[] | null {
+export function getTimelineInstructionEntries(instruction: unknown): unknown[] | null {
 	const instr = asObject(instruction);
 	if (!instr) return null;
 	// TimelineAddEntries: has `entries` array
@@ -235,7 +235,7 @@ function isTimelineTweetResult(result: any): boolean {
 	return Boolean(result && (result.__typename === 'Tweet' || result.legacy));
 }
 
-function isRetweetOrReply(candidate: any): boolean {
+export function isRetweetOrReply(candidate: any): boolean {
 	const legacy = asObject(candidate?.legacy);
 	if (!legacy) return false;
 	const text = legacy.full_text ?? legacy.fullText ?? legacy.text ?? '';
@@ -245,7 +245,7 @@ function isRetweetOrReply(candidate: any): boolean {
 	return !!inReplyTo;
 }
 
-function mergeNewestTweet(current: any, candidate: any): any {
+export function mergeNewestTweet(current: any, candidate: any): any {
 	if (!isTimelineTweetResult(candidate)) return current;
 	if (isRetweetOrReply(candidate)) return current;
 	return pickNewerTweet(current, candidate);
@@ -275,7 +275,7 @@ function pickNewestFromRawInstructions(instructions: any[], tweetData: any): any
 	return newest;
 }
 
-function extractNewestTweetFromTimeline(responseData: any): any {
+export function extractNewestTweetFromTimeline(responseData: any): any {
 	let tweetData: any = null;
 	const instructions = getTimelineInstructions(responseData);
 
@@ -324,7 +324,7 @@ function parseBackfillConfig(): BackfillConfig {
 	};
 }
 
-function pickBackfillTweetId(legacy: any, fallback: any): string | null {
+export function pickBackfillTweetId(legacy: any, fallback: any): string | null {
 	const idStr =
 		legacy?.id_str ??
 		legacy?.idStr ??
@@ -339,7 +339,7 @@ function pickBackfillTweetId(legacy: any, fallback: any): string | null {
 	return /^\d+$/.test(s) ? s : null;
 }
 
-function extractBottomCursor(obj: any, depth = 0): string | null {
+export function extractBottomCursor(obj: any, depth = 0): string | null {
 	if (!obj || typeof obj !== 'object' || depth > 25) return null;
 
 	if (obj.cursorType === 'Bottom' || obj.cursor_type === 'Bottom') {
@@ -462,7 +462,7 @@ function buildBackfillAuthor(userData: any, username: string): BackfillAuthor {
 	};
 }
 
-function extractProfileImageFromTweetResult(tweetResult: any): string | null {
+export function extractProfileImageFromTweetResult(tweetResult: any): string | null {
 	const userLegacy =
 		tweetResult?.core?.user_results?.result?.legacy ||
 		tweetResult?.core?.userResults?.result?.legacy;
