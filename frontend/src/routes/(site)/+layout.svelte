@@ -372,7 +372,7 @@
 
 	.banner-side-label {
 		position: fixed;
-		top: calc(var(--banner-label-anchor-top, 0px) + 18px);
+		top: calc(var(--banner-label-anchor-top, 0px) + 4px);
 		right: calc(100vw - var(--banner-label-anchor-left, 0px) + 34px);
 		display: inline-flex;
 		align-items: center;

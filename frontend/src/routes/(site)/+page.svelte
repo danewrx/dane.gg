@@ -251,6 +251,9 @@
 
 	.widgets-section {
 		margin-bottom: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
 	}
 
 	:global(.discord-widget) {
@@ -264,33 +267,18 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 80px;
-		margin-top: var(--spacing-md, 16px);
 	}
 
 	:global(.tweet-widget) {
 		display: flex;
 		flex-direction: column;
 		min-height: 80px;
-		margin-top: var(--spacing-md, 16px);
 	}
 
 	:global(.links-widget) {
 		display: flex;
 		flex-direction: column;
 		min-height: 120px;
-		margin-top: var(--spacing-md, 16px);
-	}
-
-	:global(.recent-posts-section) {
-		margin-top: var(--spacing-md, 16px);
-	}
-
-	:global(.service-status-section) {
-		margin-top: var(--spacing-md, 16px);
-	}
-
-	:global(.chat-section) {
-		margin-top: var(--spacing-md, 16px);
 	}
 
 	:global(.links-widget .bordered-box) {
@@ -542,9 +530,6 @@
 		outline: none !important;
 	}
 
-	:global(.site-stats-widget) {
-		margin-top: var(--spacing-md, 16px);
-	}
 
 	:global(.discord-widget),
 	:global(.tweet-widget),
@@ -666,7 +651,7 @@
 		.two-column-layout {
 			display: flex;
 			flex-direction: column;
-			gap: 0.5rem;
+			gap: 10px;
 		}
 
 		.left-column,
