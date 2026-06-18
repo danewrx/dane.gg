@@ -421,7 +421,7 @@
 		width: 100%;
 		overflow: hidden;
 		min-height: unset;
-		margin-bottom: var(--spacing-md, 16px);
+		padding: 14px 0 12px;
 	}
 
 	.tweet-info {
@@ -452,8 +452,8 @@
 
 	.profile-image {
 		flex-shrink: 0;
-		width: 52px;
-		height: 52px;
+		width: 64px;
+		height: 64px;
 		border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.15));
 		background: var(--theme-background, var(--background-secondary, #2a2a2a));
 		display: flex;
@@ -652,8 +652,8 @@
 	}
 
 	.default-placeholder .profile-image {
-		width: 52px;
-		height: 52px;
+		width: 64px;
+		height: 64px;
 	}
 
 	.tweet-details {
@@ -691,16 +691,6 @@
 
 	/* Responsive design */
 	@media (max-width: 1024px) {
-		.profile-image {
-			width: 48px;
-			height: 48px;
-		}
-
-		.default-placeholder .profile-image {
-			width: 48px;
-			height: 48px;
-		}
-
 		.no-image {
 			font-size: calc(17 * 1em / 14);
 		}
@@ -741,16 +731,6 @@
 	}
 
 	@media (max-width: 900px) {
-		.profile-image {
-			width: 46px;
-			height: 46px;
-		}
-
-		.default-placeholder .profile-image {
-			width: 46px;
-			height: 46px;
-		}
-
 		.no-image {
 			font-size: calc(16 * 1em / 14);
 		}
@@ -792,13 +772,13 @@
 
 	@media (max-width: 768px) {
 		.profile-image {
-			width: 44px;
-			height: 44px;
+			width: 52px;
+			height: 52px;
 		}
 
 		.default-placeholder .profile-image {
-			width: 44px;
-			height: 44px;
+			width: 52px;
+			height: 52px;
 		}
 
 		.no-image {
@@ -841,16 +821,6 @@
 	}
 
 	@media (max-width: 600px) {
-		.profile-image {
-			width: 40px;
-			height: 40px;
-		}
-
-		.default-placeholder .profile-image {
-			width: 40px;
-			height: 40px;
-		}
-
 		.no-image {
 			font-size: calc(15 * 1em / 14);
 		}
@@ -891,31 +861,14 @@
 	}
 
 	@media (max-width: 480px) {
-		.author-info {
-			align-items: stretch;
-		}
-
-		.author-details {
-			justify-content: space-between;
-		}
-
 		.profile-image {
-			width: 52px;
-			height: unset;
-			min-height: 52px;
-		}
-
-		.profile-image img {
-			width: 100%;
-			height: 100%;
-			min-height: 52px;
-			object-fit: cover;
+			width: 60px;
+			height: 60px;
 		}
 
 		.default-placeholder .profile-image {
-			width: 52px;
-			height: unset;
-			min-height: 52px;
+			width: 60px;
+			height: 60px;
 		}
 
 		.no-image {
