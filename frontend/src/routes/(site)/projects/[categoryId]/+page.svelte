@@ -506,7 +506,7 @@
 		font-weight: 500;
 		transition: all 0.2s ease;
 		flex: 1;
-		min-width: 0;
+		white-space: nowrap;
 	}
 
 	.action-button:hover {
@@ -540,13 +540,9 @@
 		}
 
 		.project-header {
-			flex-direction: column;
-			align-items: flex-start;
+			flex-wrap: nowrap;
+			align-items: center;
 			width: 100%;
-		}
-
-		.project-status {
-			align-self: flex-start;
 		}
 	}
 
