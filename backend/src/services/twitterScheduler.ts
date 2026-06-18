@@ -23,8 +23,8 @@ export class TwitterScheduler {
 		}
 
 		// Check if Twitter is configured
-		if (!process.env.TWITTER_COOKIES) {
-			logger.info('TWITTER_COOKIES not set, skipping scheduler initialization');
+		if (!process.env.TWITTER_AUTH_TOKEN) {
+			logger.info('TWITTER_AUTH_TOKEN not set, skipping scheduler initialization');
 			return;
 		}
 

@@ -11,7 +11,8 @@
 		ExternalLink,
 		Calendar,
 		User,
-		Edit2
+		Edit2,
+		Trash2
 	} from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 
@@ -24,7 +25,7 @@
 			method: string;
 			endpoint: string;
 			username: string;
-			hasCookies: boolean;
+			hasAuthToken: boolean;
 		};
 		response?: {
 			status?: number;
@@ -37,7 +38,7 @@
 		configured: boolean;
 		username: string | null;
 		usernameSource?: 'database' | 'environment';
-		hasCookies: boolean;
+		hasAuthToken: boolean;
 		connection: ConnectionStatus | null;
 		timestamp: string;
 	}
@@ -274,6 +275,29 @@
 		}
 	}
 
+	async function deleteTweet(tweetId: string) {
+		if (!confirm('Delete this stored tweet? The next scheduled fetch will pick up the correct latest tweet.')) return;
+		try {
+			const response = await fetch(`/api/twitter/tweets/${encodeURIComponent(tweetId)}`, {
+				method: 'DELETE',
+				credentials: 'include'
+			});
+			if (!response.ok) {
+				const result = await response.json().catch(() => ({}));
+				throw new Error(result.error || 'Failed to delete tweet');
+			}
+			toast.success('Tweet deleted');
+			allTweets = allTweets.filter((t) => t.tweetId !== tweetId);
+			if (latestTweet?.tweetId === tweetId) {
+				latestTweet = null;
+				lastTweetId = null;
+			}
+		} catch (err) {
+			logger.error('Error deleting tweet:', err);
+			toast.error(err instanceof Error ? err.message : 'Failed to delete tweet');
+		}
+	}
+
 	let pollInterval: ReturnType<typeof setInterval> | null = null;
 	let lastTweetId: string | null = null;
 	let isPageVisible = $state(true);
@@ -411,8 +435,7 @@
 							<p class="warning-text">Please set the following environment variables:</p>
 							<ul class="env-vars-list">
 								<li>
-									<code>TWITTER_COOKIES</code> - Twitter/X authentication cookies (obtained from a logged-in
-									session)
+									<code>TWITTER_AUTH_TOKEN</code> - Your <code>auth_token</code> cookie value from x.com (40-character hex string found in browser DevTools → Application → Cookies)
 								</li>
 								<li><code>TWITTER_USERNAME</code> - Your Twitter/X username (without @)</li>
 							</ul>
@@ -486,8 +509,8 @@
 							{/if}
 						</div>
 						<div class="info-item">
-							<span class="info-label">Cookies:</span>
-							<span class="info-value">{status.hasCookies ? 'Configured' : 'Not configured'}</span>
+							<span class="info-label">Auth Token:</span>
+							<span class="info-value">{status.hasAuthToken ? 'Configured' : 'Not configured'}</span>
 						</div>
 						<div class="connection-status-section">
 							<div class="connection-status-header">
@@ -571,13 +594,13 @@
 											>
 										</div>
 										<div class="request-response-item">
-											<span class="request-response-key">Cookies Configured:</span>
+											<span class="request-response-key">Auth Token:</span>
 											<span
 												class="request-response-value"
-												class:success={status.connection.request.hasCookies}
-												class:error={!status.connection.request.hasCookies}
+												class:success={status.connection.request.hasAuthToken}
+												class:error={!status.connection.request.hasAuthToken}
 											>
-												{status.connection.request.hasCookies ? 'Yes' : 'No'}
+												{status.connection.request.hasAuthToken ? 'Configured' : 'Not configured'}
 											</span>
 										</div>
 									</div>
@@ -730,6 +753,14 @@
 													<ExternalLink size={14} />
 												</a>
 											{/if}
+											<button
+												type="button"
+												class="icon-button small danger"
+												onclick={() => deleteTweet(tweet.tweetId)}
+												title="Delete stored tweet"
+											>
+												<Trash2 size={14} />
+											</button>
 										</td>
 									</tr>
 								{/each}
@@ -961,6 +992,12 @@
 	.icon-button:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	.icon-button.danger:hover {
+		background: #ef4444;
+		border-color: #ef4444;
+		color: white;
 	}
 
 	.username-edit {

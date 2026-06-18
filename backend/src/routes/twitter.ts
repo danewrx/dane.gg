@@ -4,6 +4,7 @@ import { requireSession } from '../middleware/auth';
 import { TwitterApiService } from '../services/twitterApiService';
 import { TweetService } from '../services/tweetService';
 import { ConfigService } from '../services/config';
+import { invalidateCached } from '../utils/shortLivedCache';
 
 const router = Router();
 
@@ -105,7 +106,7 @@ router.get('/status', requireSession, async (req: Request, res: Response) => {
 			configured: isConfigured,
 			username: username,
 			usernameSource: usernameSource,
-			hasCookies: !!process.env.TWITTER_COOKIES,
+			hasAuthToken: !!process.env.TWITTER_AUTH_TOKEN,
 			connection: connectionTest,
 			timestamp: new Date().toISOString()
 		});
@@ -194,6 +195,30 @@ router.put('/username', requireSession, async (req: Request, res: Response) => {
 			error: 'Internal server error',
 			message: error.message
 		});
+	}
+});
+
+/**
+ * DELETE /api/twitter/tweets/:tweetId
+ * Delete a stored tweet by its Twitter ID (authenticated users only)
+ */
+router.delete('/tweets/:tweetId', requireSession, async (req: Request, res: Response) => {
+	try {
+		const { tweetId } = req.params;
+		if (!tweetId) {
+			return res.status(400).json({ success: false, error: 'tweetId is required' });
+		}
+
+		const success = await TweetService.deleteTweet(tweetId);
+		if (!success) {
+			return res.status(404).json({ success: false, error: 'Tweet not found or could not be deleted' });
+		}
+
+		invalidateCached('widget:latest-tweet');
+		res.json({ success: true, message: `Tweet ${tweetId} deleted` });
+	} catch (error: any) {
+		logger.error('Error deleting tweet:', error);
+		res.status(500).json({ error: 'Internal server error', message: error.message });
 	}
 });
 
