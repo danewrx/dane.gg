@@ -51,12 +51,7 @@
 <CanonicalLink />
 <svelte:head>
 	{#if isBlogSection}
-		<link
-			rel="alternate"
-			type="application/rss+xml"
-			title="dane.gg Blog"
-			href="/blog/rss.xml"
-		/>
+		<link rel="alternate" type="application/rss+xml" title="dane.gg Blog" href="/blog/rss.xml" />
 	{/if}
 </svelte:head>
 {#if staticRouteSeo}
@@ -68,13 +63,7 @@
 	<ThemeProvider />
 
 	<div class="lain-ambient-deco" aria-hidden="true">
-		<img
-			src="/assets/themes/lain/misc/lain.gif"
-			alt=""
-			width="480"
-			height="720"
-			decoding="async"
-		/>
+		<img src="/assets/themes/lain/misc/lain.gif" alt="" width="480" height="720" decoding="async" />
 	</div>
 
 	<!-- Weather Effects -->
@@ -88,11 +77,7 @@
 	<div class="bg-overlay bg-overlay--vignette" aria-hidden="true"></div>
 	<div class="bg-overlay bg-overlay--glare" aria-hidden="true"></div>
 
-	<div
-		class="banner-side-label"
-		style={bannerLabelStyle}
-		aria-hidden="true"
-	>
+	<div class="banner-side-label" style={bannerLabelStyle} aria-hidden="true">
 		<span class="banner-side-text">cool sites<br />+ friends</span>
 		<span class="banner-side-arrow">&rarr;</span>
 	</div>
@@ -305,7 +290,10 @@
 	.bg-overlay--grid {
 		opacity: var(--theme-overlay-grid-opacity, 0);
 		background-image:
-			linear-gradient(var(--theme-overlay-grid-line, rgba(255, 255, 255, 0.05)) 1px, transparent 1px),
+			linear-gradient(
+				var(--theme-overlay-grid-line, rgba(255, 255, 255, 0.05)) 1px,
+				transparent 1px
+			),
 			linear-gradient(
 				90deg,
 				var(--theme-overlay-grid-line, rgba(255, 255, 255, 0.05)) 1px,
@@ -385,7 +373,7 @@
 		}
 
 		.content-area {
-			padding: 0 1rem 2rem 1rem;
+			padding: 0 1rem 3.75rem 1rem;
 		}
 
 		.content-header {
@@ -400,7 +388,7 @@
 		}
 
 		.content-area {
-			padding: 0 0.75rem 1.5rem 0.75rem;
+			padding: 0 0.75rem 3.5rem 0.75rem;
 		}
 
 		.content-header {
@@ -468,7 +456,8 @@
 	}
 
 	@keyframes banner-shimmer {
-		0%, 100% {
+		0%,
+		100% {
 			background-position: 0% 50%;
 		}
 		50% {
@@ -477,7 +466,8 @@
 	}
 
 	@keyframes banner-arrow-pulse {
-		0%, 100% {
+		0%,
+		100% {
 			opacity: 0.35;
 			transform: translateX(0);
 		}
