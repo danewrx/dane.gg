@@ -1,0 +1,13 @@
+diff --git a/dist/index.js b/dist/index.js
+index 4b71de2a541ca333ca396cc7e914d653ee8eaad5..7a9155ae9791a80be5d6c0605ec2afcfaf9d4e5b 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -164,7 +164,7 @@ class SharedInstance extends events_1.EventEmitter {
+             }
+             const spawnOptions = {
+                 env: { WS_PORT: this.port.toString() },
+-                shell: process.platform !== "win32", // false for Windows, true for others
++                shell: false, // shell:true breaks paths with spaces/parens on Linux
+                 windowsHide: true,
+                 detached: process.platform !== "win32",
+                 // Add cwd option to ensure proper working directory

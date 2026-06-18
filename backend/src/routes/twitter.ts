@@ -105,7 +105,7 @@ router.get('/status', requireSession, async (req: Request, res: Response) => {
 			configured: isConfigured,
 			username: username,
 			usernameSource: usernameSource,
-			hasCookies: !!process.env.TWITTER_COOKIES,
+			hasAuthToken: !!process.env.TWITTER_AUTH_TOKEN,
 			connection: connectionTest,
 			timestamp: new Date().toISOString()
 		});

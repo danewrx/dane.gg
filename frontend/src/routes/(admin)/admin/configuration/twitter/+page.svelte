@@ -24,7 +24,7 @@
 			method: string;
 			endpoint: string;
 			username: string;
-			hasCookies: boolean;
+			hasAuthToken: boolean;
 		};
 		response?: {
 			status?: number;
@@ -37,7 +37,7 @@
 		configured: boolean;
 		username: string | null;
 		usernameSource?: 'database' | 'environment';
-		hasCookies: boolean;
+		hasAuthToken: boolean;
 		connection: ConnectionStatus | null;
 		timestamp: string;
 	}
@@ -274,6 +274,7 @@
 		}
 	}
 
+
 	let pollInterval: ReturnType<typeof setInterval> | null = null;
 	let lastTweetId: string | null = null;
 	let isPageVisible = $state(true);
@@ -411,8 +412,7 @@
 							<p class="warning-text">Please set the following environment variables:</p>
 							<ul class="env-vars-list">
 								<li>
-									<code>TWITTER_COOKIES</code> - Twitter/X authentication cookies (obtained from a logged-in
-									session)
+									<code>TWITTER_AUTH_TOKEN</code> - Your <code>auth_token</code> cookie value from x.com (40-character hex string found in browser DevTools → Application → Cookies)
 								</li>
 								<li><code>TWITTER_USERNAME</code> - Your Twitter/X username (without @)</li>
 							</ul>
@@ -486,8 +486,8 @@
 							{/if}
 						</div>
 						<div class="info-item">
-							<span class="info-label">Cookies:</span>
-							<span class="info-value">{status.hasCookies ? 'Configured' : 'Not configured'}</span>
+							<span class="info-label">Auth Token:</span>
+							<span class="info-value">{status.hasAuthToken ? 'Configured' : 'Not configured'}</span>
 						</div>
 						<div class="connection-status-section">
 							<div class="connection-status-header">
@@ -571,13 +571,13 @@
 											>
 										</div>
 										<div class="request-response-item">
-											<span class="request-response-key">Cookies Configured:</span>
+											<span class="request-response-key">Auth Token:</span>
 											<span
 												class="request-response-value"
-												class:success={status.connection.request.hasCookies}
-												class:error={!status.connection.request.hasCookies}
+												class:success={status.connection.request.hasAuthToken}
+												class:error={!status.connection.request.hasAuthToken}
 											>
-												{status.connection.request.hasCookies ? 'Yes' : 'No'}
+												{status.connection.request.hasAuthToken ? 'Configured' : 'Not configured'}
 											</span>
 										</div>
 									</div>
@@ -691,7 +691,7 @@
 									<th>Date</th>
 									<th>Content</th>
 									<th>Author</th>
-									<th>Actions</th>
+									<th>Link</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -725,7 +725,8 @@
 													href={tweet.tweetUrl}
 													target="_blank"
 													rel="noopener noreferrer"
-													class="action-link"
+													class="icon-button small"
+													title="Open tweet on X"
 												>
 													<ExternalLink size={14} />
 												</a>
@@ -962,6 +963,7 @@
 		opacity: 0.5;
 		cursor: not-allowed;
 	}
+
 
 	.username-edit {
 		display: flex;
@@ -1428,6 +1430,9 @@
 
 	.actions-cell {
 		white-space: nowrap;
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
 	}
 
 	.action-link {
