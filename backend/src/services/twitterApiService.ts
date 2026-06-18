@@ -278,6 +278,7 @@ export class TwitterApiService {
 					break;
 				}
 
+				let hitCap = false;
 				for (const tweet of tweets) {
 					if (!tweet.id) continue;
 					fetchedIds?.add(tweet.id);
@@ -285,10 +286,14 @@ export class TwitterApiService {
 					await TweetService.upsertTweet(tweetToTweetData(tweet, username));
 					existingIds.add(tweet.id);
 					inserted++;
-					if (maxNewTweets > 0 && inserted >= maxNewTweets) break;
+					if (maxNewTweets > 0 && inserted >= maxNewTweets) {
+						hitCap = true;
+						break;
+					}
 				}
 
 				pages++;
+				if (hitCap) break;
 				if (!nextCursor) {
 					reachedEnd = true;
 					break;
