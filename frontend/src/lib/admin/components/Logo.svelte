@@ -115,17 +115,7 @@
 
 	@media (max-width: 480px) {
 		.logo-container {
-			grid-template-columns: 1fr;
-			gap: 1.5rem;
-			text-align: center;
-		}
-
-		.art-ascii {
-			text-align: center;
-		}
-
-		.text-logo {
-			text-align: center;
+			gap: 0.6rem;
 		}
 
 		.ascii-art {
