@@ -23,7 +23,7 @@ export class TwitterScheduler {
 	private static resolveFetchCronExpression(): string {
 		if (process.env.TWITTER_FETCH_CRON) return process.env.TWITTER_FETCH_CRON;
 		if (process.env.TWITTER_POLL_INTERVAL) {
-			const ms = Math.max(parseInt(process.env.TWITTER_POLL_INTERVAL, 10), 30000);
+			const ms = Math.max(Number.parseInt(process.env.TWITTER_POLL_INTERVAL, 10), 30000);
 			logger.info('TWITTER_POLL_INTERVAL is deprecated. Use TWITTER_FETCH_CRON instead.');
 			return `*/${Math.floor(ms / 60000)} * * * *`;
 		}
