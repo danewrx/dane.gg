@@ -287,6 +287,41 @@ export class TwitterApiService {
 		}
 	}
 
+	private static async runBackfillLoop(
+		userId: string,
+		username: string,
+		existingIds: Set<string>,
+		fetchedIds: Set<string> | null,
+		batchSize: number,
+		maxPages: number,
+		maxNewTweets: number
+	): Promise<{ inserted: number; reachedEnd: boolean }> {
+		let cursor: string | undefined;
+		let pages = 0;
+		let inserted = 0;
+		let reachedEnd = false;
+
+		while (pages < maxPages) {
+			const { tweets, nextCursor } = await this.client.users.tweets(userId, {
+				count: batchSize,
+				...(cursor ? { cursor } : {})
+			});
+
+			if (!tweets || tweets.length === 0) { reachedEnd = true; break; }
+
+			const result = await this.processBackfillPage(tweets, username, existingIds, fetchedIds, maxNewTweets, inserted);
+			inserted = result.inserted;
+			pages++;
+
+			if (result.hitCap) break;
+			if (!nextCursor) { reachedEnd = true; break; }
+			cursor = nextCursor;
+			logger.info(`TWITTER: backfill page ${pages}/${maxPages} (inserted ${inserted})`);
+		}
+
+		return { inserted, reachedEnd };
+	}
+
 	static async fetchAndBackfillAllTweets(username: string): Promise<boolean> {
 		try {
 			if (!(await this.ensureClient())) return false;
@@ -303,29 +338,7 @@ export class TwitterApiService {
 
 			logger.info(`TWITTER: Starting backfill for @${username}`);
 
-			let cursor: string | undefined;
-			let pages = 0;
-			let inserted = 0;
-			let reachedEnd = false;
-
-			while (pages < maxPages) {
-				if (maxNewTweets > 0 && inserted >= maxNewTweets) break;
-
-				const { tweets, nextCursor } = await this.client.users.tweets(userId, {
-					count: batchSize,
-					...(cursor ? { cursor } : {})
-				});
-
-				if (!tweets || tweets.length === 0) { reachedEnd = true; break; }
-
-				({ inserted } = await this.processBackfillPage(tweets, username, existingIds, fetchedIds, maxNewTweets, inserted));
-				pages++;
-
-				if (inserted >= maxNewTweets && maxNewTweets > 0) break;
-				if (!nextCursor) { reachedEnd = true; break; }
-				cursor = nextCursor;
-				logger.info(`TWITTER: backfill page ${pages}/${maxPages} (inserted ${inserted})`);
-			}
+			const { inserted, reachedEnd } = await this.runBackfillLoop(userId, username, existingIds, fetchedIds, batchSize, maxPages, maxNewTweets);
 
 			await this.pruneBackfillDeleted(pruneDeleted, reachedEnd, fetchedIds);
 
