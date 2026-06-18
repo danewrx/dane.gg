@@ -1,7 +1,7 @@
 import { logger } from '../utils/logger';
 import { db } from '../db';
 import { tweets, type Tweet, type NewTweet } from '../db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, isNull, and } from 'drizzle-orm';
 
 export interface TweetData {
 	tweetId: string;
@@ -167,6 +167,20 @@ export class TweetService {
 		} catch (error) {
 			logger.error('Error cleaning up tweet records:', error);
 			return false;
+		}
+	}
+
+	/**
+	 * Set authorProfileImage on a tweet only if it is currently NULL.
+	 */
+	static async updateProfileImageIfMissing(tweetId: string, imageUrl: string): Promise<void> {
+		try {
+			await db
+				.update(tweets)
+				.set({ authorProfileImage: imageUrl, updatedAt: new Date() })
+				.where(and(eq(tweets.tweetId, tweetId), isNull(tweets.authorProfileImage)));
+		} catch (error) {
+			logger.error('Error updating profile image for tweet:', tweetId, error);
 		}
 	}
 
