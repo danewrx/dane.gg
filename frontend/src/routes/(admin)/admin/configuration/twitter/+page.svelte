@@ -748,7 +748,8 @@
 													href={tweet.tweetUrl}
 													target="_blank"
 													rel="noopener noreferrer"
-													class="action-link"
+													class="icon-button small"
+													title="Open tweet on X"
 												>
 													<ExternalLink size={14} />
 												</a>
@@ -1465,6 +1466,9 @@
 
 	.actions-cell {
 		white-space: nowrap;
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
 	}
 
 	.action-link {
