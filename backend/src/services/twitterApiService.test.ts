@@ -43,17 +43,6 @@ mock.module('../utils/logger', () => ({
 	logger: { info: mock(() => {}), error: mock(() => {}), warn: mock(() => {}) }
 }));
 mock.module('./config', () => ({ ConfigService: { get: mock(async () => null) } }));
-mock.module('./notificationService', () => ({
-	NotificationService: { isConfigured: mock(() => false), sendWithAppearance: mock(async () => false) }
-}));
-mock.module('./notificationSettings', () => ({
-	getNotificationSettings: mock(async () => ({
-		twitter: { failure: { enabled: false }, restored: { enabled: false } }
-	}))
-}));
-mock.module('./ntfyTemplate', () => ({
-	resolveTemplatedAppearance: mock(() => ({ message: '', appearance: {} }))
-}));
 
 import { TwitterApiService } from './twitterApiService';
 
