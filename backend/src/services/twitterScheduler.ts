@@ -10,6 +10,7 @@ import { ConfigService } from './config';
 export class TwitterScheduler {
 	private static fetchJob: cron.ScheduledTask | null = null;
 	private static healthCheckJob: cron.ScheduledTask | null = null;
+	private static backfillJob: cron.ScheduledTask | null = null;
 	private static isInitialized = false;
 
 	/**
@@ -76,9 +77,7 @@ export class TwitterScheduler {
 				const pollIntervalMs = Math.max(parseInt(process.env.TWITTER_POLL_INTERVAL, 10), 30000);
 				const pollIntervalMinutes = Math.floor(pollIntervalMs / 60000);
 				fetchCronExpression = `*/${pollIntervalMinutes} * * * *`;
-				logger.info(
-					`TWITTER_POLL_INTERVAL is deprecated. Use TWITTER_FETCH_CRON instead.`
-				);
+				logger.info(`TWITTER_POLL_INTERVAL is deprecated. Use TWITTER_FETCH_CRON instead.`);
 			} else {
 				// Default: every 2 minutes
 				fetchCronExpression = '*/2 * * * *';
@@ -113,6 +112,37 @@ export class TwitterScheduler {
 				{
 					timezone: 'UTC'
 				}
+			);
+
+			// Periodic backfill — also prunes tweets deleted on Twitter
+			const backfillCronExpression = process.env.TWITTER_BACKFILL_CRON || '0 */6 * * *';
+
+			if (!cron.validate(backfillCronExpression)) {
+				throw new Error(
+					`Invalid cron expression for TWITTER_BACKFILL_CRON: ${backfillCronExpression}`
+				);
+			}
+
+			this.backfillJob = cron.schedule(
+				backfillCronExpression,
+				async () => {
+					try {
+						const currentDbUsername = await ConfigService.get('twitter_username');
+						const currentUsername =
+							currentDbUsername && typeof currentDbUsername === 'string' && currentDbUsername.trim()
+								? currentDbUsername.trim()
+								: process.env.TWITTER_USERNAME;
+
+						if (currentUsername) {
+							await TwitterApiService.fetchAndBackfillAllTweets(currentUsername);
+						} else {
+							logger.warn('Username not available, skipping periodic backfill');
+						}
+					} catch (error: any) {
+						logger.error('Periodic backfill failed:', error.message);
+					}
+				},
+				{ timezone: 'UTC' }
 			);
 
 			// Get health check cron expression from environment (default: every 2 hours)
@@ -156,10 +186,9 @@ export class TwitterScheduler {
 			const source = dbUsername ? 'database' : 'environment';
 			logger.info(`Initialized for @${username} (from ${source})`);
 			logger.info(`Fetch schedule: ${fetchCronExpression}`);
+			logger.info(`Backfill schedule: ${backfillCronExpression}`);
 			logger.info(`Health check schedule: ${healthCheckCronExpression}`);
-			logger.info(
-				`Polling too frequently may trigger Twitter rate limits or account restrictions`
-			);
+			logger.info(`Polling too frequently may trigger Twitter rate limits or account restrictions`);
 		} catch (error: any) {
 			logger.error('Failed to initialize:', error.message);
 		}
@@ -172,6 +201,11 @@ export class TwitterScheduler {
 		if (this.fetchJob) {
 			this.fetchJob.stop();
 			this.fetchJob = null;
+		}
+
+		if (this.backfillJob) {
+			this.backfillJob.stop();
+			this.backfillJob = null;
 		}
 
 		if (this.healthCheckJob) {

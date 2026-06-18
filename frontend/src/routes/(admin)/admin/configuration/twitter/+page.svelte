@@ -11,8 +11,7 @@
 		ExternalLink,
 		Calendar,
 		User,
-		Edit2,
-		Trash2
+		Edit2
 	} from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 
@@ -275,28 +274,6 @@
 		}
 	}
 
-	async function deleteTweet(tweetId: string) {
-		if (!confirm('Delete this stored tweet? The next scheduled fetch will pick up the correct latest tweet.')) return;
-		try {
-			const response = await fetch(`/api/twitter/tweets/${encodeURIComponent(tweetId)}`, {
-				method: 'DELETE',
-				credentials: 'include'
-			});
-			if (!response.ok) {
-				const result = await response.json().catch(() => ({}));
-				throw new Error(result.error || 'Failed to delete tweet');
-			}
-			toast.success('Tweet deleted');
-			allTweets = allTweets.filter((t) => t.tweetId !== tweetId);
-			if (latestTweet?.tweetId === tweetId) {
-				latestTweet = null;
-				lastTweetId = null;
-			}
-		} catch (err) {
-			logger.error('Error deleting tweet:', err);
-			toast.error(err instanceof Error ? err.message : 'Failed to delete tweet');
-		}
-	}
 
 	let pollInterval: ReturnType<typeof setInterval> | null = null;
 	let lastTweetId: string | null = null;
@@ -714,7 +691,7 @@
 									<th>Date</th>
 									<th>Content</th>
 									<th>Author</th>
-									<th>Actions</th>
+									<th>Link</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -754,14 +731,6 @@
 													<ExternalLink size={14} />
 												</a>
 											{/if}
-											<button
-												type="button"
-												class="icon-button small danger"
-												onclick={() => deleteTweet(tweet.tweetId)}
-												title="Delete stored tweet"
-											>
-												<Trash2 size={14} />
-											</button>
 										</td>
 									</tr>
 								{/each}
@@ -995,11 +964,6 @@
 		cursor: not-allowed;
 	}
 
-	.icon-button.danger:hover {
-		background: #ef4444;
-		border-color: #ef4444;
-		color: white;
-	}
 
 	.username-edit {
 		display: flex;
