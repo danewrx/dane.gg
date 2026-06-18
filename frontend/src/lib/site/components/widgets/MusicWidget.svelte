@@ -406,10 +406,13 @@
 	.music-widget {
 		font-family: var(--font-family-primary, 'Inter', system-ui, sans-serif);
 		color: var(--text-primary, #ffffff);
-		min-height: 60px;
 		display: flex;
 		flex-direction: column;
+		justify-content: center;
 		gap: var(--spacing-sm, 8px);
+		margin-top: 0;
+		margin-bottom: 0;
+		padding: 14px 0 12px;
 	}
 
 	.default-placeholder {
@@ -479,16 +482,16 @@
 	}
 
 	.track-image img {
-		width: 52px;
-		height: 52px;
+		width: 64px;
+		height: 64px;
 		border-radius: 0;
 		object-fit: cover;
 		border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.15));
 	}
 
 	.no-image {
-		width: 52px;
-		height: 52px;
+		width: 64px;
+		height: 64px;
 		background: var(--theme-background, var(--background-secondary, #2a2a2a));
 		border-radius: 0;
 		display: flex;
@@ -613,8 +616,8 @@
 
 		.track-image img,
 		.no-image {
-			width: 44px;
-			height: 44px;
+			width: 52px;
+			height: 52px;
 		}
 
 		.track-title {
@@ -659,8 +662,8 @@
 
 		.track-image img,
 		.no-image {
-			width: 38px;
-			height: 38px;
+			width: 60px;
+			height: 60px;
 		}
 
 		.track-title {

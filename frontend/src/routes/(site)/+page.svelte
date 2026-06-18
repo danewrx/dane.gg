@@ -79,7 +79,6 @@
 						showHeader={true}
 						headerText={musicHeaderText}
 						contentPadding={true}
-						contentBottomPadding={true}
 					>
 						<svelte:fragment slot="header-icon">
 							{#if musicData?.nowPlaying}

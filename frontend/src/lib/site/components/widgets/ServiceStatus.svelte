@@ -201,12 +201,13 @@
 	.status-list {
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
-		gap: 8px 32px;
+		gap: 6px 16px;
 	}
 
 	@media (max-width: 768px) {
 		.status-list {
 			grid-template-columns: 1fr;
+			gap: 2px;
 		}
 	}
 
@@ -214,8 +215,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		gap: 16px;
-		padding: 4px 0;
+		gap: 12px;
 	}
 
 	.status-name {

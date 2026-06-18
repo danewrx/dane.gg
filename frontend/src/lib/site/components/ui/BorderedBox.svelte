@@ -248,7 +248,7 @@
 
 		.bordered-box-content.padded {
 			margin: 0;
-			padding: 0;
+			padding: 0 6px;
 		}
 
 		.bordered-box-content.bottom-padded {

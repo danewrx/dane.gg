@@ -420,6 +420,8 @@
 		color: var(--text-primary, #ffffff);
 		width: 100%;
 		overflow: hidden;
+		min-height: unset;
+		margin-bottom: var(--spacing-md, 16px);
 	}
 
 	.tweet-info {
@@ -889,14 +891,31 @@
 	}
 
 	@media (max-width: 480px) {
+		.author-info {
+			align-items: stretch;
+		}
+
+		.author-details {
+			justify-content: space-between;
+		}
+
 		.profile-image {
-			width: 38px;
-			height: 38px;
+			width: 52px;
+			height: unset;
+			min-height: 52px;
+		}
+
+		.profile-image img {
+			width: 100%;
+			height: 100%;
+			min-height: 52px;
+			object-fit: cover;
 		}
 
 		.default-placeholder .profile-image {
-			width: 38px;
-			height: 38px;
+			width: 52px;
+			height: unset;
+			min-height: 52px;
 		}
 
 		.no-image {
