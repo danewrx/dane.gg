@@ -234,16 +234,63 @@ export class TwitterApiService {
 		}
 	}
 
+	private static getBackfillConfig() {
+		return {
+			batchSize: Math.max(Number.parseInt(process.env.TWITTER_FULL_BACKFILL_BATCH_SIZE ?? '20', 10), 1),
+			maxPages: Math.max(Number.parseInt(process.env.TWITTER_FULL_BACKFILL_MAX_PAGES ?? '200', 10), 1),
+			maxNewTweets: Number.parseInt(process.env.TWITTER_FULL_BACKFILL_MAX_NEW_TWEETS ?? '0', 10),
+			pruneDeleted: (process.env.TWITTER_FULL_BACKFILL_PRUNE_DELETED ?? 'true').toLowerCase() === 'true'
+		};
+	}
+
+	private static backfillTooSoon(): boolean {
+		const minInterval = Number.parseInt(
+			process.env.TWITTER_FULL_BACKFILL_MIN_INTERVAL_MS ?? String(this.MIN_FULL_BACKFILL_INTERVAL_MS), 10
+		);
+		return Number.isFinite(minInterval) && minInterval > 0 && Date.now() - this.lastFullBackfillTime < minInterval;
+	}
+
+	private static async processBackfillPage(
+		tweets: any[],
+		username: string,
+		existingIds: Set<string>,
+		fetchedIds: Set<string> | null,
+		maxNewTweets: number,
+		inserted: number
+	): Promise<{ inserted: number; hitCap: boolean }> {
+		let hitCap = false;
+		for (const tweet of tweets) {
+			if (!tweet.id) continue;
+			fetchedIds?.add(tweet.id);
+			if (isRetweet(tweet.text ?? '') || isReply(tweet) || existingIds.has(tweet.id)) continue;
+			await TweetService.upsertTweet(tweetToTweetData(tweet, username));
+			existingIds.add(tweet.id);
+			inserted++;
+			if (maxNewTweets > 0 && inserted >= maxNewTweets) {
+				hitCap = true;
+				break;
+			}
+		}
+		return { inserted, hitCap };
+	}
+
+	private static async pruneBackfillDeleted(
+		pruneDeleted: boolean,
+		reachedEnd: boolean,
+		fetchedIds: Set<string> | null
+	): Promise<void> {
+		if (!pruneDeleted || !reachedEnd || !fetchedIds || fetchedIds.size === 0) return;
+		const pruned = await TweetService.deleteTweetsNotIn(fetchedIds);
+		if (pruned > 0) {
+			logger.info(`TWITTER: pruned ${pruned} tweet(s) no longer on timeline`);
+			invalidateCached('widget:latest-tweet');
+		}
+	}
+
 	static async fetchAndBackfillAllTweets(username: string): Promise<boolean> {
 		try {
 			if (!(await this.ensureClient())) return false;
-
-			const minInterval = Number.parseInt(
-				process.env.TWITTER_FULL_BACKFILL_MIN_INTERVAL_MS ?? String(this.MIN_FULL_BACKFILL_INTERVAL_MS), 10
-			);
-			if (Number.isFinite(minInterval) && minInterval > 0 && Date.now() - this.lastFullBackfillTime < minInterval) {
-				return false;
-			}
+			if (this.backfillTooSoon()) return false;
 			this.lastFullBackfillTime = Date.now();
 
 			const userResult = await this.client.users.getByUsername(username);
@@ -251,11 +298,8 @@ export class TwitterApiService {
 
 			const userId: string = userResult.id;
 			const existingIds = new Set(await TweetService.getAllTweetIds());
-
-			const batchSize = Math.max(Number.parseInt(process.env.TWITTER_FULL_BACKFILL_BATCH_SIZE ?? '20', 10), 1);
-			const maxPages = Math.max(Number.parseInt(process.env.TWITTER_FULL_BACKFILL_MAX_PAGES ?? '200', 10), 1);
-			const maxNewTweets = Number.parseInt(process.env.TWITTER_FULL_BACKFILL_MAX_NEW_TWEETS ?? '0', 10);
-			const pruneDeleted = (process.env.TWITTER_FULL_BACKFILL_PRUNE_DELETED ?? 'true').toLowerCase() === 'true';
+			const { batchSize, maxPages, maxNewTweets, pruneDeleted } = this.getBackfillConfig();
+			const fetchedIds = pruneDeleted ? new Set<string>() : null;
 
 			logger.info(`TWITTER: Starting backfill for @${username}`);
 
@@ -263,7 +307,6 @@ export class TwitterApiService {
 			let pages = 0;
 			let inserted = 0;
 			let reachedEnd = false;
-			const fetchedIds = pruneDeleted ? new Set<string>() : null;
 
 			while (pages < maxPages) {
 				if (maxNewTweets > 0 && inserted >= maxNewTweets) break;
@@ -273,44 +316,18 @@ export class TwitterApiService {
 					...(cursor ? { cursor } : {})
 				});
 
-				if (!tweets || tweets.length === 0) {
-					reachedEnd = true;
-					break;
-				}
+				if (!tweets || tweets.length === 0) { reachedEnd = true; break; }
 
-				let hitCap = false;
-				for (const tweet of tweets) {
-					if (!tweet.id) continue;
-					fetchedIds?.add(tweet.id);
-					if (isRetweet(tweet.text ?? '') || isReply(tweet) || existingIds.has(tweet.id)) continue;
-					await TweetService.upsertTweet(tweetToTweetData(tweet, username));
-					existingIds.add(tweet.id);
-					inserted++;
-					if (maxNewTweets > 0 && inserted >= maxNewTweets) {
-						hitCap = true;
-						break;
-					}
-				}
-
+				({ inserted } = await this.processBackfillPage(tweets, username, existingIds, fetchedIds, maxNewTweets, inserted));
 				pages++;
-				if (hitCap) break;
-				if (!nextCursor) {
-					reachedEnd = true;
-					break;
-				}
+
+				if (inserted >= maxNewTweets && maxNewTweets > 0) break;
+				if (!nextCursor) { reachedEnd = true; break; }
 				cursor = nextCursor;
 				logger.info(`TWITTER: backfill page ${pages}/${maxPages} (inserted ${inserted})`);
 			}
 
-			// Only prune when we reached the true end of the timeline — if we stopped early
-			// due to maxPages or maxNewTweets cap we can't know what's missing
-			if (pruneDeleted && reachedEnd && fetchedIds && fetchedIds.size > 0) {
-				const pruned = await TweetService.deleteTweetsNotIn(fetchedIds);
-				if (pruned > 0) {
-					logger.info(`TWITTER: pruned ${pruned} tweet(s) no longer on timeline`);
-					invalidateCached('widget:latest-tweet');
-				}
-			}
+			await this.pruneBackfillDeleted(pruneDeleted, reachedEnd, fetchedIds);
 
 			logger.info(`TWITTER: backfill complete (inserted ${inserted} new tweets)`);
 			this.consecutiveFullBackfillErrors = 0;
