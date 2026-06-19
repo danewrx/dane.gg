@@ -99,9 +99,7 @@ async function getCustomCategoryId(): Promise<string | null> {
 	return row?.id ?? null;
 }
 
-async function resolveCategoryIdForCreate(
-	categoryId: unknown
-): Promise<string | null | undefined> {
+async function resolveCategoryIdForCreate(categoryId: unknown): Promise<string | null | undefined> {
 	if (categoryId === null) return null;
 	if (typeof categoryId === 'string' && categoryId) {
 		const [cat] = await db
@@ -154,7 +152,8 @@ router.get('/active', async (req, res) => {
 		}
 
 		const enriched = row ? await enrichThemeWithFontUrls(row) : null;
-		res.set('Cache-Control', 'public, max-age=15, stale-while-revalidate=60');
+		// Live theme-enforcement state
+		res.set('Cache-Control', 'no-store, must-revalidate');
 		res.json({
 			success: true,
 			data: enriched,
@@ -176,7 +175,7 @@ router.get('/', async (req, res) => {
 		const visibleThemes = await selectThemesWithCategories(eq(themes.isVisible, true));
 
 		const enriched = await enrichThemesWithFontUrls(visibleThemes);
-		res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
+		res.set('Cache-Control', 'no-store, must-revalidate');
 		res.json({
 			success: true,
 			data: enriched,

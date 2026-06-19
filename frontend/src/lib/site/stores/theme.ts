@@ -213,7 +213,7 @@ export async function loadSiteTheme(): Promise<void> {
 			ssrActiveThemePayload = null;
 		} else {
 			themeLoading.set(true);
-			const activeRes = await fetch('/api/themes/active');
+			const activeRes = await fetch('/api/themes/active', { cache: 'no-store' });
 
 			if (!activeRes.ok) {
 				throw new Error(`Failed to fetch theme: ${activeRes.statusText}`);
@@ -239,7 +239,7 @@ export async function loadSiteTheme(): Promise<void> {
 
 		if (savedThemeId) {
 			themeLoading.set(true);
-			const themesResponse = await fetch('/api/themes');
+			const themesResponse = await fetch('/api/themes', { cache: 'no-store' });
 
 			if (themesResponse.ok) {
 				const themesData = await themesResponse.json();
@@ -252,7 +252,7 @@ export async function loadSiteTheme(): Promise<void> {
 								? themesData.enforcement.themeId
 								: null
 					});
-					const r2 = await fetch('/api/themes/active');
+					const r2 = await fetch('/api/themes/active', { cache: 'no-store' });
 					if (r2.ok) {
 						const d2 = await r2.json();
 						applyActiveThemePayload(d2);
