@@ -200,8 +200,12 @@ export function hydratePublicThemeFromSsr(payload: unknown): void {
 /**
  * Load active theme (or user's preferred theme). Honors admin theme enforcement from the API.
  */
-export async function loadSiteTheme(): Promise<void> {
+export async function loadSiteTheme(opts: { background?: boolean } = {}): Promise<void> {
 	if (!browser) return;
+
+	const setLoading = (v: boolean) => {
+		if (!opts.background) themeLoading.set(v);
+	};
 
 	themeError.set(null);
 
@@ -212,7 +216,7 @@ export async function loadSiteTheme(): Promise<void> {
 			activeData = ssrActiveThemePayload;
 			ssrActiveThemePayload = null;
 		} else {
-			themeLoading.set(true);
+			setLoading(true);
 			const activeRes = await fetch('/api/themes/active', { cache: 'no-store' });
 
 			if (!activeRes.ok) {
@@ -238,7 +242,7 @@ export async function loadSiteTheme(): Promise<void> {
 		const savedThemeId = localStorage.getItem('selectedTheme');
 
 		if (savedThemeId) {
-			themeLoading.set(true);
+			setLoading(true);
 			const themesResponse = await fetch('/api/themes', { cache: 'no-store' });
 
 			if (themesResponse.ok) {
@@ -266,7 +270,7 @@ export async function loadSiteTheme(): Promise<void> {
 
 				if (savedTheme) {
 					siteTheme.set(savedTheme);
-					themeLoading.set(false);
+					setLoading(false);
 					return;
 				}
 				localStorage.removeItem('selectedTheme');
@@ -279,7 +283,7 @@ export async function loadSiteTheme(): Promise<void> {
 		themeError.set(error instanceof Error ? error.message : 'Unknown error');
 		siteTheme.set(DEFAULT_THEME);
 	} finally {
-		themeLoading.set(false);
+		setLoading(false);
 	}
 }
 

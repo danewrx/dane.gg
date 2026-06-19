@@ -16,6 +16,8 @@
 	import type { ThemePreviewApplyMessage } from '$lib/site/themePreview';
 	import { themeDarkenToRgba } from '$lib/site/constants/themeOverlayOpacity';
 
+	const THEME_POLL_MS = 30_000;
+
 	let theme = $derived($siteTheme ?? DEFAULT_THEME);
 	let loading = $derived($themeLoading);
 
@@ -47,11 +49,22 @@
 
 		function onVisibilityChange() {
 			if (document.visibilityState === 'visible') {
-				void loadSiteTheme();
+				void loadSiteTheme({ background: true });
 			}
 		}
 		document.addEventListener('visibilitychange', onVisibilityChange);
-		return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+
+		// Skip while hidden to avoid requests from backgrounded tabs.
+		const pollId = setInterval(() => {
+			if (document.visibilityState === 'visible') {
+				void loadSiteTheme({ background: true });
+			}
+		}, THEME_POLL_MS);
+
+		return () => {
+			document.removeEventListener('visibilitychange', onVisibilityChange);
+			clearInterval(pollId);
+		};
 	});
 
 	function getBgUrlCss(): string {
