@@ -802,6 +802,26 @@ export class ChatService {
 	/**
 	 * Sanitize nickname
 	 */
+	private static readonly RESERVED_NICKNAMES = new Set([
+		'server',
+		'system',
+		'admin',
+		'administrator',
+		'moderator',
+		'mod',
+		'bot',
+		'staff',
+		'root',
+		'official'
+	]);
+
+	private isReservedNickname(nickname: string): boolean {
+		const lower = nickname.toLowerCase().trim();
+		if (ChatService.RESERVED_NICKNAMES.has(lower)) return true;
+		if (lower === this.adminConfig.nickname.toLowerCase()) return true;
+		return false;
+	}
+
 	private sanitizeNickname(nickname: string): string {
 		return nickname
 			.replace(/[<>]/g, '') // Remove angle brackets
@@ -820,6 +840,11 @@ export class ChatService {
 		const sanitizedNickname = this.sanitizeNickname(nickname);
 		if (sanitizedNickname.length === 0) {
 			this.sendToClient(ws, { type: 'error', message: 'Invalid nickname' });
+			return;
+		}
+
+		if (!this.adminClients.has(ws) && this.isReservedNickname(sanitizedNickname)) {
+			this.sendToClient(ws, { type: 'error', message: 'That nickname is reserved' });
 			return;
 		}
 
@@ -914,10 +939,10 @@ export class ChatService {
 	 * Sanitize message content
 	 */
 	private sanitizeMessage(message: string): string {
-		// Remove null bytes and control characters
 		return message
 			.replace(/\0/g, '')
 			.replace(/[\x01-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '')
+			.replace(/<[^>]*>/g, '')
 			.trim();
 	}
 
