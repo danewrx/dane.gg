@@ -48,17 +48,17 @@ export class StatsService {
 			VPNDetectionService.isVPN(ipAddress)
 		]);
 
-		// Generate visitor ID if not exists
-		let visitorId = req.cookies?.visitor_id;
-		if (!visitorId) {
-			visitorId = this.generateId();
-		}
+		const isUUID = (s: unknown): s is string =>
+			typeof s === 'string' &&
+			/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
-		// Generate session ID if not exists
-		let sessionId = req.cookies?.session_id;
-		if (!sessionId) {
-			sessionId = this.generateId();
-		}
+		const visitorId = isUUID(req.cookies?.visitor_id)
+			? req.cookies.visitor_id
+			: this.generateId();
+
+		const sessionId = isUUID(req.cookies?.session_id)
+			? req.cookies.session_id
+			: this.generateId();
 
 		// Parse user agent for browser/OS info
 		const { browser, os, device } = this.parseUserAgent(userAgent);

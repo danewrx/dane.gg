@@ -79,7 +79,7 @@ class TrackingService {
 		return true;
 	}
 
-	async trackPageView(path: string): Promise<void> {
+	async trackPageView(path: string, statusCode: number = 200): Promise<void> {
 		logger.info('trackPageView called for path:', path);
 
 		// Check paths to be tracked
@@ -100,11 +100,9 @@ class TrackingService {
 				body: JSON.stringify({
 					path,
 					method: 'GET',
-					statusCode: 200,
+					statusCode,
 					responseTime: 0,
-					contentLength: 0,
-					visitorId: this.getVisitorId(),
-					sessionId: this.getSessionId()
+					contentLength: 0
 				})
 			});
 
