@@ -67,7 +67,7 @@
 
 			if (!isAdmin && !newPage.url.searchParams.has('themePreview')) {
 				logger.info('Calling trackPageView for:', newPage.url.pathname);
-				trackingService.trackPageView(newPage.url.pathname);
+				trackingService.trackPageView(newPage.url.pathname, newPage.status);
 			} else if (!isAdmin) {
 				logger.info('Skipping tracking (theme preview iframe)');
 			} else {

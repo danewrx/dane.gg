@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 import { get } from 'svelte/store';
-import { loadSiteConfig, siteConfig } from '$lib/site/stores/siteConfig';
+import { loadSiteConfig, siteConfig, SITE_CONFIG_UPDATED_EVENT } from '$lib/site/stores/siteConfig';
 import { subscribeSiteConfigBroadcast } from '$lib/shared/utils/siteConfigLiveSync';
 
 /** Selected Web Neko skin (folder name on webneko.net, e.g. `white`, `black`). */
@@ -159,14 +159,14 @@ export function syncWebNekoInjectedGlobalsFromSiteConfig(): void {
 	const enf = normalizeDefaultWebNekoTypeForServer(
 		c.enforced_web_neko_type ?? c.default_web_neko_type
 	);
-	(
-		window as unknown as { __DANE_DEFAULT_WEB_NEKO_TYPE__?: string }
-	).__DANE_DEFAULT_WEB_NEKO_TYPE__ = def;
-	(
-		window as unknown as { __DANE_ENFORCED_WEB_NEKO_TYPE__?: string }
-	).__DANE_ENFORCED_WEB_NEKO_TYPE__ = enf;
-	(window as unknown as { __DANE_ENFORCE_WEB_NEKO__?: boolean }).__DANE_ENFORCE_WEB_NEKO__ =
-		Boolean(c.enforce_web_neko);
+	const g = globalThis as typeof globalThis & {
+		__DANE_DEFAULT_WEB_NEKO_TYPE__?: string;
+		__DANE_ENFORCED_WEB_NEKO_TYPE__?: string;
+		__DANE_ENFORCE_WEB_NEKO__?: boolean;
+	};
+	g.__DANE_DEFAULT_WEB_NEKO_TYPE__ = def;
+	g.__DANE_ENFORCED_WEB_NEKO_TYPE__ = enf;
+	g.__DANE_ENFORCE_WEB_NEKO__ = Boolean(c.enforce_web_neko);
 }
 
 /** Persist skin; restarts Web Neko in-page when available, else full reload. */
@@ -177,20 +177,46 @@ export function setStoredWebNekoType(id: string): void {
 	try {
 		localStorage.setItem(WEB_NEKO_TYPE_STORAGE_KEY, next);
 	} catch {}
-	const w = window as Window & { daneRestartWebNeko?: () => void };
+	const w = globalThis as typeof globalThis & { daneRestartWebNeko?: () => void };
 	if (typeof w.daneRestartWebNeko === 'function') {
 		w.daneRestartWebNeko();
 		return;
 	}
-	window.location.reload();
+	globalThis.location.reload();
+}
+
+/**
+ * Re-apply the Web Neko skin from the live site config. The skin is first chosen
+ * at boot from the SSR-injected globals, which can be stale (the server caches the
+ * page vars, and a CDN may cache the HTML). Once fresh config is available we
+ * reconcile: restart only when the effective skin actually differs, so a visitor's
+ * personal pick (or an already-correct default) is never disrupted.
+ */
+function reconcileWebNekoFromConfig(): void {
+	if (!browser) return;
+	syncWebNekoInjectedGlobalsFromSiteConfig();
+	const w = globalThis as typeof globalThis & { daneRestartWebNeko?: () => void; NekoType?: string };
+	const effective = getStoredWebNekoType();
+	const current = typeof w.NekoType === 'string' ? w.NekoType.toLowerCase() : WEB_NEKO_DISABLED;
+	if (current === effective) return;
+	if (typeof w.daneRestartWebNeko === 'function') w.daneRestartWebNeko();
 }
 
 if (browser) {
-	subscribeSiteConfigBroadcast(() => {
-		void loadSiteConfig().then(() => {
-			syncWebNekoInjectedGlobalsFromSiteConfig();
-			const w = window as Window & { daneRestartWebNeko?: () => void };
-			if (typeof w.daneRestartWebNeko === 'function') w.daneRestartWebNeko();
-		});
+	// Live server push: when an admin changes config, the backend broadcasts over
+	// the chat WebSocket, which reloads siteConfig and dispatches this event. The
+	// store is already fresh here, so reconcile directly — connected visitors
+	// update within ~350ms, no polling needed.
+	globalThis.addEventListener(SITE_CONFIG_UPDATED_EVENT, () => reconcileWebNekoFromConfig());
+
+	// Cross-tab: admin saved in another tab of the same browser.
+	subscribeSiteConfigBroadcast(async () => {
+		await loadSiteConfig();
+		reconcileWebNekoFromConfig();
 	});
+
+	// Initial load: correct the boot-time skin once fresh config is available,
+	// covering new visitors whose injected default was served stale.
+	await loadSiteConfig();
+	reconcileWebNekoFromConfig();
 }
