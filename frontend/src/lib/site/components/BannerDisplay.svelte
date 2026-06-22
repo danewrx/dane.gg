@@ -1,12 +1,19 @@
 <script lang="ts">
 	import type { BannerConfig } from '$lib/admin/services/bannerService';
 	import { onMount } from 'svelte';
+	import { siteTheme } from '$lib/site/stores/theme';
+	import { getReadableTextColor } from '$lib/site/constants/tagContrast';
 
 	interface Props {
 		config: BannerConfig;
 	}
 
 	let { config }: Props = $props();
+
+	const adjustedTextColor = $derived.by(() => {
+		const bg = config.transparentBackground ? $siteTheme.surfaceColor : config.backgroundColor;
+		return getReadableTextColor(config.textColor, bg);
+	});
 
 	function convertBannerText(text: string): string {
 		// If it's already HTML, return
@@ -89,7 +96,7 @@
 <div
 	class="banner-container"
 	style:background-color={config.transparentBackground ? 'transparent' : config.backgroundColor}
-	style:color={config.textColor}
+	style:color={adjustedTextColor}
 	bind:this={bannerContainer}
 >
 	<div class="banner-content" bind:this={bannerContent}>
@@ -103,7 +110,7 @@
 		overflow: hidden;
 		position: relative;
 		padding: 4px 0;
-		margin-top: 12px;
+		margin-top: 0;
 		margin-bottom: 12px;
 	}
 
@@ -119,7 +126,7 @@
 	@media (max-width: 768px) {
 		.banner-container {
 			padding: 3px 0;
-			margin-top: 10px;
+			margin-top: 0;
 			margin-bottom: 10px;
 		}
 
@@ -131,7 +138,7 @@
 	@media (max-width: 480px) {
 		.banner-container {
 			padding: 2px 0;
-			margin-top: 8px;
+			margin-top: 0;
 			margin-bottom: 8px;
 		}
 
