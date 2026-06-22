@@ -91,6 +91,38 @@ function compositeOver(fg: Rgb, alpha: number, bg: Rgb): Rgb {
  * Returns text/background/border colours for a tag chip that stay legible on
  * the given surface. The hue and saturation are preserved
  */
+/**
+ * Adjusts text colour for legibility against a solid background.
+ * Shifts lightness until WCAG AA (4.5:1) is met.
+ */
+export function getReadableTextColor(textColorCss: string, bgColorCss: string): string {
+	const text = parseCssColor(textColorCss);
+	if (!text) return textColorCss;
+
+	const bgParsed = parseCssColor(bgColorCss);
+	const bg: Rgb = bgParsed ? compositeOnWhite(bgParsed) : { r: 26, g: 26, b: 26 };
+	const bgLum = relativeLuminance(bg.r, bg.g, bg.b);
+	const bgIsLight = bgLum > LIGHT_SURFACE_LUMINANCE;
+
+	let rgb = compositeOnWhite(text);
+	const [h, s] = rgbToHsl(rgb.r, rgb.g, rgb.b);
+	let [, , l] = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+	const step = bgIsLight ? -2 : 2;
+
+	for (let i = 0; i < 60; i++) {
+		const textLum = relativeLuminance(rgb.r, rgb.g, rgb.b);
+		if (contrastRatio(textLum, bgLum) >= TARGET_CONTRAST) break;
+
+		const nextL = l + step;
+		l = Math.min(100, Math.max(0, nextL));
+		rgb = hslToRgb(h, s, l);
+		if (nextL <= 0 || nextL >= 100) break;
+	}
+
+	return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+}
+
 export function getReadableTagColors(tagColorCss: string, surfaceCss: string): TagColors {
 	const tag = parseCssColor(tagColorCss);
 	if (!tag) {
