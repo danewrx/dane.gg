@@ -159,14 +159,14 @@ export function syncWebNekoInjectedGlobalsFromSiteConfig(): void {
 	const enf = normalizeDefaultWebNekoTypeForServer(
 		c.enforced_web_neko_type ?? c.default_web_neko_type
 	);
-	(
-		window as unknown as { __DANE_DEFAULT_WEB_NEKO_TYPE__?: string }
-	).__DANE_DEFAULT_WEB_NEKO_TYPE__ = def;
-	(
-		window as unknown as { __DANE_ENFORCED_WEB_NEKO_TYPE__?: string }
-	).__DANE_ENFORCED_WEB_NEKO_TYPE__ = enf;
-	(window as unknown as { __DANE_ENFORCE_WEB_NEKO__?: boolean }).__DANE_ENFORCE_WEB_NEKO__ =
-		Boolean(c.enforce_web_neko);
+	const g = globalThis as typeof globalThis & {
+		__DANE_DEFAULT_WEB_NEKO_TYPE__?: string;
+		__DANE_ENFORCED_WEB_NEKO_TYPE__?: string;
+		__DANE_ENFORCE_WEB_NEKO__?: boolean;
+	};
+	g.__DANE_DEFAULT_WEB_NEKO_TYPE__ = def;
+	g.__DANE_ENFORCED_WEB_NEKO_TYPE__ = enf;
+	g.__DANE_ENFORCE_WEB_NEKO__ = Boolean(c.enforce_web_neko);
 }
 
 /** Persist skin; restarts Web Neko in-page when available, else full reload. */
@@ -177,12 +177,12 @@ export function setStoredWebNekoType(id: string): void {
 	try {
 		localStorage.setItem(WEB_NEKO_TYPE_STORAGE_KEY, next);
 	} catch {}
-	const w = window as Window & { daneRestartWebNeko?: () => void };
+	const w = globalThis as typeof globalThis & { daneRestartWebNeko?: () => void };
 	if (typeof w.daneRestartWebNeko === 'function') {
 		w.daneRestartWebNeko();
 		return;
 	}
-	window.location.reload();
+	globalThis.location.reload();
 }
 
 /**
@@ -195,7 +195,7 @@ export function setStoredWebNekoType(id: string): void {
 function reconcileWebNekoFromConfig(): void {
 	if (!browser) return;
 	syncWebNekoInjectedGlobalsFromSiteConfig();
-	const w = window as Window & { daneRestartWebNeko?: () => void; NekoType?: string };
+	const w = globalThis as typeof globalThis & { daneRestartWebNeko?: () => void; NekoType?: string };
 	const effective = getStoredWebNekoType();
 	const current = typeof w.NekoType === 'string' ? w.NekoType.toLowerCase() : WEB_NEKO_DISABLED;
 	if (current === effective) return;
@@ -207,14 +207,18 @@ if (browser) {
 	// the chat WebSocket, which reloads siteConfig and dispatches this event. The
 	// store is already fresh here, so reconcile directly — connected visitors
 	// update within ~350ms, no polling needed.
-	window.addEventListener(SITE_CONFIG_UPDATED_EVENT, () => reconcileWebNekoFromConfig());
+	globalThis.addEventListener(SITE_CONFIG_UPDATED_EVENT, () => reconcileWebNekoFromConfig());
 
 	// Cross-tab: admin saved in another tab of the same browser.
-	subscribeSiteConfigBroadcast(() => {
-		void loadSiteConfig().then(() => reconcileWebNekoFromConfig());
+	subscribeSiteConfigBroadcast(async () => {
+		await loadSiteConfig();
+		reconcileWebNekoFromConfig();
 	});
 
 	// Initial load: correct the boot-time skin once fresh config is available,
 	// covering new visitors whose injected default was served stale.
-	void loadSiteConfig().then(() => reconcileWebNekoFromConfig());
+	(async () => {
+		await loadSiteConfig();
+		reconcileWebNekoFromConfig();
+	})();
 }
