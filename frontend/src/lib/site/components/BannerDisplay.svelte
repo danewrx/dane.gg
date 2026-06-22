@@ -110,7 +110,7 @@
 		overflow: hidden;
 		position: relative;
 		padding: 4px 0;
-		margin-top: 12px;
+		margin-top: 0;
 		margin-bottom: 12px;
 	}
 
@@ -126,7 +126,7 @@
 	@media (max-width: 768px) {
 		.banner-container {
 			padding: 3px 0;
-			margin-top: 10px;
+			margin-top: 0;
 			margin-bottom: 10px;
 		}
 
@@ -138,7 +138,7 @@
 	@media (max-width: 480px) {
 		.banner-container {
 			padding: 2px 0;
-			margin-top: 8px;
+			margin-top: 0;
 			margin-bottom: 8px;
 		}
 
