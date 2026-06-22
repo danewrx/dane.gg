@@ -217,8 +217,6 @@ if (browser) {
 
 	// Initial load: correct the boot-time skin once fresh config is available,
 	// covering new visitors whose injected default was served stale.
-	(async () => {
-		await loadSiteConfig();
-		reconcileWebNekoFromConfig();
-	})();
+	await loadSiteConfig();
+	reconcileWebNekoFromConfig();
 }
