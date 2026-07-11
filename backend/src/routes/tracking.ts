@@ -15,14 +15,29 @@ function isNonNegativeNumber(v: unknown): v is number {
 	return typeof v === 'number' && Number.isFinite(v) && v >= 0;
 }
 
+function isUUID(v: unknown): v is string {
+	return (
+		typeof v === 'string' &&
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)
+	);
+}
+
 /**
  * POST /api/track
  * Track a page view
  */
 router.post('/', async (req: Request, res: Response) => {
 	try {
-		const { path, method = 'GET', query, statusCode = 200, responseTime = 0, contentLength } =
-			req.body;
+		const {
+			path,
+			method = 'GET',
+			query,
+			statusCode = 200,
+			responseTime = 0,
+			contentLength,
+			visitorId,
+			sessionId
+		} = req.body;
 
 		if (!path || typeof path !== 'string') {
 			return res.status(400).json({ error: 'Bad request', message: 'Path is required' });
@@ -38,11 +53,19 @@ router.post('/', async (req: Request, res: Response) => {
 				? query.replace(/[\x00-\x1F\x7F]/g, '').slice(0, MAX_QUERY_LENGTH)
 				: undefined;
 
-		// Derive visitor/session IDs server-side from httpOnly cookies.
 		const visitorData = await StatsService.extractVisitorData(req);
+
+		// Persistent visitor ID (localStorage) + per-tab session ID (sessionStorage)
+		// are supplied by the client so the same person keeps one identity across
+		// page views and return visits. Validated as UUIDs to reject garbage/spoofed
+		// values; fall back to the server-generated ID when absent or malformed.
+		const finalVisitorId = isUUID(visitorId) ? visitorId : visitorData.visitorId;
+		const finalSessionId = isUUID(sessionId) ? sessionId : visitorData.sessionId;
 
 		await StatsService.trackVisitor({
 			...visitorData,
+			visitorId: finalVisitorId,
+			sessionId: finalSessionId,
 			method: typeof method === 'string' ? method.toUpperCase().slice(0, 7) : 'GET',
 			path: cleanPath,
 			query: cleanQuery,

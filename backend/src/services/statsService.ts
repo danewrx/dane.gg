@@ -48,17 +48,11 @@ export class StatsService {
 			VPNDetectionService.isVPN(ipAddress)
 		]);
 
-		const isUUID = (s: unknown): s is string =>
-			typeof s === 'string' &&
-			/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
-
-		const visitorId = isUUID(req.cookies?.visitor_id)
-			? req.cookies.visitor_id
-			: this.generateId();
-
-		const sessionId = isUUID(req.cookies?.session_id)
-			? req.cookies.session_id
-			: this.generateId();
+		// Fallback IDs, used only when the client doesn't supply valid ones.
+		// The real identity comes from the client's localStorage/sessionStorage
+		// values, validated and applied in the /api/track route.
+		const visitorId = this.generateId();
+		const sessionId = this.generateId();
 
 		// Parse user agent for browser/OS info
 		const { browser, os, device } = this.parseUserAgent(userAgent);
