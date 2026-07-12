@@ -4,67 +4,191 @@
 
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
-	import { Save, Eye, EyeOff, Plus, Trash2, ExternalLink } from 'lucide-svelte';
-	import {
-		siteConfig,
-		loadSiteConfig,
-		type AdvertItem
-	} from '$lib/site/stores/siteConfig';
+	import { Save, Eye, EyeOff, Plus, X, Pencil, Trash2, ExternalLink } from 'lucide-svelte';
+	import { siteConfig, loadSiteConfig } from '$lib/site/stores/siteConfig';
+	import { adverts as advertsStore, loadAdverts, type Advert } from '$lib/site/stores/adverts';
 	import { toast } from 'svelte-sonner';
 	import { notifySiteConfigConsumers } from '$lib/shared/utils/siteConfigLiveSync';
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
 	import FileUpload, { type UploadedFile } from '$lib/admin/components/ui/FileUpload.svelte';
+	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
-	// Local advert row carries a client-only id for stable #each keying.
-	interface AdvertRow extends AdvertItem {
-		id: number;
-	}
-
-	let nextId = 0;
-
+	// Global settings (stored in site_config).
 	let enabled = $state(false);
 	let rotationSeconds = $state(8);
-	let adverts = $state<AdvertRow[]>([]);
+	let savedEnabled = $state(false);
+	let savedRotation = $state(8);
+	let isSavingSettings = $state(false);
+	const settingsDirty = $derived(enabled !== savedEnabled || rotationSeconds !== savedRotation);
 
-	let isSaving = $state(false);
+	// Adverts (stored in the adverts table, managed via /api/adverts).
+	let ads = $state<Advert[]>([]);
+	let isLoadingAds = $state(true);
 
-	function toRows(items: AdvertItem[]): AdvertRow[] {
-		return (items ?? []).map((item) => ({
-			id: nextId++,
-			imageUrl: item?.imageUrl ?? '',
-			linkUrl: item?.linkUrl ?? ''
-		}));
-	}
+	// Inline editor state. `creating` shows the new-advert form; `editingId`
+	// swaps a row for its inline edit form. Only one is open at a time.
+	let creating = $state(false);
+	let editingId = $state<string | null>(null);
+	let draftTitle = $state('');
+	let draftDescription = $state('');
+	let draftImageUrl = $state('');
+	let draftLinkUrl = $state('');
+	let draftActive = $state(true);
+	let isSavingAdvert = $state(false);
 
-	function syncFromConfig(c: import('$lib/site/stores/siteConfig').SiteConfig) {
-		enabled = Boolean(c.advert_enabled);
-		rotationSeconds = Number(c.advert_rotation_seconds) || 8;
-		adverts = toRows(c.advert_items);
+	const canSaveDraft = $derived(Boolean(draftImageUrl.trim()) && !isSavingAdvert);
+
+	// Delete confirmation.
+	let confirmOpen = $state(false);
+	let pendingDeleteId = $state<string | null>(null);
+	let pendingDeleteLabel = $state('');
+
+	function syncSettingsFromConfig(c: import('$lib/site/stores/siteConfig').SiteConfig) {
+		savedEnabled = Boolean(c.advert_enabled);
+		enabled = savedEnabled;
+		savedRotation = Number(c.advert_rotation_seconds) || 8;
+		rotationSeconds = savedRotation;
 	}
 
 	onMount(() => {
-		const unsub = siteConfig.subscribe(syncFromConfig);
+		const unsub = siteConfig.subscribe(syncSettingsFromConfig);
+		ads = get(advertsStore);
+		refreshAds();
 		return unsub;
 	});
 
-	function addAdvert() {
-		adverts = [...adverts, { id: nextId++, imageUrl: '', linkUrl: '' }];
+	async function refreshAds() {
+		isLoadingAds = true;
+		try {
+			const response = await fetch('/api/adverts/all', { credentials: 'include' });
+			if (!response.ok) throw new Error(`Failed to load adverts: ${response.statusText}`);
+			const data = await response.json();
+			ads = data.success && Array.isArray(data.data) ? data.data : [];
+		} catch (e) {
+			logger.error(e);
+			toast.error('Failed to load adverts', {
+				description: e instanceof Error ? e.message : 'Try again'
+			});
+		} finally {
+			isLoadingAds = false;
+		}
 	}
 
-	function removeAdvert(id: number) {
-		adverts = adverts.filter((a) => a.id !== id);
+	function resetDraft() {
+		draftTitle = '';
+		draftDescription = '';
+		draftImageUrl = '';
+		draftLinkUrl = '';
+		draftActive = true;
 	}
 
-	function handleImageUpload(id: number, file: UploadedFile | UploadedFile[]) {
+	function startNew() {
+		editingId = null;
+		resetDraft();
+		creating = true;
+	}
+
+	function startEdit(ad: Advert) {
+		creating = false;
+		editingId = ad.id;
+		draftTitle = ad.title ?? '';
+		draftDescription = ad.description ?? '';
+		draftImageUrl = ad.imageUrl ?? '';
+		draftLinkUrl = ad.linkUrl ?? '';
+		draftActive = ad.isActive;
+	}
+
+	function cancelEdit() {
+		if (isSavingAdvert) return;
+		creating = false;
+		editingId = null;
+	}
+
+	function handleDraftImageUpload(file: UploadedFile | UploadedFile[]) {
 		const uploadedFile = Array.isArray(file) ? file[0] : file;
 		if (uploadedFile) {
-			adverts = adverts.map((a) => (a.id === id ? { ...a, imageUrl: uploadedFile.path } : a));
+			draftImageUrl = uploadedFile.path;
 			toast.success('Image uploaded');
 		}
 	}
 
 	function handleUploadError(error: string) {
 		toast.error('Upload failed', { description: error });
+	}
+
+	async function submitDraft() {
+		if (!draftImageUrl.trim()) return;
+		isSavingAdvert = true;
+		try {
+			const body = {
+				title: draftTitle.trim(),
+				description: draftDescription.trim(),
+				imageUrl: draftImageUrl.trim(),
+				linkUrl: draftLinkUrl.trim(),
+				isActive: draftActive
+			};
+			const isCreate = creating;
+			const url = isCreate ? '/api/adverts' : `/api/adverts/${editingId}`;
+			const method = isCreate ? 'POST' : 'PUT';
+			const response = await fetch(url, {
+				method,
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify(body)
+			});
+			if (!response.ok) {
+				const data = await response.json().catch(() => ({}));
+				throw new Error(data.error || 'Failed to save advert');
+			}
+			await refreshAds();
+			await loadAdverts();
+			notifySiteConfigConsumers();
+			creating = false;
+			editingId = null;
+			toast.success(isCreate ? 'Advert added' : 'Advert updated');
+		} catch (e) {
+			logger.error(e);
+			toast.error('Failed to save advert', {
+				description: e instanceof Error ? e.message : 'Try again'
+			});
+		} finally {
+			isSavingAdvert = false;
+		}
+	}
+
+	function requestDelete(ad: Advert, index: number) {
+		pendingDeleteId = ad.id;
+		pendingDeleteLabel = ad.title.trim() || `Advert ${index + 1}`;
+		confirmOpen = true;
+	}
+
+	async function confirmDelete() {
+		if (!pendingDeleteId) return;
+		try {
+			const response = await fetch(`/api/adverts/${pendingDeleteId}`, {
+				method: 'DELETE',
+				credentials: 'include'
+			});
+			if (!response.ok) {
+				const data = await response.json().catch(() => ({}));
+				throw new Error(data.error || 'Failed to delete advert');
+			}
+			if (editingId === pendingDeleteId) {
+				editingId = null;
+			}
+			await refreshAds();
+			await loadAdverts();
+			notifySiteConfigConsumers();
+			toast.success('Advert deleted');
+		} catch (e) {
+			logger.error(e);
+			toast.error('Failed to delete advert', {
+				description: e instanceof Error ? e.message : 'Try again'
+			});
+		} finally {
+			pendingDeleteId = null;
+			pendingDeleteLabel = '';
+		}
 	}
 
 	async function putConfig(key: string, value: unknown, dataType: string) {
@@ -81,28 +205,26 @@
 	}
 
 	async function saveSettings() {
-		isSaving = true;
+		if (!settingsDirty) return;
+		isSavingSettings = true;
 		try {
-			// Drop rows with no image; trim the rest.
-			const items: AdvertItem[] = adverts
-				.map((a) => ({ imageUrl: a.imageUrl.trim(), linkUrl: a.linkUrl.trim() }))
-				.filter((a) => a.imageUrl);
-
-			await putConfig('advert_items', items, 'json');
-			await putConfig('advert_rotation_seconds', rotationSeconds, 'number');
-			await putConfig('advert_enabled', enabled, 'boolean');
-
+			if (rotationSeconds !== savedRotation) {
+				await putConfig('advert_rotation_seconds', rotationSeconds, 'number');
+			}
+			if (enabled !== savedEnabled) {
+				await putConfig('advert_enabled', enabled, 'boolean');
+			}
 			await loadSiteConfig();
 			notifySiteConfigConsumers();
-			syncFromConfig(get(siteConfig));
+			syncSettingsFromConfig(get(siteConfig));
 			toast.success('Advertisement settings saved');
 		} catch (e) {
 			logger.error(e);
-			toast.error('Failed to save advertisement', {
+			toast.error('Failed to save settings', {
 				description: e instanceof Error ? e.message : 'Try again'
 			});
 		} finally {
-			isSaving = false;
+			isSavingSettings = false;
 		}
 	}
 </script>
@@ -110,6 +232,92 @@
 <svelte:head>
 	<title>{adminPageTitle('Advertisement')}</title>
 </svelte:head>
+
+{#snippet advertForm(submitLabel: string)}
+	<div class="advert-edit-form">
+		<p class="form-hint">
+			Full-width banner with no border. Use a wide image (e.g. 728&times;90) for best results. Leave
+			the Link URL empty for a non-clickable image.
+		</p>
+
+		<div class="advert-field">
+			<label class="field-label" for="draft-title">Title</label>
+			<input
+				id="draft-title"
+				class="text-input"
+				type="text"
+				placeholder="e.g. Summer sale"
+				bind:value={draftTitle}
+			/>
+		</div>
+
+		<div class="advert-field">
+			<label class="field-label" for="draft-desc">
+				Description <span class="optional-tag">(optional)</span>
+			</label>
+			<textarea
+				id="draft-desc"
+				class="text-input textarea-input"
+				rows="2"
+				placeholder="Short internal note about this advert"
+				bind:value={draftDescription}
+			></textarea>
+		</div>
+
+		<div class="advert-field">
+			<span class="field-label">Image</span>
+			{#if draftImageUrl}
+				<div class="preview-wrapper">
+					<img src={draftImageUrl} alt="Advert preview" />
+				</div>
+			{/if}
+			<FileUpload
+				acceptedTypes={['image']}
+				onUpload={handleDraftImageUpload}
+				onError={handleUploadError}
+				showPreview={false}
+				label="Upload Image"
+			/>
+		</div>
+
+		<div class="advert-field">
+			<label class="field-label" for="draft-link">Link URL</label>
+			<input
+				id="draft-link"
+				class="text-input"
+				type="url"
+				placeholder="https://example.com"
+				bind:value={draftLinkUrl}
+			/>
+			{#if draftLinkUrl.trim()}
+				<a
+					class="preview-link"
+					href={draftLinkUrl.trim()}
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					<ExternalLink size={14} aria-hidden="true" />
+					{draftLinkUrl.trim()}
+				</a>
+			{/if}
+		</div>
+
+		<div class="advert-field toggle-field">
+			<Toggle bind:checked={draftActive} label="Active" />
+			<span class="help-text">Inactive adverts are hidden from the rotation.</span>
+		</div>
+
+		<div class="form-actions edit-actions">
+			<button type="button" class="save-button" onclick={submitDraft} disabled={!canSaveDraft}>
+				<Save size={16} />
+				{isSavingAdvert ? 'Saving...' : submitLabel}
+			</button>
+			<button type="button" class="cancel-btn" onclick={cancelEdit} disabled={isSavingAdvert}>
+				Cancel
+			</button>
+		</div>
+	</div>
+{/snippet}
 
 <div class="advert-config">
 	<p class="page-description">
@@ -159,92 +367,96 @@
 			</div>
 			<p class="help-text">
 				How long each advert is shown before switching to the next. Only applies when more than one
-				advert is added.
+				active advert exists.
 			</p>
+		</div>
+
+		<!-- Settings save -->
+		<div class="form-actions">
+			<button
+				class="save-button"
+				onclick={saveSettings}
+				disabled={!settingsDirty || isSavingSettings}
+			>
+				<Save size={18} />
+				{isSavingSettings ? 'Saving...' : 'Save Settings'}
+			</button>
 		</div>
 
 		<!-- Advert List -->
 		<div class="form-group">
 			<div class="form-group-label">Adverts</div>
-			{#if adverts.length === 0}
-				<p class="empty-adverts">No adverts yet. Add one to get started.</p>
-			{/if}
 
-			{#each adverts as advert, i (advert.id)}
-				<div class="advert-card">
-					<div class="advert-card-header">
-						<span class="advert-card-title">Advert {i + 1}</span>
-						<button
-							type="button"
-							class="remove-btn"
-							onclick={() => removeAdvert(advert.id)}
-							aria-label="Remove advert {i + 1}"
-						>
-							<Trash2 size={16} />
-						</button>
-					</div>
-
-					{#if advert.imageUrl}
-						<div class="preview-wrapper">
-							<img src={advert.imageUrl} alt="Advert {i + 1} preview" />
+			{#if !isLoadingAds}
+				{#each ads as advert, i (advert.id)}
+					{#if editingId === advert.id}
+						<div class="advert-card editing">
+							{@render advertForm('Save advert')}
+						</div>
+					{:else}
+						<div class="advert-row" class:inactive={!advert.isActive}>
+							<div class="advert-thumb">
+								{#if advert.imageUrl}
+									<img
+										src={advert.imageUrl}
+										alt="{advert.title.trim() || `Advert ${i + 1}`} preview"
+									/>
+								{/if}
+							</div>
+							<div class="advert-row-info">
+								<span class="advert-row-title">
+									{advert.title.trim() || `Advert ${i + 1}`}
+									{#if !advert.isActive}<span class="inactive-badge">Inactive</span>{/if}
+								</span>
+								{#if advert.linkUrl.trim()}
+									<span class="advert-row-link">{advert.linkUrl.trim()}</span>
+								{/if}
+							</div>
+							<div class="advert-row-actions">
+								<button
+									type="button"
+									class="icon-btn"
+									onclick={() => startEdit(advert)}
+									aria-label="Edit advert {i + 1}"
+								>
+									<Pencil size={16} />
+								</button>
+								<button
+									type="button"
+									class="icon-btn remove-btn"
+									onclick={() => requestDelete(advert, i)}
+									aria-label="Delete advert {i + 1}"
+								>
+									<Trash2 size={16} />
+								</button>
+							</div>
 						</div>
 					{/if}
+				{/each}
+			{/if}
 
-					<div class="advert-field">
-						<span class="field-label">Image</span>
-						<FileUpload
-							acceptedTypes={['image']}
-							onUpload={(f) => handleImageUpload(advert.id, f)}
-							onError={handleUploadError}
-							showPreview={false}
-							label="Upload Image"
-						/>
-					</div>
-
-					<div class="advert-field">
-						<label class="field-label" for="advert-link-{advert.id}">Link URL</label>
-						<input
-							id="advert-link-{advert.id}"
-							class="text-input"
-							type="url"
-							placeholder="https://example.com"
-							bind:value={advert.linkUrl}
-						/>
-						{#if advert.linkUrl}
-							<a
-								class="preview-link"
-								href={advert.linkUrl}
-								target="_blank"
-								rel="noopener noreferrer"
-							>
-								<ExternalLink size={14} aria-hidden="true" />
-								{advert.linkUrl}
-							</a>
-						{/if}
-					</div>
+			{#if creating}
+				<div class="advert-card editing">
+					{@render advertForm('Add advert')}
 				</div>
-			{/each}
-
-			<button type="button" class="add-btn" onclick={addAdvert}>
-				<Plus size={18} />
-				Add Advert
-			</button>
-			<p class="help-text">
-				Each advert is a full-width banner with no border. Use a wide image (e.g. 728&times;90) for
-				best results. Adverts without an image are ignored. Leave a Link URL empty for a
-				non-clickable image.
-			</p>
-		</div>
-
-		<!-- Save Button -->
-		<div class="form-actions">
-			<button class="save-button" onclick={saveSettings} disabled={isSaving}>
-				<Save size={18} />
-				{isSaving ? 'Saving...' : 'Save Configuration'}
-			</button>
+			{:else}
+				<button type="button" class="add-btn" onclick={startNew}>
+					<Plus size={18} />
+					Add Advert
+				</button>
+			{/if}
 		</div>
 	</div>
 </div>
+
+<ConfirmDialog
+	bind:open={confirmOpen}
+	title="Delete advert?"
+	message="“{pendingDeleteLabel}” will be permanently removed."
+	confirmLabel="Delete"
+	variant="danger"
+	onConfirm={confirmDelete}
+/>
 
 <style>
 	.advert-config {
@@ -366,39 +578,86 @@
 		font-size: 12px;
 	}
 
-	.empty-adverts {
-		color: var(--text-secondary, #a1a1aa);
-		font-size: 13px;
-		margin: 0;
-		padding: 16px;
-		border: 1px dashed var(--border-color, #3a3a3a);
-		border-radius: 8px;
-		text-align: center;
-	}
-
-	.advert-card {
+	/* Advert list rows */
+	.advert-row {
 		display: flex;
-		flex-direction: column;
+		align-items: center;
 		gap: 12px;
-		padding: 16px;
+		padding: 10px 12px;
 		background: var(--bg-secondary, var(--bg-tertiary, #2d2d2d));
 		border: 1px solid var(--border-color, #3a3a3a);
 		border-radius: 10px;
 	}
 
-	.advert-card-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
+	.advert-row.inactive {
+		opacity: 0.65;
 	}
 
-	.advert-card-title {
+	.advert-thumb {
+		flex-shrink: 0;
+		width: 96px;
+		height: 44px;
+		border-radius: 6px;
+		overflow: hidden;
+		background: var(--bg-tertiary, #2d2d2d);
+		border: 1px solid var(--border-color, #3a3a3a);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.advert-thumb img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center;
+	}
+
+	.advert-row-info {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+		flex: 1;
+	}
+
+	.advert-row-title {
 		color: var(--text-primary, #ffffff);
 		font-size: 14px;
 		font-weight: 600;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: flex;
+		align-items: center;
+		gap: 8px;
 	}
 
-	.remove-btn {
+	.inactive-badge {
+		font-size: 11px;
+		font-weight: 500;
+		color: var(--text-secondary, #a1a1aa);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 999px;
+		padding: 1px 8px;
+	}
+
+	.advert-row-link {
+		color: var(--text-secondary, #a1a1aa);
+		font-size: 12px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.advert-row-actions {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-shrink: 0;
+	}
+
+	.icon-btn {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -411,9 +670,34 @@
 		transition: all 0.2s ease;
 	}
 
+	.icon-btn:hover {
+		border-color: var(--accent-color, #6366f1);
+		color: var(--text-primary, #ffffff);
+	}
+
 	.remove-btn:hover {
 		border-color: #ef4444;
 		color: #ef4444;
+	}
+
+	/* Inline edit / new form */
+	.advert-card.editing {
+		background: var(--bg-secondary, var(--bg-tertiary, #2d2d2d));
+		border: 1px solid var(--accent-color, #6366f1);
+		border-radius: 10px;
+		padding: 16px;
+	}
+
+	.advert-edit-form {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.form-hint {
+		margin: 0 0 16px 0;
+		font-size: 13px;
+		color: var(--text-secondary, #a1a1aa);
+		line-height: 1.45;
 	}
 
 	.advert-field {
@@ -422,10 +706,27 @@
 		gap: 8px;
 	}
 
+	.advert-field + .advert-field {
+		margin-top: 16px;
+	}
+
+	.toggle-field {
+		flex-direction: row;
+		align-items: center;
+		gap: 12px;
+		flex-wrap: wrap;
+	}
+
 	.field-label {
 		font-size: 13px;
 		color: var(--text-secondary, #a1a1aa);
 		font-weight: 400;
+	}
+
+	.optional-tag {
+		color: var(--text-secondary, #a1a1aa);
+		font-weight: 400;
+		font-size: 12px;
 	}
 
 	.text-input {
@@ -442,6 +743,13 @@
 	.text-input:focus {
 		outline: none;
 		border-color: var(--accent-color, #6366f1);
+	}
+
+	.textarea-input {
+		resize: vertical;
+		min-height: 44px;
+		font-family: inherit;
+		line-height: 1.4;
 	}
 
 	.preview-wrapper {
@@ -498,6 +806,11 @@
 		min-width: 0;
 	}
 
+	.edit-actions {
+		gap: 10px;
+		margin-top: 20px;
+	}
+
 	.save-button {
 		background: var(--accent-bg, var(--accent-color, #6366f1));
 		color: var(--accent-fg);
@@ -527,6 +840,28 @@
 		cursor: not-allowed;
 	}
 
+	.cancel-btn {
+		background: transparent;
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 8px;
+		padding: 12px 20px;
+		font-size: 14px;
+		font-weight: 500;
+		color: var(--text-secondary, #a1a1aa);
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.cancel-btn:hover:not(:disabled) {
+		border-color: var(--accent-color, #6366f1);
+		color: var(--text-primary, #ffffff);
+	}
+
+	.cancel-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+
 	@media (max-width: 768px) {
 		.advert-config {
 			padding: 16px;
@@ -538,7 +873,15 @@
 			justify-content: stretch;
 		}
 
-		.save-button {
+		.form-actions .save-button {
+			width: 100%;
+		}
+
+		.edit-actions {
+			flex-direction: column-reverse;
+		}
+
+		.edit-actions .cancel-btn {
 			width: 100%;
 		}
 	}

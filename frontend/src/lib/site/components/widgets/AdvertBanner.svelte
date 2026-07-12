@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { AdvertItem } from '$lib/site/stores/siteConfig';
+	import type { Advert } from '$lib/site/stores/adverts';
 
 	interface Props {
-		items: AdvertItem[];
+		items: Advert[];
 		rotationSeconds?: number;
 		alt?: string;
 	}
@@ -43,13 +43,13 @@
 			href={current.linkUrl}
 			target="_blank"
 			rel="noopener noreferrer nofollow sponsored"
-			aria-label={alt}
+			aria-label={current.title || alt}
 		>
-			<img src={current.imageUrl} {alt} loading="lazy" decoding="async" />
+			<img src={current.imageUrl} alt={current.title || alt} loading="lazy" decoding="async" />
 		</a>
 	{:else}
 		<div class="advert-banner">
-			<img src={current.imageUrl} {alt} loading="lazy" decoding="async" />
+			<img src={current.imageUrl} alt={current.title || alt} loading="lazy" decoding="async" />
 		</div>
 	{/if}
 {/if}

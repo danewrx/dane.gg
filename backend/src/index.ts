@@ -98,6 +98,7 @@ import emojisRoutes from './routes/emojis';
 import chatNotificationSoundsRoutes from './routes/chatNotificationSounds';
 import skillsRoutes from './routes/skills';
 import certificationsRoutes from './routes/certifications';
+import advertsRoutes from './routes/adverts';
 import contactRoutes from './routes/contact';
 import themesRoutes from './routes/themes';
 import fontsRoutes from './routes/fonts';
@@ -195,6 +196,9 @@ app.use('/api/skills', skillsRoutes);
 
 // Certifications routes
 app.use('/api/certifications', certificationsRoutes);
+
+// Advertisement routes
+app.use('/api/adverts', advertsRoutes);
 
 // Contact page routes
 app.use('/api/contact', contactRoutes);

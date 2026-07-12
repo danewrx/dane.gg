@@ -11,6 +11,7 @@
 	import ServiceStatus from '$lib/site/components/widgets/ServiceStatus.svelte';
 	import AdvertBanner from '$lib/site/components/widgets/AdvertBanner.svelte';
 	import { siteConfig } from '$lib/site/stores/siteConfig';
+	import { adverts } from '$lib/site/stores/adverts';
 	import SiteStats from '$lib/site/components/widgets/SiteStats.svelte';
 	import Chat from '$lib/site/components/Chat.svelte';
 	import ChatUserCount from '$lib/site/components/ChatUserCount.svelte';
@@ -192,10 +193,10 @@
 					</BorderedBox>
 				</div>
 
-				{#if $siteConfig.advert_enabled && $siteConfig.advert_items.length > 0}
+				{#if $siteConfig.advert_enabled && $adverts.length > 0}
 					<div class="card-slot advert-slot" data-mobile-order="12">
 						<AdvertBanner
-							items={$siteConfig.advert_items}
+							items={$adverts}
 							rotationSeconds={$siteConfig.advert_rotation_seconds}
 						/>
 					</div>

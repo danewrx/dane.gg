@@ -329,6 +329,19 @@ export const certifications = websiteSchema.table('certifications', {
 	updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
 });
 
+// Advertisement banners shown on the homepage right column
+export const adverts = websiteSchema.table('adverts', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	title: varchar('title', { length: 255 }).notNull().default(''),
+	description: text('description'),
+	imageUrl: varchar('image_url', { length: 500 }).notNull(),
+	linkUrl: varchar('link_url', { length: 500 }).notNull().default(''),
+	isActive: boolean('is_active').notNull().default(true),
+	displayOrder: integer('display_order').notNull().default(0),
+	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+	updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
+});
+
 // Contact emails table
 export const contactEmails = websiteSchema.table('contact_emails', {
 	id: uuid('id').primaryKey().defaultRandom(),
@@ -556,6 +569,8 @@ export type Skill = typeof skills.$inferSelect;
 export type NewSkill = typeof skills.$inferInsert;
 export type Certification = typeof certifications.$inferSelect;
 export type NewCertification = typeof certifications.$inferInsert;
+export type Advert = typeof adverts.$inferSelect;
+export type NewAdvert = typeof adverts.$inferInsert;
 export type ContactEmail = typeof contactEmails.$inferSelect;
 export type NewContactEmail = typeof contactEmails.$inferInsert;
 export type ContactPageSetting = typeof contactPageSettings.$inferSelect;
