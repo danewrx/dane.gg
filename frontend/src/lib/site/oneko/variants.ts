@@ -210,13 +210,20 @@ if (browser) {
 	globalThis.addEventListener(SITE_CONFIG_UPDATED_EVENT, () => reconcileWebNekoFromConfig());
 
 	// Cross-tab: admin saved in another tab of the same browser.
-	subscribeSiteConfigBroadcast(async () => {
-		await loadSiteConfig();
-		reconcileWebNekoFromConfig();
+	subscribeSiteConfigBroadcast(() => {
+		loadSiteConfig()
+			.then(() => reconcileWebNekoFromConfig())
+			.catch(() => {});
 	});
 
 	// Initial load: correct the boot-time skin once fresh config is available,
 	// covering new visitors whose injected default was served stale.
-	await loadSiteConfig();
-	reconcileWebNekoFromConfig();
+	//
+	// NOTE: do NOT convert this to top-level `await`. This module is a
+	// side-effect import in the site layout; a top-level await makes it an async
+	// module and reorders the layout's import graph, causing a "Cannot access
+	// 'SettingsPanel' before initialization" TDZ crash. Keep it fire-and-forget.
+	loadSiteConfig()
+		.then(() => reconcileWebNekoFromConfig())
+		.catch(() => {});
 }
