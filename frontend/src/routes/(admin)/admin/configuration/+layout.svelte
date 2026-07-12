@@ -300,6 +300,8 @@
 						<User size={18} />
 					{:else if selectedCategory.icon === Mail}
 						<Mail size={18} />
+					{:else if selectedCategory.icon === Megaphone}
+						<Megaphone size={18} />
 					{/if}
 					{selectedCategory.title}
 				</h1>

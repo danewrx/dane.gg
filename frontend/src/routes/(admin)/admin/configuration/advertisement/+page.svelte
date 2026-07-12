@@ -4,7 +4,7 @@
 
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
-	import { Megaphone, Save, Loader2, ExternalLink } from 'lucide-svelte';
+	import { Save, Eye, EyeOff, ExternalLink } from 'lucide-svelte';
 	import { siteConfig, loadSiteConfig } from '$lib/site/stores/siteConfig';
 	import { toast } from 'svelte-sonner';
 	import { notifySiteConfigConsumers } from '$lib/shared/utils/siteConfigLiveSync';
@@ -98,30 +98,35 @@
 	<title>{adminPageTitle('Advertisement')}</title>
 </svelte:head>
 
-<div class="advert-admin">
-	<div class="page-head">
-		<Megaphone size={22} class="advert-page-icon" aria-hidden="true" />
-		<div>
-			<h2 class="page-title">Advertisement</h2>
-			<p class="page-desc">
-				Manage the image-only advertisement banner shown in the homepage right column, between
-				Recent posts and Systems status.
-			</p>
-		</div>
-	</div>
+<div class="advert-config">
+	<p class="page-description">
+		Manage the image-only advertisement banner shown in the homepage right column, between Recent
+		posts and Systems status.
+	</p>
 
-	<section class="advert-panel">
-		<div class="field-row">
-			<div class="field-label">
-				<span class="field-title">Show advertisement</span>
-				<span class="field-hint">Controls whether the advert is displayed on the site.</span>
+	<div class="config-form">
+		<!-- Enabled Toggle -->
+		<div class="form-group">
+			<div class="advert-enabled-toggle">
+				<div class="toggle-with-icon">
+					<Toggle bind:checked={pendingEnabled} />
+					<span class="toggle-text">
+						{#if pendingEnabled}
+							<Eye size={16} />
+							Advertisement Enabled
+						{:else}
+							<EyeOff size={16} />
+							Advertisement Disabled
+						{/if}
+					</span>
+				</div>
+				<p class="help-text">Controls whether the advert is displayed on the public site.</p>
 			</div>
-			<Toggle bind:checked={pendingEnabled} />
 		</div>
 
-		<div class="field-block">
-			<label class="field-title" for="advert-link">Link URL</label>
-			<span class="field-hint">Opens in a new tab when the advert is clicked. Leave empty for a non-clickable image.</span>
+		<!-- Link URL -->
+		<div class="form-group">
+			<label for="advert-link">Link URL</label>
 			<input
 				id="advert-link"
 				class="text-input"
@@ -129,11 +134,14 @@
 				placeholder="https://example.com"
 				bind:value={pendingLinkUrl}
 			/>
+			<p class="help-text">
+				Opens in a new tab when the advert is clicked. Leave empty for a non-clickable image.
+			</p>
 		</div>
 
-		<div class="field-block">
-			<span class="field-title">Advert image</span>
-			<span class="field-hint">Upload an image or paste an external URL. Displayed full-width with no border.</span>
+		<!-- Advert Image -->
+		<div class="form-group">
+			<div class="form-group-label">Advert Image</div>
 			<FileUpload
 				acceptedTypes={['image']}
 				onUpload={handleImageUpload}
@@ -147,12 +155,17 @@
 				placeholder="/uploads/advert.png or https://..."
 				bind:value={pendingImageUrl}
 			/>
+			<p class="help-text">
+				Upload an image or paste an external URL. Displayed as a full-width banner with no border.
+				Use a wide image (e.g. 728&times;90) for best results.
+			</p>
 		</div>
 
+		<!-- Preview -->
 		{#if pendingImageUrl}
-			<div class="preview">
-				<span class="field-hint">Preview</span>
-				<div class="preview-frame">
+			<div class="preview-section">
+				<h3>Preview</h3>
+				<div class="preview-wrapper">
 					<img src={pendingImageUrl} alt="Advertisement preview" />
 				</div>
 				{#if pendingLinkUrl}
@@ -164,168 +177,194 @@
 			</div>
 		{/if}
 
-		<div class="actions">
-			<button class="save-btn" onclick={saveSettings} disabled={!dirty || isSaving}>
-				{#if isSaving}
-					<Loader2 size={16} class="spin" aria-hidden="true" />
-					Saving…
-				{:else}
-					<Save size={16} aria-hidden="true" />
-					Save changes
-				{/if}
+		<!-- Save Button -->
+		<div class="form-actions">
+			<button class="save-button" onclick={saveSettings} disabled={!dirty || isSaving}>
+				<Save size={18} />
+				{isSaving ? 'Saving...' : 'Save Configuration'}
 			</button>
 		</div>
-	</section>
+	</div>
 </div>
 
 <style>
-	.advert-admin {
-		display: flex;
-		flex-direction: column;
-		gap: 20px;
+	.advert-config {
+		padding: 24px;
+		min-width: 0;
+		box-sizing: border-box;
+		overflow-x: hidden;
 	}
 
-	.page-head {
-		display: flex;
-		align-items: flex-start;
-		gap: 12px;
-	}
-
-	:global(.advert-page-icon) {
-		color: #f59e0b;
-		margin-top: 2px;
-	}
-
-	.page-title {
-		margin: 0;
-		font-size: 1.25rem;
-		font-weight: 600;
-	}
-
-	.page-desc {
-		margin: 4px 0 0;
-		color: var(--text-secondary, #94a3b8);
-		font-size: 0.875rem;
+	.page-description {
+		color: var(--text-secondary, #a1a1aa);
+		font-size: 14px;
+		margin: 0 0 24px 0;
 		max-width: 60ch;
 	}
 
-	.advert-panel {
+	.config-form {
 		display: flex;
 		flex-direction: column;
-		gap: 20px;
-		padding: 20px;
-		border: 1px solid rgba(148, 163, 184, 0.2);
-		border-radius: 12px;
-		background: rgba(15, 23, 42, 0.35);
+		gap: 24px;
 	}
 
-	.field-row {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 16px;
-	}
-
-	.field-block {
+	.form-group {
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
 	}
 
-	.field-label {
+	label,
+	.form-group-label {
+		color: var(--text-primary, #ffffff);
+		font-size: 14px;
+		font-weight: 500;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
+		min-width: 0;
+	}
+
+	.help-text {
+		color: var(--text-secondary, #a1a1aa);
+		font-size: 12px;
+		margin: 0;
+	}
+
+	.advert-enabled-toggle {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: 8px;
 	}
 
-	.field-title {
-		font-weight: 600;
-		font-size: 0.9rem;
+	.toggle-with-icon {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 12px;
+		background: var(--bg-tertiary, #2d2d2d);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 8px;
+		transition: all 0.2s ease;
 	}
 
-	.field-hint {
-		color: var(--text-secondary, #94a3b8);
-		font-size: 0.8rem;
+	.toggle-with-icon:hover {
+		border-color: var(--accent-color, #6366f1);
+	}
+
+	.toggle-text {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: var(--text-primary, #ffffff);
+		font-size: 14px;
+		flex-wrap: wrap;
+		min-width: 0;
+		line-height: 1.3;
 	}
 
 	.text-input {
 		width: 100%;
-		padding: 10px 12px;
-		border: 1px solid rgba(148, 163, 184, 0.25);
+		box-sizing: border-box;
+		background: var(--bg-tertiary, #2d2d2d);
+		border: 1px solid var(--border-color, #3a3a3a);
 		border-radius: 8px;
-		background: rgba(2, 6, 23, 0.5);
-		color: inherit;
-		font-size: 0.9rem;
+		padding: 12px 14px;
+		color: var(--text-primary, #ffffff);
+		font-size: 14px;
 	}
 
 	.text-input:focus {
 		outline: none;
-		border-color: #f59e0b;
+		border-color: var(--accent-color, #6366f1);
 	}
 
-	.preview {
+	.preview-section {
+		margin-top: 8px;
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: 12px;
 	}
 
-	.preview-frame {
-		border: 1px dashed rgba(148, 163, 184, 0.3);
+	.preview-section h3 {
+		color: var(--text-primary, #ffffff);
+		font-size: 16px;
+		margin: 0;
+	}
+
+	.preview-wrapper {
 		border-radius: 8px;
-		padding: 8px;
-		background: rgba(2, 6, 23, 0.4);
+		border: 1px solid var(--border-color, #3a3a3a);
+		overflow: hidden;
 	}
 
-	.preview-frame img {
+	.preview-wrapper img {
 		display: block;
 		width: 100%;
 		height: 90px;
 		object-fit: cover;
 		object-position: center;
-		border-radius: 4px;
 	}
 
 	.preview-link {
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
-		font-size: 0.8rem;
-		color: #60a5fa;
+		font-size: 13px;
+		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		word-break: break-all;
 	}
 
-	.actions {
+	.form-actions {
 		display: flex;
 		justify-content: flex-end;
+		padding-top: 8px;
+		min-width: 0;
 	}
 
-	.save-btn {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		padding: 10px 18px;
+	.save-button {
+		background: var(--accent-bg, var(--accent-color, #6366f1));
+		color: var(--accent-fg);
 		border: none;
 		border-radius: 8px;
-		background: #f59e0b;
-		color: #0f172a;
-		font-weight: 600;
-		font-size: 0.9rem;
+		padding: 12px 20px;
+		font-size: 14px;
+		font-weight: 500;
 		cursor: pointer;
-		transition: opacity 0.15s ease;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		transition: all 0.2s ease;
+		max-width: 100%;
+		box-sizing: border-box;
+		text-align: center;
 	}
 
-	.save-btn:disabled {
-		opacity: 0.5;
+	.save-button:hover:not(:disabled) {
+		background: var(--accent-hover, #5b5bf6);
+		transform: translateY(-1px);
+	}
+
+	.save-button:disabled {
+		opacity: 0.6;
 		cursor: not-allowed;
 	}
 
-	:global(.spin) {
-		animation: spin 1s linear infinite;
+	@media (max-width: 768px) {
+		.advert-config {
+			padding: 16px;
+		}
 	}
 
-	@keyframes spin {
-		to {
-			transform: rotate(360deg);
+	@media (max-width: 480px) {
+		.form-actions {
+			justify-content: stretch;
+		}
+
+		.save-button {
+			width: 100%;
 		}
 	}
 </style>
