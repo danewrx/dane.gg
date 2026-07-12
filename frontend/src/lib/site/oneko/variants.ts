@@ -202,6 +202,21 @@ function reconcileWebNekoFromConfig(): void {
 	if (typeof w.daneRestartWebNeko === 'function') w.daneRestartWebNeko();
 }
 
+/**
+ * Reload the live site config, then re-apply the Web Neko skin.
+ *
+ * The promise handling lives inside this function on purpose. This module is a
+ * side-effect import in the site layout: a *top-level* `await` (or promise
+ * chain) would make it an async module, reorder the layout's import graph, and
+ * cause a "Cannot access 'SettingsPanel' before initialization" TDZ crash. By
+ * keeping the fire-and-forget inside a function, the module stays synchronous.
+ */
+function refreshWebNekoFromConfig(): void {
+	loadSiteConfig()
+		.then(() => reconcileWebNekoFromConfig())
+		.catch(() => {});
+}
+
 if (browser) {
 	// Live server push: when an admin changes config, the backend broadcasts over
 	// the chat WebSocket, which reloads siteConfig and dispatches this event. The
@@ -210,13 +225,9 @@ if (browser) {
 	globalThis.addEventListener(SITE_CONFIG_UPDATED_EVENT, () => reconcileWebNekoFromConfig());
 
 	// Cross-tab: admin saved in another tab of the same browser.
-	subscribeSiteConfigBroadcast(async () => {
-		await loadSiteConfig();
-		reconcileWebNekoFromConfig();
-	});
+	subscribeSiteConfigBroadcast(() => refreshWebNekoFromConfig());
 
 	// Initial load: correct the boot-time skin once fresh config is available,
 	// covering new visitors whose injected default was served stale.
-	await loadSiteConfig();
-	reconcileWebNekoFromConfig();
+	refreshWebNekoFromConfig();
 }
