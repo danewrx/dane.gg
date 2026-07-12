@@ -1,27 +1,57 @@
 <script lang="ts">
+	import type { AdvertItem } from '$lib/site/stores/siteConfig';
+
 	interface Props {
-		imageUrl: string;
-		linkUrl?: string;
+		items: AdvertItem[];
+		rotationSeconds?: number;
 		alt?: string;
 	}
 
-	let { imageUrl, linkUrl = '', alt = 'Advertisement' }: Props = $props();
+	let { items, rotationSeconds = 8, alt = 'Advertisement' }: Props = $props();
+
+	// Only adverts with an image are displayable.
+	const visibleItems = $derived((items ?? []).filter((item) => item?.imageUrl));
+
+	let index = $state(0);
+
+	// Keep the index in range if the list shrinks.
+	$effect(() => {
+		if (index >= visibleItems.length) {
+			index = 0;
+		}
+	});
+
+	const current = $derived(visibleItems[index]);
+
+	// Rotate between adverts. Only runs when there is more than one to show.
+	$effect(() => {
+		if (visibleItems.length <= 1) return;
+
+		const intervalMs = Math.max(1, rotationSeconds) * 1000;
+		const timer = setInterval(() => {
+			index = (index + 1) % visibleItems.length;
+		}, intervalMs);
+
+		return () => clearInterval(timer);
+	});
 </script>
 
-{#if linkUrl}
-	<a
-		class="advert-banner"
-		href={linkUrl}
-		target="_blank"
-		rel="noopener noreferrer nofollow sponsored"
-		aria-label={alt}
-	>
-		<img src={imageUrl} {alt} loading="lazy" decoding="async" />
-	</a>
-{:else}
-	<div class="advert-banner">
-		<img src={imageUrl} {alt} loading="lazy" decoding="async" />
-	</div>
+{#if current}
+	{#if current.linkUrl}
+		<a
+			class="advert-banner"
+			href={current.linkUrl}
+			target="_blank"
+			rel="noopener noreferrer nofollow sponsored"
+			aria-label={alt}
+		>
+			<img src={current.imageUrl} {alt} loading="lazy" decoding="async" />
+		</a>
+	{:else}
+		<div class="advert-banner">
+			<img src={current.imageUrl} {alt} loading="lazy" decoding="async" />
+		</div>
+	{/if}
 {/if}
 
 <style>

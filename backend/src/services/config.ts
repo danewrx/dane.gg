@@ -10,6 +10,11 @@ export interface SiteConfigValue {
 	description?: string;
 }
 
+export interface AdvertItem {
+	imageUrl: string;
+	linkUrl: string;
+}
+
 export interface SiteConfig {
 	default_weather_type: 'none' | 'rain' | 'snow';
 	default_weather_speed: number;
@@ -20,8 +25,10 @@ export interface SiteConfig {
 	site_title: string;
 	site_description: string;
 	advert_enabled: boolean;
-	advert_image_url: string;
-	advert_link_url: string;
+	/** How long each advert is shown before rotating to the next (seconds). */
+	advert_rotation_seconds: number;
+	/** Ordered list of adverts the banner rotates between. */
+	advert_items: AdvertItem[];
 }
 
 // Environment variable fallbacks
@@ -38,8 +45,8 @@ const ENV_FALLBACKS: Partial<SiteConfig> = {
 		process.env.SITE_DESCRIPTION ||
 		"Hi, I'm Dane! I'm a software engineer & freelance designer from Manchester, UK.",
 	advert_enabled: process.env.ADVERT_ENABLED === 'true',
-	advert_image_url: process.env.ADVERT_IMAGE_URL || '',
-	advert_link_url: process.env.ADVERT_LINK_URL || ''
+	advert_rotation_seconds: parseFloat(process.env.ADVERT_ROTATION_SECONDS || '8'),
+	advert_items: []
 };
 
 function toEnvKey(key: string): string {

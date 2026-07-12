@@ -192,11 +192,11 @@
 					</BorderedBox>
 				</div>
 
-				{#if $siteConfig.advert_enabled && $siteConfig.advert_image_url}
+				{#if $siteConfig.advert_enabled && $siteConfig.advert_items.length > 0}
 					<div class="card-slot advert-slot" data-mobile-order="12">
 						<AdvertBanner
-							imageUrl={$siteConfig.advert_image_url}
-							linkUrl={$siteConfig.advert_link_url}
+							items={$siteConfig.advert_items}
+							rotationSeconds={$siteConfig.advert_rotation_seconds}
 						/>
 					</div>
 				{/if}

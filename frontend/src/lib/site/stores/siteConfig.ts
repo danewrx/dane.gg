@@ -4,6 +4,11 @@ import { browser } from '$app/environment';
 
 export const SITE_CONFIG_UPDATED_EVENT = 'siteConfigUpdated';
 
+export interface AdvertItem {
+	imageUrl: string;
+	linkUrl: string;
+}
+
 export interface SiteConfig {
 	default_weather_type: 'none' | 'rain' | 'snow';
 	default_weather_speed: number;
@@ -17,10 +22,10 @@ export interface SiteConfig {
 	site_description: string;
 	/** Whether the homepage advertisement banner is shown. */
 	advert_enabled: boolean;
-	/** Image URL (uploaded path or external URL) for the advertisement. */
-	advert_image_url: string;
-	/** Link opened when the advertisement is clicked. */
-	advert_link_url: string;
+	/** How long each advert is shown before rotating to the next (seconds). */
+	advert_rotation_seconds: number;
+	/** Ordered list of adverts the banner rotates between. */
+	advert_items: AdvertItem[];
 }
 
 // Default configuration (fallback)
@@ -35,8 +40,8 @@ const DEFAULT_CONFIG: SiteConfig = {
 	site_description:
 		"Hi, I'm Dane! I'm a software engineer & freelance designer from Manchester, UK.",
 	advert_enabled: false,
-	advert_image_url: '',
-	advert_link_url: ''
+	advert_rotation_seconds: 8,
+	advert_items: []
 };
 
 // Store for site configuration
