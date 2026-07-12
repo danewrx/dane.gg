@@ -20,7 +20,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use('/uploads', express.static(path.join(process.cwd(), 'static', 'uploads')));
-app.use('/emojis', express.static(path.join(process.cwd(), 'static', 'emojis')));
 app.use('/chat-sounds', express.static(path.join(process.cwd(), 'static', 'chat-sounds')));
 
 // Session configuration
