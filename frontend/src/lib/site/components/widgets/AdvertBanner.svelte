@@ -34,6 +34,8 @@
 	.advert-banner img {
 		display: block;
 		width: 100%;
-		height: auto;
+		height: 90px;
+		object-fit: cover;
+		object-position: center;
 	}
 </style>
