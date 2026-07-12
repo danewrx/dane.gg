@@ -19,6 +19,9 @@ export interface SiteConfig {
 	enforce_web_neko: boolean;
 	site_title: string;
 	site_description: string;
+	advert_enabled: boolean;
+	advert_image_url: string;
+	advert_link_url: string;
 }
 
 // Environment variable fallbacks
@@ -33,7 +36,10 @@ const ENV_FALLBACKS: Partial<SiteConfig> = {
 	site_title: process.env.SITE_TITLE || 'dane.gg - Software Engineer & Designer',
 	site_description:
 		process.env.SITE_DESCRIPTION ||
-		"Hi, I'm Dane! I'm a software engineer & freelance designer from Manchester, UK."
+		"Hi, I'm Dane! I'm a software engineer & freelance designer from Manchester, UK.",
+	advert_enabled: process.env.ADVERT_ENABLED === 'true',
+	advert_image_url: process.env.ADVERT_IMAGE_URL || '',
+	advert_link_url: process.env.ADVERT_LINK_URL || ''
 };
 
 function toEnvKey(key: string): string {

@@ -15,6 +15,12 @@ export interface SiteConfig {
 	enforce_web_neko: boolean;
 	site_title: string;
 	site_description: string;
+	/** Whether the homepage advertisement banner is shown. */
+	advert_enabled: boolean;
+	/** Image URL (uploaded path or external URL) for the advertisement. */
+	advert_image_url: string;
+	/** Link opened when the advertisement is clicked. */
+	advert_link_url: string;
 }
 
 // Default configuration (fallback)
@@ -27,7 +33,10 @@ const DEFAULT_CONFIG: SiteConfig = {
 	enforce_web_neko: false,
 	site_title: 'dane.gg - Software Engineer & Designer',
 	site_description:
-		"Hi, I'm Dane! I'm a software engineer & freelance designer from Manchester, UK."
+		"Hi, I'm Dane! I'm a software engineer & freelance designer from Manchester, UK.",
+	advert_enabled: false,
+	advert_image_url: '',
+	advert_link_url: ''
 };
 
 // Store for site configuration

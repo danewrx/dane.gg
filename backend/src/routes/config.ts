@@ -16,7 +16,10 @@ const LIVE_BROADCAST_KEYS = new Set([
 	'banner_bg_color',
 	'banner_text_color',
 	'banner_speed',
-	'banner_transparent_bg'
+	'banner_transparent_bg',
+	'advert_enabled',
+	'advert_image_url',
+	'advert_link_url'
 ]);
 
 const router = Router();
