@@ -26,7 +26,7 @@ describe('Emoji Sync Logic', () => {
 
 		const result = simulateSyncLogic(incoming);
 
-		expect(result.toInsertOrUpdate.length).toBe(2);
+		expect(result.toInsertOrUpdate).toHaveLength(2);
 		expect(result.toInsertOrUpdate[0].name).toBe('test1');
 		expect(result.toInsertOrUpdate[1].name).toBe('test2');
 	});
@@ -42,7 +42,7 @@ describe('Emoji Sync Logic', () => {
 		const toDelete = existingIds.filter((id) => !incomingIds.has(id));
 
 		expect(toDelete).toEqual(['emoji-2']);
-		expect(toDelete.length).toBe(1);
+		expect(toDelete).toHaveLength(1);
 	});
 
 	it('should handle emoji resurrection', () => {
@@ -100,7 +100,7 @@ describe('Emoji Sync Logic', () => {
 		const toDelete = existingIds.filter((id) => !new Set<string>().has(id));
 
 		expect(toDelete).toEqual(existingIds);
-		expect(toDelete.length).toBe(existingIds.length);
+		expect(toDelete).toHaveLength(existingIds.length);
 	});
 
 	it('should validate filtering logic for GET endpoint', () => {
@@ -112,16 +112,16 @@ describe('Emoji Sync Logic', () => {
 
 		// Default: exclude deleted
 		const active = allEmojis.filter((e) => !e.deleted);
-		expect(active.length).toBe(2);
+		expect(active).toHaveLength(2);
 		expect(active.map((e) => e.name).sort((a, b) => a.localeCompare(b))).toEqual(['active', 'hidden']);
 
 		// With includeDeleted=true
 		const all = allEmojis;
-		expect(all.length).toBe(3);
+		expect(all).toHaveLength(3);
 
 		// For picker: exclude both deleted and hidden
 		const picker = allEmojis.filter((e) => !e.deleted && !e.hidden);
-		expect(picker.length).toBe(1);
+		expect(picker).toHaveLength(1);
 		expect(picker[0].name).toBe('active');
 	});
 });

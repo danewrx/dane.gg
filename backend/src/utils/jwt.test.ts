@@ -55,7 +55,7 @@ describe('JWT helpers', () => {
 			isAdmin: false
 		});
 		const parts = token.split('.');
-		expect(parts.length).toBe(3);
+		expect(parts).toHaveLength(3);
 		const tampered = `${parts[0]}.${parts[1]}x${parts[2]}`;
 		expect(jwt.verifyAccessToken(tampered)).toBeNull();
 	});

@@ -102,7 +102,9 @@ class TrackingService {
 					method: 'GET',
 					statusCode,
 					responseTime: 0,
-					contentLength: 0
+					contentLength: 0,
+					visitorId: this.getVisitorId(),
+					sessionId: this.getSessionId()
 				})
 			});
 

@@ -942,7 +942,9 @@ export class ChatService {
 		return message
 			.replace(/\0/g, '')
 			.replace(/[\x01-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '')
-			.replace(/<[^>]*>/g, '')
+			// Strip HTML tags. `[^<>]` (rather than `[^>]`) keeps this linear-time:
+			// an unclosed tag stops matching at the next `<` instead of backtracking.
+			.replace(/<[^<>]*>/g, '')
 			.trim();
 	}
 
