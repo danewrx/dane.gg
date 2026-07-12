@@ -60,6 +60,13 @@
 			url: 'https://nekoweb.org/',
 			imageUrl: 'https://nekoweb.org/assets/buttons/button6.gif',
 			alt: 'NekoWeb'
+		},
+		{
+			id: '7',
+			title: 'hrtowii',
+			url: 'https://hrtowii.nekoweb.org/',
+			imageUrl: 'https://hrtowii.nekoweb.org/88x31-madoka.png',
+			alt: 'hrtowii'
 		}
 	]);
 
