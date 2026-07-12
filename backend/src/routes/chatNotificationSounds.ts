@@ -17,7 +17,9 @@ const router = Router();
 
 const soundStorage = multer.diskStorage({
 	destination: (req, file, cb) => {
-		const uploadDir = path.join(process.cwd(), 'static', 'chat-sounds');
+		// Custom uploads live under the persistent `uploads` volume.
+		// Only the built-in default sound ships in static/chat-sounds via the image.
+		const uploadDir = path.join(process.cwd(), 'static', 'uploads', 'chat-sounds');
 		if (!fs.existsSync(uploadDir)) {
 			fs.mkdirSync(uploadDir, { recursive: true });
 		}
@@ -108,7 +110,7 @@ router.post(
 				return res.status(500).json({ success: false, error: 'Unexpected file name collision' });
 			}
 
-			const soundUrl = `/chat-sounds/${req.file.filename}`;
+			const soundUrl = `/uploads/chat-sounds/${req.file.filename}`;
 			const [row] = await db
 				.insert(chatNotificationSounds)
 				.values({
