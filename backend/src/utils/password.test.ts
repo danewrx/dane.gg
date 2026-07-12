@@ -23,7 +23,7 @@ describe('validatePasswordStrength', () => {
 
 	test('rejects over 128 characters', () => {
 		const body = 'Aa1!' + 'x'.repeat(125);
-		expect(body.length).toBe(129);
+		expect(body).toHaveLength(129);
 		const r = validatePasswordStrength(body);
 		expect(r.isValid).toBe(false);
 		expect(r.message).toMatch(/128/);
