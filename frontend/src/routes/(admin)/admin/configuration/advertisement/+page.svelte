@@ -4,7 +4,18 @@
 
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
-	import { Save, Eye, EyeOff, Plus, X, Pencil, Trash2, ExternalLink } from 'lucide-svelte';
+	import {
+		Save,
+		Eye,
+		EyeOff,
+		Plus,
+		X,
+		Pencil,
+		Trash2,
+		ExternalLink,
+		ZoomIn,
+		ZoomOut
+	} from 'lucide-svelte';
 	import { siteConfig, loadSiteConfig } from '$lib/site/stores/siteConfig';
 	import { adverts as advertsStore, loadAdverts, type Advert } from '$lib/site/stores/adverts';
 	import { toast } from 'svelte-sonner';
@@ -85,6 +96,7 @@
 	function startNew() {
 		editingId = null;
 		resetDraft();
+		closeCrop();
 		creating = true;
 	}
 
@@ -96,20 +108,201 @@
 		draftImageUrl = ad.imageUrl ?? '';
 		draftLinkUrl = ad.linkUrl ?? '';
 		draftActive = ad.isActive;
+		closeCrop();
 	}
 
 	function cancelEdit() {
 		if (isSavingAdvert) return;
 		creating = false;
 		editingId = null;
+		closeCrop();
 	}
 
-	function handleDraftImageUpload(file: UploadedFile | UploadedFile[]) {
-		const uploadedFile = Array.isArray(file) ? file[0] : file;
-		if (uploadedFile) {
-			draftImageUrl = uploadedFile.path;
-			toast.success('Image uploaded');
+	// Target banner size
+	const MAX_IMAGE_WIDTH = 1456;
+	const MAX_IMAGE_HEIGHT = 180;
+	const CROP_ASPECT = MAX_IMAGE_WIDTH / MAX_IMAGE_HEIGHT;
+
+	const MAX_ZOOM = 4;
+
+	// Inline crop state
+	let cropMode = $state(false);
+	let cropSrc = $state('');
+	let cropImgW = $state(0);
+	let cropImgH = $state(0);
+	let cropRequired = $state(false);
+	let isCropping = $state(false);
+
+	// Freehand pan/zoom: viewport is the fixed-aspect crop window
+	let viewportW = $state(0);
+	let zoom = $state(1);
+	let panX = $state(0);
+	let panY = $state(0);
+	let dragging = $state(false);
+	let cropInitKey = '';
+	let dragStartX = 0;
+	let dragStartY = 0;
+	let dragPanX = 0;
+	let dragPanY = 0;
+
+	const viewportH = $derived(viewportW ? viewportW / CROP_ASPECT : 0);
+	const coverScale = $derived(
+		viewportW && cropImgW && cropImgH ? Math.max(viewportW / cropImgW, viewportH / cropImgH) : 0
+	);
+	const dispW = $derived(cropImgW * coverScale * zoom);
+	const dispH = $derived(cropImgH * coverScale * zoom);
+
+	function clampPan() {
+		panX = Math.min(0, Math.max(viewportW - dispW, panX));
+		panY = Math.min(0, Math.max(viewportH - dispH, panY));
+	}
+
+	$effect(() => {
+		if (cropMode && cropSrc && viewportW > 0 && coverScale > 0 && cropInitKey !== cropSrc) {
+			cropInitKey = cropSrc;
+			zoom = 1;
+			panX = (viewportW - cropImgW * coverScale) / 2;
+			panY = (viewportH - cropImgH * coverScale) / 2;
 		}
+	});
+
+	function setZoom(next: number) {
+		const z = Math.min(MAX_ZOOM, Math.max(1, next));
+		if (!coverScale || z === zoom) return;
+		const s1 = coverScale * zoom;
+		const s2 = coverScale * z;
+		const cx = (viewportW / 2 - panX) / s1;
+		const cy = (viewportH / 2 - panY) / s1;
+		zoom = z;
+		panX = viewportW / 2 - cx * s2;
+		panY = viewportH / 2 - cy * s2;
+		clampPan();
+	}
+
+	function onCropPointerDown(e: PointerEvent) {
+		dragging = true;
+		dragStartX = e.clientX;
+		dragStartY = e.clientY;
+		dragPanX = panX;
+		dragPanY = panY;
+		(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+	}
+
+	function onCropPointerMove(e: PointerEvent) {
+		if (!dragging) return;
+		panX = dragPanX + (e.clientX - dragStartX);
+		panY = dragPanY + (e.clientY - dragStartY);
+		clampPan();
+	}
+
+	function onCropPointerUp() {
+		dragging = false;
+	}
+
+	function onCropWheel(e: WheelEvent) {
+		e.preventDefault();
+		setZoom(zoom * (e.deltaY < 0 ? 1.1 : 0.9));
+	}
+
+	function getImageDimensions(src: string): Promise<{ width: number; height: number }> {
+		return new Promise((resolve, reject) => {
+			const img = new Image();
+			img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+			img.onerror = () => reject(new Error('Could not read image'));
+			img.src = src;
+		});
+	}
+
+	function closeCrop() {
+		cropMode = false;
+		cropSrc = '';
+		cropImgW = 0;
+		cropImgH = 0;
+		cropRequired = false;
+		zoom = 1;
+		panX = 0;
+		panY = 0;
+		dragging = false;
+		cropInitKey = '';
+	}
+
+	async function handleDraftImageUpload(file: UploadedFile | UploadedFile[]) {
+		const uploadedFile = Array.isArray(file) ? file[0] : file;
+		if (!uploadedFile) return;
+
+		let width = 0;
+		let height = 0;
+		try {
+			({ width, height } = await getImageDimensions(uploadedFile.path));
+		} catch (e) {
+			logger.error(e);
+			toast.error('Could not read image dimensions', {
+				description: 'Check the image URL and try again'
+			});
+			return;
+		}
+
+		const oversized = width > MAX_IMAGE_WIDTH || height > MAX_IMAGE_HEIGHT;
+		const aspectMismatch = Math.abs(width / height - CROP_ASPECT) / CROP_ASPECT > 0.01;
+
+		if (oversized || aspectMismatch) {
+			cropSrc = uploadedFile.path;
+			cropImgW = width;
+			cropImgH = height;
+			cropRequired = oversized;
+			cropMode = true;
+			return;
+		}
+
+		draftImageUrl = uploadedFile.path;
+		toast.success('Image uploaded');
+	}
+
+	async function applyCrop() {
+		if (!cropSrc || isCropping) return;
+		isCropping = true;
+		try {
+			const s = coverScale * zoom;
+			if (!s) throw new Error('Crop area not ready');
+
+			const response = await fetch('/api/adverts/crop', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({
+					source: cropSrc,
+					x: -panX / s,
+					y: -panY / s,
+					width: viewportW / s,
+					height: viewportH / s
+				})
+			});
+			if (!response.ok) {
+				const data = await response.json().catch(() => ({}));
+				throw new Error(data.error || 'Failed to crop image');
+			}
+			const data = await response.json();
+			const path = data?.data?.path;
+			if (!path) throw new Error('Crop returned no file path');
+
+			draftImageUrl = path;
+			closeCrop();
+			toast.success('Image cropped and uploaded');
+		} catch (e) {
+			logger.error(e);
+			toast.error('Failed to crop image', {
+				description: e instanceof Error ? e.message : 'Try again'
+			});
+		} finally {
+			isCropping = false;
+		}
+	}
+
+	function useUncropped() {
+		if (cropRequired) return;
+		draftImageUrl = cropSrc;
+		closeCrop();
+		toast.success('Image selected');
 	}
 
 	function handleUploadError(error: string) {
@@ -236,8 +429,9 @@
 {#snippet advertForm(submitLabel: string)}
 	<div class="advert-edit-form">
 		<p class="form-hint">
-			Full-width banner with no border. Use a wide image (e.g. 728&times;90) for best results. Leave
-			the Link URL empty for a non-clickable image.
+			Full-width banner with no border. Use a 728&times;90 image (or {MAX_IMAGE_WIDTH}&times;{MAX_IMAGE_HEIGHT}
+			for retina screens) — other shapes can be cropped after selecting. Leave the Link URL empty for
+			a non-clickable image.
 		</p>
 
 		<div class="advert-field">
@@ -266,18 +460,80 @@
 
 		<div class="advert-field">
 			<span class="field-label">Image</span>
-			{#if draftImageUrl}
-				<div class="preview-wrapper">
-					<img src={draftImageUrl} alt="Advert preview" />
+			{#if cropMode}
+				<div class="crop-panel">
+					<p class="help-text">
+						{#if cropRequired}
+							This image is larger than the {MAX_IMAGE_WIDTH}&times;{MAX_IMAGE_HEIGHT}px maximum
+							(2&times; the 728&times;90 banner), so it needs cropping.
+						{:else}
+							This image doesn't match the 728&times;90 banner shape.
+						{/if}
+						Drag the image to reposition it and zoom with the slider or scroll wheel — the visible area
+						is what gets kept.
+					</p>
+					<div
+						class="crop-viewport"
+						class:dragging
+						bind:clientWidth={viewportW}
+						style="height: {viewportH}px"
+						role="application"
+						aria-label="Crop image: drag to reposition, scroll to zoom"
+						onpointerdown={onCropPointerDown}
+						onpointermove={onCropPointerMove}
+						onpointerup={onCropPointerUp}
+						onpointercancel={onCropPointerUp}
+						onwheel={onCropWheel}
+					>
+						<img
+							src={cropSrc}
+							alt=""
+							draggable="false"
+							style="width: {dispW}px; height: {dispH}px; transform: translate({panX}px, {panY}px);"
+						/>
+					</div>
+					<div class="zoom-row">
+						<ZoomOut size={16} aria-hidden="true" />
+						<input
+							type="range"
+							min="1"
+							max={MAX_ZOOM}
+							step="0.01"
+							value={zoom}
+							oninput={(e) => setZoom(Number((e.target as HTMLInputElement).value))}
+							class="range-input"
+							aria-label="Zoom"
+						/>
+						<ZoomIn size={16} aria-hidden="true" />
+					</div>
+					<div class="crop-actions">
+						<button type="button" class="save-button" onclick={applyCrop} disabled={isCropping}>
+							{isCropping ? 'Cropping...' : 'Crop & Use'}
+						</button>
+						{#if !cropRequired}
+							<button type="button" class="cancel-btn" onclick={useUncropped} disabled={isCropping}>
+								Use as-is
+							</button>
+						{/if}
+						<button type="button" class="cancel-btn" onclick={closeCrop} disabled={isCropping}>
+							Cancel
+						</button>
+					</div>
 				</div>
+			{:else}
+				{#if draftImageUrl}
+					<div class="preview-wrapper">
+						<img src={draftImageUrl} alt="Advert preview" />
+					</div>
+				{/if}
+				<FileUpload
+					acceptedTypes={['image']}
+					onUpload={handleDraftImageUpload}
+					onError={handleUploadError}
+					showPreview={false}
+					label="Upload Image"
+				/>
 			{/if}
-			<FileUpload
-				acceptedTypes={['image']}
-				onUpload={handleDraftImageUpload}
-				onError={handleUploadError}
-				showPreview={false}
-				label="Upload Image"
-			/>
 		</div>
 
 		<div class="advert-field">
@@ -752,6 +1008,53 @@
 		line-height: 1.4;
 	}
 
+	.crop-panel {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	.crop-viewport {
+		position: relative;
+		width: 100%;
+		overflow: hidden;
+		border-radius: 8px;
+		border: 1px solid var(--accent-color, #6366f1);
+		background: var(--bg-tertiary, #2d2d2d);
+		cursor: grab;
+		touch-action: none;
+	}
+
+	.crop-viewport.dragging {
+		cursor: grabbing;
+	}
+
+	.crop-viewport img {
+		position: absolute;
+		top: 0;
+		left: 0;
+		max-width: none;
+		user-select: none;
+		pointer-events: none;
+	}
+
+	.zoom-row {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		color: var(--text-secondary, #a1a1aa);
+	}
+
+	.zoom-row .range-input {
+		flex: 1;
+	}
+
+	.crop-actions {
+		display: flex;
+		gap: 10px;
+		flex-wrap: wrap;
+	}
+
 	.preview-wrapper {
 		border-radius: 8px;
 		border: 1px solid var(--border-color, #3a3a3a);
@@ -761,7 +1064,8 @@
 	.preview-wrapper img {
 		display: block;
 		width: 100%;
-		height: 90px;
+		height: auto;
+		aspect-ratio: 1456 / 180;
 		object-fit: cover;
 		object-position: center;
 	}

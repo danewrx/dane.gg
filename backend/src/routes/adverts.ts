@@ -1,7 +1,10 @@
 import { logger } from '../utils/logger';
 import { Router } from 'express';
+import path from 'path';
+import fs from 'fs';
+import sharp from 'sharp';
 import { db } from '../db';
-import { adverts } from '../db/schema';
+import { adverts, userUploads } from '../db/schema';
 import { eq, asc } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
 import { chatService } from '../services/chatService';
@@ -49,6 +52,175 @@ router.get('/all', requireAuth, async (req, res) => {
 	} catch (error) {
 		logger.error('Error fetching adverts:', error);
 		res.status(500).json({ success: false, error: 'Failed to fetch adverts' });
+	}
+});
+
+const MAX_ADVERT_WIDTH = 1456;
+
+class ImageSourceError extends Error {
+	status: number;
+	constructor(status: number, message: string) {
+		super(message);
+		this.status = status;
+	}
+}
+
+// Load an advert image source as a buffer: either a local /uploads/ path or
+// an external URL (fetched server-side with basic SSRF guards).
+async function loadImageSource(source: string): Promise<Buffer> {
+	if (source.startsWith('/uploads/')) {
+		const relative = source.replace(/^\//, '');
+		const filePath = path.join(process.cwd(), 'static', relative);
+		const uploadsRoot = path.join(process.cwd(), 'static', 'uploads');
+		if (!path.resolve(filePath).startsWith(uploadsRoot)) {
+			throw new ImageSourceError(400, 'Invalid image path');
+		}
+		if (!fs.existsSync(filePath)) {
+			throw new ImageSourceError(404, 'Image file not found');
+		}
+		return fs.readFileSync(filePath);
+	}
+
+	let target: URL;
+	try {
+		target = new URL(source);
+	} catch {
+		throw new ImageSourceError(400, 'Invalid URL');
+	}
+	if (target.protocol !== 'http:' && target.protocol !== 'https:') {
+		throw new ImageSourceError(400, 'Only http(s) URLs are allowed');
+	}
+
+	// Basic SSRF guard: refuse obviously internal hosts.
+	const host = target.hostname.toLowerCase();
+	const isPrivateHost =
+		host === 'localhost' ||
+		host === '0.0.0.0' ||
+		host === '::1' ||
+		host.endsWith('.local') ||
+		/^127\./.test(host) ||
+		/^10\./.test(host) ||
+		/^192\.168\./.test(host) ||
+		/^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
+		/^169\.254\./.test(host);
+	if (isPrivateHost) {
+		throw new ImageSourceError(400, 'URL host not allowed');
+	}
+
+	const upstream = await fetch(target, {
+		redirect: 'follow',
+		signal: AbortSignal.timeout(10_000),
+		headers: {
+			// Some image hosts reject requests without a browser-like UA.
+			'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0',
+			Accept: 'image/avif,image/webp,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5'
+		}
+	});
+	if (!upstream.ok) {
+		throw new ImageSourceError(502, `Image fetch failed (${upstream.status})`);
+	}
+	const contentType = upstream.headers.get('content-type') || '';
+	if (!contentType.startsWith('image/')) {
+		throw new ImageSourceError(400, 'URL is not an image');
+	}
+	const buffer = Buffer.from(await upstream.arrayBuffer());
+	if (buffer.byteLength > 15 * 1024 * 1024) {
+		throw new ImageSourceError(413, 'Image too large (max 15MB)');
+	}
+	return buffer;
+}
+
+// POST crop an advert image server-side (admin). Uses sharp so animated GIFs/WebPs keep their animation
+router.post('/crop', requireAuth, async (req, res) => {
+	try {
+		const source = normaliseString(req.body.source);
+		if (!source) {
+			return res.status(400).json({ success: false, error: 'Image source is required' });
+		}
+		const x = Number(req.body.x);
+		const y = Number(req.body.y);
+		const width = Number(req.body.width);
+		const height = Number(req.body.height);
+		if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) {
+			return res.status(400).json({ success: false, error: 'Invalid crop region' });
+		}
+
+		const input = await loadImageSource(source);
+
+		const image = sharp(input, { animated: true });
+		const meta = await image.metadata();
+		const imgW = meta.width ?? 0;
+		// For animated images, height is all frames stacked; pageHeight is one frame.
+		const frameH = meta.pageHeight ?? meta.height ?? 0;
+		if (!imgW || !frameH) {
+			return res.status(400).json({ success: false, error: 'Could not read image dimensions' });
+		}
+
+		// Clamp the region to the frame bounds.
+		const left = Math.min(Math.max(0, Math.round(x)), imgW - 1);
+		const top = Math.min(Math.max(0, Math.round(y)), frameH - 1);
+		const regionW = Math.max(1, Math.min(Math.round(width), imgW - left));
+		const regionH = Math.max(1, Math.min(Math.round(height), frameH - top));
+
+		let pipeline = image.extract({ left, top, width: regionW, height: regionH });
+		if (regionW > MAX_ADVERT_WIDTH) {
+			pipeline = pipeline.resize({ width: MAX_ADVERT_WIDTH });
+		}
+
+		// Keep the source format so animation and transparency survive.
+		let ext: string;
+		let mimetype: string;
+		switch (meta.format) {
+			case 'gif':
+				pipeline = pipeline.gif();
+				ext = 'gif';
+				mimetype = 'image/gif';
+				break;
+			case 'webp':
+				pipeline = pipeline.webp({ quality: 90 });
+				ext = 'webp';
+				mimetype = 'image/webp';
+				break;
+			case 'jpeg':
+				pipeline = pipeline.jpeg({ quality: 90 });
+				ext = 'jpg';
+				mimetype = 'image/jpeg';
+				break;
+			default:
+				pipeline = pipeline.png();
+				ext = 'png';
+				mimetype = 'image/png';
+		}
+
+		const output = await pipeline.toBuffer();
+
+		const filename = `advert-crop-${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
+		const uploadDir = path.join(process.cwd(), 'static', 'uploads');
+		if (!fs.existsSync(uploadDir)) {
+			fs.mkdirSync(uploadDir, { recursive: true });
+		}
+		fs.writeFileSync(path.join(uploadDir, filename), output);
+
+		const filePath = `/uploads/${filename}`;
+		if (req.user) {
+			await db.insert(userUploads).values({
+				userId: req.user.id,
+				filename,
+				originalName: filename,
+				path: filePath,
+				size: output.byteLength,
+				mimetype,
+				isExternal: false
+			});
+		}
+
+		res.json({ success: true, data: { path: filePath } });
+	} catch (error) {
+		if (error instanceof ImageSourceError) {
+			return res.status(error.status).json({ success: false, error: error.message });
+		}
+		logger.error('Error cropping advert image:', error);
+		res.status(500).json({ success: false, error: 'Failed to crop image' });
 	}
 });
 
