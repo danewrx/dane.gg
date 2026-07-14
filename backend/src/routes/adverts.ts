@@ -1,7 +1,8 @@
 import { logger } from '../utils/logger';
 import { Router } from 'express';
-import path from 'path';
-import fs from 'fs';
+import path from 'node:path';
+import fs from 'node:fs';
+import crypto from 'node:crypto';
 import sharp from 'sharp';
 import { db } from '../db';
 import { adverts, userUploads } from '../db/schema';
@@ -73,11 +74,11 @@ export function isPrivateAdvertHost(hostname: string): boolean {
 		host === '0.0.0.0' ||
 		host === '::1' ||
 		host.endsWith('.local') ||
-		/^127\./.test(host) ||
-		/^10\./.test(host) ||
-		/^192\.168\./.test(host) ||
+		host.startsWith('127.') ||
+		host.startsWith('10.') ||
+		host.startsWith('192.168.') ||
 		/^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
-		/^169\.254\./.test(host)
+		host.startsWith('169.254.')
 	);
 }
 
@@ -236,7 +237,7 @@ router.post('/crop', requireAuth, async (req, res) => {
 		const input = await loadImageSource(source);
 		const { buffer: output, ext, mimetype } = await cropAdvertImage(input, { x, y, width, height });
 
-		const filename = `advert-crop-${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
+		const filename = `advert-crop-${crypto.randomUUID()}.${ext}`;
 		const uploadDir = path.join(process.cwd(), 'static', 'uploads');
 		if (!fs.existsSync(uploadDir)) {
 			fs.mkdirSync(uploadDir, { recursive: true });

@@ -42,10 +42,15 @@ export async function loadAdverts(): Promise<void> {
 }
 
 // Load on startup and refresh whenever site config broadcasts a live update
-// (admin advert changes trigger the same broadcast).
-if (browser) {
-	loadAdverts();
+// (admin advert changes trigger the same broadcast). Kept inside a sync
+// helper: top-level await would make this an async module and reorder the
+// import graph, which previously broke WebKit (see oneko/variants.ts).
+function initAdvertsStore(): void {
+	if (!browser) return;
+	void loadAdverts();
 	window.addEventListener(SITE_CONFIG_UPDATED_EVENT, () => {
-		loadAdverts();
+		void loadAdverts();
 	});
 }
+
+initAdvertsStore();

@@ -42,9 +42,11 @@ const ENV_FALLBACKS: Partial<SiteConfig> = {
 		process.env.SITE_DESCRIPTION ||
 		"Hi, I'm Dane! I'm a software engineer & freelance designer from Manchester, UK.",
 	advert_enabled: process.env.ADVERT_ENABLED === 'true',
-	advert_rotation_seconds: parseFloat(process.env.ADVERT_ROTATION_SECONDS || '8'),
+	advert_rotation_seconds: Number.parseFloat(process.env.ADVERT_ROTATION_SECONDS || '8'),
 	advert_transition: process.env.ADVERT_TRANSITION || 'fade',
-	advert_transition_duration_ms: parseFloat(process.env.ADVERT_TRANSITION_DURATION_MS || '600')
+	advert_transition_duration_ms: Number.parseFloat(
+		process.env.ADVERT_TRANSITION_DURATION_MS || '600'
+	)
 };
 
 function toEnvKey(key: string): string {
