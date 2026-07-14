@@ -23,6 +23,13 @@
 	import Toggle from '$lib/admin/components/ui/Toggle.svelte';
 	import FileUpload, { type UploadedFile } from '$lib/admin/components/ui/FileUpload.svelte';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
+	import {
+		coverScale as computeCoverScale,
+		clampPan as clampPanMath,
+		centredPan,
+		zoomAroundCentre,
+		viewportToImageRegion
+	} from '$lib/admin/utils/advertCrop';
 
 	const TRANSITIONS = [
 		{ value: 'fade', label: 'Fade' },
@@ -170,37 +177,39 @@
 	let dragPanY = 0;
 
 	const viewportH = $derived(viewportW ? viewportW / CROP_ASPECT : 0);
-	const coverScale = $derived(
-		viewportW && cropImgW && cropImgH ? Math.max(viewportW / cropImgW, viewportH / cropImgH) : 0
-	);
+	const coverScale = $derived(computeCoverScale(viewportW, viewportH, cropImgW, cropImgH));
 	const dispW = $derived(cropImgW * coverScale * zoom);
 	const dispH = $derived(cropImgH * coverScale * zoom);
 
 	function clampPan() {
-		panX = Math.min(0, Math.max(viewportW - dispW, panX));
-		panY = Math.min(0, Math.max(viewportH - dispH, panY));
+		({ panX, panY } = clampPanMath(panX, panY, viewportW, viewportH, dispW, dispH));
 	}
 
 	$effect(() => {
 		if (cropMode && cropSrc && viewportW > 0 && coverScale > 0 && cropInitKey !== cropSrc) {
 			cropInitKey = cropSrc;
 			zoom = 1;
-			panX = (viewportW - cropImgW * coverScale) / 2;
-			panY = (viewportH - cropImgH * coverScale) / 2;
+			({ panX, panY } = centredPan(
+				viewportW,
+				viewportH,
+				cropImgW * coverScale,
+				cropImgH * coverScale
+			));
 		}
 	});
 
 	function setZoom(next: number) {
-		const z = Math.min(MAX_ZOOM, Math.max(1, next));
-		if (!coverScale || z === zoom) return;
-		const s1 = coverScale * zoom;
-		const s2 = coverScale * z;
-		const cx = (viewportW / 2 - panX) / s1;
-		const cy = (viewportH / 2 - panY) / s1;
-		zoom = z;
-		panX = viewportW / 2 - cx * s2;
-		panY = viewportH / 2 - cy * s2;
-		clampPan();
+		const state = zoomAroundCentre({ zoom, panX, panY }, next, {
+			coverScale,
+			viewportW,
+			viewportH,
+			imgW: cropImgW,
+			imgH: cropImgH,
+			maxZoom: MAX_ZOOM
+		});
+		zoom = state.zoom;
+		panX = state.panX;
+		panY = state.panY;
 	}
 
 	function onCropPointerDown(e: PointerEvent) {
@@ -288,18 +297,13 @@
 		try {
 			const s = coverScale * zoom;
 			if (!s) throw new Error('Crop area not ready');
+			const region = viewportToImageRegion(panX, panY, viewportW, viewportH, s);
 
 			const response = await fetch('/api/adverts/crop', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
-				body: JSON.stringify({
-					source: cropSrc,
-					x: -panX / s,
-					y: -panY / s,
-					width: viewportW / s,
-					height: viewportH / s
-				})
+				body: JSON.stringify({ source: cropSrc, ...region })
 			});
 			if (!response.ok) {
 				const data = await response.json().catch(() => ({}));

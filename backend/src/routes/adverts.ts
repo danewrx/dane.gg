@@ -57,7 +57,7 @@ router.get('/all', requireAuth, async (req, res) => {
 
 const MAX_ADVERT_WIDTH = 1456;
 
-class ImageSourceError extends Error {
+export class ImageSourceError extends Error {
 	status: number;
 	constructor(status: number, message: string) {
 		super(message);
@@ -65,16 +65,117 @@ class ImageSourceError extends Error {
 	}
 }
 
+/** SSRF guard: refuse obviously internal/private hosts. Exported for tests. */
+export function isPrivateAdvertHost(hostname: string): boolean {
+	const host = hostname.toLowerCase();
+	return (
+		host === 'localhost' ||
+		host === '0.0.0.0' ||
+		host === '::1' ||
+		host.endsWith('.local') ||
+		/^127\./.test(host) ||
+		/^10\./.test(host) ||
+		/^192\.168\./.test(host) ||
+		/^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
+		/^169\.254\./.test(host)
+	);
+}
+
+/**
+ * Resolve a `/uploads/...` source to an absolute file path
+ */
+export function resolveUploadSourcePath(source: string, rootDir = process.cwd()): string {
+	const relative = source.replace(/^\//, '');
+	const filePath = path.resolve(rootDir, 'static', relative);
+	const uploadsRoot = path.resolve(rootDir, 'static', 'uploads');
+	if (filePath !== uploadsRoot && !filePath.startsWith(uploadsRoot + path.sep)) {
+		throw new ImageSourceError(400, 'Invalid image path');
+	}
+	return filePath;
+}
+
+/**
+ * Clamp a requested crop region to the image's frame bounds.
+ */
+export function clampCropRegion(
+	x: number,
+	y: number,
+	width: number,
+	height: number,
+	imgW: number,
+	frameH: number
+): { left: number; top: number; width: number; height: number } {
+	const left = Math.min(Math.max(0, Math.round(x)), imgW - 1);
+	const top = Math.min(Math.max(0, Math.round(y)), frameH - 1);
+	return {
+		left,
+		top,
+		width: Math.max(1, Math.min(Math.round(width), imgW - left)),
+		height: Math.max(1, Math.min(Math.round(height), frameH - top))
+	};
+}
+
+export function pickAdvertOutputFormat(format: string | undefined): {
+	ext: string;
+	mimetype: string;
+} {
+	switch (format) {
+		case 'gif':
+			return { ext: 'gif', mimetype: 'image/gif' };
+		case 'webp':
+			return { ext: 'webp', mimetype: 'image/webp' };
+		case 'jpeg':
+			return { ext: 'jpg', mimetype: 'image/jpeg' };
+		default:
+			return { ext: 'png', mimetype: 'image/png' };
+	}
+}
+
+/**
+ * Crop an image buffer to the given source-pixel region
+ */
+export async function cropAdvertImage(
+	input: Buffer,
+	region: { x: number; y: number; width: number; height: number }
+): Promise<{ buffer: Buffer; ext: string; mimetype: string }> {
+	const image = sharp(input, { animated: true });
+	const meta = await image.metadata();
+	const imgW = meta.width ?? 0;
+	const frameH = meta.pageHeight ?? meta.height ?? 0;
+	if (!imgW || !frameH) {
+		throw new ImageSourceError(400, 'Could not read image dimensions');
+	}
+
+	const clamped = clampCropRegion(region.x, region.y, region.width, region.height, imgW, frameH);
+
+	let pipeline = image.extract(clamped);
+	if (clamped.width > MAX_ADVERT_WIDTH) {
+		pipeline = pipeline.resize({ width: MAX_ADVERT_WIDTH });
+	}
+
+	const { ext, mimetype } = pickAdvertOutputFormat(meta.format);
+	switch (ext) {
+		case 'gif':
+			pipeline = pipeline.gif();
+			break;
+		case 'webp':
+			pipeline = pipeline.webp({ quality: 90 });
+			break;
+		case 'jpg':
+			pipeline = pipeline.jpeg({ quality: 90 });
+			break;
+		default:
+			pipeline = pipeline.png();
+	}
+
+	return { buffer: await pipeline.toBuffer(), ext, mimetype };
+}
+
 // Load an advert image source as a buffer: either a local /uploads/ path or
 // an external URL (fetched server-side with basic SSRF guards).
 async function loadImageSource(source: string): Promise<Buffer> {
 	if (source.startsWith('/uploads/')) {
-		const relative = source.replace(/^\//, '');
-		const filePath = path.join(process.cwd(), 'static', relative);
-		const uploadsRoot = path.join(process.cwd(), 'static', 'uploads');
-		if (!path.resolve(filePath).startsWith(uploadsRoot)) {
-			throw new ImageSourceError(400, 'Invalid image path');
-		}
+		const filePath = resolveUploadSourcePath(source);
 		if (!fs.existsSync(filePath)) {
 			throw new ImageSourceError(404, 'Image file not found');
 		}
@@ -90,20 +191,7 @@ async function loadImageSource(source: string): Promise<Buffer> {
 	if (target.protocol !== 'http:' && target.protocol !== 'https:') {
 		throw new ImageSourceError(400, 'Only http(s) URLs are allowed');
 	}
-
-	// Basic SSRF guard: refuse obviously internal hosts.
-	const host = target.hostname.toLowerCase();
-	const isPrivateHost =
-		host === 'localhost' ||
-		host === '0.0.0.0' ||
-		host === '::1' ||
-		host.endsWith('.local') ||
-		/^127\./.test(host) ||
-		/^10\./.test(host) ||
-		/^192\.168\./.test(host) ||
-		/^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
-		/^169\.254\./.test(host);
-	if (isPrivateHost) {
+	if (isPrivateAdvertHost(target.hostname)) {
 		throw new ImageSourceError(400, 'URL host not allowed');
 	}
 
@@ -146,53 +234,7 @@ router.post('/crop', requireAuth, async (req, res) => {
 		}
 
 		const input = await loadImageSource(source);
-
-		const image = sharp(input, { animated: true });
-		const meta = await image.metadata();
-		const imgW = meta.width ?? 0;
-		// For animated images, height is all frames stacked; pageHeight is one frame.
-		const frameH = meta.pageHeight ?? meta.height ?? 0;
-		if (!imgW || !frameH) {
-			return res.status(400).json({ success: false, error: 'Could not read image dimensions' });
-		}
-
-		// Clamp the region to the frame bounds.
-		const left = Math.min(Math.max(0, Math.round(x)), imgW - 1);
-		const top = Math.min(Math.max(0, Math.round(y)), frameH - 1);
-		const regionW = Math.max(1, Math.min(Math.round(width), imgW - left));
-		const regionH = Math.max(1, Math.min(Math.round(height), frameH - top));
-
-		let pipeline = image.extract({ left, top, width: regionW, height: regionH });
-		if (regionW > MAX_ADVERT_WIDTH) {
-			pipeline = pipeline.resize({ width: MAX_ADVERT_WIDTH });
-		}
-
-		// Keep the source format so animation and transparency survive.
-		let ext: string;
-		let mimetype: string;
-		switch (meta.format) {
-			case 'gif':
-				pipeline = pipeline.gif();
-				ext = 'gif';
-				mimetype = 'image/gif';
-				break;
-			case 'webp':
-				pipeline = pipeline.webp({ quality: 90 });
-				ext = 'webp';
-				mimetype = 'image/webp';
-				break;
-			case 'jpeg':
-				pipeline = pipeline.jpeg({ quality: 90 });
-				ext = 'jpg';
-				mimetype = 'image/jpeg';
-				break;
-			default:
-				pipeline = pipeline.png();
-				ext = 'png';
-				mimetype = 'image/png';
-		}
-
-		const output = await pipeline.toBuffer();
+		const { buffer: output, ext, mimetype } = await cropAdvertImage(input, { x, y, width, height });
 
 		const filename = `advert-crop-${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
 		const uploadDir = path.join(process.cwd(), 'static', 'uploads');
