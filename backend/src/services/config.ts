@@ -20,8 +20,12 @@ export interface SiteConfig {
 	site_title: string;
 	site_description: string;
 	advert_enabled: boolean;
-	/** How long each advert is shown before rotating to the next (seconds). */
+	/** How long each advert is shown (seconds). */
 	advert_rotation_seconds: number;
+	/** Transition effect between adverts: none, fade, slide, slide-up, zoom, flip. */
+	advert_transition: string;
+	/** Duration (milliseconds). */
+	advert_transition_duration_ms: number;
 }
 
 // Environment variable fallbacks
@@ -38,7 +42,9 @@ const ENV_FALLBACKS: Partial<SiteConfig> = {
 		process.env.SITE_DESCRIPTION ||
 		"Hi, I'm Dane! I'm a software engineer & freelance designer from Manchester, UK.",
 	advert_enabled: process.env.ADVERT_ENABLED === 'true',
-	advert_rotation_seconds: parseFloat(process.env.ADVERT_ROTATION_SECONDS || '8')
+	advert_rotation_seconds: parseFloat(process.env.ADVERT_ROTATION_SECONDS || '8'),
+	advert_transition: process.env.ADVERT_TRANSITION || 'fade',
+	advert_transition_duration_ms: parseFloat(process.env.ADVERT_TRANSITION_DURATION_MS || '600')
 };
 
 function toEnvKey(key: string): string {

@@ -198,6 +198,8 @@
 						<AdvertBanner
 							items={$adverts}
 							rotationSeconds={$siteConfig.advert_rotation_seconds}
+							transition={$siteConfig.advert_transition}
+							transitionDurationMs={$siteConfig.advert_transition_duration_ms}
 						/>
 					</div>
 				{/if}

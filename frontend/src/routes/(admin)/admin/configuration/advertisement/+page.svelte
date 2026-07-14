@@ -24,13 +24,31 @@
 	import FileUpload, { type UploadedFile } from '$lib/admin/components/ui/FileUpload.svelte';
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
+	const TRANSITIONS = [
+		{ value: 'fade', label: 'Fade' },
+		{ value: 'slide', label: 'Slide' },
+		{ value: 'slide-up', label: 'Slide Up' },
+		{ value: 'zoom', label: 'Zoom' },
+		{ value: 'flip', label: 'Flip' },
+		{ value: 'none', label: 'None (instant)' }
+	];
+
 	// Global settings (stored in site_config).
 	let enabled = $state(false);
 	let rotationSeconds = $state(8);
+	let transitionKind = $state('fade');
+	let transitionDurationMs = $state(600);
 	let savedEnabled = $state(false);
 	let savedRotation = $state(8);
+	let savedTransition = $state('fade');
+	let savedTransitionDuration = $state(600);
 	let isSavingSettings = $state(false);
-	const settingsDirty = $derived(enabled !== savedEnabled || rotationSeconds !== savedRotation);
+	const settingsDirty = $derived(
+		enabled !== savedEnabled ||
+			rotationSeconds !== savedRotation ||
+			transitionKind !== savedTransition ||
+			transitionDurationMs !== savedTransitionDuration
+	);
 
 	// Adverts (stored in the adverts table, managed via /api/adverts).
 	let ads = $state<Advert[]>([]);
@@ -59,6 +77,12 @@
 		enabled = savedEnabled;
 		savedRotation = Number(c.advert_rotation_seconds) || 8;
 		rotationSeconds = savedRotation;
+		savedTransition = TRANSITIONS.some((t) => t.value === c.advert_transition)
+			? c.advert_transition
+			: 'fade';
+		transitionKind = savedTransition;
+		savedTransitionDuration = Number(c.advert_transition_duration_ms) || 600;
+		transitionDurationMs = savedTransitionDuration;
 	}
 
 	onMount(() => {
@@ -404,6 +428,12 @@
 			if (rotationSeconds !== savedRotation) {
 				await putConfig('advert_rotation_seconds', rotationSeconds, 'number');
 			}
+			if (transitionKind !== savedTransition) {
+				await putConfig('advert_transition', transitionKind, 'string');
+			}
+			if (transitionDurationMs !== savedTransitionDuration) {
+				await putConfig('advert_transition_duration_ms', transitionDurationMs, 'number');
+			}
 			if (enabled !== savedEnabled) {
 				await putConfig('advert_enabled', enabled, 'boolean');
 			}
@@ -626,6 +656,45 @@
 				active advert exists.
 			</p>
 		</div>
+
+		<!-- Transition Effect -->
+		<div class="form-group">
+			<label for="transition">Transition Effect</label>
+			<select id="transition" class="text-input select-input" bind:value={transitionKind}>
+				{#each TRANSITIONS as t (t.value)}
+					<option value={t.value}>{t.label}</option>
+				{/each}
+			</select>
+			<p class="help-text">
+				How the banner animates when switching between adverts. Only applies when more than one
+				active advert exists.
+			</p>
+		</div>
+
+		<!-- Transition Duration -->
+		{#if transitionKind !== 'none'}
+			<div class="form-group">
+				<label for="transition-duration">
+					Transition Duration
+					<span class="rotation-value">{(transitionDurationMs / 1000).toFixed(2)}s</span>
+				</label>
+				<input
+					type="range"
+					id="transition-duration"
+					value={transitionDurationMs}
+					oninput={(e) => (transitionDurationMs = Number((e.target as HTMLInputElement).value))}
+					min="100"
+					max="2000"
+					step="50"
+					class="range-input"
+				/>
+				<div class="range-labels">
+					<span>0.1s</span>
+					<span>2s</span>
+				</div>
+				<p class="help-text">How long the transition animation runs when adverts switch.</p>
+			</div>
+		{/if}
 
 		<!-- Settings save -->
 		<div class="form-actions">
@@ -999,6 +1068,15 @@
 	.text-input:focus {
 		outline: none;
 		border-color: var(--accent-color, #6366f1);
+	}
+
+	.select-input {
+		cursor: pointer;
+		appearance: none;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+		background-repeat: no-repeat;
+		background-position: right 12px center;
+		padding-right: 40px;
 	}
 
 	.textarea-input {
