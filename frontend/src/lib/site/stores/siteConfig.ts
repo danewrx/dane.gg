@@ -15,6 +15,14 @@ export interface SiteConfig {
 	enforce_web_neko: boolean;
 	site_title: string;
 	site_description: string;
+	/** Whether the homepage advertisement banner is shown. */
+	advert_enabled: boolean;
+	/** How long each advert is shown before rotating to the next (seconds). */
+	advert_rotation_seconds: number;
+	/** Transition effect between adverts: none, fade, slide, slide-up, zoom, flip. */
+	advert_transition: string;
+	/** How long the transition animation runs (milliseconds). */
+	advert_transition_duration_ms: number;
 }
 
 // Default configuration (fallback)
@@ -27,7 +35,11 @@ const DEFAULT_CONFIG: SiteConfig = {
 	enforce_web_neko: false,
 	site_title: 'dane.gg - Software Engineer & Designer',
 	site_description:
-		"Hi, I'm Dane! I'm a software engineer & freelance designer from Manchester, UK."
+		"Hi, I'm Dane! I'm a software engineer & freelance designer from Manchester, UK.",
+	advert_enabled: false,
+	advert_rotation_seconds: 8,
+	advert_transition: 'fade',
+	advert_transition_duration_ms: 600
 };
 
 // Store for site configuration

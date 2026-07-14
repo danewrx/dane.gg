@@ -17,4 +17,11 @@ test.describe('Homepage', () => {
 		await page.click('.ascii-link');
 		await expect(page).toHaveURL('/');
 	});
+
+	test('does not render the advert slot when no adverts are configured', async ({ page }) => {
+		// The e2e database has adverts disabled/empty; the guarded slot must not
+		// leave an empty gap between Recent posts and Systems status.
+		await gotoReady(page, '/');
+		await expect(page.locator('.advert-slot')).toHaveCount(0);
+	});
 });

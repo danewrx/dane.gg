@@ -9,6 +9,9 @@
 	import MyButtonWidget from '$lib/site/components/widgets/MyButtonWidget.svelte';
 	import BorderedBox from '$lib/site/components/ui/BorderedBox.svelte';
 	import ServiceStatus from '$lib/site/components/widgets/ServiceStatus.svelte';
+	import AdvertBanner from '$lib/site/components/widgets/AdvertBanner.svelte';
+	import { siteConfig } from '$lib/site/stores/siteConfig';
+	import { adverts } from '$lib/site/stores/adverts';
 	import SiteStats from '$lib/site/components/widgets/SiteStats.svelte';
 	import Chat from '$lib/site/components/Chat.svelte';
 	import ChatUserCount from '$lib/site/components/ChatUserCount.svelte';
@@ -189,6 +192,17 @@
 						</div>
 					</BorderedBox>
 				</div>
+
+				{#if $siteConfig.advert_enabled && $adverts.length > 0}
+					<div class="card-slot advert-slot" data-mobile-order="12">
+						<AdvertBanner
+							items={$adverts}
+							rotationSeconds={$siteConfig.advert_rotation_seconds}
+							transition={$siteConfig.advert_transition}
+							transitionDurationMs={$siteConfig.advert_transition_duration_ms}
+						/>
+					</div>
+				{/if}
 
 				<div class="card-slot" data-mobile-order="7">
 					<BorderedBox
@@ -700,6 +714,9 @@
 		}
 		.card-slot[data-mobile-order='11'] {
 			order: 11;
+		}
+		.card-slot[data-mobile-order='12'] {
+			order: 12;
 		}
 
 		:global(.discord-widget) {

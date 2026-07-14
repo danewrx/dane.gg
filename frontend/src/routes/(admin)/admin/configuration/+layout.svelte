@@ -19,7 +19,8 @@
 		User,
 		Mail,
 		Palette,
-		Bell
+		Bell,
+		Megaphone
 	} from 'lucide-svelte';
 
 	let { children } = $props();
@@ -119,6 +120,18 @@
 			borderColor: 'rgba(249, 115, 22, 0.2)',
 			iconBgColor: '#f97316', // Orange
 			path: '/admin/configuration/service-status',
+			section: 'home'
+		},
+		{
+			id: 'advertisement',
+			title: 'Advertisement',
+			description: 'Manage the homepage advertisement banner',
+			icon: Megaphone,
+			color: 'from-amber-500 to-orange-500',
+			bgColor: 'rgba(245, 158, 11, 0.1)',
+			borderColor: 'rgba(245, 158, 11, 0.2)',
+			iconBgColor: '#f59e0b', // Amber
+			path: '/admin/configuration/advertisement',
 			section: 'home'
 		},
 		{
@@ -287,6 +300,8 @@
 						<User size={18} />
 					{:else if selectedCategory.icon === Mail}
 						<Mail size={18} />
+					{:else if selectedCategory.icon === Megaphone}
+						<Megaphone size={18} />
 					{/if}
 					{selectedCategory.title}
 				</h1>
