@@ -435,7 +435,7 @@
 
 	/* Copy-type links render as buttons but look identical to the anchors. */
 	button.social-link {
-		position: relative;
+		align-self: flex-start;
 		background: none;
 		border: none;
 		padding: 0;
@@ -443,6 +443,11 @@
 		font-family: inherit;
 		cursor: pointer;
 		text-align: left;
+	}
+
+	.social-link:focus:not(:focus-visible),
+	.email-link:focus:not(:focus-visible) {
+		outline: none;
 	}
 
 	.copy-tooltip {
