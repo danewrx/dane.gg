@@ -646,6 +646,10 @@
 		background: var(--bg-secondary, #2a2a2a);
 		border: 1px solid var(--border-color, #3a3a3a);
 		border-radius: 12px;
+
+		--theme-accent: var(--accent-color, #6366f1);
+		--theme-surface: var(--bg-secondary, #2a2a2a);
+		--theme-text-primary: var(--text-primary, #ffffff);
 	}
 
 	.save-button {
