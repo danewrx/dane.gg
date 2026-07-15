@@ -20,7 +20,9 @@ const LIVE_BROADCAST_KEYS = new Set([
 	'advert_enabled',
 	'advert_rotation_seconds',
 	'advert_transition',
-	'advert_transition_duration_ms'
+	'advert_transition_duration_ms',
+	'github_enabled',
+	'github_username'
 ]);
 
 const router = Router();

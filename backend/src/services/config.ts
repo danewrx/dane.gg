@@ -26,6 +26,10 @@ export interface SiteConfig {
 	advert_transition: string;
 	/** Duration (milliseconds). */
 	advert_transition_duration_ms: number;
+	/** Whether the homepage GitHub contributions widget is shown. */
+	github_enabled: boolean;
+	/** GitHub username whose contribution calendar is displayed. */
+	github_username: string;
 }
 
 // Environment variable fallbacks
@@ -46,7 +50,9 @@ const ENV_FALLBACKS: Partial<SiteConfig> = {
 	advert_transition: process.env.ADVERT_TRANSITION || 'fade',
 	advert_transition_duration_ms: Number.parseFloat(
 		process.env.ADVERT_TRANSITION_DURATION_MS || '600'
-	)
+	),
+	github_enabled: process.env.GITHUB_ENABLED === 'true',
+	github_username: process.env.GITHUB_USERNAME || ''
 };
 
 function toEnvKey(key: string): string {

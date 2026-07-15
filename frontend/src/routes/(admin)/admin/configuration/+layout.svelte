@@ -20,7 +20,8 @@
 		Mail,
 		Palette,
 		Bell,
-		Megaphone
+		Megaphone,
+		Github
 	} from 'lucide-svelte';
 
 	let { children } = $props();
@@ -144,6 +145,18 @@
 			borderColor: 'rgba(59, 130, 246, 0.2)',
 			iconBgColor: '#60a5fa', // Light blue
 			path: '/admin/configuration/twitter',
+			section: 'home'
+		},
+		{
+			id: 'github',
+			title: 'GitHub Activity',
+			description: 'Show a GitHub contributions heatmap on the homepage',
+			icon: Github,
+			color: 'from-gray-500 to-gray-700',
+			bgColor: 'rgba(148, 163, 184, 0.1)',
+			borderColor: 'rgba(148, 163, 184, 0.2)',
+			iconBgColor: '#94a3b8', // Slate
+			path: '/admin/configuration/github',
 			section: 'home'
 		},
 		{
@@ -302,6 +315,8 @@
 						<Mail size={18} />
 					{:else if selectedCategory.icon === Megaphone}
 						<Megaphone size={18} />
+					{:else if selectedCategory.icon === Github}
+						<Github size={18} />
 					{/if}
 					{selectedCategory.title}
 				</h1>
