@@ -1,15 +1,13 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
 	import { onMount } from 'svelte';
+	import {
+		computeMonthLabels,
+		weekdayRow,
+		dayTooltip,
+		type ContributionWeek
+	} from '$lib/site/utils/githubContributions';
 
-	interface ContributionDay {
-		date: string;
-		count: number;
-		level: 0 | 1 | 2 | 3 | 4;
-	}
-	interface ContributionWeek {
-		days: ContributionDay[];
-	}
 	interface ContributionsResponse {
 		configured: boolean;
 		username?: string;
@@ -24,43 +22,7 @@
 	const weeks = $derived(data?.weeks ?? []);
 	const total = $derived(data?.totalContributions ?? 0);
 	const profileUrl = $derived(data?.username ? `https://github.com/${data.username}` : null);
-
-	// Month labels: one per month, at the week column where it first appears,
-	// skipping labels that would collide with the previous one.
-	const monthLabels = $derived.by(() => {
-		const labels: { col: number; label: string }[] = [];
-		let lastMonth = -1;
-		let lastCol = -3;
-		weeks.forEach((week, i) => {
-			const first = week.days[0];
-			if (!first) return;
-			const d = new Date(`${first.date}T00:00:00`);
-			const month = d.getMonth();
-			if (month !== lastMonth && i - lastCol >= 3) {
-				labels.push({ col: i + 1, label: d.toLocaleString('en-US', { month: 'short' }) });
-				lastMonth = month;
-				lastCol = i;
-			} else if (month !== lastMonth) {
-				lastMonth = month;
-			}
-		});
-		return labels;
-	});
-
-	function weekdayRow(date: string): number {
-		// getDay: 0 = Sunday … 6 = Saturday → grid rows 1…7
-		return new Date(`${date}T00:00:00`).getDay() + 1;
-	}
-
-	function tooltip(day: ContributionDay): string {
-		const label = day.count === 1 ? '1 contribution' : `${day.count} contributions`;
-		const d = new Date(`${day.date}T00:00:00`).toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric'
-		});
-		return `${label} on ${d}`;
-	}
+	const monthLabels = $derived(computeMonthLabels(weeks));
 
 	onMount(async () => {
 		try {
@@ -103,7 +65,7 @@
 								class="gh-cell"
 								data-level={day.level}
 								style="grid-column: {w + 1}; grid-row: {weekdayRow(day.date)}"
-								title={tooltip(day)}
+								title={dayTooltip(day)}
 							></span>
 						{/each}
 					{/each}

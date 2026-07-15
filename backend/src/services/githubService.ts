@@ -52,18 +52,45 @@ interface GraphQLDay {
 	contributionLevel: string;
 }
 
+export interface ContributionCalendar {
+	totalContributions: number;
+	weeks: { contributionDays: GraphQLDay[] }[];
+}
+
 interface GraphQLResponse {
 	data?: {
 		user?: {
 			contributionsCollection?: {
-				contributionCalendar?: {
-					totalContributions: number;
-					weeks: { contributionDays: GraphQLDay[] }[];
-				};
+				contributionCalendar?: ContributionCalendar;
 			};
 		};
 	};
 	errors?: { message: string }[];
+}
+
+/**
+ * Map a GitHub contribution calendar to the widget shape
+ */
+export function mapContributionCalendar(
+	calendar: ContributionCalendar,
+	login: string
+): GitHubContributions {
+	const weeks: GitHubContributionWeek[] = calendar.weeks.map((week) => ({
+		days: week.contributionDays.map((day) => ({
+			date: day.date,
+			count: day.contributionCount,
+			level: LEVEL_BY_ENUM[day.contributionLevel] ?? 0
+		}))
+	}));
+
+	const allDays = weeks.flatMap((w) => w.days);
+	return {
+		username: login,
+		totalContributions: calendar.totalContributions,
+		weeks,
+		from: allDays[0]?.date ?? '',
+		to: allDays[allDays.length - 1]?.date ?? ''
+	};
 }
 
 export class GitHubService {
@@ -173,25 +200,7 @@ export class GitHubService {
 				return null;
 			}
 
-			const weeks: GitHubContributionWeek[] = calendar.weeks.map((week) => ({
-				days: week.contributionDays.map((day) => ({
-					date: day.date,
-					count: day.contributionCount,
-					level: LEVEL_BY_ENUM[day.contributionLevel] ?? 0
-				}))
-			}));
-
-			const allDays = weeks.flatMap((w) => w.days);
-			const from = allDays[0]?.date ?? '';
-			const to = allDays[allDays.length - 1]?.date ?? '';
-
-			return {
-				username: login,
-				totalContributions: calendar.totalContributions,
-				weeks,
-				from,
-				to
-			};
+			return mapContributionCalendar(calendar, login);
 		} catch (error) {
 			logger.error('Error fetching GitHub contributions:', error);
 			return null;

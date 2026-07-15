@@ -24,4 +24,9 @@ test.describe('Homepage', () => {
 		await gotoReady(page, '/');
 		await expect(page.locator('.advert-slot')).toHaveCount(0);
 	});
+
+	test('does not render the GitHub activity widget when disabled', async ({ page }) => {
+		await gotoReady(page, '/');
+		await expect(page.locator('.github-contributions-section')).toHaveCount(0);
+	});
 });
