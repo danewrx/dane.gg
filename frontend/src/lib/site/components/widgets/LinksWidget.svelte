@@ -9,6 +9,7 @@
 		isLikelyLucideMisstoredAsCoreUi,
 		stripCoreUIBrandPrefix
 	} from '$lib/site/utils/iconHelper';
+	import { balancedColumns } from '$lib/site/utils/balancedColumns';
 
 	interface SocialLink {
 		id: string;
@@ -29,9 +30,7 @@
 
 	// Balance icons across rows: at most 8 per line, rows as even as possible
 	// (e.g. 17 icons render 6+6+5 instead of 8+8+1).
-	const columns = $derived(
-		socialLinks.length > 0 ? Math.ceil(socialLinks.length / Math.ceil(socialLinks.length / 8)) : 8
-	);
+	const columns = $derived(balancedColumns(socialLinks.length));
 
 	onMount(async () => {
 		try {
