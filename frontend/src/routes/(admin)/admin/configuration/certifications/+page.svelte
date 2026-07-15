@@ -822,7 +822,6 @@
 <style>
 	.certifications-settings {
 		width: 100%;
-		max-width: 800px;
 	}
 
 	.settings-description {

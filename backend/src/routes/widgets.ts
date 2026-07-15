@@ -3,6 +3,8 @@ import { Router } from 'express';
 import { DiscordStatusService } from '../services/discordStatusService';
 import { LastFmService } from '../services/lastfmService';
 import { TweetService } from '../services/tweetService';
+import { GitHubService } from '../services/githubService';
+import { ConfigService } from '../services/config';
 import { getOrSetCached } from '../utils/shortLivedCache';
 
 const router = Router();
@@ -10,6 +12,7 @@ const router = Router();
 const DISCORD_WIDGET_TTL_MS = 20_000;
 const LASTFM_WIDGET_TTL_MS = 15_000;
 const LATEST_TWEET_WIDGET_TTL_MS = 30_000;
+const GITHUB_CONTRIBUTIONS_TTL_MS = 10 * 60_000;
 
 function shouldProxyTwitterImages(): boolean {
 	return (process.env.TWITTER_PROXY_PROFILE_IMAGES ?? 'true').toLowerCase() === 'true';
@@ -112,8 +115,10 @@ router.get('/latest-tweet', async (req, res) => {
 	try {
 		res.set('Cache-Control', 'public, max-age=20, stale-while-revalidate=120');
 
-		const latestTweet = await getOrSetCached('widget:latest-tweet', LATEST_TWEET_WIDGET_TTL_MS, () =>
-			TweetService.getLatestTweet()
+		const latestTweet = await getOrSetCached(
+			'widget:latest-tweet',
+			LATEST_TWEET_WIDGET_TTL_MS,
+			() => TweetService.getLatestTweet()
 		);
 
 		if (!latestTweet) {
@@ -186,6 +191,39 @@ router.get('/tweet-profile-image', async (req, res) => {
 	} catch (error: any) {
 		logger.error('Error proxying tweet profile image:', error);
 		res.status(500).json({ error: 'Failed to fetch image' });
+	}
+});
+
+/**
+ * GET /api/widgets/github-contributions
+ * Trailing-year GitHub contribution calendar for the configured user.
+ */
+router.get('/github-contributions', async (req, res) => {
+	try {
+		// Not publicly cached: the response depends on config that can change, and
+		// the backend already caches the GitHub data in memory for 10 minutes.
+		res.set('Cache-Control', 'no-store');
+
+		const data = await getOrSetCached(
+			'widget:github-contributions',
+			GITHUB_CONTRIBUTIONS_TTL_MS,
+			async () => {
+				const username = ((await ConfigService.get('github_username')) as string) || '';
+				if (!username || !GitHubService.isConfigured()) {
+					return null;
+				}
+				return GitHubService.getContributions(username);
+			}
+		);
+
+		if (!data) {
+			return res.json({ configured: false, totalContributions: 0, weeks: [] });
+		}
+
+		res.json({ configured: true, ...data });
+	} catch (error) {
+		logger.error('Error fetching GitHub contributions:', error);
+		res.status(500).json({ error: 'Failed to fetch GitHub contributions' });
 	}
 });
 

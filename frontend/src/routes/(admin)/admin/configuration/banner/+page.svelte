@@ -79,6 +79,10 @@
 </svelte:head>
 
 <div class="banner-config">
+	<div class="settings-description">
+		<p>Configure the scrolling text banner shown across the top of the homepage.</p>
+	</div>
+
 	{#if loading}
 		<div class="loading-state">
 			<div class="spinner"></div>
@@ -245,10 +249,23 @@
 
 <style>
 	.banner-config {
-		padding: 24px;
+		width: 100%;
 		min-width: 0;
 		box-sizing: border-box;
 		overflow-x: hidden;
+	}
+
+	.settings-description {
+		margin-bottom: 24px;
+		padding-bottom: 16px;
+		border-bottom: 1px solid var(--border-color, #3a3a3a);
+	}
+
+	.settings-description p {
+		color: var(--text-secondary, #a1a1aa);
+		margin: 0;
+		font-size: 14px;
+		line-height: 1.5;
 	}
 
 	.loading-state {
@@ -549,12 +566,6 @@
 	.save-button:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
-	}
-
-	@media (max-width: 768px) {
-		.banner-config {
-			padding: 16px;
-		}
 	}
 
 	@media (max-width: 480px) {

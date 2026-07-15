@@ -16,7 +16,8 @@
 		Award,
 		Mail,
 		Bell,
-		Megaphone
+		Megaphone,
+		Github
 	} from 'lucide-svelte';
 	import type { ComponentType } from 'svelte';
 
@@ -139,6 +140,8 @@
 								<User size={20} stroke-width={1.5} />
 							{:else if category.icon === Megaphone}
 								<Megaphone size={20} stroke-width={1.5} />
+							{:else if category.icon === Github}
+								<Github size={20} stroke-width={1.5} />
 							{/if}
 						</div>
 						<span class="sidebar-title">{category.title}</span>

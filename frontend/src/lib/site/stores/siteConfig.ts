@@ -23,6 +23,10 @@ export interface SiteConfig {
 	advert_transition: string;
 	/** How long the transition animation runs (milliseconds). */
 	advert_transition_duration_ms: number;
+	/** Whether the homepage GitHub contributions widget is shown. */
+	github_enabled: boolean;
+	/** GitHub username whose contribution calendar is displayed. */
+	github_username: string;
 }
 
 // Default configuration (fallback)
@@ -39,7 +43,9 @@ const DEFAULT_CONFIG: SiteConfig = {
 	advert_enabled: false,
 	advert_rotation_seconds: 8,
 	advert_transition: 'fade',
-	advert_transition_duration_ms: 600
+	advert_transition_duration_ms: 600,
+	github_enabled: false,
+	github_username: ''
 };
 
 // Store for site configuration

@@ -10,6 +10,7 @@
 	import BorderedBox from '$lib/site/components/ui/BorderedBox.svelte';
 	import ServiceStatus from '$lib/site/components/widgets/ServiceStatus.svelte';
 	import AdvertBanner from '$lib/site/components/widgets/AdvertBanner.svelte';
+	import GitHubContributionsWidget from '$lib/site/components/widgets/GitHubContributionsWidget.svelte';
 	import { siteConfig } from '$lib/site/stores/siteConfig';
 	import { adverts } from '$lib/site/stores/adverts';
 	import SiteStats from '$lib/site/components/widgets/SiteStats.svelte';
@@ -175,7 +176,7 @@
 						padding="8px 16px"
 						className="recent-posts-section"
 						showHeader={true}
-						headerText="Recent posts"
+						headerText="Recent Posts"
 						dynamicHeight={true}
 						contentPadding={true}
 					>
@@ -193,6 +194,23 @@
 					</BorderedBox>
 				</div>
 
+				{#if $siteConfig.github_enabled}
+					<div class="card-slot" data-mobile-order="13">
+						<BorderedBox
+							padding="8px 16px"
+							className="github-contributions-section"
+							showHeader={true}
+							headerText="GitHub Activity"
+							dynamicHeight={true}
+							contentPadding={true}
+						>
+							<LazyWhenVisible minHeight="160px">
+								<GitHubContributionsWidget />
+							</LazyWhenVisible>
+						</BorderedBox>
+					</div>
+				{/if}
+
 				{#if $siteConfig.advert_enabled && $adverts.length > 0}
 					<div class="card-slot advert-slot" data-mobile-order="5">
 						<AdvertBanner
@@ -209,7 +227,7 @@
 						padding="8px 16px"
 						className="service-status-section"
 						showHeader={true}
-						headerText="Systems status:"
+						headerText="Systems Status:"
 						subheading={overallStatus}
 						subheadingSemanticStatus={true}
 						dynamicHeight={true}
@@ -544,7 +562,6 @@
 		outline: none !important;
 	}
 
-
 	:global(.discord-widget),
 	:global(.tweet-widget),
 	:global(.music-widget),
@@ -717,6 +734,9 @@
 		}
 		.card-slot[data-mobile-order='12'] {
 			order: 12;
+		}
+		.card-slot[data-mobile-order='13'] {
+			order: 13;
 		}
 
 		:global(.discord-widget) {

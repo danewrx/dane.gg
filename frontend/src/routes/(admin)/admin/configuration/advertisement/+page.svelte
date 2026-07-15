@@ -611,10 +611,12 @@
 {/snippet}
 
 <div class="advert-config">
-	<p class="page-description">
-		Manage the image-only advertisement banner shown in the homepage right column, between Recent
-		posts and Systems status. Add multiple adverts and the banner rotates between them.
-	</p>
+	<div class="settings-description">
+		<p>
+			Manage the image-only advertisement banner shown on the homepage. Add multiple adverts and the
+			banner rotates between them.
+		</p>
+	</div>
 
 	<div class="config-form">
 		<!-- Enabled Toggle -->
@@ -790,17 +792,23 @@
 
 <style>
 	.advert-config {
-		padding: 24px;
+		width: 100%;
 		min-width: 0;
 		box-sizing: border-box;
 		overflow-x: hidden;
 	}
 
-	.page-description {
+	.settings-description {
+		margin-bottom: 24px;
+		padding-bottom: 16px;
+		border-bottom: 1px solid var(--border-color, #3a3a3a);
+	}
+
+	.settings-description p {
 		color: var(--text-secondary, #a1a1aa);
+		margin: 0;
 		font-size: 14px;
-		margin: 0 0 24px 0;
-		max-width: 60ch;
+		line-height: 1.5;
 	}
 
 	.config-form {
@@ -1247,12 +1255,6 @@
 	.cancel-btn:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
-	}
-
-	@media (max-width: 768px) {
-		.advert-config {
-			padding: 16px;
-		}
 	}
 
 	@media (max-width: 480px) {

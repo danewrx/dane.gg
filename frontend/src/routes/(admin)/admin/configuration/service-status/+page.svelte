@@ -303,6 +303,10 @@
 </svelte:head>
 
 <div class="service-status-config">
+	<div class="settings-description">
+		<p>Configure the homepage service status widget, powered by your Uptime Kuma monitors.</p>
+	</div>
+
 	{#if loading}
 		<div class="loading-state">
 			<div class="spinner"></div>
@@ -624,6 +628,19 @@
 <style>
 	.service-status-config {
 		padding: 0;
+	}
+
+	.settings-description {
+		margin-bottom: 24px;
+		padding-bottom: 16px;
+		border-bottom: 1px solid var(--border-color, #3a3a3a);
+	}
+
+	.settings-description p {
+		color: var(--text-secondary, #a1a1aa);
+		margin: 0;
+		font-size: 14px;
+		line-height: 1.5;
 	}
 
 	.loading-state {

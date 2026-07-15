@@ -273,14 +273,18 @@
 						bind:appearance={settings.twitter.restored}
 						title="Connection restored"
 						description="Sent when the Twitter API connection recovers after a failure."
-						onedit={() =>
-							openEditor('Connection restored', settings!.twitter.restored, ['time'])}
+						onedit={() => openEditor('Connection restored', settings!.twitter.restored, ['time'])}
 					/>
 				</div>
 			</section>
 
 			<div class="form-actions">
-				<button type="button" class="secondary-button" onclick={resetToDefaults} disabled={!hasDefaults}>
+				<button
+					type="button"
+					class="secondary-button"
+					onclick={resetToDefaults}
+					disabled={!hasDefaults}
+				>
 					<RotateCcw size={16} />
 					Reset to defaults
 				</button>

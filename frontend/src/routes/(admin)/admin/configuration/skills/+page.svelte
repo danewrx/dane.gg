@@ -786,7 +786,6 @@
 <style>
 	.skills-settings {
 		width: 100%;
-		max-width: 800px;
 		min-width: 0;
 		box-sizing: border-box;
 	}
