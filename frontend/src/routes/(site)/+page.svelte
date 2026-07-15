@@ -176,7 +176,7 @@
 						padding="8px 16px"
 						className="recent-posts-section"
 						showHeader={true}
-						headerText="Recent posts"
+						headerText="Recent Posts"
 						dynamicHeight={true}
 						contentPadding={true}
 					>
@@ -200,7 +200,7 @@
 							padding="8px 16px"
 							className="github-contributions-section"
 							showHeader={true}
-							headerText="github commits"
+							headerText="GitHub Activity"
 							dynamicHeight={true}
 							contentPadding={true}
 						>
@@ -227,7 +227,7 @@
 						padding="8px 16px"
 						className="service-status-section"
 						showHeader={true}
-						headerText="Systems status:"
+						headerText="Systems Status:"
 						subheading={overallStatus}
 						subheadingSemanticStatus={true}
 						dynamicHeight={true}
