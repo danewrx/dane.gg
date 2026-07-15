@@ -786,37 +786,37 @@
 		}
 
 		.author-name {
-			font-size: calc(13 * 1em / 14);
+			font-size: calc(14 * 1em / 14);
 		}
 
 		.author-username {
-			font-size: calc(11 * 1em / 14);
+			font-size: calc(12 * 1em / 14);
 		}
 
 		.time-separator {
-			font-size: calc(11 * 1em / 14);
+			font-size: calc(12 * 1em / 14);
 		}
 
 		.tweet-time {
-			font-size: calc(11 * 1em / 14);
+			font-size: calc(12 * 1em / 14);
 		}
 
 		.tweet-text {
-			font-size: calc(13 * 1em / 14);
+			font-size: calc(14 * 1em / 14);
 			-webkit-line-clamp: 2;
 			line-clamp: 2;
 		}
 
 		.tweet-title {
-			font-size: calc(13 * 1em / 14);
+			font-size: calc(14 * 1em / 14);
 		}
 
 		.tweet-subtitle {
-			font-size: calc(13 * 1em / 14);
+			font-size: calc(14 * 1em / 14);
 		}
 
 		.tweet-status {
-			font-size: calc(11 * 1em / 14);
+			font-size: calc(12 * 1em / 14);
 		}
 	}
 
@@ -826,37 +826,37 @@
 		}
 
 		.author-name {
-			font-size: calc(11 * 1em / 14);
+			font-size: calc(13 * 1em / 14);
 		}
 
 		.author-username {
-			font-size: calc(9 * 1em / 14);
+			font-size: calc(11 * 1em / 14);
 		}
 
 		.time-separator {
-			font-size: calc(9 * 1em / 14);
+			font-size: calc(11 * 1em / 14);
 		}
 
 		.tweet-time {
-			font-size: calc(9 * 1em / 14);
+			font-size: calc(11 * 1em / 14);
 		}
 
 		.tweet-text {
-			font-size: calc(11 * 1em / 14);
+			font-size: calc(13 * 1em / 14);
 			-webkit-line-clamp: 2;
 			line-clamp: 2;
 		}
 
 		.tweet-title {
-			font-size: calc(11 * 1em / 14);
+			font-size: calc(13 * 1em / 14);
 		}
 
 		.tweet-subtitle {
-			font-size: calc(11 * 1em / 14);
+			font-size: calc(13 * 1em / 14);
 		}
 
 		.tweet-status {
-			font-size: calc(9 * 1em / 14);
+			font-size: calc(11 * 1em / 14);
 		}
 	}
 
@@ -876,37 +876,37 @@
 		}
 
 		.author-name {
-			font-size: calc(12 * 1em / 14);
+			font-size: calc(13 * 1em / 14);
 		}
 
 		.author-username {
-			font-size: calc(10 * 1em / 14);
+			font-size: calc(11 * 1em / 14);
 		}
 
 		.time-separator {
-			font-size: calc(10 * 1em / 14);
+			font-size: calc(11 * 1em / 14);
 		}
 
 		.tweet-time {
-			font-size: calc(10 * 1em / 14);
+			font-size: calc(11 * 1em / 14);
 		}
 
 		.tweet-text {
-			font-size: calc(12 * 1em / 14);
+			font-size: calc(13 * 1em / 14);
 			-webkit-line-clamp: 2;
 			line-clamp: 2;
 		}
 
 		.tweet-title {
-			font-size: calc(12 * 1em / 14);
+			font-size: calc(13 * 1em / 14);
 		}
 
 		.tweet-subtitle {
-			font-size: calc(12 * 1em / 14);
+			font-size: calc(13 * 1em / 14);
 		}
 
 		.tweet-status {
-			font-size: calc(10 * 1em / 14);
+			font-size: calc(11 * 1em / 14);
 		}
 	}
 </style>

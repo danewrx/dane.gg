@@ -63,7 +63,7 @@
 					</BorderedBox>
 				</div>
 
-				<div class="card-slot" data-mobile-order="4">
+				<div class="card-slot" data-mobile-order="8">
 					<BorderedBox
 						padding="8px 16px"
 						className="tweet-widget tweet-bordered-box"
@@ -75,7 +75,7 @@
 					</BorderedBox>
 				</div>
 
-				<div class="card-slot" data-mobile-order="5">
+				<div class="card-slot" data-mobile-order="9">
 					<BorderedBox
 						padding="8px 16px"
 						className="music-widget"
@@ -96,7 +96,7 @@
 					</BorderedBox>
 				</div>
 
-				<div class="card-slot" data-mobile-order="8">
+				<div class="card-slot" data-mobile-order="7">
 					<BorderedBox
 						padding="8px 16px"
 						className="links-widget"
@@ -110,13 +110,13 @@
 					</BorderedBox>
 				</div>
 
-				<div class="card-slot" data-mobile-order="9">
+				<div class="card-slot" data-mobile-order="10">
 					<LazyWhenVisible minHeight="72px">
 						<ButtonBanner />
 					</LazyWhenVisible>
 				</div>
 
-				<div class="card-slot" data-mobile-order="10">
+				<div class="card-slot" data-mobile-order="11">
 					<BorderedBox
 						padding="0 16px"
 						className="my-button-widget"
@@ -130,7 +130,7 @@
 					</BorderedBox>
 				</div>
 
-				<div class="card-slot" data-mobile-order="11">
+				<div class="card-slot" data-mobile-order="12">
 					<BorderedBox
 						padding="8px 16px"
 						className="site-stats-widget"
@@ -194,7 +194,7 @@
 				</div>
 
 				{#if $siteConfig.advert_enabled && $adverts.length > 0}
-					<div class="card-slot advert-slot" data-mobile-order="12">
+					<div class="card-slot advert-slot" data-mobile-order="5">
 						<AdvertBanner
 							items={$adverts}
 							rotationSeconds={$siteConfig.advert_rotation_seconds}
@@ -204,7 +204,7 @@
 					</div>
 				{/if}
 
-				<div class="card-slot" data-mobile-order="7">
+				<div class="card-slot" data-mobile-order="4">
 					<BorderedBox
 						padding="8px 16px"
 						className="service-status-section"
