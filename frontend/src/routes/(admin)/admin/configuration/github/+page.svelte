@@ -126,11 +126,11 @@
 </svelte:head>
 
 <div class="github-config">
-	<p class="page-description">
-		Show a GitHub contributions heatmap (the trailing year of commit activity) in the homepage right
-		column. Requires a <code>GITHUB_TOKEN</code> environment variable on the backend — any token with
-		default scopes can read public contributions.
-	</p>
+	<div class="settings-description">
+		<p>
+			Show a GitHub contributions heatmap in the homepage - Requires a <code>GITHUB_TOKEN</code> environment variable on the backend
+		</p>
+	</div>
 
 	<div class="status-card">
 		<div class="status-header">
@@ -297,21 +297,27 @@
 
 <style>
 	.github-config {
-		padding: 24px;
+		width: 100%;
+		max-width: 800px;
 		min-width: 0;
 		box-sizing: border-box;
 		overflow-x: hidden;
 	}
 
-	.page-description {
+	.settings-description {
+		margin-bottom: 24px;
+		padding-bottom: 16px;
+		border-bottom: 1px solid var(--border-color, #3a3a3a);
+	}
+
+	.settings-description p {
 		color: var(--text-secondary, #a1a1aa);
+		margin: 0;
 		font-size: 14px;
-		margin: 0 0 24px 0;
-		max-width: 60ch;
 		line-height: 1.5;
 	}
 
-	.page-description code {
+	.settings-description code {
 		font-family: monospace;
 		font-size: 13px;
 		background: var(--bg-tertiary, #2d2d2d);
@@ -675,11 +681,5 @@
 	.save-button:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
-	}
-
-	@media (max-width: 768px) {
-		.github-config {
-			padding: 16px;
-		}
 	}
 </style>
