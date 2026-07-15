@@ -350,11 +350,11 @@ function buildBanner(service: string, port: string | number, host: string) {
 	const maxLabel = Math.max(...info.map(([l]) => l.length));
 	const lines: string[] = [];
 
-	lines.push('');
 	lines.push(
-		`${c.cyan}══════════════════════════════════════════════════════════════════════════════${c.r}`
+		'',
+		`${c.cyan}══════════════════════════════════════════════════════════════════════════════${c.r}`,
+		''
 	);
-	lines.push('');
 
 	for (let i = 0; i < art.length; i++) {
 		const artLine = `${c.blue}${art[i]}${c.r}`;
@@ -368,18 +368,18 @@ function buildBanner(service: string, port: string | number, host: string) {
 		}
 	}
 
-	lines.push('');
-	lines.push(`${c.bBlue}  _____          _   _ ______   _____  _____ ${c.r}`);
-	lines.push(`${c.bBlue} |  __ \\   /\\   | \\ | |  ____| / ____|/ ____|${c.r}`);
-	lines.push(`${c.bBlue} | |  | | /  \\  |  \\| | |__   | |  __| |  __ ${c.r}`);
-	lines.push(`${c.bBlue} | |  | |/ /\\ \\ | . \` |  __|  | | |_ | | |_ |${c.r}`);
-	lines.push(`${c.bBlue} | |__| / ____ \\| |\\  | |____ | |__| | |__| |${c.r}`);
-	lines.push(`${c.bBlue} |_____/_/    \\_\\_| \\_|______(_)_____|\\______|${c.r}`);
-	lines.push('');
 	lines.push(
-		`${c.cyan}══════════════════════════════════════════════════════════════════════════════${c.r}`
+		'',
+		`${c.bBlue}  _____          _   _ ______   _____  _____ ${c.r}`,
+		`${c.bBlue} |  __ \\   /\\   | \\ | |  ____| / ____|/ ____|${c.r}`,
+		`${c.bBlue} | |  | | /  \\  |  \\| | |__   | |  __| |  __ ${c.r}`,
+		`${c.bBlue} | |  | |/ /\\ \\ | . \` |  __|  | | |_ | | |_ |${c.r}`,
+		`${c.bBlue} | |__| / ____ \\| |\\  | |____ | |__| | |__| |${c.r}`,
+		`${c.bBlue} |_____/_/    \\_\\_| \\_|______(_)_____|\\______|${c.r}`,
+		'',
+		`${c.cyan}══════════════════════════════════════════════════════════════════════════════${c.r}`,
+		''
 	);
-	lines.push('');
 
 	return lines.join('\n');
 }
