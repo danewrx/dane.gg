@@ -15,7 +15,8 @@
 		Zap,
 		Award,
 		Mail,
-		Bell
+		Bell,
+		Megaphone
 	} from 'lucide-svelte';
 	import type { ComponentType } from 'svelte';
 
@@ -71,9 +72,7 @@
 						<div
 							class="sidebar-icon"
 							class:active={selectedCategoryId === category.id}
-							style:color={selectedCategoryId === category.id
-								? null
-								: category.iconBgColor}
+							style:color={selectedCategoryId === category.id ? null : category.iconBgColor}
 						>
 							{#if category.icon === Palette}
 								<Palette size={20} stroke-width={1.5} />
@@ -122,9 +121,7 @@
 						<div
 							class="sidebar-icon"
 							class:active={selectedCategoryId === category.id}
-							style:color={selectedCategoryId === category.id
-								? null
-								: category.iconBgColor}
+							style:color={selectedCategoryId === category.id ? null : category.iconBgColor}
 						>
 							{#if category.icon === CloudRain}
 								<CloudRain size={20} stroke-width={1.5} />
@@ -140,6 +137,8 @@
 								<FileText size={20} stroke-width={1.5} />
 							{:else if category.icon === User}
 								<User size={20} stroke-width={1.5} />
+							{:else if category.icon === Megaphone}
+								<Megaphone size={20} stroke-width={1.5} />
 							{/if}
 						</div>
 						<span class="sidebar-title">{category.title}</span>
@@ -171,9 +170,7 @@
 						<div
 							class="sidebar-icon"
 							class:active={selectedCategoryId === category.id}
-							style:color={selectedCategoryId === category.id
-								? null
-								: category.iconBgColor}
+							style:color={selectedCategoryId === category.id ? null : category.iconBgColor}
 						>
 							{#if category.icon === FileText}
 								<FileText size={20} stroke-width={1.5} />
@@ -214,9 +211,7 @@
 						<div
 							class="sidebar-icon"
 							class:active={selectedCategoryId === category.id}
-							style:color={selectedCategoryId === category.id
-								? null
-								: category.iconBgColor}
+							style:color={selectedCategoryId === category.id ? null : category.iconBgColor}
 						>
 							{#if category.icon === Mail}
 								<Mail size={20} stroke-width={1.5} />

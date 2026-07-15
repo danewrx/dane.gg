@@ -820,9 +820,6 @@
 		}
 	}
 
-	/* Below this point sizes hold steady rather than continuing to shrink,
-	   so text stays legible on typical phone widths (previously dipped
-	   smaller here than the narrower 480px breakpoint below). */
 	@media (max-width: 600px) {
 		.no-image {
 			font-size: calc(15 * 1em / 14);
