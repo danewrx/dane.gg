@@ -27,6 +27,12 @@
 	let socialLinks: SocialLink[] = $state([]);
 	let isLoading = $state(true);
 
+	// Balance icons across rows: at most 8 per line, rows as even as possible
+	// (e.g. 17 icons render 6+6+5 instead of 8+8+1).
+	const columns = $derived(
+		socialLinks.length > 0 ? Math.ceil(socialLinks.length / Math.ceil(socialLinks.length / 8)) : 8
+	);
+
 	onMount(async () => {
 		try {
 			const response = await fetch('/api/social-links');
@@ -99,7 +105,7 @@
 	</div>
 {:else if socialLinks.length > 0}
 	<div class="links-container">
-		<div class="links-grid">
+		<div class="links-grid" style="--cols: {columns}">
 			{#each socialLinks as link}
 				<button
 					class="link-item"
@@ -243,14 +249,17 @@
 	}
 
 	.links-grid {
-		display: grid;
-		grid-template-columns: repeat(8, 1fr);
-		gap: 4px;
+		/* Flex-wrap instead of a fixed grid: row size comes from --cols
+		   (balanced in the component, max 8) and the last partial row centres. */
+		--grid-gap: 4px;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: var(--grid-gap);
 		width: 100%;
 		margin: 0;
 		padding: 12px 8px;
 		box-sizing: border-box;
-		grid-auto-rows: min-content;
 	}
 
 	.link-item {
@@ -258,7 +267,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 100%;
+		flex: 0 0 calc((100% - (var(--cols, 8) - 1) * var(--grid-gap)) / var(--cols, 8));
 		height: 24px;
 		background: transparent !important;
 		border: none !important;
@@ -399,17 +408,17 @@
 		font-family: var(--font-family, 'Inter', sans-serif);
 	}
 
-	/* Maintain 8 links per row on all screen sizes */
+	/* Same row balance on all screen sizes; only gaps/padding shrink */
 	@media (max-width: 1024px) {
 		.links-grid {
-			gap: 3px;
+			--grid-gap: 3px;
 			--gap-height: 3px;
 		}
 	}
 
 	@media (max-width: 768px) {
 		.links-grid {
-			gap: 2px;
+			--grid-gap: 2px;
 			padding: 10px 6px;
 			--base-padding: 20px;
 			--icon-height: 24px;
@@ -434,7 +443,7 @@
 
 	@media (max-width: 480px) {
 		.links-grid {
-			gap: 2px;
+			--grid-gap: 2px;
 			padding: 8px 4px;
 			--base-padding: 16px;
 			--icon-height: 24px;
