@@ -407,6 +407,7 @@
 				description: e instanceof Error ? e.message : 'Try again'
 			});
 		} finally {
+			confirmOpen = false;
 			pendingDeleteId = null;
 			pendingDeleteLabel = '';
 		}
