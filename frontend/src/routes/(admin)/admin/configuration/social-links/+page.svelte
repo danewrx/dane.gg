@@ -410,6 +410,37 @@
 	<title>{adminPageTitle('Social links')}</title>
 </svelte:head>
 
+{#snippet linkTypeField()}
+	<div class="form-group">
+		<span class="segment-label">Type *</span>
+		<div class="segmented" role="group" aria-label="Link type">
+			<button
+				type="button"
+				class="segment"
+				class:active={formData.linkType === 'link'}
+				aria-pressed={formData.linkType === 'link'}
+				onclick={() => (formData.linkType = 'link')}
+			>
+				Link
+			</button>
+			<button
+				type="button"
+				class="segment"
+				class:active={formData.linkType === 'copy'}
+				aria-pressed={formData.linkType === 'copy'}
+				onclick={() => (formData.linkType = 'copy')}
+			>
+				Text
+			</button>
+		</div>
+		<p class="segment-hint">
+			{formData.linkType === 'copy'
+				? 'Copies text (username, address…) to the clipboard when clicked'
+				: 'Opens a URL in a new tab when clicked'}
+		</p>
+	</div>
+{/snippet}
+
 <ConfirmDialog
 	bind:open={showDeleteLinkDialog}
 	title="Delete link"
@@ -477,13 +508,7 @@
 										/>
 									</div>
 
-									<div class="form-group">
-										<label for="link-type">Type *</label>
-										<select id="link-type" class="edit-input" bind:value={formData.linkType}>
-											<option value="link">Link — opens a URL</option>
-											<option value="copy">Copy — copies text to the clipboard</option>
-										</select>
-									</div>
+									{@render linkTypeField()}
 
 									<div class="form-group">
 										{#if formData.linkType === 'copy'}
@@ -682,13 +707,7 @@
 							/>
 						</div>
 
-						<div class="form-group">
-							<label for="link-type-new">Type *</label>
-							<select id="link-type-new" class="edit-input" bind:value={formData.linkType}>
-								<option value="link">Link — opens a URL</option>
-								<option value="copy">Copy — copies text to the clipboard</option>
-							</select>
-						</div>
+						{@render linkTypeField()}
 
 						<div class="form-group">
 							{#if formData.linkType === 'copy'}
@@ -1050,6 +1069,51 @@
 		font-weight: 500;
 		color: var(--text-primary, #ffffff);
 		margin-bottom: 8px;
+	}
+
+	.segment-label {
+		display: block;
+		font-size: 14px;
+		font-weight: 500;
+		color: var(--text-primary, #ffffff);
+		margin-bottom: 8px;
+	}
+
+	.segmented {
+		display: flex;
+		gap: 4px;
+		padding: 4px;
+		background: var(--bg-secondary, #2d2d2d);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 8px;
+	}
+
+	.segment {
+		flex: 1;
+		padding: 8px 12px;
+		border: none;
+		border-radius: 5px;
+		background: transparent;
+		color: var(--text-secondary, #9ca3af);
+		font-size: 14px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.segment:hover:not(.active) {
+		color: var(--text-primary, #ffffff);
+	}
+
+	.segment.active {
+		background: var(--accent-color, #6366f1);
+		color: #ffffff;
+	}
+
+	.segment-hint {
+		margin: 8px 0 0;
+		font-size: 13px;
+		color: var(--text-secondary, #9ca3af);
 	}
 
 	.icon-selection-section {
