@@ -920,9 +920,7 @@
 											Manage
 										</button>
 									</div>
-									<p class="form-hint">
-										Groups this theme in the public theme selector.
-									</p>
+									<p class="form-hint">Groups this theme in the public theme selector.</p>
 								</div>
 							</div>
 						</section>
@@ -2087,7 +2085,6 @@
 <style>
 	.themes-settings {
 		width: 100%;
-		max-width: 1200px;
 	}
 
 	.settings-description {

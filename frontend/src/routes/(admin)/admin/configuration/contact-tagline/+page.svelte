@@ -114,7 +114,6 @@
 <style>
 	.contact-tagline-settings {
 		width: 100%;
-		max-width: 1000px;
 	}
 
 	.settings-description {

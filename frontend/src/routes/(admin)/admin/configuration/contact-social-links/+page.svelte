@@ -440,7 +440,9 @@
 											{:else if link.iconType === 'svg-inline' && link.svgInline}
 												{@const cfgSvgUnsel = sanitizeSvgInlineMarkup(link.svgInline)}
 												{#if cfgSvgUnsel}
-													<span class="svg-inline-thumb" aria-hidden="true">{@html cfgSvgUnsel}</span>
+													<span class="svg-inline-thumb" aria-hidden="true"
+														>{@html cfgSvgUnsel}</span
+													>
 												{:else}
 													<Link2 size={20} />
 												{/if}
@@ -494,7 +496,6 @@
 <style>
 	.contact-social-links-settings {
 		width: 100%;
-		max-width: 1000px;
 		min-width: 0;
 		box-sizing: border-box;
 	}

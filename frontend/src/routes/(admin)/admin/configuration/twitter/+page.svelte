@@ -387,6 +387,10 @@
 </svelte:head>
 
 <div class="twitter-config">
+	<div class="settings-description">
+		<p>Manage the Twitter/X integration that powers the status widget on the homepage.</p>
+	</div>
+
 	{#if loading}
 		<div class="loading-state">
 			<div class="spinner"></div>
@@ -748,6 +752,19 @@
 		min-width: 0;
 		box-sizing: border-box;
 		overflow-x: hidden;
+	}
+
+	.settings-description {
+		margin-bottom: 24px;
+		padding-bottom: 16px;
+		border-bottom: 1px solid var(--border-color, #3a3a3a);
+	}
+
+	.settings-description p {
+		color: var(--text-secondary, #a1a1aa);
+		margin: 0;
+		font-size: 14px;
+		line-height: 1.5;
 	}
 
 	.loading-state,

@@ -4,7 +4,7 @@
 
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
-	import { Cat, Lock, Save, Loader2 } from 'lucide-svelte';
+	import { Lock, Save, Loader2 } from 'lucide-svelte';
 	import { siteConfig, loadSiteConfig } from '$lib/site/stores/siteConfig';
 	import { toast } from 'svelte-sonner';
 	import { notifySiteConfigConsumers } from '$lib/shared/utils/siteConfigLiveSync';
@@ -145,17 +145,13 @@
 </svelte:head>
 
 <div class="neko-admin">
-	<div class="page-head">
-		<Cat size={22} class="neko-page-icon" aria-hidden="true" />
-		<div>
-			<h2 class="page-title">Web Neko</h2>
-			<p class="page-desc">
-				Art and script from <a href="https://webneko.net/" target="_blank" rel="noopener noreferrer"
-					>webneko.net</a
-				>. Optional site-wide lock is below; further down, set the default for new visitors and for
-				anyone without a saved choice while the lock is off.
-			</p>
-		</div>
+	<div class="settings-description">
+		<p>
+			Web Neko follows the cursor around the site. Art and script from
+			<a href="https://webneko.net/" target="_blank" rel="noopener noreferrer">webneko.net</a>.
+			Optional site-wide lock is below; further down, set the default for new visitors and for
+			anyone without a saved choice while the lock is off.
+		</p>
 	</div>
 
 	<section class="neko-enforcement-panel" aria-labelledby="neko-enforcement-heading">
@@ -284,36 +280,20 @@
 		box-sizing: border-box;
 	}
 
-	.page-head {
-		display: flex;
-		align-items: flex-start;
-		gap: 14px;
+	.settings-description {
 		margin-bottom: 24px;
 		padding-bottom: 16px;
 		border-bottom: 1px solid var(--border-color, #3a3a3a);
 	}
 
-	:global(.neko-page-icon) {
-		flex-shrink: 0;
-		color: var(--accent-on-surface, var(--accent-color, #6366f1));
-		margin-top: 2px;
-	}
-
-	.page-title {
-		margin: 0 0 6px 0;
-		font-size: 1.25rem;
-		font-weight: 600;
-		color: var(--text-primary, #fff);
-	}
-
-	.page-desc {
+	.settings-description p {
 		margin: 0;
-		font-size: 13px;
+		font-size: 14px;
 		line-height: 1.5;
 		color: var(--text-secondary, #a1a1aa);
 	}
 
-	.page-desc a {
+	.settings-description a {
 		color: var(--accent-on-surface, var(--accent-color, #6366f1));
 		text-decoration: underline;
 		text-underline-offset: 2px;

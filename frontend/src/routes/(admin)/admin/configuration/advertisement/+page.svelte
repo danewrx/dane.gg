@@ -613,7 +613,8 @@
 <div class="advert-config">
 	<div class="settings-description">
 		<p>
-			Manage the image-only advertisement banner shown on the homepage. Add multiple adverts and the banner rotates between them.
+			Manage the image-only advertisement banner shown on the homepage. Add multiple adverts and the
+			banner rotates between them.
 		</p>
 	</div>
 
@@ -792,7 +793,6 @@
 <style>
 	.advert-config {
 		width: 100%;
-		max-width: 800px;
 		min-width: 0;
 		box-sizing: border-box;
 		overflow-x: hidden;

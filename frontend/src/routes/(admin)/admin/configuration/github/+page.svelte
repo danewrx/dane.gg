@@ -128,7 +128,8 @@
 <div class="github-config">
 	<div class="settings-description">
 		<p>
-			Show a GitHub contributions heatmap in the homepage - Requires a <code>GITHUB_TOKEN</code> environment variable on the backend
+			Show a GitHub contributions heatmap in the homepage - Requires a <code>GITHUB_TOKEN</code> environment
+			variable on the backend
 		</p>
 	</div>
 
@@ -298,7 +299,6 @@
 <style>
 	.github-config {
 		width: 100%;
-		max-width: 800px;
 		min-width: 0;
 		box-sizing: border-box;
 		overflow-x: hidden;

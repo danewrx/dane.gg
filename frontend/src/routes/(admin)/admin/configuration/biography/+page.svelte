@@ -115,7 +115,6 @@ This is my personal website where I showcase some of the side projects I'm worki
 <style>
 	.biography-settings {
 		width: 100%;
-		max-width: 1000px;
 	}
 
 	.settings-description {

@@ -437,7 +437,8 @@
 
 	.settings-page-content {
 		padding: 0;
-		max-width: 1200px;
+		/* Config-page content width */
+		max-width: 1000px;
 		margin: 0 auto;
 		width: 100%;
 		min-width: 0;
