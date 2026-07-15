@@ -100,6 +100,10 @@
 		padding: 4px 0 8px;
 		box-sizing: border-box;
 
+		/* Minimum cell width. Cells expand to fill the column (1fr) but never
+		   shrink below this */
+		--gh-cell-min: 10px;
+
 		/* Base ramp (grayscale) — works everywhere and is the fallback when
 		   color-mix() is unavailable. */
 		--gh-level-0: rgba(255, 255, 255, 0.06);
@@ -179,6 +183,14 @@
 		grid-template-columns: repeat(var(--weeks), 1fr);
 		grid-template-rows: repeat(7, auto);
 		gap: 2px;
+	}
+
+	/* On small screens, stop cells shrinking below a legible size */
+	@media (max-width: 768px) {
+		.gh-months,
+		.gh-grid {
+			grid-template-columns: repeat(var(--weeks), minmax(var(--gh-cell-min), 1fr));
+		}
 	}
 
 	.gh-cell {
