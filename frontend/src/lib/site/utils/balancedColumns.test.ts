@@ -69,7 +69,7 @@ describe('balancedColumns', () => {
 			const minimalRows = Math.ceil(count / 8);
 			const evenCols = Math.ceil(count / minimalRows);
 			if (count % evenCols !== 1) {
-				expect(rows.length).toBe(minimalRows);
+				expect(rows).toHaveLength(minimalRows);
 			}
 		}
 	});
