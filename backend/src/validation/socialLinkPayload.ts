@@ -9,6 +9,11 @@ export const ICON_TYPES = [
 	'custom-text'
 ] as const;
 
+/** 'link' opens the URL; 'copy' copies the stored text to the clipboard. */
+export const LINK_TYPES = ['link', 'copy'] as const;
+
+const LINK_TYPE_ERROR = 'Valid link type is required (link or copy)';
+
 const ICON_TYPE_ERROR =
 	'Valid icon type is required (coreui-brand, lucide, svg-url, svg-inline, or custom-text)';
 
@@ -32,14 +37,31 @@ function asTrimmedSvgField(value: unknown): string {
 
 type CreateNameUrlOk = { nameTrimmed: string; urlTrimmed: string };
 
-function parseCreateNameAndUrl(body: {
-	name?: unknown;
-	url?: unknown;
-}): { error: string } | CreateNameUrlOk {
+function parseCreateNameAndUrl(
+	body: {
+		name?: unknown;
+		url?: unknown;
+	},
+	linkType: string
+): { error: string } | CreateNameUrlOk {
 	if (!isNonEmptyString(body.name) || !isNonEmptyString(body.url)) {
-		return { error: 'Name and URL are required' };
+		return {
+			error:
+				linkType === 'copy' ? 'Name and text to copy are required' : 'Name and URL are required'
+		};
 	}
 	return { nameTrimmed: body.name.trim(), urlTrimmed: body.url.trim() };
+}
+
+/** Returns the validated link type, defaulting to 'link' when absent. */
+export function parseLinkType(value: unknown): { error: string } | string {
+	if (value === undefined || value === null || value === '') {
+		return 'link';
+	}
+	if (typeof value === 'string' && (LINK_TYPES as readonly string[]).includes(value)) {
+		return value;
+	}
+	return { error: LINK_TYPE_ERROR };
 }
 
 function validateCreateIconTypeSpecific(
@@ -77,12 +99,15 @@ function pickCreateIconName(iconType: string, body: { iconName?: unknown }): str
 }
 
 function pickCreateIconText(iconType: string, body: { iconText?: unknown }): string | null {
-	return iconType === 'custom-text' && isNonEmptyString(body.iconText) ? body.iconText.trim() : null;
+	return iconType === 'custom-text' && isNonEmptyString(body.iconText)
+		? body.iconText.trim()
+		: null;
 }
 
 export type ValidatedCreatePayload = {
 	name: string;
 	url: string;
+	linkType: string;
 	iconType: string;
 	iconName: string | null;
 	iconText: string | null;
@@ -95,6 +120,7 @@ export type ValidatedCreatePayload = {
 export function validateCreateSocialLinkBody(body: {
 	name?: unknown;
 	url?: unknown;
+	linkType?: unknown;
 	iconType?: unknown;
 	iconName?: unknown;
 	iconText?: unknown;
@@ -103,7 +129,12 @@ export function validateCreateSocialLinkBody(body: {
 	displayOrder?: unknown;
 	isActive?: unknown;
 }): { error: string } | ValidatedCreatePayload {
-	const nameUrl = parseCreateNameAndUrl(body);
+	const linkType = parseLinkType(body.linkType);
+	if (typeof linkType !== 'string') {
+		return linkType;
+	}
+
+	const nameUrl = parseCreateNameAndUrl(body, linkType);
 	if ('error' in nameUrl) {
 		return nameUrl;
 	}
@@ -127,6 +158,7 @@ export function validateCreateSocialLinkBody(body: {
 	return {
 		name: nameUrl.nameTrimmed,
 		url: nameUrl.urlTrimmed,
+		linkType,
 		iconType,
 		iconName: pickCreateIconName(iconType, body),
 		iconText: pickCreateIconText(iconType, body),

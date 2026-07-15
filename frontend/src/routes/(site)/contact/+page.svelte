@@ -2,13 +2,17 @@
 	import { logger } from '$lib/logger';
 	import { publicPageTitle } from '$lib/site/pageTitle';
 
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { Mail } from 'lucide-svelte';
 	import Icon from '@iconify/svelte';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
 	import { marked } from 'marked';
 	import { sanitizeSvgInlineMarkup } from '@repo/shared/utils/sanitizeSvgInline';
-	import { getIconRenderInfo, isLikelyLucideMisstoredAsCoreUi, stripCoreUIBrandPrefix } from '$lib/site/utils/iconHelper';
+	import {
+		getIconRenderInfo,
+		isLikelyLucideMisstoredAsCoreUi,
+		stripCoreUIBrandPrefix
+	} from '$lib/site/utils/iconHelper';
 
 	let taglineContent = $state('');
 	let loadingTagline = $state(true);
@@ -16,20 +20,59 @@
 	let loadingEmails = $state(true);
 	let emailsHeader = $state('');
 	let loadingEmailsHeader = $state(true);
-	let socialLinks = $state<
-		{
-			id: string;
-			name: string;
-			url: string;
-			iconType: string;
-			iconName?: string;
-			iconText?: string;
-			svgUrl?: string;
-			svgInline?: string | null;
-		}[]
-	>([]);
+	interface ContactSocialLink {
+		id: string;
+		name: string;
+		url: string;
+		linkType?: 'link' | 'copy';
+		iconType: string;
+		iconName?: string;
+		iconText?: string;
+		svgUrl?: string;
+		svgInline?: string | null;
+	}
+
+	let socialLinks = $state<ContactSocialLink[]>([]);
 	let socialHeader = $state('');
 	let loadingSocial = $state(true);
+
+	// Copy-to-clipboard feedback. The tooltip is portaled to <body> and
+	// positioned with fixed coordinates so it floats above everything.
+	let copiedText = $state('');
+	let copyFailed = $state(false);
+	let tooltipVisible = $state(false);
+	let tooltipX = $state(0);
+	let tooltipY = $state(0);
+	let copyResetTimer: ReturnType<typeof setTimeout> | undefined;
+
+	onDestroy(() => clearTimeout(copyResetTimer));
+
+	/** Move an element to <body> so no ancestor overflow/transform clips it. */
+	function portal(node: HTMLElement) {
+		document.body.appendChild(node);
+		return {
+			destroy() {
+				node.remove();
+			}
+		};
+	}
+
+	async function copySocialText(link: ContactSocialLink, trigger: HTMLElement) {
+		copiedText = link.url;
+		try {
+			await navigator.clipboard.writeText(link.url);
+			copyFailed = false;
+		} catch (error) {
+			logger.error('Clipboard write failed:', error);
+			copyFailed = true;
+		}
+		const rect = trigger.getBoundingClientRect();
+		tooltipX = rect.left + rect.width / 2;
+		tooltipY = rect.top;
+		tooltipVisible = true;
+		clearTimeout(copyResetTimer);
+		copyResetTimer = setTimeout(() => (tooltipVisible = false), 2000);
+	}
 
 	onMount(async () => {
 		await Promise.all([loadTagline(), loadContactEmails(), loadEmailsHeader(), loadSocialLinks()]);
@@ -188,6 +231,44 @@
 		{/if}
 	</div>
 
+	{#snippet socialIcon(link: ContactSocialLink)}
+		{#if link.iconType === 'custom-text' && link.iconText}
+			<span class="text-icon">{link.iconText}</span>
+		{:else if link.iconType === 'svg-url' && link.svgUrl}
+			<img src={link.svgUrl} alt={link.name} class="svg-icon" />
+		{:else if link.iconType === 'svg-inline' && link.svgInline}
+			{@const contactSvg = sanitizeSvgInlineMarkup(link.svgInline)}
+			{#if contactSvg}
+				<span class="svg-inline-host" aria-hidden="true">{@html contactSvg}</span>
+			{:else}
+				<Icon icon="simple-icons:link" width="20" height="20" />
+			{/if}
+		{:else if link.iconType === 'lucide' && link.iconName}
+			{@const contactLucide = getIconRenderInfo(link.iconName)}
+			{#if contactLucide.type === 'component' && contactLucide.component}
+				{@const ContactLucideIcon = contactLucide.component}
+				<ContactLucideIcon size={20} strokeWidth={2} />
+			{:else}
+				<Icon icon="simple-icons:link" width="20" height="20" />
+			{/if}
+		{:else if link.iconType === 'coreui-brand' && link.iconName}
+			{@const contactCoreUi = stripCoreUIBrandPrefix(link.iconName)}
+			{#if isLikelyLucideMisstoredAsCoreUi(link.iconName)}
+				{@const misContact = getIconRenderInfo(contactCoreUi)}
+				{#if misContact.type === 'component' && misContact.component}
+					{@const MisLucide = misContact.component}
+					<MisLucide size={20} strokeWidth={2} />
+				{:else}
+					<Icon icon="simple-icons:link" width="20" height="20" />
+				{/if}
+			{:else}
+				<Icon icon={`cib:${contactCoreUi}`} width="20" height="20" />
+			{/if}
+		{:else}
+			<Icon icon="simple-icons:link" width="20" height="20" />
+		{/if}
+	{/snippet}
+
 	{#if !loadingSocial && socialLinks.length > 0}
 		<hr class="section-divider" />
 		<div class="social-section">
@@ -197,44 +278,22 @@
 			{/if}
 			<div class="social-links">
 				{#each socialLinks as link (link.id)}
-					<a href={link.url} target="_blank" rel="noopener noreferrer" class="social-link">
-						{#if link.iconType === 'custom-text' && link.iconText}
-							<span class="text-icon">{link.iconText}</span>
-						{:else if link.iconType === 'svg-url' && link.svgUrl}
-							<img src={link.svgUrl} alt={link.name} class="svg-icon" />
-						{:else if link.iconType === 'svg-inline' && link.svgInline}
-							{@const contactSvg = sanitizeSvgInlineMarkup(link.svgInline)}
-							{#if contactSvg}
-								<span class="svg-inline-host" aria-hidden="true">{@html contactSvg}</span>
-							{:else}
-								<Icon icon="simple-icons:link" width="20" height="20" />
-							{/if}
-						{:else if link.iconType === 'lucide' && link.iconName}
-							{@const contactLucide = getIconRenderInfo(link.iconName)}
-							{#if contactLucide.type === 'component' && contactLucide.component}
-								{@const ContactLucideIcon = contactLucide.component}
-								<ContactLucideIcon size={20} strokeWidth={2} />
-							{:else}
-								<Icon icon="simple-icons:link" width="20" height="20" />
-							{/if}
-						{:else if link.iconType === 'coreui-brand' && link.iconName}
-							{@const contactCoreUi = stripCoreUIBrandPrefix(link.iconName)}
-							{#if isLikelyLucideMisstoredAsCoreUi(link.iconName)}
-								{@const misContact = getIconRenderInfo(contactCoreUi)}
-								{#if misContact.type === 'component' && misContact.component}
-									{@const MisLucide = misContact.component}
-									<MisLucide size={20} strokeWidth={2} />
-								{:else}
-									<Icon icon="simple-icons:link" width="20" height="20" />
-								{/if}
-							{:else}
-								<Icon icon={`cib:${contactCoreUi}`} width="20" height="20" />
-							{/if}
-						{:else}
-							<Icon icon="simple-icons:link" width="20" height="20" />
-						{/if}
-						<span>{link.name}</span>
-					</a>
+					{#if link.linkType === 'copy'}
+						<button
+							type="button"
+							class="social-link copy-link"
+							onclick={(e) => copySocialText(link, e.currentTarget)}
+							aria-label={`Copy ${link.name} to clipboard`}
+						>
+							{@render socialIcon(link)}
+							<span>{link.name}</span>
+						</button>
+					{:else}
+						<a href={link.url} target="_blank" rel="noopener noreferrer" class="social-link">
+							{@render socialIcon(link)}
+							<span>{link.name}</span>
+						</a>
+					{/if}
 				{/each}
 			</div>
 		</div>
@@ -249,6 +308,18 @@
 		</div>
 	</div>
 </div>
+
+{#if tooltipVisible}
+	<span
+		use:portal
+		class="copy-tooltip"
+		role="status"
+		style="left: {tooltipX}px; top: {tooltipY}px;"
+	>
+		<strong class="copy-tooltip-text">{copiedText}</strong>
+		<em class="copy-tooltip-label">{copyFailed ? '(copy failed)' : '(copied)'}</em>
+	</span>
+{/if}
 
 <style>
 	.page-content {
@@ -360,6 +431,54 @@
 
 	.social-link:hover {
 		color: var(--accent-color);
+	}
+
+	/* Copy-type links render as buttons but look identical to the anchors. */
+	button.social-link {
+		position: relative;
+		background: none;
+		border: none;
+		padding: 0;
+		margin: 0;
+		font-family: inherit;
+		cursor: pointer;
+		text-align: left;
+	}
+
+	.copy-tooltip {
+		/* Portaled to <body>; left/top come from the clicked button's rect and
+		   the transform centres it horizontally and lifts it above the button. */
+		position: fixed;
+		transform: translate(-50%, calc(-100% - 8px));
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+		background: var(--bg-secondary, #1f2937);
+		color: var(--text-primary, #ffffff);
+		border: 1px solid var(--accent-color, #3b82f6);
+		border-radius: 4px;
+		padding: 6px 10px;
+		font-size: 13px;
+		line-height: 1.3;
+		z-index: 9999;
+		pointer-events: none;
+	}
+
+	.copy-tooltip-text {
+		font-weight: 700;
+		white-space: nowrap;
+		max-width: 280px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.copy-tooltip-label {
+		font-style: italic;
+		font-weight: 400;
+		font-size: 11px;
+		color: var(--text-secondary, #9ca3af);
+		white-space: nowrap;
 	}
 
 	.text-icon {

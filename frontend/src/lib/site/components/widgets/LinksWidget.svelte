@@ -1,15 +1,20 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
 
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import { sanitizeSvgInlineMarkup } from '@repo/shared/utils/sanitizeSvgInline';
-	import { getIconRenderInfo, isLikelyLucideMisstoredAsCoreUi, stripCoreUIBrandPrefix } from '$lib/site/utils/iconHelper';
+	import {
+		getIconRenderInfo,
+		isLikelyLucideMisstoredAsCoreUi,
+		stripCoreUIBrandPrefix
+	} from '$lib/site/utils/iconHelper';
 
 	interface SocialLink {
 		id: string;
 		name: string;
 		url: string;
+		linkType?: 'link' | 'copy';
 		iconType: 'coreui-brand' | 'lucide' | 'svg-url' | 'svg-inline' | 'custom-text';
 		iconName?: string;
 		iconText?: string;
@@ -42,8 +47,47 @@
 		}
 	});
 
-	function handleLinkClick(url: string) {
-		window.open(url, '_blank', 'noopener,noreferrer');
+	// Copy-to-clipboard feedback. The tooltip is portaled to <body> and
+	// positioned with fixed coordinates so it floats above the widget's
+	// bordered container instead of being clipped inside it.
+	let copiedText = $state('');
+	let copyFailed = $state(false);
+	let tooltipVisible = $state(false);
+	let tooltipX = $state(0);
+	let tooltipY = $state(0);
+	let copyResetTimer: ReturnType<typeof setTimeout> | undefined;
+
+	onDestroy(() => clearTimeout(copyResetTimer));
+
+	/** Move an element to <body> so no ancestor overflow/transform clips it. */
+	function portal(node: HTMLElement) {
+		document.body.appendChild(node);
+		return {
+			destroy() {
+				node.remove();
+			}
+		};
+	}
+
+	async function handleLinkClick(link: SocialLink, trigger: HTMLElement) {
+		if (link.linkType === 'copy') {
+			copiedText = link.url;
+			try {
+				await navigator.clipboard.writeText(link.url);
+				copyFailed = false;
+			} catch (error) {
+				logger.error('Clipboard write failed:', error);
+				copyFailed = true;
+			}
+			const rect = trigger.getBoundingClientRect();
+			tooltipX = rect.left + rect.width / 2;
+			tooltipY = rect.top;
+			tooltipVisible = true;
+			clearTimeout(copyResetTimer);
+			copyResetTimer = setTimeout(() => (tooltipVisible = false), 2000);
+			return;
+		}
+		window.open(link.url, '_blank', 'noopener,noreferrer');
 	}
 </script>
 
@@ -59,8 +103,8 @@
 			{#each socialLinks as link}
 				<button
 					class="link-item"
-					onclick={() => handleLinkClick(link.url)}
-					aria-label={link.name}
+					onclick={(e) => handleLinkClick(link, e.currentTarget)}
+					aria-label={link.linkType === 'copy' ? `Copy ${link.name} to clipboard` : link.name}
 					title={link.name}
 				>
 					{#if link.iconType === 'custom-text' && link.iconText}
@@ -106,6 +150,18 @@
 			<p>There are currently no links</p>
 		</div>
 	</div>
+{/if}
+
+{#if tooltipVisible}
+	<span
+		use:portal
+		class="copy-tooltip"
+		role="status"
+		style="left: {tooltipX}px; top: {tooltipY}px;"
+	>
+		<strong class="copy-tooltip-text">{copiedText}</strong>
+		<em class="copy-tooltip-label">{copyFailed ? '(copy failed)' : '(copied)'}</em>
+	</span>
 {/if}
 
 <style>
@@ -198,6 +254,7 @@
 	}
 
 	.link-item {
+		position: relative;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -252,6 +309,43 @@
 		outline: none !important;
 		box-shadow: none !important;
 		background: transparent !important;
+	}
+
+	.copy-tooltip {
+		/* Portaled to <body>; left/top come from the clicked button's rect and
+		   the transform centres it horizontally and lifts it above the button. */
+		position: fixed;
+		transform: translate(-50%, calc(-100% - 8px));
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+		background: var(--bg-secondary, #1f2937);
+		color: var(--text-primary, #ffffff);
+		border: 1px solid var(--accent-color, #3b82f6);
+		border-radius: 4px;
+		padding: 6px 10px;
+		/* Fixed size: the trigger button's em-based font is tiny. */
+		font-size: 13px;
+		line-height: 1.3;
+		z-index: 9999;
+		pointer-events: none;
+	}
+
+	.copy-tooltip-text {
+		font-weight: 700;
+		white-space: nowrap;
+		max-width: 260px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.copy-tooltip-label {
+		font-style: italic;
+		font-weight: 400;
+		font-size: 11px;
+		color: var(--text-secondary, #9ca3af);
+		white-space: nowrap;
 	}
 
 	.text-icon {

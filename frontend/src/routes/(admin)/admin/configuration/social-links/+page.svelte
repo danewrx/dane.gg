@@ -16,6 +16,7 @@
 		id: string;
 		name: string;
 		url: string;
+		linkType: 'link' | 'copy';
 		iconType: 'coreui-brand' | 'lucide' | 'svg-url' | 'svg-inline' | 'custom-text';
 		iconName?: string;
 		iconText?: string;
@@ -40,6 +41,7 @@
 	let formData = $state({
 		name: '',
 		url: '',
+		linkType: 'link' as 'link' | 'copy',
 		iconType: 'coreui-brand' as
 			| 'coreui-brand'
 			| 'lucide'
@@ -96,12 +98,8 @@
 			isSaving = true;
 
 			// Determine icon type and values from selectedIcon
-			let iconType:
-				| 'coreui-brand'
-				| 'lucide'
-				| 'svg-url'
-				| 'svg-inline'
-				| 'custom-text' = 'coreui-brand';
+			let iconType: 'coreui-brand' | 'lucide' | 'svg-url' | 'svg-inline' | 'custom-text' =
+				'coreui-brand';
 			let iconName: string | null = null;
 			let iconText: string | null = null;
 			let svgUrl: string | null = null;
@@ -247,6 +245,7 @@
 		formData = {
 			name: link.name,
 			url: link.url,
+			linkType: link.linkType || 'link',
 			iconType: link.iconType,
 			iconName: link.iconName || '',
 			iconText: link.iconText || '',
@@ -301,6 +300,7 @@
 		formData = {
 			name: '',
 			url: '',
+			linkType: 'link',
 			iconType: 'coreui-brand',
 			iconName: '',
 			iconText: '',
@@ -478,15 +478,35 @@
 									</div>
 
 									<div class="form-group">
-										<label for="url">URL *</label>
-										<input
-											type="url"
-											id="url"
-											class="edit-input"
-											bind:value={formData.url}
-											placeholder="https://example.com"
-											required
-										/>
+										<label for="link-type">Type *</label>
+										<select id="link-type" class="edit-input" bind:value={formData.linkType}>
+											<option value="link">Link — opens a URL</option>
+											<option value="copy">Copy — copies text to the clipboard</option>
+										</select>
+									</div>
+
+									<div class="form-group">
+										{#if formData.linkType === 'copy'}
+											<label for="url">Text to Copy *</label>
+											<input
+												type="text"
+												id="url"
+												class="edit-input"
+												bind:value={formData.url}
+												placeholder="e.g., username, wallet address"
+												required
+											/>
+										{:else}
+											<label for="url">URL *</label>
+											<input
+												type="url"
+												id="url"
+												class="edit-input"
+												bind:value={formData.url}
+												placeholder="https://example.com"
+												required
+											/>
+										{/if}
 									</div>
 
 									<div class="form-group">
@@ -503,7 +523,9 @@
 													{#if selectedIcon.type === 'svg-inline' && selectedIcon.svgInline}
 														{@const safeSvg = sanitizeSvgInlineMarkup(selectedIcon.svgInline)}
 														{#if safeSvg}
-															<span class="svg-inline-thumb" aria-hidden="true">{@html safeSvg}</span>
+															<span class="svg-inline-thumb" aria-hidden="true"
+																>{@html safeSvg}</span
+															>
 														{:else}
 															<Icon icon="lucide:image" width="20" height="20" />
 														{/if}
@@ -578,7 +600,12 @@
 										{#if safeListSvg}
 											<span class="svg-inline-thumb" aria-hidden="true">{@html safeListSvg}</span>
 										{:else}
-											<Icon icon="lucide:external-link" width="20" height="20" class="default-icon" />
+											<Icon
+												icon="lucide:external-link"
+												width="20"
+												height="20"
+												class="default-icon"
+											/>
 										{/if}
 									{:else if link.iconType === 'coreui-brand' && link.iconName}
 										<Icon icon={`cib:${link.iconName.replace('cb-', '')}`} width="20" height="20" />
@@ -598,6 +625,9 @@
 									<h3>{link.name}</h3>
 									<p>{link.url}</p>
 									<div class="link-meta">
+										{#if link.linkType === 'copy'}
+											<span class="icon-type">copies to clipboard</span>
+										{/if}
 										<span class="icon-type">{link.iconType}</span>
 										<span class="display-order">Order: {link.displayOrder}</span>
 									</div>
@@ -653,15 +683,35 @@
 						</div>
 
 						<div class="form-group">
-							<label for="url-new">URL *</label>
-							<input
-								type="url"
-								id="url-new"
-								class="edit-input"
-								bind:value={formData.url}
-								placeholder="https://example.com"
-								required
-							/>
+							<label for="link-type-new">Type *</label>
+							<select id="link-type-new" class="edit-input" bind:value={formData.linkType}>
+								<option value="link">Link — opens a URL</option>
+								<option value="copy">Copy — copies text to the clipboard</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							{#if formData.linkType === 'copy'}
+								<label for="url-new">Text to Copy *</label>
+								<input
+									type="text"
+									id="url-new"
+									class="edit-input"
+									bind:value={formData.url}
+									placeholder="e.g., username, wallet address"
+									required
+								/>
+							{:else}
+								<label for="url-new">URL *</label>
+								<input
+									type="url"
+									id="url-new"
+									class="edit-input"
+									bind:value={formData.url}
+									placeholder="https://example.com"
+									required
+								/>
+							{/if}
 						</div>
 
 						<div class="form-group">
