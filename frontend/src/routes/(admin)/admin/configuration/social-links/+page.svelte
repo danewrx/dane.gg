@@ -16,6 +16,7 @@
 		id: string;
 		name: string;
 		url: string;
+		linkType: 'link' | 'copy';
 		iconType: 'coreui-brand' | 'lucide' | 'svg-url' | 'svg-inline' | 'custom-text';
 		iconName?: string;
 		iconText?: string;
@@ -40,6 +41,7 @@
 	let formData = $state({
 		name: '',
 		url: '',
+		linkType: 'link' as 'link' | 'copy',
 		iconType: 'coreui-brand' as
 			| 'coreui-brand'
 			| 'lucide'
@@ -96,12 +98,8 @@
 			isSaving = true;
 
 			// Determine icon type and values from selectedIcon
-			let iconType:
-				| 'coreui-brand'
-				| 'lucide'
-				| 'svg-url'
-				| 'svg-inline'
-				| 'custom-text' = 'coreui-brand';
+			let iconType: 'coreui-brand' | 'lucide' | 'svg-url' | 'svg-inline' | 'custom-text' =
+				'coreui-brand';
 			let iconName: string | null = null;
 			let iconText: string | null = null;
 			let svgUrl: string | null = null;
@@ -247,6 +245,7 @@
 		formData = {
 			name: link.name,
 			url: link.url,
+			linkType: link.linkType || 'link',
 			iconType: link.iconType,
 			iconName: link.iconName || '',
 			iconText: link.iconText || '',
@@ -301,6 +300,7 @@
 		formData = {
 			name: '',
 			url: '',
+			linkType: 'link',
 			iconType: 'coreui-brand',
 			iconName: '',
 			iconText: '',
@@ -410,6 +410,37 @@
 	<title>{adminPageTitle('Social links')}</title>
 </svelte:head>
 
+{#snippet linkTypeField()}
+	<div class="form-group">
+		<span class="segment-label">Type *</span>
+		<div class="segmented" role="group" aria-label="Link type">
+			<button
+				type="button"
+				class="segment"
+				class:active={formData.linkType === 'link'}
+				aria-pressed={formData.linkType === 'link'}
+				onclick={() => (formData.linkType = 'link')}
+			>
+				Link
+			</button>
+			<button
+				type="button"
+				class="segment"
+				class:active={formData.linkType === 'copy'}
+				aria-pressed={formData.linkType === 'copy'}
+				onclick={() => (formData.linkType = 'copy')}
+			>
+				Text
+			</button>
+		</div>
+		<p class="segment-hint">
+			{formData.linkType === 'copy'
+				? 'Copies text (username, address…) to the clipboard when clicked'
+				: 'Opens a URL in a new tab when clicked'}
+		</p>
+	</div>
+{/snippet}
+
 <ConfirmDialog
 	bind:open={showDeleteLinkDialog}
 	title="Delete link"
@@ -477,16 +508,30 @@
 										/>
 									</div>
 
+									{@render linkTypeField()}
+
 									<div class="form-group">
-										<label for="url">URL *</label>
-										<input
-											type="url"
-											id="url"
-											class="edit-input"
-											bind:value={formData.url}
-											placeholder="https://example.com"
-											required
-										/>
+										{#if formData.linkType === 'copy'}
+											<label for="url">Text to Copy *</label>
+											<input
+												type="text"
+												id="url"
+												class="edit-input"
+												bind:value={formData.url}
+												placeholder="e.g., username, wallet address"
+												required
+											/>
+										{:else}
+											<label for="url">URL *</label>
+											<input
+												type="url"
+												id="url"
+												class="edit-input"
+												bind:value={formData.url}
+												placeholder="https://example.com"
+												required
+											/>
+										{/if}
 									</div>
 
 									<div class="form-group">
@@ -503,7 +548,9 @@
 													{#if selectedIcon.type === 'svg-inline' && selectedIcon.svgInline}
 														{@const safeSvg = sanitizeSvgInlineMarkup(selectedIcon.svgInline)}
 														{#if safeSvg}
-															<span class="svg-inline-thumb" aria-hidden="true">{@html safeSvg}</span>
+															<span class="svg-inline-thumb" aria-hidden="true"
+																>{@html safeSvg}</span
+															>
 														{:else}
 															<Icon icon="lucide:image" width="20" height="20" />
 														{/if}
@@ -578,7 +625,12 @@
 										{#if safeListSvg}
 											<span class="svg-inline-thumb" aria-hidden="true">{@html safeListSvg}</span>
 										{:else}
-											<Icon icon="lucide:external-link" width="20" height="20" class="default-icon" />
+											<Icon
+												icon="lucide:external-link"
+												width="20"
+												height="20"
+												class="default-icon"
+											/>
 										{/if}
 									{:else if link.iconType === 'coreui-brand' && link.iconName}
 										<Icon icon={`cib:${link.iconName.replace('cb-', '')}`} width="20" height="20" />
@@ -598,6 +650,9 @@
 									<h3>{link.name}</h3>
 									<p>{link.url}</p>
 									<div class="link-meta">
+										{#if link.linkType === 'copy'}
+											<span class="icon-type">copies to clipboard</span>
+										{/if}
 										<span class="icon-type">{link.iconType}</span>
 										<span class="display-order">Order: {link.displayOrder}</span>
 									</div>
@@ -652,16 +707,30 @@
 							/>
 						</div>
 
+						{@render linkTypeField()}
+
 						<div class="form-group">
-							<label for="url-new">URL *</label>
-							<input
-								type="url"
-								id="url-new"
-								class="edit-input"
-								bind:value={formData.url}
-								placeholder="https://example.com"
-								required
-							/>
+							{#if formData.linkType === 'copy'}
+								<label for="url-new">Text to Copy *</label>
+								<input
+									type="text"
+									id="url-new"
+									class="edit-input"
+									bind:value={formData.url}
+									placeholder="e.g., username, wallet address"
+									required
+								/>
+							{:else}
+								<label for="url-new">URL *</label>
+								<input
+									type="url"
+									id="url-new"
+									class="edit-input"
+									bind:value={formData.url}
+									placeholder="https://example.com"
+									required
+								/>
+							{/if}
 						</div>
 
 						<div class="form-group">
@@ -1000,6 +1069,51 @@
 		font-weight: 500;
 		color: var(--text-primary, #ffffff);
 		margin-bottom: 8px;
+	}
+
+	.segment-label {
+		display: block;
+		font-size: 14px;
+		font-weight: 500;
+		color: var(--text-primary, #ffffff);
+		margin-bottom: 8px;
+	}
+
+	.segmented {
+		display: flex;
+		gap: 4px;
+		padding: 4px;
+		background: var(--bg-secondary, #2d2d2d);
+		border: 1px solid var(--border-color, #3a3a3a);
+		border-radius: 8px;
+	}
+
+	.segment {
+		flex: 1;
+		padding: 8px 12px;
+		border: none;
+		border-radius: 5px;
+		background: transparent;
+		color: var(--text-secondary, #9ca3af);
+		font-size: 14px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.segment:hover:not(.active) {
+		color: var(--text-primary, #ffffff);
+	}
+
+	.segment.active {
+		background: var(--accent-color, #6366f1);
+		color: #ffffff;
+	}
+
+	.segment-hint {
+		margin: 8px 0 0;
+		font-size: 13px;
+		color: var(--text-secondary, #9ca3af);
 	}
 
 	.icon-selection-section {

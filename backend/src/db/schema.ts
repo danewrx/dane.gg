@@ -209,7 +209,10 @@ export const tweets = websiteSchema.table('tweets', {
 export const socialLinks = websiteSchema.table('social_links', {
 	id: uuid('id').primaryKey().defaultRandom(),
 	name: varchar('name', { length: 100 }).notNull(),
+	// For linkType 'link' this is the URL to open; for 'copy' it is the text
+	// (username, wallet address, ...) copied to the visitor's clipboard.
 	url: varchar('url', { length: 500 }).notNull(),
+	linkType: varchar('link_type', { length: 10 }).notNull().default('link'), // 'link' | 'copy'
 	iconType: varchar('icon_type', { length: 20 }).notNull().default('coreui-brand'), // 'coreui-brand', 'svg-url', 'svg-inline', 'custom-text'
 	iconName: varchar('icon_name', { length: 100 }),
 	iconText: varchar('icon_text', { length: 50 }),

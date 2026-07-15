@@ -1,0 +1,1 @@
+ALTER TABLE "website"."social_links" ADD COLUMN "link_type" varchar(10) DEFAULT 'link' NOT NULL;

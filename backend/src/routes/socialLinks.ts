@@ -4,7 +4,8 @@ import { SocialLinksService } from '../services/socialLinksService';
 import { requireSession } from '../middleware/auth';
 import {
 	validateCreateSocialLinkBody,
-	validateUpdateSocialLinkIconFields
+	validateUpdateSocialLinkIconFields,
+	parseLinkType
 } from '../validation/socialLinkPayload';
 
 const router = Router();
@@ -86,6 +87,7 @@ router.post('/', requireSession, async (req, res) => {
 		const link = await SocialLinksService.create({
 			name: validated.name,
 			url: validated.url,
+			linkType: validated.linkType,
 			iconType: validated.iconType,
 			iconName: validated.iconName,
 			iconText: validated.iconText,
@@ -123,6 +125,14 @@ router.put('/:id', requireSession, async (req, res) => {
 			});
 		}
 
+		const linkType = parseLinkType(req.body.linkType);
+		if (typeof linkType !== 'string') {
+			return res.status(400).json({
+				success: false,
+				error: linkType.error
+			});
+		}
+
 		const iconFields = validateUpdateSocialLinkIconFields(req.body);
 		if ('error' in iconFields) {
 			return res.status(400).json({
@@ -136,6 +146,7 @@ router.put('/:id', requireSession, async (req, res) => {
 		const link = await SocialLinksService.update(id, {
 			name,
 			url,
+			linkType: req.body.linkType === undefined ? undefined : linkType,
 			iconType,
 			iconName: iconType === 'coreui-brand' || iconType === 'lucide' ? iconName : null,
 			iconText: iconType === 'custom-text' ? iconText : null,
