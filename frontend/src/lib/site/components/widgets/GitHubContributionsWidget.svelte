@@ -137,6 +137,28 @@
 		width: 100%;
 		padding: 4px 0 8px;
 		box-sizing: border-box;
+
+		/* Base ramp (grayscale) — works everywhere and is the fallback when
+		   color-mix() is unavailable. */
+		--gh-level-0: rgba(255, 255, 255, 0.06);
+		--gh-level-1: rgba(255, 255, 255, 0.22);
+		--gh-level-2: rgba(255, 255, 255, 0.4);
+		--gh-level-3: rgba(255, 255, 255, 0.62);
+		--gh-level-4: rgba(255, 255, 255, 0.92);
+	}
+
+	/* Tint the heatmap with the active theme's accent colour so it matches
+	   whatever theme is applied. */
+	@supports (background: color-mix(in srgb, red, blue)) {
+		.github-widget {
+			--gh-surface: var(--theme-surface, var(--bg-secondary, #1a1a1a));
+			--gh-accent: var(--theme-accent, var(--accent-color, #6366f1));
+			--gh-level-0: color-mix(in srgb, var(--theme-text-primary, #ffffff) 8%, transparent);
+			--gh-level-1: color-mix(in srgb, var(--gh-accent) 28%, var(--gh-surface));
+			--gh-level-2: color-mix(in srgb, var(--gh-accent) 52%, var(--gh-surface));
+			--gh-level-3: color-mix(in srgb, var(--gh-accent) 76%, var(--gh-surface));
+			--gh-level-4: var(--gh-accent);
+		}
 	}
 
 	.gh-state {
@@ -201,20 +223,20 @@
 		aspect-ratio: 1;
 		width: 100%;
 		border-radius: 2px;
-		background: var(--gh-level-0, rgba(255, 255, 255, 0.06));
+		background: var(--gh-level-0);
 	}
 
 	.gh-cell[data-level='1'] {
-		background: var(--gh-level-1, rgba(255, 255, 255, 0.22));
+		background: var(--gh-level-1);
 	}
 	.gh-cell[data-level='2'] {
-		background: var(--gh-level-2, rgba(255, 255, 255, 0.4));
+		background: var(--gh-level-2);
 	}
 	.gh-cell[data-level='3'] {
-		background: var(--gh-level-3, rgba(255, 255, 255, 0.62));
+		background: var(--gh-level-3);
 	}
 	.gh-cell[data-level='4'] {
-		background: var(--gh-level-4, rgba(255, 255, 255, 0.92));
+		background: var(--gh-level-4);
 	}
 
 	.gh-footer {
