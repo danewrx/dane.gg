@@ -116,6 +116,13 @@ router.post(
 				isAdmin: userData.isAdmin || false
 			});
 
+			// Rotate the session ID at the authentication boundary
+			if (req.session) {
+				await new Promise<void>((resolve, reject) => {
+					req.session.regenerate((err) => (err ? reject(err) : resolve()));
+				});
+			}
+
 			// Set session data
 			if (req.session) {
 				req.session.user = {

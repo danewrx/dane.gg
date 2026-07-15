@@ -1,6 +1,7 @@
 import { logger } from './utils/logger';
 import express from 'express';
 import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 import os from 'node:os';
@@ -22,9 +23,21 @@ app.use(cookieParser());
 app.use('/uploads', express.static(path.join(process.cwd(), 'static', 'uploads')));
 app.use('/chat-sounds', express.static(path.join(process.cwd(), 'static', 'chat-sounds')));
 
-// Session configuration
+// Session configuration. Sessions persist in Postgres so admin logins
+// survive backend restarts/redeploys; without DATABASE_URL (e.g. some test
+// contexts) express-session falls back to its in-memory store.
+const PgSessionStore = connectPgSimple(session);
+const sessionStore = process.env.DATABASE_URL
+	? new PgSessionStore({
+			conString: process.env.DATABASE_URL,
+			tableName: 'session',
+			createTableIfMissing: true
+		})
+	: undefined;
+
 app.use(
 	session({
+		store: sessionStore,
 		secret: process.env.SESSION_SECRET || 'your-super-secret-session-key-change-this-in-production',
 		resave: false,
 		saveUninitialized: false,
@@ -337,9 +350,11 @@ function buildBanner(service: string, port: string | number, host: string) {
 	const maxLabel = Math.max(...info.map(([l]) => l.length));
 	const lines: string[] = [];
 
-	lines.push('');
-	lines.push(`${c.cyan}══════════════════════════════════════════════════════════════════════════════${c.r}`);
-	lines.push('');
+	lines.push(
+		'',
+		`${c.cyan}══════════════════════════════════════════════════════════════════════════════${c.r}`,
+		''
+	);
 
 	for (let i = 0; i < art.length; i++) {
 		const artLine = `${c.blue}${art[i]}${c.r}`;
@@ -353,16 +368,18 @@ function buildBanner(service: string, port: string | number, host: string) {
 		}
 	}
 
-	lines.push('');
-	lines.push(`${c.bBlue}  _____          _   _ ______   _____  _____ ${c.r}`);
-	lines.push(`${c.bBlue} |  __ \\   /\\   | \\ | |  ____| / ____|/ ____|${c.r}`);
-	lines.push(`${c.bBlue} | |  | | /  \\  |  \\| | |__   | |  __| |  __ ${c.r}`);
-	lines.push(`${c.bBlue} | |  | |/ /\\ \\ | . \` |  __|  | | |_ | | |_ |${c.r}`);
-	lines.push(`${c.bBlue} | |__| / ____ \\| |\\  | |____ | |__| | |__| |${c.r}`);
-	lines.push(`${c.bBlue} |_____/_/    \\_\\_| \\_|______(_)_____|\\______|${c.r}`);
-	lines.push('');
-	lines.push(`${c.cyan}══════════════════════════════════════════════════════════════════════════════${c.r}`);
-	lines.push('');
+	lines.push(
+		'',
+		`${c.bBlue}  _____          _   _ ______   _____  _____ ${c.r}`,
+		String.raw`${c.bBlue} |  __ \   /\   | \ | |  ____| / ____|/ ____|${c.r}`,
+		String.raw`${c.bBlue} | |  | | /  \  |  \| | |__   | |  __| |  __ ${c.r}`,
+		`${c.bBlue} | |  | |/ /\\ \\ | . \` |  __|  | | |_ | | |_ |${c.r}`,
+		String.raw`${c.bBlue} | |__| / ____ \| |\  | |____ | |__| | |__| |${c.r}`,
+		String.raw`${c.bBlue} |_____/_/    \_\_| \_|______(_)_____|\______|${c.r}`,
+		'',
+		`${c.cyan}══════════════════════════════════════════════════════════════════════════════${c.r}`,
+		''
+	);
 
 	return lines.join('\n');
 }
