@@ -64,7 +64,7 @@
 					</BorderedBox>
 				</div>
 
-				<div class="card-slot" data-mobile-order="8">
+				<div class="card-slot" data-mobile-order="9">
 					<BorderedBox
 						padding="8px 16px"
 						className="tweet-widget tweet-bordered-box"
@@ -76,7 +76,7 @@
 					</BorderedBox>
 				</div>
 
-				<div class="card-slot" data-mobile-order="9">
+				<div class="card-slot" data-mobile-order="10">
 					<BorderedBox
 						padding="8px 16px"
 						className="music-widget"
@@ -111,13 +111,13 @@
 					</BorderedBox>
 				</div>
 
-				<div class="card-slot" data-mobile-order="10">
+				<div class="card-slot" data-mobile-order="11">
 					<LazyWhenVisible minHeight="72px">
 						<ButtonBanner />
 					</LazyWhenVisible>
 				</div>
 
-				<div class="card-slot" data-mobile-order="11">
+				<div class="card-slot" data-mobile-order="12">
 					<BorderedBox
 						padding="0 16px"
 						className="my-button-widget"
@@ -131,7 +131,7 @@
 					</BorderedBox>
 				</div>
 
-				<div class="card-slot" data-mobile-order="12">
+				<div class="card-slot" data-mobile-order="13">
 					<BorderedBox
 						padding="8px 16px"
 						className="site-stats-widget"
@@ -195,7 +195,7 @@
 				</div>
 
 				{#if $siteConfig.github_enabled}
-					<div class="card-slot" data-mobile-order="13">
+					<div class="card-slot" data-mobile-order="8">
 						<BorderedBox
 							padding="8px 16px"
 							className="github-contributions-section"
