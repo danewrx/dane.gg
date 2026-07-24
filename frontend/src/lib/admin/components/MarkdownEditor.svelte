@@ -151,29 +151,22 @@
 
 	const getEditorValue = () => (outputFormat === 'html' ? internalMarkdown : value);
 
-	// Configure marked to not render images
-	const markedRenderer = new marked.Renderer();
-	markedRenderer.image = () => '';
+	// Configure marked to render images properly in preview
+		const markedRenderer = new marked.Renderer();
 
-	let previewHtml = $derived.by(() => {
-		try {
-			const markdownValue = getEditorValue();
-			// Strip only image markdown syntax
-			const cleanedMarkdown = markdownValue
-				// Remove inline images
-				.replace(/!\[([^\]]*)\]\([^\)]+\)/g, '')
-				// Remove reference-style images
-				.replace(/!\[([^\]]*)\]\[[^\]]+\]/g, '');
-			return marked(cleanedMarkdown, {
-				renderer: markedRenderer,
-				breaks: true,
-				gfm: true
-			});
-		} catch (error) {
-			logger.error('Markdown parsing error:', error);
-			return '<p>Error parsing markdown</p>';
-		}
-	});
+		let previewHtml = $derived.by(() => {
+			try {
+				const markdownValue = getEditorValue();
+				return marked(markdownValue, {
+					renderer: markedRenderer,
+					breaks: true,
+					gfm: true
+				});
+			} catch (error) {
+				logger.error('Markdown parsing error:', error);
+				return '<p>Error parsing markdown</p>';
+			}
+		});
 
 	// Convert markdown to HTML when outputFormat is 'html'
 	function convertToHtml(markdown: string): string {
