@@ -355,12 +355,15 @@
 	}
 
 	.post-content :global(img) {
-		max-width: 100%;
-		height: auto;
-		display: block;
-		margin: 2em 0;
-		border-radius: 4px;
-	}
+			width: 100%;
+			height: auto;
+			max-height: 600px;
+			display: block;
+			margin: 2em 0;
+			border-radius: 4px;
+			object-fit: cover;
+			object-position: center;
+			}
 
 	.post-content :global(hr) {
 		border: none;
