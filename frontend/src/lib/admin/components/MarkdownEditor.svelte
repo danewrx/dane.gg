@@ -43,6 +43,7 @@
 		onchange?: (value: string) => void;
 		placeholder?: string;
 		minHeight?: string;
+		maxHeight?: string;
 		enabledTools?: ToolType[];
 		outputFormat?: 'markdown' | 'html';
 	}
@@ -69,6 +70,7 @@
 		onchange,
 		placeholder = 'Write your markdown here...',
 		minHeight = '400px',
+		maxHeight = '70vh',
 		enabledTools = DEFAULT_TOOLS,
 		outputFormat = 'markdown'
 	}: Props = $props();
@@ -922,7 +924,11 @@
 	</div>
 
 	<!-- Editor Content -->
-	<div class="editor-content" class:split={showPreview} style="min-height: {minHeight};">
+	<div
+		class="editor-content"
+		class:split={showPreview}
+		style="min-height: {minHeight}; max-height: {maxHeight};"
+	>
 		<div class="editor-pane" class:half={showPreview}>
 			<textarea
 				bind:this={textarea}
