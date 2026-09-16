@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
 
+	import { toast } from 'svelte-sonner';
 	import { marked } from 'marked';
 	import {
 		Bold,
@@ -678,23 +679,18 @@
 		return path;
 	}
 
-	function handleImageUpload(file: UploadedFile | UploadedFile[]) {
-		const uploadedFile = Array.isArray(file) ? file[0] : file;
-		if (!uploadedFile || !imageInsertPosition) return;
-
-		const { start, end } = imageInsertPosition;
+	/** Insert an uploaded image as markdown at a given range */
+	function insertImageMarkdown(
+		uploadedFile: UploadedFile,
+		altText: string,
+		start: number,
+		end: number
+	) {
 		const editorValue = getEditorValue();
-		const altText = imageAltText || uploadedFile.originalName || 'image';
-
 		const imagePath = formatImagePath(uploadedFile.path, uploadedFile.isExternal || false);
-
 		const newText = `![${altText}](${imagePath})`;
 		const newValue = editorValue.substring(0, start) + newText + editorValue.substring(end);
 		handleValueChange(newValue);
-
-		showImageUploadModal = false;
-		imageAltText = '';
-		imageInsertPosition = null;
 
 		setTimeout(() => {
 			textarea.focus();
@@ -702,6 +698,96 @@
 			textarea.setSelectionRange(newStart, newStart);
 			updateActiveFormats();
 		}, 0);
+	}
+
+	function handleImageUpload(file: UploadedFile | UploadedFile[]) {
+		const uploadedFile = Array.isArray(file) ? file[0] : file;
+		if (!uploadedFile || !imageInsertPosition) return;
+
+		const { start, end } = imageInsertPosition;
+		const altText = imageAltText || uploadedFile.originalName || 'image';
+		insertImageMarkdown(uploadedFile, altText, start, end);
+
+		showImageUploadModal = false;
+		imageAltText = '';
+		imageInsertPosition = null;
+	}
+
+	const PASTE_MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+
+	/** Upload a pasted image the same way FileUpload does (POST /api/upload). */
+	async function uploadPastedImageFile(file: File): Promise<UploadedFile> {
+		if (file.size > PASTE_MAX_IMAGE_SIZE) {
+			const maxSizeMB = (PASTE_MAX_IMAGE_SIZE / (1024 * 1024)).toFixed(2);
+			throw new Error(`File size exceeds maximum of ${maxSizeMB}MB`);
+		}
+
+		const formData = new FormData();
+		formData.append('file', file);
+
+		const response = await fetch('/api/upload', {
+			method: 'POST',
+			body: formData,
+			credentials: 'include'
+		});
+
+		if (!response.ok) {
+			const errorData = await response.json().catch(() => ({ error: 'Upload failed' }));
+			throw new Error(errorData.error || errorData.message || 'Upload failed');
+		}
+
+		const result = await response.json();
+		return result.data;
+	}
+
+	function pasteAltTextFromFilename(file: File): string {
+		if (!file.name || /^image\.\w+$/i.test(file.name)) return 'image';
+		return file.name.replace(/\.[^./]+$/, '') || 'image';
+	}
+
+	/** Upload one pasted image and insert it at the cursor */
+	async function uploadAndInsertPastedImage(file: File) {
+		const { start, end } = getSelection();
+		const toastId = toast.loading('Uploading pasted image…');
+
+		try {
+			const uploadedFile = await uploadPastedImageFile(file);
+			insertImageMarkdown(uploadedFile, pasteAltTextFromFilename(file), start, end);
+			toast.success('Image uploaded', {
+				id: toastId,
+				description: uploadedFile.originalName
+			});
+		} catch (error: any) {
+			const errorMessage = error?.message || 'Failed to upload pasted image';
+			logger.error('Paste image upload error:', error);
+			toast.error('Upload failed', {
+				id: toastId,
+				description: errorMessage
+			});
+		}
+	}
+
+	/** Intercept image data pasted from the clipboard and upload it instead of pasting raw data. */
+	async function handlePaste(e: ClipboardEvent) {
+		const items = e.clipboardData?.items;
+		if (!items) return;
+
+		const imageFiles: File[] = [];
+		for (const item of Array.from(items)) {
+			if (item.kind === 'file' && item.type.startsWith('image/')) {
+				const file = item.getAsFile();
+				if (file) imageFiles.push(file);
+			}
+		}
+
+		if (imageFiles.length === 0) return;
+
+		e.preventDefault();
+
+		// Sequential so each insertion lands after the previous one's cursor position.
+		for (const file of imageFiles) {
+			await uploadAndInsertPastedImage(file);
+		}
 	}
 
 	function closeImageUploadModal() {
@@ -938,6 +1024,7 @@
 				onkeydown={handleKeyDown}
 				onkeyup={handleSelectionChange}
 				onclick={handleSelectionChange}
+				onpaste={handlePaste}
 				{placeholder}
 				spellcheck="true"
 			></textarea>
