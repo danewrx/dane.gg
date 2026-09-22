@@ -184,7 +184,7 @@ router.post('/logout', (req: Request, res: Response) => {
 			}
 
 			// Clear cookies
-			res.clearCookie('connect.sid'); // Session cookie
+			res.clearCookie('dane.gg.sid'); // Session cookie
 
 			res.json({
 				success: true,
