@@ -47,7 +47,7 @@ services:
       DB_MIGRATE: ${DB_MIGRATE:-true}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     volumes:
-      - uploads:/repo/backend/static/uploads
+      - uploads:/repo/apps/backend/static/uploads
     depends_on:
       postgres:
         condition: service_healthy

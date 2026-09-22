@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-cd /repo/backend
+cd /repo/apps/backend
 
 if [ "${DB_MIGRATE:-true}" = "true" ]; then
 	echo "[db] Running database migrations..."

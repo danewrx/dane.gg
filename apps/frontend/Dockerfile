@@ -3,15 +3,18 @@
 
 FROM oven/bun:1 AS builder
 
+# Mirrors the repo's apps/frontend + packages/shared layout so the @repo/shared
+# alias in svelte.config.js (relative to apps/frontend) resolves identically
+# here and in local dev — do not flatten this without updating both.
 WORKDIR /build
 
-COPY apps/frontend/package.json apps/frontend/bun.lock ./frontend/
-RUN cd frontend && bun install --frozen-lockfile
+COPY apps/frontend/package.json apps/frontend/bun.lock ./apps/frontend/
+RUN cd apps/frontend && bun install --frozen-lockfile
 
-COPY apps/frontend/ ./frontend/
-COPY packages/shared/ ./shared/
-COPY .env.example.prod ./frontend/.env
-RUN cd frontend && bun run prepare && bun run build
+COPY apps/frontend/ ./apps/frontend/
+COPY packages/shared/ ./packages/shared/
+COPY .env.example.prod ./apps/frontend/.env
+RUN cd apps/frontend && bun run prepare && bun run build
 
 FROM node:22-alpine
 
@@ -19,9 +22,9 @@ RUN apk add --no-cache tini
 
 WORKDIR /app
 
-COPY --from=builder /build/frontend/build       build/
-COPY --from=builder /build/frontend/package.json ./
-COPY --from=builder /build/frontend/node_modules node_modules/
+COPY --from=builder /build/apps/frontend/build       build/
+COPY --from=builder /build/apps/frontend/package.json ./
+COPY --from=builder /build/apps/frontend/node_modules node_modules/
 COPY apps/frontend/server-split.mjs ./server-split.mjs
 
 ENV NODE_ENV=production
