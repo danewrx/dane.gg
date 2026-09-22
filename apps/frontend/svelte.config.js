@@ -13,7 +13,7 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		alias: {
-			'@repo/shared': path.resolve(__dirname, '../shared')
+			'@repo/shared': path.resolve(__dirname, '../../packages/shared')
 		}
 	}
 };

@@ -21,9 +21,9 @@
   ],
   "exclude": [
     "node_modules",
-    "frontend/node_modules",
-    "backend/node_modules",
-    "frontend/build",
-    "backend/build"
+    "apps/frontend/node_modules",
+    "apps/backend/node_modules",
+    "apps/frontend/build",
+    "apps/backend/build"
   ]
 }

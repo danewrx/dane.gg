@@ -3,8 +3,8 @@ node_modules/
 bun.lockb
 
 # Build outputs
-frontend/build/
-backend/build/
+apps/frontend/build/
+apps/backend/build/
 dist/
 
 # Coverage (generated locally / CI artifacts)

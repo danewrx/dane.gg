@@ -1,7 +1,7 @@
 import { logger } from '../utils/logger';
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../db';
-import { users, apiKeys } from '../db/schema';
+import { apiKeys } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { apiKeyValidationLimiter } from './rateLimiting';
 import crypto from 'crypto';
