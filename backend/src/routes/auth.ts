@@ -4,13 +4,12 @@ import { db } from '../db';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { hashPassword, verifyPassword, validatePasswordStrength } from '../utils/password';
-import { generateTokenPair, verifyRefreshToken } from '../utils/jwt';
-import { authenticateToken, requireSession } from '../middleware/auth';
+import { requireSession } from '../middleware/auth';
 import bcrypt from 'bcryptjs';
 import {
 	authLimiter,
 	passwordChangeLimiter,
-	tokenRefreshLimiter,
+	sessionRefreshLimiter,
 	loginSlowDown,
 	bruteForceProtection,
 	getClientIp
@@ -109,13 +108,6 @@ router.post(
 				}
 			}
 
-			// Generate tokens
-			const tokens = generateTokenPair({
-				id: userData.id,
-				username: userData.username,
-				isAdmin: userData.isAdmin || false
-			});
-
 			// Rotate the session ID at the authentication boundary
 			if (req.session) {
 				await new Promise<void>((resolve, reject) => {
@@ -148,21 +140,6 @@ router.post(
 				}
 			}
 
-			// Set secure HTTP-only cookies for tokens
-			res.cookie('accessToken', tokens.accessToken, {
-				httpOnly: true,
-				secure: process.env.NODE_ENV === 'production',
-				sameSite: 'strict',
-				maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000
-			});
-
-			res.cookie('refreshToken', tokens.refreshToken, {
-				httpOnly: true,
-				secure: process.env.NODE_ENV === 'production',
-				sameSite: 'strict',
-				maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
-			});
-
 			NotificationService.notifyAdminLoginSuccess(userData.username, getClientIp(req), {
 				totpUsed: !!userData.totpEnabled
 			});
@@ -176,8 +153,7 @@ router.post(
 					isAdmin: userData.isAdmin || false,
 					themePreference: userData.themePreference || 'system',
 					accentColor: userData.accentColor || '#3b82f6'
-				},
-				expiresIn: tokens.expiresIn
+				}
 			});
 		} catch (error) {
 			logger.error('Login error:', error);
@@ -208,9 +184,7 @@ router.post('/logout', (req: Request, res: Response) => {
 			}
 
 			// Clear cookies
-			res.clearCookie('accessToken');
-			res.clearCookie('refreshToken');
-			res.clearCookie('connect.sid'); // Session cookie
+			res.clearCookie('dane.gg.sid'); // Session cookie
 
 			res.json({
 				success: true,
@@ -226,29 +200,13 @@ router.post('/logout', (req: Request, res: Response) => {
 	}
 });
 
-// Refresh token route with rate limiting
-router.post('/refresh', tokenRefreshLimiter, async (req: Request, res: Response) => {
+// Refresh route with rate limiting — re-syncs session data from the DB and
+// resets the session cookie's expiry. Session-based (no JWT involved); kept as
+// its own endpoint because the frontend calls it on a 30-minute heartbeat to
+// detect a deleted/deauthorized account and re-pull up-to-date user fields
+// (theme/accent color) without a full page reload.
+router.post('/refresh', sessionRefreshLimiter, requireSession, async (req: Request, res: Response) => {
 	try {
-		// Get refresh token from cookies
-		const refreshToken = req.cookies.refreshToken;
-
-		if (!refreshToken) {
-			return res.status(400).json({
-				error: 'Validation failed',
-				message: 'Refresh token is required'
-			});
-		}
-
-		// Verify refresh token
-		const decoded = verifyRefreshToken(refreshToken);
-		if (!decoded) {
-			return res.status(403).json({
-				error: 'Authentication failed',
-				message: 'Invalid or expired refresh token'
-			});
-		}
-
-		// Get user data
 		const user = await db
 			.select({
 				id: users.id,
@@ -258,7 +216,7 @@ router.post('/refresh', tokenRefreshLimiter, async (req: Request, res: Response)
 				accentColor: users.accentColor
 			})
 			.from(users)
-			.where(eq(users.id, decoded.userId))
+			.where(eq(users.id, req.user!.id))
 			.limit(1);
 
 		if (user.length === 0) {
@@ -268,14 +226,6 @@ router.post('/refresh', tokenRefreshLimiter, async (req: Request, res: Response)
 			});
 		}
 
-		// Generate new tokens
-		const tokens = generateTokenPair({
-			id: user[0].id,
-			username: user[0].username,
-			isAdmin: user[0].isAdmin || false
-		});
-
-		// Update session
 		if (req.session) {
 			req.session.user = {
 				id: user[0].id,
@@ -286,36 +236,18 @@ router.post('/refresh', tokenRefreshLimiter, async (req: Request, res: Response)
 			};
 		}
 
-		// Set new cookies
-		res.cookie('accessToken', tokens.accessToken, {
-			httpOnly: true,
-			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
-			maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-		});
-
 		res.json({
 			success: true,
-			message: 'Token refreshed successfully',
-			accessToken: tokens.accessToken,
-			expiresIn: tokens.expiresIn
+			message: 'Session refreshed successfully',
+			user: user[0]
 		});
 	} catch (error) {
-		logger.error('Refresh token error:', error);
+		logger.error('Session refresh error:', error);
 		res.status(500).json({
 			error: 'Internal server error',
-			message: 'Token refresh failed'
+			message: 'Session refresh failed'
 		});
 	}
-});
-
-// Verify user route (check if user is authenticated)
-router.get('/verify', authenticateToken, (req: Request, res: Response) => {
-	res.json({
-		success: true,
-		user: req.user,
-		message: 'User is authenticated'
-	});
 });
 
 // Get current user from session
@@ -368,7 +300,7 @@ router.get('/me', async (req: Request, res: Response) => {
 router.post(
 	'/change-password',
 	passwordChangeLimiter,
-	authenticateToken,
+	requireSession,
 	async (req: Request, res: Response) => {
 		try {
 			const { currentPassword, newPassword } = req.body;

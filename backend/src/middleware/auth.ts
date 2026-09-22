@@ -1,6 +1,5 @@
 import { logger } from '../utils/logger';
 import { Request, Response, NextFunction } from 'express';
-import { verifyAccessToken } from '../utils/jwt';
 import { db } from '../db';
 import { users, apiKeys } from '../db/schema';
 import { eq } from 'drizzle-orm';
@@ -19,7 +18,7 @@ function requestPathname(req: Request): string {
 }
 
 /**
- * Restrict what API keys may do over HTTP. Session/JWT users are unaffected.
+ * Restrict what API keys may do over HTTP. Session users are unaffected.
  * Call after `req.user` is set from an API key.
  */
 export function enforceApiKeyHttpScope(req: Request, res: Response, next: NextFunction): void {
@@ -201,64 +200,8 @@ async function validateApiKey(
 }
 
 /**
- * Middleware to authenticate JWT tokens
- * Checks for Authorization header with Bearer token
- */
-export async function authenticateToken(req: Request, res: Response, next: NextFunction) {
-	try {
-		const authHeader = req.headers.authorization;
-		const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-
-		if (!token) {
-			return res.status(401).json({
-				error: 'Access denied',
-				message: 'No token provided'
-			});
-		}
-
-		const decoded = verifyAccessToken(token);
-		if (!decoded) {
-			return res.status(403).json({
-				error: 'Access denied',
-				message: 'Invalid or expired token'
-			});
-		}
-
-		// Verify user still exists in database
-		const user = await db
-			.select({
-				id: users.id,
-				username: users.username,
-				isAdmin: users.isAdmin
-			})
-			.from(users)
-			.where(eq(users.id, decoded.userId))
-			.limit(1);
-
-		if (user.length === 0) {
-			return res.status(403).json({
-				error: 'Access denied',
-				message: 'User no longer exists'
-			});
-		}
-
-		req.user = {
-			...user[0],
-			isAdmin: user[0].isAdmin ?? false
-		};
-		next();
-	} catch (error) {
-		logger.error('Auth middleware error:', error);
-		return res.status(500).json({
-			error: 'Internal server error',
-			message: 'Authentication failed'
-		});
-	}
-}
-
-/**
  * Middleware to check if user is admin
- * Must be used after authenticateToken
+ * Must be used after requireSession/requireAuth
  */
 export function requireAdmin(req: Request, res: Response, next: NextFunction) {
 	if (!req.user) {
@@ -448,40 +391,3 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
  * Export the validateApiKey function for use in WebSocket auth
  */
 export { validateApiKey, hashApiKey };
-
-/**
- * Optional authentication middleware
- * Adds user to request if token is valid, but doesn't fail if missing
- */
-export async function optionalAuth(req: Request, res: Response, next: NextFunction) {
-	try {
-		const authHeader = req.headers.authorization;
-		const token = authHeader && authHeader.split(' ')[1];
-
-		if (token) {
-			const decoded = verifyAccessToken(token);
-			if (decoded) {
-				const user = await db
-					.select({
-						id: users.id,
-						username: users.username,
-						isAdmin: users.isAdmin
-					})
-					.from(users)
-					.where(eq(users.id, decoded.userId))
-					.limit(1);
-
-				if (user.length > 0) {
-					req.user = {
-						...user[0],
-						isAdmin: user[0].isAdmin ?? false
-					};
-				}
-			}
-		}
-	} catch (error) {
-		logger.error('Optional auth error:', error);
-	}
-
-	next();
-}

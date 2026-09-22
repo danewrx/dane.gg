@@ -379,7 +379,6 @@ export const themes = websiteSchema.table('themes', {
 	name: varchar('name', { length: 100 }).notNull(),
 	categoryId: uuid('category_id').references(() => themeCategories.id, { onDelete: 'set null' }),
 	description: text('description'),
-	isActive: boolean('is_active').default(false),
 	isDefault: boolean('is_default').default(false),
 	isVisible: boolean('is_visible').default(true),
 

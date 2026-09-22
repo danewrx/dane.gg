@@ -1,0 +1,1 @@
+ALTER TABLE "website"."themes" DROP COLUMN IF EXISTS "is_active";

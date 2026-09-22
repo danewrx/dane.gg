@@ -59,15 +59,15 @@ if (browser) {
 		});
 	}
 
-	// Set up periodic token refresh (every 30 minutes) - only for admin routes
+	// Set up periodic session refresh (every 30 minutes) - only for admin routes
 	setInterval(
 		async () => {
 			const currentPath = globalThis.location.pathname;
 			if (isAdminRoute(currentPath)) {
 				try {
-					await authService.refreshToken();
+					await authService.refreshSession();
 				} catch (error) {
-					logger.error('Token refresh failed:', error);
+					logger.error('Session refresh failed:', error);
 					// Only redirect to login if we're on an admin route
 					if (isAdminRoute(currentPath)) {
 						goto('/login');

@@ -266,23 +266,23 @@ export function accountLockoutProtection(req: any, res: any, next: any) {
 }
 
 /**
- * Rate limiting for token refresh
+ * Rate limiting for session refresh
  * 100 refresh attempts per hour per IP
  */
-export const tokenRefreshLimiter = rateLimit({
+export const sessionRefreshLimiter = rateLimit({
 	windowMs: 60 * 60 * 1000, // 1 hour
 	max: 100,
 	message: {
-		error: 'Too many token refresh attempts',
-		message: 'Too many token refresh attempts from this IP, please try again later',
+		error: 'Too many session refresh attempts',
+		message: 'Too many session refresh attempts from this IP, please try again later',
 		retryAfter: '1 hour'
 	},
 	standardHeaders: true,
 	legacyHeaders: false,
 	handler: (req, res) => {
 		res.status(429).json({
-			error: 'Too many token refresh attempts',
-			message: 'Too many token refresh attempts from this IP, please try again later',
+			error: 'Too many session refresh attempts',
+			message: 'Too many session refresh attempts from this IP, please try again later',
 			retryAfter: '1 hour'
 		});
 	}
