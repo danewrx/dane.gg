@@ -23,15 +23,12 @@ jobs:
     env:
       PW_CI_WORKERS: 2
       DATABASE_URL: postgresql://dane_gg:testpassword@localhost:5432/danegg_test
-      JWT_SECRET: ci-test-jwt-secret
       SESSION_SECRET: ci-test-session-secret
       FRONTEND_PORT: 3000
       PUBLIC_ORIGIN: http://localhost:3000
       BACKEND_PORT: 3001
       HOST: 0.0.0.0
       COOKIE_SECURE: false
-      JWT_EXPIRES_IN: 7d
-      JWT_REFRESH_EXPIRES_IN: 30d
 
     services:
       postgres:

@@ -168,7 +168,7 @@ class AuthService {
 
 			return response;
 		} catch (error) {
-			logger.error('Token refresh failed:', error);
+			logger.error('Session refresh failed:', error);
 			// Only logout if we're actually authenticated
 			// Note: We can't easily check auth state here without subscribing
 			// This is a fallback, so we'll just clear the persisted data

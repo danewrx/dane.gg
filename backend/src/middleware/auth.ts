@@ -18,7 +18,7 @@ function requestPathname(req: Request): string {
 }
 
 /**
- * Restrict what API keys may do over HTTP. Session/JWT users are unaffected.
+ * Restrict what API keys may do over HTTP. Session users are unaffected.
  * Call after `req.user` is set from an API key.
  */
 export function enforceApiKeyHttpScope(req: Request, res: Response, next: NextFunction): void {

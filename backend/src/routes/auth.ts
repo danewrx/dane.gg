@@ -9,7 +9,7 @@ import bcrypt from 'bcryptjs';
 import {
 	authLimiter,
 	passwordChangeLimiter,
-	tokenRefreshLimiter,
+	sessionRefreshLimiter,
 	loginSlowDown,
 	bruteForceProtection,
 	getClientIp
@@ -205,7 +205,7 @@ router.post('/logout', (req: Request, res: Response) => {
 // its own endpoint because the frontend calls it on a 30-minute heartbeat to
 // detect a deleted/deauthorized account and re-pull up-to-date user fields
 // (theme/accent color) without a full page reload.
-router.post('/refresh', tokenRefreshLimiter, requireSession, async (req: Request, res: Response) => {
+router.post('/refresh', sessionRefreshLimiter, requireSession, async (req: Request, res: Response) => {
 	try {
 		const user = await db
 			.select({

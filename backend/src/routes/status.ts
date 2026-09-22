@@ -27,10 +27,10 @@ router.get('/rate-limits', requireSession, (req: Request, res: Response) => {
 				max: 3,
 				description: 'Password change attempts per IP'
 			},
-			tokenRefresh: {
+			sessionRefresh: {
 				windowMs: 60 * 60 * 1000, // 1 hour
 				max: 10,
-				description: 'Token refresh attempts per IP'
+				description: 'Session refresh attempts per IP'
 			},
 			userCreation: {
 				windowMs: 60 * 60 * 1000, // 1 hour
@@ -71,7 +71,6 @@ router.get('/health', (req: Request, res: Response) => {
 			},
 			security: {
 				passwordHashing: 'bcrypt (12 rounds)',
-				jwtTokens: 'enabled',
 				sessionManagement: 'enabled',
 				bruteForceProtection: 'enabled',
 				rateLimiting: 'enabled'
