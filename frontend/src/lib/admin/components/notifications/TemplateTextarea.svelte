@@ -34,9 +34,7 @@
 		}
 
 		const rendered = renderNotificationTemplate(value, previewVars);
-		void marked.parse(rendered).then((html) => {
-			previewHtml = typeof html === 'string' ? html : String(html);
-		});
+		previewHtml = marked.parse(rendered, { async: false });
 	});
 
 	function escapeHtml(text: string): string {
