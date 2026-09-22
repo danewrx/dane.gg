@@ -24,8 +24,9 @@ A personal portfolio and blog with a content management dashboard.
 
 | | |
 | --- | --- |
-| ![Blog](docs/screenshots/public-blog.png) Blog | ![Projects](docs/screenshots/public-projects.png) Projects |
-| ![About](docs/screenshots/public-about.png) About | ![Contact](docs/screenshots/public-contact.png) Contact |
+| ![Blog](docs/screenshots/public-blog.png) Blog | ![Blog post](docs/screenshots/public-blog-post.png) Blog post |
+| ![Projects](docs/screenshots/public-projects.png) Projects | ![About](docs/screenshots/public-about.png) About |
+| ![Contact](docs/screenshots/public-contact.png) Contact | |
 
 </details>
 
