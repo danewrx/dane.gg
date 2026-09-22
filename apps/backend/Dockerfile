@@ -28,7 +28,7 @@ RUN mkdir -p node_modules/@repo && ln -s ../../shared node_modules/@repo/shared
 
 VOLUME ["/repo/backend/static/uploads"]
 
-COPY docker/backend-entrypoint.sh /repo/backend/entrypoint.sh
+COPY apps/backend/docker-entrypoint.sh /repo/backend/entrypoint.sh
 RUN chmod +x /repo/backend/entrypoint.sh
 
 ENV NODE_ENV=production
