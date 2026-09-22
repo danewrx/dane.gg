@@ -83,25 +83,6 @@ async function verifyAuth(cookies: any, fetch: typeof globalThis.fetch): Promise
 			}
 		}
 
-		// If session fails, try JWT token verification
-		const authHeader = cookies.get('authorization');
-		if (authHeader) {
-			const tokenResponse = await fetch(`${API_BASE_URL}/auth/verify`, {
-				method: 'GET',
-				headers: {
-					Authorization: authHeader,
-					'Content-Type': 'application/json'
-				}
-			});
-
-			if (tokenResponse.ok) {
-				const data = await tokenResponse.json();
-				if (data.success && data.user) {
-					return data.user;
-				}
-			}
-		}
-
 		return null;
 	} catch (error) {
 		logger.error('Auth verification failed:', error);

@@ -65,7 +65,7 @@ if (browser) {
 			const currentPath = globalThis.location.pathname;
 			if (isAdminRoute(currentPath)) {
 				try {
-					await authService.refreshToken();
+					await authService.refreshSession();
 				} catch (error) {
 					logger.error('Token refresh failed:', error);
 					// Only redirect to login if we're on an admin route

@@ -22,8 +22,6 @@ interface AuthResponse {
 		themePreference?: string;
 		accentColor?: string;
 	};
-	expiresIn?: string;
-	accessToken?: string;
 	requiresTOTP?: boolean;
 }
 
@@ -156,7 +154,7 @@ class AuthService {
 		}
 	}
 
-	async refreshToken(): Promise<AuthResponse> {
+	async refreshSession(): Promise<AuthResponse> {
 		try {
 			const response = await this.makeRequest<AuthResponse>('/auth/refresh', {
 				method: 'POST',
@@ -174,26 +172,6 @@ class AuthService {
 			// Only logout if we're actually authenticated
 			// Note: We can't easily check auth state here without subscribing
 			// This is a fallback, so we'll just clear the persisted data
-			auth.logout();
-			auth.clearPersisted();
-			throw error;
-		}
-	}
-
-	async verifyToken(): Promise<AuthResponse> {
-		try {
-			const response = await this.makeRequest<AuthResponse>('/auth/verify', {
-				method: 'GET'
-			});
-
-			if (response.success && response.user) {
-				auth.setUser(response.user);
-				auth.persist(response.user);
-			}
-
-			return response;
-		} catch (error) {
-			// Token verification failed - this is normal for unauthenticated users
 			auth.logout();
 			auth.clearPersisted();
 			throw error;
@@ -258,18 +236,11 @@ class AuthService {
 		if (!browser) return false;
 
 		try {
-			// First try to get from session
 			await this.getCurrentUser();
 			return true;
 		} catch {
-			// If session fails, try token verification
-			try {
-				await this.verifyToken();
-				return true;
-			} catch {
-				// User not authenticated - this is normal for login page
-				return false;
-			}
+			// User not authenticated - this is normal for login page
+			return false;
 		}
 	}
 
