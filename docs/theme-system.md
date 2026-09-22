@@ -37,22 +37,23 @@ always use the neutral admin UI styling regardless of the active site theme.
 `GET /api/themes/active` resolves in this order (`backend/src/routes/themes.ts`):
 
 1. If **enforcement** is on (`site_theme_enforcement` in `site_config`,
-   `{enforced: true, themeId: "..."}`) → that exact theme, full stop. This is what `Admin →
+   `{enforced: true, themeId: "..."}`) → that theme if it exists. This is what `Admin →
    Configuration → Themes → Enforce theme` sets; while it's on, the public theme picker is
    disabled and everyone gets the same theme regardless of any saved preference.
 2. Otherwise → the theme with `isDefault = true` and `isVisible = true`.
 3. Otherwise → the first `isVisible = true` theme by `displayOrder`.
 
-Separately, an individual visitor's own choice (saved in `localStorage` under `selectedTheme`)
-overrides #2/#3 on the client — but never overrides enforcement. This is the general
-site-wide-default-vs-visitor-preference pattern also used for weather effects and the web
-cat companion; see the settings-persistence discussion earlier in this doc set for the full
-precedence rules if you're touching that logic.
+A visitor's saved `selectedTheme` ID overrides the default on the client when it still
+matches a visible theme. Enforcement takes precedence but preserves that saved preference
+for later use. If the saved theme is no longer available, its stored ID is removed and the
+site default is used. If the server returns no theme, the frontend uses `DEFAULT_THEME`.
+An unavailable enforced theme falls back to the server's default selection.
 
-**Gotcha:** the `isActive` column on `themes` exists in the schema but nothing in
-`themes.ts` ever reads or writes it — don't be misled by the name, it plays no part in
-resolving the active theme. `isDefault` is what matters, and the API enforces that at most
-one theme has it (`set-default` unsets it on every other row first).
+Theme selection uses `isDefault`, `isVisible`, and the enforcement configuration. Setting a
+new default clears the previous default flag. The obsolete `isActive` field has been removed
+from the schema, seed data, and frontend types. The migration
+`backend/drizzle/0010_drop_themes_is_active.sql` removes its database column; apply it with
+`bun run db:migrate` when deploying the cleanup. Do not use `isActive` to select a theme.
 
 ## Creating a theme
 
