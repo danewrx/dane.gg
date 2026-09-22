@@ -1,15 +1,15 @@
 # dane.gg — SvelteKit + proxy to API (build context: repo root)
-#   docker build -f frontend/Dockerfile -t danegg-frontend .
+#   docker build -f apps/frontend/Dockerfile -t danegg-frontend .
 
 FROM oven/bun:1 AS builder
 
 WORKDIR /build
 
-COPY frontend/package.json frontend/bun.lock ./frontend/
+COPY apps/frontend/package.json apps/frontend/bun.lock ./frontend/
 RUN cd frontend && bun install --frozen-lockfile
 
-COPY frontend/ ./frontend/
-COPY shared/ ./shared/
+COPY apps/frontend/ ./frontend/
+COPY packages/shared/ ./shared/
 COPY .env.example.prod ./frontend/.env
 RUN cd frontend && bun run prepare && bun run build
 
@@ -22,7 +22,7 @@ WORKDIR /app
 COPY --from=builder /build/frontend/build       build/
 COPY --from=builder /build/frontend/package.json ./
 COPY --from=builder /build/frontend/node_modules node_modules/
-COPY frontend/server-split.mjs ./server-split.mjs
+COPY apps/frontend/server-split.mjs ./server-split.mjs
 
 ENV NODE_ENV=production
 ENV PORT=3000

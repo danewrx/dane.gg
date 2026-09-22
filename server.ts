@@ -1,7 +1,7 @@
-import { handler } from './frontend/build/handler.js';
+import { handler } from './apps/frontend/build/handler.js';
 import express from 'express';
 import cookieParser from 'cookie-parser';
-import { createDefaultAdmin } from './backend/src/utils/createDefaultAdmin';
+import { createDefaultAdmin } from './apps/backend/src/utils/createDefaultAdmin';
 
 const app = express();
 const PORT = process.env.PORT || 3000;

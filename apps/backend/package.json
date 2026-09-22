@@ -3,7 +3,7 @@
 	"version": "1.0.50",
 	"type": "module",
 	"imports": {
-		"@repo/shared/*": "../shared/*"
+		"@repo/shared/*": "../../packages/shared/*"
 	},
 	"scripts": {
 		"test": "bun test",

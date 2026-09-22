@@ -1,11 +1,11 @@
 # dane.gg — Express API (build context: repo root)
-#   docker build -f backend/Dockerfile -t danegg-backend .
+#   docker build -f apps/backend/Dockerfile -t danegg-backend .
 
 FROM oven/bun:1 AS builder
 
 WORKDIR /build
 
-COPY backend/package.json backend/bun.lock ./
+COPY apps/backend/package.json apps/backend/bun.lock ./
 RUN bun install --frozen-lockfile
 
 FROM node:22-alpine
@@ -15,15 +15,15 @@ RUN apk add --no-cache tini && npm install -g tsx
 WORKDIR /repo/backend
 
 COPY --from=builder /build/node_modules node_modules/
-COPY backend/src        src/
-COPY backend/package.json ./
-COPY backend/tsconfig.json ./
-COPY backend/static     static/
-COPY backend/drizzle    drizzle/
-COPY backend/drizzle.config.ts ./
+COPY apps/backend/src        src/
+COPY apps/backend/package.json ./
+COPY apps/backend/tsconfig.json ./
+COPY apps/backend/static     static/
+COPY apps/backend/drizzle    drizzle/
+COPY apps/backend/drizzle.config.ts ./
 
-# Monorepo helpers imported as @repo/shared (see backend/tsconfig paths)
-COPY shared             ../shared
+# Monorepo helpers imported as @repo/shared (see apps/backend/tsconfig paths)
+COPY packages/shared        ../shared
 RUN mkdir -p node_modules/@repo && ln -s ../../shared node_modules/@repo/shared
 
 VOLUME ["/repo/backend/static/uploads"]

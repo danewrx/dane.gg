@@ -3,7 +3,11 @@ import { resolve } from 'node:path';
 import type { Config } from 'drizzle-kit';
 import { config } from 'dotenv';
 
-for (const p of [resolve(process.cwd(), '.env'), resolve(process.cwd(), '../.env')]) {
+for (const p of [
+	resolve(process.cwd(), '.env'),
+	resolve(process.cwd(), '../.env'),
+	resolve(process.cwd(), '../../.env')
+]) {
 	if (existsSync(p)) {
 		config({ path: p });
 		break;

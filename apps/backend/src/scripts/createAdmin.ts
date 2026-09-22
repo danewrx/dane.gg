@@ -5,15 +5,11 @@
  */
 
 import { logger } from '../utils/logger';
-import { config } from 'dotenv';
 import { hasAnyUsers, getAdminUserCount } from '../utils/createDefaultAdmin';
 import { db } from '../db';
 import { users } from '../db/schema';
 import { hashPassword } from '../utils/password';
 import { eq } from 'drizzle-orm';
-
-// Load environment variables
-config({ path: '../../.env' });
 
 async function createAdminUser(username: string, password: string) {
 	try {

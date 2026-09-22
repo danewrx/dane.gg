@@ -30,28 +30,28 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install && cd frontend && bun install && cd ../backend && bun install
+        run: bun install && cd apps/frontend && bun install && cd ../backend && bun install
 
       - name: Frontend unit tests with coverage
-        working-directory: frontend
+        working-directory: apps/frontend
         run: bun run test:coverage
 
       - name: Backend unit tests with coverage
-        working-directory: backend
+        working-directory: apps/backend
         run: bun test --coverage --coverage-reporter=lcov --coverage-dir=coverage
 
       - name: Align LCOV paths with monorepo (Sonar)
         run: |
-          sed -i 's|^SF:src/|SF:backend/src/|g' backend/coverage/lcov.info
-          sed -i 's|^SF:src/|SF:frontend/src/|g' frontend/coverage/lcov.info
+          sed -i 's|^SF:src/|SF:apps/backend/src/|g' apps/backend/coverage/lcov.info
+          sed -i 's|^SF:src/|SF:apps/frontend/src/|g' apps/frontend/coverage/lcov.info
 
       - name: Upload LCOV for SonarQube
         uses: actions/upload-artifact@v4
         with:
           name: coverage-lcov-main
           path: |
-            frontend/coverage/lcov.info
-            backend/coverage/lcov.info
+            apps/frontend/coverage/lcov.info
+            apps/backend/coverage/lcov.info
           if-no-files-found: error
 
   # ─────────────────────────────────────────────
@@ -152,7 +152,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: frontend/Dockerfile
+          file: apps/frontend/Dockerfile
           push: true
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
@@ -163,7 +163,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: backend/Dockerfile
+          file: apps/backend/Dockerfile
           push: true
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
