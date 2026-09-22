@@ -19,7 +19,7 @@ my personal portfolio/blog site + content management (CMS) dashboard</p>
 </p>
 
 <details>
-<summary>More public site screenshots</summary>
+<summary>Public site screenshots</summary>
 <br>
 
 | | |
@@ -31,7 +31,7 @@ my personal portfolio/blog site + content management (CMS) dashboard</p>
 </details>
 
 <details>
-<summary>More admin dashboard screenshots</summary>
+<summary>Admin dashboard screenshots</summary>
 <br>
 
 | | |
