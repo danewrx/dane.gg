@@ -38,7 +38,7 @@ A personal portfolio and blog with a content management dashboard.
 | --- | --- |
 | ![Login](docs/screenshots/admin-login.png) Login | ![Blog list](docs/screenshots/admin-blog-list.png) Blog list |
 | ![Blog editor](docs/screenshots/admin-blog-editor.png) Blog editor | ![Projects](docs/screenshots/admin-projects.png) Projects |
-| ![Themes](docs/screenshots/admin-themes.png) Themes | |
+| ![Project editor](docs/screenshots/admin-project-editor.png) Project editor | ![Themes](docs/screenshots/admin-themes.png) Themes |
 
 </details>
 
