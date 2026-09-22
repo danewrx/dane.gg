@@ -1,11 +1,10 @@
 # Authentication & permissions
 
 The backend uses session cookies for the browser-based admin panel and scoped API keys
-for bots and external services. This guide describes the session-only authentication
-refactor and explains which route guards to use. Regular panel accounts can manage content;
+for bots and external services. This guide explains how authentication works and which route guards to use. Regular panel accounts can manage content;
 account administration requires additional permissions.
 
-## 1. Session auth — what actually protects the admin panel
+## Session authentication
 
 Login (`POST /api/auth/login`) sets a session cookie, `dane.gg.sid`
 (`backend/src/index.ts`): `httpOnly`, `sameSite: strict`, `secure` gated on `COOKIE_SECURE`,
@@ -17,10 +16,10 @@ If the account has TOTP/2FA enabled, login is two steps — password first, then
 backup code — handled entirely inside the login flow (`backend/src/routes/totp.ts` +
 `routes/auth.ts`), not as a separate per-route guard.
 
-This is the credential that actually gates `/admin/*` — the frontend's `hooks.server.ts`
+The frontend's `hooks.server.ts`
 checks for `dane.gg.sid` (via `GET /api/auth/me`) before allowing an admin route through.
 
-## 2. Session checks, refresh, and logout
+## Session checks, refresh, and logout
 
 | Endpoint | Purpose |
 | --- | --- |
@@ -36,20 +35,12 @@ existing authenticated session; it cannot restore an expired session using a sep
 If the account no longer exists, the endpoint returns an error. A changed admin flag is
 copied into the session, rather than rejecting a legitimate non-admin panel account.
 
-JWT issuance and validation have been removed. `/api/auth/verify` no longer exists; callers
-should use `/api/auth/me`. `JWT_SECRET`, `JWT_EXPIRES_IN`, and `JWT_REFRESH_EXPIRES_IN` are
-no longer used. Login no longer issues `accessToken` or `refreshToken` cookies. Existing
-legacy cookies are ignored and may remain in a browser until they expire.
-
-Logout must clear the configured cookie name, `dane.gg.sid`, rather than express-session's
-default `connect.sid`. Destroying a session alone does not remove the browser cookie.
-
-## 3. API keys — for bots and external services
+## API keys for bots and external services
 
 Format `dk_` + 40 chars, created from `Admin → API Keys` (`/admin/api-keys`), stored as a
 SHA-256 hash (`api_keys` table) and validated with constant-time comparison. This is the
 credential the [Discord bridge](discord-integration.md) and any custom integration you build
-use — there's no separate service-account system.
+use.
 
 Every key has exactly one **permission** scope, and unlike browser sessions, keys
 are restricted not just by *whether* they're authenticated but by *what HTTP surface they can
@@ -66,12 +57,10 @@ route resolves `req.user` from an API key (via `requireAuth`/`requireSession`/`a
 **This table is HTTP-only.** The chat bridge's WebSocket connection (`/ws/chat`) does its own,
 separate key validation in `chatService.ts` that only checks the key is active/unexpired and
 has `full` or `chat` permission — it doesn't go through `enforceApiKeyHttpScope` at all, since
-it's not an Express HTTP route. Don't assume the table above describes WS behavior.
+it's not an Express HTTP route.
 
 `requireWebhookAccess` (used on the two `/webhooks/*` routes) is a narrower check layered on
-top: admin session **or** an API key with `full`/`webhooks` permission — it's what actually
-requires the scope in the table above to be correct, `enforceApiKeyHttpScope` just restricts
-what a *given* scope is allowed to reach.
+top: admin session **or** an API key with `full`/`webhooks` permission.
 
 ## Guard reference
 
@@ -81,20 +70,17 @@ what a *given* scope is allowed to reach.
 | `requireAdmin` | Admin session or `full`-permission API key only (`req.user.isAdmin`) | **Only** user management (`users.ts`), API key management (`apiKeys.ts`), and uploading/deleting custom chat notification sounds (`chatNotificationSounds.ts`) |
 | `requireWebhookAccess` | Admin session, or API key with `full`/`webhooks` permission | The two `/webhooks/*` routes |
 
-## The intentional part: `requireAuth`, not `requireAdmin`, is correct on content routes
+## Account roles
 
-This is deliberate, not an oversight: the admin panel is private (no public registration —
-admins create every account), so a non-admin account is still a legitimate, trusted user of
-the panel, just without user/API-key management rights. `requireAuth`/`requireSession` is the
-right guard for content-management routes; `requireAdmin` is reserved for the genuinely
-sensitive, account-level operations listed above.
+Administrators create all accounts; public registration is disabled. Regular accounts can
+manage content and site configuration through the panel. Administrative permissions are
+required for user management, API key management, and uploading or deleting custom chat
+notification sounds.
 
-If you're reviewing a diff and see a content route using `requireAuth` instead of
-`requireAdmin`, that's not a privilege-escalation bug to "fix" — adding `requireAdmin` there
-would lock out regular accounts from doing their job. (This has been added incorrectly once
-already, to the adverts routes, and had to be reverted.)
+Use `requireAuth` or `requireSession` for content routes so regular accounts retain access.
+Add `requireAdmin` for the administrative operations listed in the guard reference.
 
-## Adding a new authenticated route — which guard to use
+## Adding an authenticated route
 
 1. **Just needs "any logged-in account"** (the common case — most content/config
    endpoints) → `requireAuth` or `requireSession` (they behave the same for HTTP; `requireAuth`
@@ -104,7 +90,7 @@ already, to the adverts routes, and had to be reverted.)
    could escalate privilege or leak credentials) → add `requireAdmin` after `requireSession`.
 3. **A webhook meant for bots/external services** → `requireAuth`/`requireSession` +
    `requireWebhookAccess`, and make sure it's mounted under `/webhooks` (that path prefix is
-   load-bearing for the `webhooks`-scoped key restriction above).
+   used by the `webhooks`-scoped key restriction above).
 4. **Self-service account operations** should use a real user session. Remember that
    `requireSession` also accepts API keys; add a session-only check when an endpoint must
    exclude service credentials.

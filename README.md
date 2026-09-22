@@ -2,7 +2,7 @@
 <img src="https://files.catbox.moe/ncbsm2.svg" alt="dane.gg" />
 </p>
 <p align="center">
-my personal portfolio/blog site + content management (CMS) dashboard</p>
+A personal portfolio and blog with a content management dashboard.
 </p>
 
 <p align="center">
@@ -46,7 +46,7 @@ my personal portfolio/blog site + content management (CMS) dashboard</p>
 
 ```
 dane.gg/
-├── frontend/                # SvelteKit 5 app — public site + admin dashboard UI
+├── frontend/                # SvelteKit app with Svelte 5 — public site + admin dashboard UI
 │   └── src/
 │       ├── routes/
 │       │   ├── (site)/      # Public pages: home, blog, projects, about, contact
@@ -88,20 +88,33 @@ Prerequisites: [Bun](https://bun.sh) (latest) and Docker (or Podman — every `d
 cp .env.example.dev .env
 ```
 
-Fill in secrets as needed. Most third-party integrations (Last.fm, Twitter, GitHub, ntfy, Uptime Kuma) are optional — the app runs fine without them, those widgets just stay empty/disabled.
+Set `SESSION_SECRET` to a random value. For the included development database, set:
+
+```dotenv
+DATABASE_URL=postgresql://dane_gg:daneGGPassword!@localhost:5432/dane.gg
+PUBLIC_ORIGIN=http://localhost:5173
+COOKIE_SECURE=false
+```
+
+Third-party integrations are optional. See the [integration guide](docs/third-party-integrations.md) for their credentials and settings.
 
 ### Option A — Local dev (recommended day-to-day)
 
 Frontend and backend run natively with Bun (hot reload); only Postgres runs in Docker.
 
 ```bash
-bun run setup        # installs deps in root/frontend/backend + copies .env.example.dev -> .env
+bun install
+(cd frontend && bun install)
+(cd backend && bun install)
 bun run db:dev:up    # starts Postgres + Adminer (http://localhost:8080) via docker-compose.dev.yml
 bun run db:push      # push the Drizzle schema to the DB
 bun run db:seed      # seed default data (themes, tags, etc.)
-bun run create:admin # create your admin login
-bun run dev          # frontend (:3000) + backend (:3001) concurrently
+bun run create:admin your-username 'your-strong-password'
+bun run dev          # frontend (:5173) + backend (:3001) concurrently
 ```
+
+Run `db:seed` only on a fresh development database: it clears existing seeded data.
+Open the frontend URL printed by Vite; its default port is 5173.
 
 Tear down the dev DB with `bun run db:dev:down` when you're done.
 
@@ -110,11 +123,16 @@ Tear down the dev DB with `bun run db:dev:down` when you're done.
 Frontend, backend, and Postgres all run in containers.
 
 ```bash
-cp .env.example.prod .env   # or adjust .env.example.dev — see comments in each file
-bun run docker:up           # docker compose up -d --build; migrations run automatically
+cp .env.example.prod .env
+# Configure database credentials, SESSION_SECRET, and PUBLIC_ORIGIN before starting.
+docker compose up -d --build # migrations run automatically
 bun run docker:logs         # tail logs
 bun run docker:down         # stop everything
 ```
+
+For local HTTP testing, set `PUBLIC_ORIGIN=http://localhost:3000` and `COOKIE_SECURE=false`.
+For an HTTPS deployment, use your public URL and `COOKIE_SECURE=true`.
+Rebuild the containers after changing application code.
 
 ### Useful commands
 
@@ -127,5 +145,14 @@ bun run docker:down         # stop everything
 | `bun run test:e2e` | Run Playwright end-to-end tests (`test:e2e:ui` for the UI runner) |
 | `bun run db:studio` | Open Drizzle Studio against your DB |
 | `bun run db:generate` | Generate a new Drizzle migration from schema changes |
-| `bun run db:reset` | Push schema + reseed from scratch |
+| `bun run db:migrate` | Apply database migrations |
 | `bun run db:adminer` | Print the Adminer URL (started as part of `db:dev:up`) |
+
+## Documentation
+
+- [Authentication and permissions](docs/auth-model.md)
+- [Theme configuration and customization](docs/theme-system.md)
+- [Discord integration protocol](docs/discord-integration.md)
+- [Third-party integrations](docs/third-party-integrations.md)
+- [Backend development](backend/README.md)
+- [Frontend development](frontend/README.md)

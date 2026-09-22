@@ -1,38 +1,28 @@
-# sv
+# Frontend
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+The frontend uses SvelteKit, Svelte 5, and TypeScript for the public website and content
+management dashboard. Production builds use the Node adapter.
 
-## Creating a project
+Follow the [project setup guide](../README.md#development) first. Run these commands
+from `frontend/`:
 
-If you're seeing this, you've probably already done this step. Congrats!
+| Command | Purpose |
+| --- | --- |
+| `bun run dev` | Start Vite with hot reload, on port 5173 by default |
+| `bun run check` | Check Svelte and TypeScript files |
+| `bun run test` | Run unit tests with Vitest |
+| `bun run lint` | Check formatting and lint rules |
+| `bun run build` | Create a production build |
 
-```sh
-# create a new project in the current directory
-npx sv create
+The development server proxies API, WebSocket, upload, and webhook requests to the
+backend on port 3001. Use `bun run dev` at the repository root to start both servers.
 
-# create a new project in my-app
-npx sv create my-app
-```
+## Source layout
 
-## Developing
+- `src/routes/(site)/`: public pages.
+- `src/routes/(admin)/`: login, logout, and dashboard pages.
+- `src/lib/`: components, services, stores, and utilities; see the [library guide](src/lib/README.md).
+- `src/hooks.server.ts`: server-side route authentication and page initialization.
+- `src/hooks.client.ts`: browser authentication checks and public/admin presentation changes.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+See the [theme guide](../docs/theme-system.md) for public-site styling and customization.

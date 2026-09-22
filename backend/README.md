@@ -1,19 +1,30 @@
-# Elysia with Bun runtime
+# Backend
 
-## Getting Started
+The backend runs Express 5 on Bun. It provides the HTTP API, session authentication,
+WebSocket chat, scheduled integrations, and PostgreSQL access through Drizzle ORM.
 
-To get started with this template, simply paste this command into your terminal:
+Follow the [project setup guide](../README.md#development) to install dependencies,
+configure `.env`, and start the database. Run these commands from `backend/`:
 
-```bash
-bun create elysia ./elysia-example
-```
+| Command | Purpose |
+| --- | --- |
+| `bun run dev` | Start the API with file watching, on port 3001 by default |
+| `bun run typecheck` | Check TypeScript types |
+| `bun run test` | Run backend tests |
+| `bun run lint` | Check formatting and lint rules |
+| `bun run db:generate` | Generate a migration from schema changes |
+| `bun run db:migrate` | Apply database migrations |
+| `bun run db:studio` | Open the database browser |
 
-## Development
+## Source layout
 
-To start the development server run:
+- `src/routes/`: HTTP endpoints, grouped by resource.
+- `src/middleware/`: authentication, permissions, and rate limiting.
+- `src/services/`: application logic, chat, and integrations.
+- `src/db/`: schema, seeds, and database initialization helpers.
+- `drizzle/`: SQL migrations and migration metadata.
+- `src/validation/` and `src/utils/`: validation and reusable helpers.
 
-```bash
-bun run dev
-```
-
-Open http://localhost:3000/ with your browser to see the result.
+Use the [authentication guide](../docs/auth-model.md) when choosing route guards.
+See the [Discord protocol](../docs/discord-integration.md) and
+[integration setup](../docs/third-party-integrations.md) for external services.

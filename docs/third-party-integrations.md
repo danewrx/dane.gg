@@ -1,8 +1,8 @@
 # Third-party integrations
 
-dane.gg has five optional integrations, each gated purely by whether its env vars are set —
-none of them are required for the site to run. This doc covers what each one needs, where to
-get credentials, and non-obvious behavior worth knowing before you flip one on.
+These optional integrations provide public widgets and administrator notifications. Configure
+credentials in `.env` and use the admin panel for the settings listed below. The site can
+run without these integrations.
 
 | Integration | Powers | Configured via |
 | --- | --- | --- |
@@ -15,22 +15,20 @@ get credentials, and non-obvious behavior worth knowing before you flip one on.
 ## Twitter/X
 
 **What it does:** periodically fetches the latest tweet(s) from one account and stores them
-in the `tweets` table; the homepage widget reads the most recent one. On first startup it also
-does a one-time full-history backfill.
+in the `tweets` table; the homepage widget reads the most recent one. When enabled, a full-history backfill also runs at backend startup.
 
-**How it authenticates — read this first:** this does not use the official paid Twitter API.
+**Authentication:** this does not use the official paid Twitter API.
 It uses [`twitter-openapi-typescript`](https://www.npmjs.com/package/twitter-openapi-typescript),
 an unofficial client that authenticates as a *logged-in browser session* via cookies
 (`backend/src/services/twitterApiService.ts:initialize`). That means:
 
 - You need `auth_token` and `ct0` cookie values from an actual logged-in x.com session (your
-  own account, or a throwaway one — whichever tweets you want to backfill needs to be visible
-  to that account). Log into x.com in a browser, open DevTools → Application/Storage →
+  account, with access to the tweets you want to fetch). Log into x.com in a browser, open DevTools → Application/Storage →
   Cookies, and copy those two values.
 - `TWITTER_COOKIES` is a raw `Cookie:`-header-style string: `auth_token=...; ct0=...`
   (semicolon-separated `key=value` pairs — the service parses it exactly like a browser would
   send it).
-- Because this rides on a real session rather than an API key, it's inherently fragile: X can
+- X can
   invalidate the session, rate-limit it, or flag the account for automated behavior. Poll
   conservatively — the default is every 2 minutes, and the service logs a warning that
   "polling too frequently may trigger rate limits or account restrictions."
@@ -45,7 +43,7 @@ an unofficial client that authenticates as a *logged-in browser session* via coo
 | `TWITTER_FETCH_CRON` | No (default `*/2 * * * *`) | Standard cron expression for the polling job |
 | `TWITTER_HEALTH_CHECK_CRON` | No (default `0 */2 * * *`) | How often to verify the session is still valid |
 | `TWITTER_FETCH_PRUNE_DELETED` | No (default `true`) | On each poll, remove DB tweets newer than the API's latest if the newest tweet was deleted upstream |
-| `TWITTER_FULL_BACKFILL_ENABLED` | No (default `true`) | Run a one-time full-history backfill on startup |
+| `TWITTER_FULL_BACKFILL_ENABLED` | No (default `true`) | Run a full-history backfill on backend startup |
 | `TWITTER_FULL_BACKFILL_BATCH_SIZE` / `_MAX_PAGES` / `_MAX_NEW_TWEETS` / `_MIN_INTERVAL_MS` / `_PRUNE_DELETED` | No | Tune backfill size/frequency — see `.env.example.dev` for defaults |
 | `TWITTER_MAX_STORED_TWEETS` | No (default `0` = unlimited) | Cap how many tweets are retained in the DB |
 
@@ -57,7 +55,7 @@ so you can change which account is tracked without redeploying. Same pattern as
 ## Last.fm
 
 **What it does:** shows your currently-playing (or most recently played) track via the
-official Last.fm API — no scraping involved, this one's straightforward.
+official Last.fm API.
 
 **Setup:**
 
@@ -103,14 +101,17 @@ The widget endpoint (`GET /api/widgets/github-contributions`) caches the result 
 monitors are shown is chosen from `Admin → Configuration` (stored as
 `uptime_kuma_selected_monitors` in `site_config`), not by env var.
 
-**Two modes, based on which env vars you set:**
+**Configuration:**
 
 | Variable | Required | Effect |
 | --- | --- | --- |
 | `UPTIME_KUMA_URL` | Yes | Base URL of your Uptime Kuma instance |
-| `UPTIME_KUMA_API_KEY` | No | If set, uses Uptime Kuma's REST API (full monitor list, needed to populate the picker in `Admin → Configuration`). If unset, falls back to scraping a public status page — you'll need at least one status page configured in Uptime Kuma for that fallback to return anything |
+| `UPTIME_KUMA_API_KEY` | No | Credentials for authenticated monitor and metrics requests. Available data depends on the endpoints exposed by your instance. |
 
-Without `UPTIME_KUMA_URL` set at all, the public status endpoint just returns an empty list —
+The service tries monitor, Prometheus metrics, and public status-page endpoints.
+Configure a public status page if you intend to use that fallback.
+
+Without `UPTIME_KUMA_URL` set, the public status endpoint just returns an empty list —
 no error, the widget quietly shows nothing.
 
 ## ntfy (push notifications)
@@ -138,13 +139,12 @@ Message templates support placeholders like `{username}`, `{ip}`, `{time}`, `{to
 
 | Variable | Required | Notes |
 | --- | --- | --- |
-| `NTFY_TOPIC` | Yes (this is what gates the whole feature — `isConfigured()` just checks this) | Topic name on your ntfy server |
+| `NTFY_TOPIC` | Yes | Topic name on your ntfy server |
 | `NTFY_URL` | No (default `https://ntfy.sh`) | Point this at a self-hosted instance if you run one |
 | `NTFY_TOKEN` | No | Bearer token auth, if your topic/server requires it |
 | `NTFY_USERNAME` / `NTFY_PASSWORD` | No | Basic auth, alternative to `NTFY_TOKEN` |
 | `ADMIN_LOGIN_NOTIFY_FAILED` | No (default `lockout`) | `lockout` / `each` / `off` — see table above |
 
-If you're using the public `ntfy.sh` with no auth, anyone who knows your topic name can read
-your notifications — pick a topic name that isn't guessable (a random topic like a subscribed
-`Admin → Notifications` test send makes this obvious quickly), or self-host, or set
-`NTFY_TOKEN`/basic auth.
+Use a topic with appropriate access controls for notifications containing account or IP
+information. Configure the matching token or username/password when your ntfy server
+requires authentication. Send a test from `Admin → Notifications` to verify delivery.

@@ -5,13 +5,10 @@ sync) are powered by a separate bot process — nothing in this repo depends on 
 Without it, the site just shows no live Discord status and the webchat only carries
 web-originated messages.
 
-The bot I actually run (`danewrx/discord`) is a private repo, so it isn't something you can
-clone. Instead, this doc specifies the protocol it speaks against the endpoints in this repo
-— everything below is written from the dane.gg server code, so it's enough to build your own
-bridge bot in whatever language/stack you like (it's a small program: a WebSocket client plus
-two outgoing webhook calls).
+This guide describes the website's HTTP and WebSocket interfaces so you can implement a
+bridge in your own bot. The bot connects to Discord and forwards events to these endpoints.
 
-## What the bot actually does
+## Features
 
 | Feature | Direction | How |
 | --- | --- | --- |
@@ -19,8 +16,7 @@ two outgoing webhook calls).
 | Online/offline widget | Discord → site | Bot watches one Discord user's presence and `POST`s `0`/`1` to a webhook |
 | Custom emoji sync | Discord → site | Bot pushes the guild's custom emoji list to a webhook whenever it changes, so `:emoji:` works in webchat |
 
-All three are optional and independently gated by config — you can run just the chat bridge
-without presence tracking, for example.
+Implement only the features you need; presence tracking and emoji sync are optional.
 
 ## 1. Create the Discord application & bot
 
@@ -34,9 +30,7 @@ without presence tracking, for example.
    Discord rejects the gateway connection with a "disallowed intents" error if your bot
    requests an intent that isn't enabled here.
 4. **OAuth2 → URL Generator**: scope `bot`, permissions **View Channel**, **Send Messages**,
-   **Read Message History** (that's the full permission set the reference implementation
-   exercises — it never needs to delete other users' messages or manage the guild). Open the
-   generated URL and invite the bot to your server.
+   **Read Message History**. Open the generated URL and invite the bot to your server.
 5. Enable Developer Mode in Discord (User Settings → Advanced) so you can right-click to
    copy IDs, then grab your server ID and the ID of the channel you want to bridge.
 
@@ -49,12 +43,10 @@ The bot authenticates to dane.gg using the same API keys as everything else in
    WebSocket bridge only; it does not work against the webhook endpoints below.
 2. If you want presence tracking and/or emoji sync, create a second key with permission
    **Webhooks Only** → this is `WEBHOOK_AUTH_TOKEN`. (You can use one **Full Access** key for
-   both instead if you don't care about scoping — simpler, but it can also hit every other
-   authenticated API route.)
+   both, but separate scoped keys limit each credential to its intended use.)
 3. `Admin → Chat` (`/admin/chat`) has a "Discord chat integration" toggle
    (`discord_chat_integration_enabled` in `site_config`). It must be **on** for the bridge to
-   relay messages — the bot polls this every 30s and silently stops forwarding while it's off,
-   which is the intended way to kill the bridge without stopping the bot process.
+   relay messages. Have your bot poll this setting periodically and stop forwarding when it's off.
 
 ## 3. The webchat bridge protocol (`/ws/chat`)
 
@@ -66,24 +58,24 @@ in local dev) with one of:
 
 using the **Chat Only** (or **Full Access**) key from step 2.1.
 
-### Handshake — read this carefully
+### Authentication
 
-The server does **not** reject the connection outright for a bad/missing key — every client,
-authenticated or not, immediately receives `history`, `system`, and `userCount` messages on
-connect. There is no clean "auth failed" signal at connect time. The only way to know your key
-actually worked is that **privileged commands stop returning errors** — the first time you
-send `/discord ...` (or any bot-only command below) with a bad key, you'll get back:
+The server accepts public chat connections, so an open connection alone does not confirm
+API key authentication. Authenticated admin or API key connections receive an `adminConfig`
+event. Public events such as `system`, `userCount`, and available message history do not
+confirm authentication.
+
+A privileged command sent without authentication returns an error:
 
 ```json
 { "type": "error", "message": "Unauthorized" }
 ```
 
-Treat any `error` message whose text contains "unauthorized" as a fatal auth failure (bad key,
-wrong permission scope, or key deactivated/expired) — don't keep retrying with the same key.
+Check the key, its scope, and its expiry before reconnecting after an authentication error.
 
 ### Messages the server sends you
 
-All frames are JSON, `{"type": "...", ...}`. The ones you care about:
+Chat events use JSON objects with a `type` field. Deletion commands use raw text as described below. The main chat events are:
 
 - `{"type":"message","data":{id, timestamp, nickname, message, formatted, color?, source}}` —
   a chat message. `source` is `"web"`, `"discord"`, or `"admin"`. **Ignore messages where
@@ -100,8 +92,8 @@ Send a **raw text frame** (not JSON-wrapped) of the form:
 ```
 
 - `nickname` and `message` are required; `color` and `discordMessageId` are optional.
-- Server truncates `nickname` to 50 chars and `message` to 1000 chars if you don't do it
-  client-side; the whole `/discord ` command text is capped around 5000 bytes.
+- Nicknames are sanitized and limited to 50 characters. Messages over 1000 characters
+  and JSON payloads over 5000 characters are rejected.
 - `color` must match `^#[0-9A-Fa-f]{6}$` or it's silently dropped.
 - `discordMessageId`, if present, must be a numeric string ≤100 chars (Discord snowflake).
 - Requires: admin/API-key authenticated connection, and `discord_chat_integration_enabled`
@@ -130,12 +122,12 @@ tell the server so deletions can round-trip later:
   (raw text, same shape) when an admin deletes a bridged message on the site — your bot should
   delete that message on Discord in response.
 
-### Chat integration kill switch
+### Enable or disable the chat bridge
 
 `Admin → Chat` (`/admin/chat`) has a "Discord chat integration" toggle
 (`discord_chat_integration_enabled` in `site_config`, readable at
 `GET /api/config/discord_chat_integration_enabled` → `{"success":true,"data":{"value":bool}}`,
-404 if never set — treat 404 as enabled). Poll it periodically (the reference bot uses 30s)
+404 if never set — treat 404 as enabled). Poll it periodically, for example every 30 seconds,
 and stop sending `/discord` while it's off; the server also enforces it server-side and will
 error if you send anyway.
 
@@ -153,7 +145,7 @@ Content-Type: application/json
 not in guild → `0`). Watch Discord Gateway presence updates for one specific user (your own
 account) and POST only when the mapped value changes — debounce a few seconds so rapid
 status flapping doesn't spam the endpoint. Responses: `200` success, `400` if `status` isn't
-`0`/`1`, `401` if the key is invalid/wrong scope.
+`0`/`1`, `401` for missing credentials, and `403` for an invalid key or insufficient scope.
 
 ## 5. The emoji sync webhook (`:emoji:` support in webchat)
 
@@ -178,7 +170,7 @@ yourself: Discord's `<:name:id>` / `<a:name:id>` ↔ the site's `:name:`.
 - A message typed in the site's chat widget should arrive as a `message` frame over your
   WebSocket connection (with `source` other than `"discord"`).
 - `POST /webhooks/discord-status/update` with `{"status":1}` should flip the homepage
-  online/offline indicator within a few seconds.
+  online/offline indicator after its next data refresh.
 - `POST /webhooks/discord-emojis/sync` should make `:name:` render as an image in webchat.
 
 ## Troubleshooting
@@ -186,7 +178,7 @@ yourself: Discord's `<:name:id>` / `<a:name:id>` ↔ the site's `:name:`.
 | Symptom | Cause |
 | --- | --- |
 | `/discord` (or other bot-only command) returns `{"type":"error","message":"Unauthorized"}` | Key wrong, inactive, expired, or wrong permission scope (needs Chat Only/Full Access for the WS bridge) |
-| Webhook calls return `403` | Key isn't `Webhooks Only`/`Full Access` permission |
-| Webhook calls return `401` | Key wrong/inactive/expired |
+| Webhook calls return `403` | Key is invalid, inactive, expired, or lacks `Webhooks Only`/`Full Access` permission |
+| Webhook calls return `401` | Authentication credentials are missing |
 | Bot won't log in to Discord at all | A requested gateway intent isn't enabled in the Developer Portal (step 1.3) |
 | `/discord` returns an error mentioning "integration is disabled" | `discord_chat_integration_enabled` is off in `Admin → Chat` |

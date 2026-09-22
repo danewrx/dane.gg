@@ -4,7 +4,7 @@ The public site's entire visual presentation — colors, background, typography,
 radius, custom CSS, retro overlay effects — is data-driven from the `themes` table
 (`backend/src/db/schema.ts`), editable from `Admin → Configuration → Themes`
 (`/admin/configuration/themes`). This doc covers the data model, how it becomes CSS in the
-browser, and the non-obvious bits you'd otherwise have to read four files to piece together.
+browser, and how to create and configure themes.
 
 ## How a theme becomes CSS
 
@@ -28,7 +28,7 @@ browser, and the non-obvious bits you'd otherwise have to read four files to pie
 5. Google Fonts / custom font `<link>`/`@font-face` tags are (re)injected based on
    `fontFamily`/`headingFontFamily` — see [Fonts](#fonts) below.
 
-None of this runs for the admin panel — `applyBrowserSiteThemeToDom()` bails out unless
+None of this runs for the admin panel — `applyBrowserSiteThemeToDom()` runs only when
 `document.documentElement.dataset.daneApp === 'public'`, so `/admin`, `/login`, `/logout`
 always use the neutral admin UI styling regardless of the active site theme.
 
@@ -50,10 +50,7 @@ site default is used. If the server returns no theme, the frontend uses `DEFAULT
 An unavailable enforced theme falls back to the server's default selection.
 
 Theme selection uses `isDefault`, `isVisible`, and the enforcement configuration. Setting a
-new default clears the previous default flag. The obsolete `isActive` field has been removed
-from the schema, seed data, and frontend types. The migration
-`backend/drizzle/0010_drop_themes_is_active.sql` removes its database column; apply it with
-`bun run db:migrate` when deploying the cleanup. Do not use `isActive` to select a theme.
+new default clears the default flag on the other themes.
 
 ## Creating a theme
 
@@ -104,17 +101,15 @@ depends on whether they match something in the `fonts` table:
   `fonts.googleapis.com` at weights 300–700. If it's not a real Google Fonts family, the
   browser just falls back to `sans-serif` — there's no validation against Google's font list.
 
-The site seeds a default seed of Google Fonts on first run, plus one bundled custom font
+The site registers a selection of Google Fonts on first run, plus one bundled custom font
 (`W95FA`, used by the Windows 95 theme) registered automatically — see
 `backend/src/db/ensureBuiltinSiteFont.ts` if you want to bundle another font the same way
 instead of requiring an admin to upload it.
 
 ## Bundled example themes
 
-`backend/src/db/seeds/themes.ts` (~3800 lines) ships ~19 example themes spanning simple
+`backend/src/db/seeds/themes.ts` contains example themes spanning simple
 editor-style palettes (Dracula, Nord, Catppuccin, Tokyo Night, Gruvbox, One Dark/Light,
 GitHub Light, Rosé Pine) and elaborate retro/novelty ones (Windows 95, Windows XP, GeoCities,
 Matrix Terminal, Cyberpunk Neon) that combine every field above, `customCss`, and in a couple
-of cases the slug-based component special-casing mentioned earlier. They're the best reference
-for "what does a fully-realized theme actually look like" — reading a couple of the retro ones
-end-to-end will teach you more about the system's capabilities than this doc can.
+of cases the slug-based component special-casing mentioned earlier. Use these examples when designing palettes, overlays, and custom CSS for your own themes.
