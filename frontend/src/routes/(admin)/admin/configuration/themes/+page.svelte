@@ -157,7 +157,6 @@
 			id: editingTheme?.id ?? 'preview',
 			name: formData.name?.trim() || 'Preview',
 			description: formData.description?.trim() || null,
-			isActive: true,
 			isDefault: false,
 			primaryColor: formData.primaryColor,
 			secondaryColor: formData.secondaryColor,

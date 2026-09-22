@@ -11,7 +11,6 @@ const CYBERPUNK_NEON_THEME_INSERT = {
 	name: 'Cyberpunk Neon',
 	description:
 		'A futuristic cyberpunk theme with neon cyan and magenta accents, inspired by rainy neo-noir cityscapes',
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 
@@ -66,7 +65,6 @@ const WINDOWS_XP_BLISS_THEME_INSERT = {
 	name: 'Windows XP',
 	description:
 		'Classic Windows XP Luna chrome with the bliss wallpaper',
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 
@@ -345,7 +343,6 @@ const WINDOWS_XP_BLISS_THEME_INSERT = {
 const WINDOWS_95_THEME_INSERT = {
 	name: 'Windows 95',
 	description: 'Classic Windows 95 chrome with the teal cloud wallpaper and W95FA',
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 
@@ -613,7 +610,6 @@ const GEOCITIES_THEME_INSERT = {
 	name: 'GeoCities',
 	description:
 		'Late-90s personal homepage — tiled fractal wallpaper, GifCities stickers, teal/green/amber accents',
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 
@@ -2315,7 +2311,6 @@ const GEOCITIES_THEME_INSERT = {
 const DRACULA_THEME_INSERT = {
 	name: 'Dracula',
 	description: 'Dracula editor palette — purple accents on charcoal, pink and green highlights',
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 
@@ -2387,7 +2382,6 @@ html[data-theme="dracula"] ::selection {
 const CATPPUCCIN_MOCHA_THEME_INSERT = {
 	name: 'Catppuccin Mocha',
 	description: 'Catppuccin Mocha — pastel dark UI with mauve, blue, and pink accents',
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 
@@ -2456,7 +2450,6 @@ html[data-theme="catppuccin-mocha"] ::selection {
 const TOKYO_NIGHT_THEME_INSERT = {
 	name: 'Tokyo Night',
 	description: 'Tokyo Night — deep blue editor theme with magenta and sky accents',
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 
@@ -2525,7 +2518,6 @@ html[data-theme="tokyo-night"] ::selection {
 const GRUVBOX_THEME_INSERT = {
 	name: 'Gruvbox',
 	description: 'Gruvbox Dark — warm retro terminal palette with orange and aqua accents',
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 
@@ -2597,7 +2589,6 @@ html[data-theme="gruvbox"] ::selection {
 const ONE_DARK_THEME_INSERT = {
 	name: 'One Dark',
 	description: 'Atom One Dark — familiar blue-gray editor UI with purple and green accents',
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 
@@ -2666,7 +2657,6 @@ html[data-theme="one-dark"] ::selection {
 const NORD_THEME_INSERT = {
 	name: 'Nord',
 	description: 'Nord — arctic blue-gray palette with frost blue and aurora mauve accents',
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 
@@ -2735,7 +2725,6 @@ html[data-theme="nord"] ::selection {
 const ROSE_PINE_THEME_INSERT = {
 	name: 'Rosé Pine',
 	description: 'Rosé Pine Moon — soft dark UI with iris, foam, and love pink highlights',
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 
@@ -2804,7 +2793,6 @@ html[data-theme="rose-pine"] ::selection {
 const CATPPUCCIN_LATTE_THEME_INSERT = {
 	name: 'Catppuccin Latte',
 	description: 'Catppuccin Latte — light pastel UI with blue, mauve, and pink accents',
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 
@@ -2877,7 +2865,6 @@ html[data-theme="catppuccin-latte"] ::selection {
 const GITHUB_LIGHT_THEME_INSERT = {
 	name: 'GitHub Light',
 	description: 'GitHub Light — clean neutral UI with blue link accents',
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 
@@ -2943,7 +2930,6 @@ html[data-theme="github-light"] ::selection {
 const ONE_LIGHT_THEME_INSERT = {
 	name: 'One Light',
 	description: 'Atom One Light — soft gray UI with blue and purple syntax accents',
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 
@@ -3007,7 +2993,6 @@ html[data-theme="one-light"] ::selection {
 const GRUVBOX_LIGHT_THEME_INSERT = {
 	name: 'Gruvbox Light',
 	description: 'Gruvbox Light — warm cream palette with orange and aqua accents',
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 
@@ -3074,7 +3059,6 @@ html[data-theme="gruvbox-light"] ::selection {
 const ROSE_PINE_DAWN_THEME_INSERT = {
 	name: 'Rose Pine Dawn',
 	description: 'Rosé Pine Dawn — light variant with iris, foam, and soft pink highlights',
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 
@@ -3138,7 +3122,6 @@ html[data-theme="rose-pine-dawn"] ::selection {
 const MATRIX_TERMINAL_THEME_INSERT = {
 	name: 'Matrix Terminal',
 	description: 'Phosphor green on black — CRT terminal glow, scanlines, and monospace readouts',
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 
@@ -3326,7 +3309,6 @@ const LETS_ALL_LOVE_LAIN_THEME_INSERT = {
 	name: 'Lets All Love Lain',
 	description:
 		"Let's all love Lain — Serial Experiments Lain mood with maroon CRT scanlines, pink and cream accents, wired green when connected",
-	isActive: false,
 	isDefault: false,
 	isVisible: true,
 

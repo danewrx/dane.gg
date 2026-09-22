@@ -24,7 +24,6 @@ export interface SiteTheme {
 	id: string;
 	name: string;
 	description: string | null;
-	isActive: boolean;
 	isDefault: boolean;
 
 	// Colors
@@ -72,7 +71,6 @@ export const DEFAULT_THEME: SiteTheme = {
 	id: 'default',
 	name: 'Default',
 	description: 'Default site theme',
-	isActive: true,
 	isDefault: true,
 
 	// Colors

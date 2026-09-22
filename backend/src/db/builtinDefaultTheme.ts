@@ -9,7 +9,6 @@ import { themes } from './schema';
 export const BUILTIN_DEFAULT_THEME_INSERT = {
 	name: 'Default',
 	description: 'The default site theme with a dark aesthetic and background image',
-	isActive: true,
 	isDefault: true,
 	isVisible: true,
 
