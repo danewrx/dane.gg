@@ -6,7 +6,7 @@ function ciPlaywrightWorkers(): number {
 }
 
 export default defineConfig({
-	testDir: './e2e',
+	testDir: './testing',
 	fullyParallel: true,
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 1 : 0,
