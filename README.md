@@ -10,8 +10,6 @@ A personal portfolio and blog with a content management dashboard.
 <a href="https://github.com/danewrx/dane.gg/blob/main/LICENSE"><img src="https://img.shields.io/github/license/danewrx/dane.gg.svg?cacheBust=2" alt="License" /></a>
 </p>
 
-Manage posts, projects, themes, and site settings through the admin dashboard.
-
 <p align="center">
   <img src="docs/screenshots/public-home.png" alt="Public site homepage" width="49%" />
   <img src="docs/screenshots/admin-stats.png" alt="Admin dashboard" width="49%" />
@@ -20,10 +18,10 @@ Manage posts, projects, themes, and site settings through the admin dashboard.
   <sub>Public site (left) · Admin dashboard (right)</sub>
 </p>
 
-<h3 align="center">Public site screenshots</h3>
+## Overview
 
 <details>
-<summary>View screenshots</summary>
+<summary><h3>Public Site</h3></summary>
 <br>
 
 | | |
@@ -34,10 +32,8 @@ Manage posts, projects, themes, and site settings through the admin dashboard.
 
 </details>
 
-<h3 align="center">Admin dashboard screenshots</h3>
-
 <details>
-<summary>View screenshots</summary>
+<summary><h3>Admin Dashboard</h3></summary>
 <br>
 
 | | |
