@@ -21,7 +21,7 @@ A personal portfolio and blog with a content management dashboard.
 ## Overview
 
 <details>
-<summary><h5>Public Site</h5></summary>
+<summary><big><strong>Public Site</strong></big></summary>
 <br>
 
 - Blog posts with tags, an RSS feed, and individual post pages.
@@ -39,7 +39,7 @@ A personal portfolio and blog with a content management dashboard.
 </details>
 
 <details>
-<summary><h5>Admin Dashboard</h5></summary>
+<summary><big><strong>Admin Dashboard</strong></big></summary>
 <br>
 
 - Session-based login with optional two-factor authentication.
@@ -135,7 +135,7 @@ fresh development database. Seeding clears existing data.
 - **Frontend:** <img alt="SvelteKit" src="https://img.shields.io/badge/SvelteKit-FF3E00?style=flat&amp;labelColor=595959&amp;logo=svelte&amp;logoColor=white" height="18"> <img alt="Svelte 5" src="https://img.shields.io/badge/Svelte%205-FF3E00?style=flat&amp;labelColor=595959&amp;logo=svelte&amp;logoColor=white" height="18"> <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&amp;labelColor=595959&amp;logo=typescript&amp;logoColor=white" height="18"> <img alt="Vite" src="https://img.shields.io/badge/Vite-646CFF?style=flat&amp;labelColor=595959&amp;logo=vite&amp;logoColor=white" height="18">
 - **Backend:** <img alt="Bun" src="https://img.shields.io/badge/Bun-14151A?style=flat&amp;labelColor=595959&amp;logo=bun&amp;logoColor=white" height="18"> <img alt="Express" src="https://img.shields.io/badge/Express-000000?style=flat&amp;labelColor=595959&amp;logo=express&amp;logoColor=white" height="18"> <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&amp;labelColor=595959&amp;logo=typescript&amp;logoColor=white" height="18">
 - **Database:** <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat&amp;labelColor=595959&amp;logo=postgresql&amp;logoColor=white" height="18"> <img alt="Drizzle ORM" src="https://img.shields.io/badge/Drizzle%20ORM-455B20?style=flat&amp;labelColor=595959&amp;logo=drizzle&amp;logoColor=white" height="18">
-- **Real-time:** <img alt="WebSocket (ws)" src="https://img.shields.io/badge/WebSocket%20%28ws%29-E06800?style=flat&amp;labelColor=595959&amp;logo=socket&amp;logoColor=white" height="18">
+- **Real-time:** <img alt="WebSocket (WS)" src="https://img.shields.io/badge/WebSocket%20%28ws%29-E06800?style=flat&amp;labelColor=595959&amp;logo=socket&amp;logoColor=white" height="18">
 - **Authentication:** <img alt="Sessions" src="https://img.shields.io/badge/Sessions-4051B5?style=flat&amp;labelColor=595959&amp;logo=jsonwebtokens&amp;logoColor=white" height="18"> <img alt="API keys" src="https://img.shields.io/badge/API%20keys-555555?style=flat&amp;labelColor=595959&amp;logo=keeweb&amp;logoColor=white" height="18"> <img alt="TOTP / 2FA" src="https://img.shields.io/badge/TOTP%20%2F%202FA-00875A?style=flat&amp;labelColor=595959&amp;logo=googleauthenticator&amp;logoColor=white" height="18">
 - **Testing:** <img alt="Playwright" src="https://img.shields.io/badge/Playwright-2EAD33?style=flat&amp;labelColor=595959&amp;logo=codesandbox&amp;logoColor=white" height="18"> <img alt="Vitest" src="https://img.shields.io/badge/Vitest-526B1E?style=flat&amp;labelColor=595959&amp;logo=vitest&amp;logoColor=white" height="18">
-- **Containers:** <img alt="Docker" src="https://img.shields.io/badge/Docker-2496ED?style=flat&amp;labelColor=595959&amp;logo=docker&amp;logoColor=white" height="18">
+- **Containers:** <img alt="Docker" src="https://img.shields.io/badge/Docker-2496ED?style=flat&amp;labelColor=595959&amp;logo=docker&amp;logoColor=white" height="18"> <img alt="Podman" src="https://img.shields.io/badge/Podman-892CA0?style=flat&amp;labelColor=595959&amp;logo=podman&amp;logoColor=white" height="18">
