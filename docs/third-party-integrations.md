@@ -20,7 +20,7 @@ in the `tweets` table; the homepage widget reads the most recent one. When enabl
 **Authentication:** this does not use the official paid Twitter API.
 It uses [`twitter-openapi-typescript`](https://www.npmjs.com/package/twitter-openapi-typescript),
 an unofficial client that authenticates as a *logged-in browser session* via cookies
-(`backend/src/services/twitterApiService.ts:initialize`). That means:
+(`apps/backend/src/services/twitterApiService.ts:initialize`). That means:
 
 - You need `auth_token` and `ct0` cookie values from an actual logged-in x.com session (your
   account, with access to the tweets you want to fetch). Log into x.com in a browser, open DevTools → Application/Storage →

@@ -7,13 +7,13 @@ account administration requires additional permissions.
 ## Session authentication
 
 Login (`POST /api/auth/login`) sets a session cookie, `dane.gg.sid`
-(`backend/src/index.ts`): `httpOnly`, `sameSite: strict`, `secure` gated on `COOKIE_SECURE`,
+(`apps/backend/src/index.ts`): `httpOnly`, `sameSite: strict`, `secure` gated on `COOKIE_SECURE`,
 1-day `maxAge`, or 30 days when “remember me” is selected. Sessions are stored server-side in Postgres via `connect-pg-simple` (falls
 back to in-memory if `DATABASE_URL` isn't set, e.g. some test contexts), so they survive
 backend restarts.
 
 If the account has TOTP/2FA enabled, login is two steps — password first, then a TOTP code or
-backup code — handled entirely inside the login flow (`backend/src/routes/totp.ts` +
+backup code — handled entirely inside the login flow (`apps/backend/src/routes/totp.ts` +
 `routes/auth.ts`), not as a separate per-route guard.
 
 The frontend's `hooks.server.ts`

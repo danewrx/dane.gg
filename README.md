@@ -10,6 +10,8 @@ A personal portfolio and blog with a content management dashboard.
 <a href="https://github.com/danewrx/dane.gg/blob/main/LICENSE"><img src="https://img.shields.io/github/license/danewrx/dane.gg.svg?cacheBust=2" alt="License" /></a>
 </p>
 
+Manage posts, projects, themes, and site settings through the admin dashboard.
+
 <p align="center">
   <img src="docs/screenshots/public-home.png" alt="Public site homepage" width="49%" />
   <img src="docs/screenshots/admin-stats.png" alt="Admin dashboard" width="49%" />
@@ -19,7 +21,7 @@ A personal portfolio and blog with a content management dashboard.
 </p>
 
 <details>
-<summary>Public site screenshots</summary>
+<summary align="center">Public site screenshots</summary>
 <br>
 
 | | |
@@ -31,7 +33,7 @@ A personal portfolio and blog with a content management dashboard.
 </details>
 
 <details>
-<summary>Admin dashboard screenshots</summary>
+<summary align="center">Admin dashboard screenshots</summary>
 <br>
 
 | | |
@@ -42,117 +44,34 @@ A personal portfolio and blog with a content management dashboard.
 
 </details>
 
-## Project structure
+## Technologies
 
-```
-dane.gg/
-├── frontend/                # SvelteKit app with Svelte 5 — public site + admin dashboard UI
-│   └── src/
-│       ├── routes/
-│       │   ├── (site)/      # Public pages: home, blog, projects, about, contact
-│       │   └── (admin)/     # Admin dashboard: login, logout, admin/*
-│       ├── lib/
-│       │   ├── site/        # Components, stores, services used only on the public site
-│       │   ├── admin/       # Components, stores, services used only in the admin dashboard
-│       │   ├── shared/      # Code shared between site and admin
-│       │   └── server/      # Server-only helpers (SSR, etc.)
-│       ├── hooks.server.ts  # Session auth check + SSR placeholder injection
-│       └── app.html / app.css
-│
-├── backend/                 # Express 5 API server (runs on Bun)
-│   └── src/
-│       ├── routes/          # One file per API resource (blog, themes, users, chat, ...)
-│       ├── middleware/      # Auth guards, rate limiting, etc.
-│       ├── services/        # Business logic (Discord, Twitter, GitHub, Last.fm, etc.)
-│       ├── db/               # Drizzle schema, seeds, migration/setup helpers
-│       ├── validation/      # Request validation schemas
-│       ├── constants/ types/ utils/ scripts/
-│       └── index.ts         # App entrypoint — Express setup, sessions, WebSocket
-│
-├── shared/                  # Utilities shared between frontend and backend (e.g. SVG sanitization)
-├── e2e/                     # Playwright end-to-end tests
-├── docker/                  # Container entrypoint scripts
-├── docker-compose.yml       # Production-style stack: frontend + backend + Postgres
-├── docker-compose.dev.yml   # Local dev DB only: Postgres + Adminer
-├── server.ts                # Production entrypoint — serves the built SvelteKit app
-└── package.json             # Root scripts that orchestrate frontend/backend/db commands
-```
+- **Frontend & admin:** <img alt="SvelteKit" src="https://img.shields.io/badge/SvelteKit-FF3E00?style=flat&amp;labelColor=595959&amp;logo=svelte&amp;logoColor=white" height="18"> <img alt="Svelte 5" src="https://img.shields.io/badge/Svelte%205-FF3E00?style=flat&amp;labelColor=595959&amp;logo=svelte&amp;logoColor=white" height="18"> <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&amp;labelColor=595959&amp;logo=typescript&amp;logoColor=white" height="18"> <img alt="Vite" src="https://img.shields.io/badge/Vite-646CFF?style=flat&amp;labelColor=595959&amp;logo=vite&amp;logoColor=white" height="18">
+- **Backend:** <img alt="Bun" src="https://img.shields.io/badge/Bun-14151A?style=flat&amp;labelColor=595959&amp;logo=bun&amp;logoColor=white" height="18"> <img alt="Express" src="https://img.shields.io/badge/Express-000000?style=flat&amp;labelColor=595959&amp;logo=express&amp;logoColor=white" height="18"> <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&amp;labelColor=595959&amp;logo=typescript&amp;logoColor=white" height="18">
+- **Database:** <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat&amp;labelColor=595959&amp;logo=postgresql&amp;logoColor=white" height="18"> <img alt="Drizzle ORM" src="https://img.shields.io/badge/Drizzle%20ORM-455B20?style=flat&amp;labelColor=595959&amp;logo=drizzle&amp;logoColor=white" height="18">
+- **Real-time:** <img alt="WebSocket (ws)" src="https://img.shields.io/badge/WebSocket%20%28ws%29-E06800?style=flat&amp;labelColor=595959" height="18">
+- **Authentication:** <img alt="Sessions" src="https://img.shields.io/badge/Sessions-4051B5?style=flat&amp;labelColor=595959" height="18"> <img alt="API keys" src="https://img.shields.io/badge/API%20keys-555555?style=flat&amp;labelColor=595959" height="18"> <img alt="TOTP / 2FA" src="https://img.shields.io/badge/TOTP%20%2F%202FA-00875A?style=flat&amp;labelColor=595959" height="18">
+- **Testing:** <img alt="Playwright" src="https://img.shields.io/badge/Playwright-2EAD33?style=flat&amp;labelColor=595959" height="18"> <img alt="Vitest" src="https://img.shields.io/badge/Vitest-526B1E?style=flat&amp;labelColor=595959&amp;logo=vitest&amp;logoColor=white" height="18">
+- **Containers:** <img alt="Docker" src="https://img.shields.io/badge/Docker-2496ED?style=flat&amp;labelColor=595959&amp;logo=docker&amp;logoColor=white" height="18">
 
 ## Development
 
-Prerequisites: [Bun](https://bun.sh) (latest) and Docker (or Podman — every `docker:*`/`db:dev:*` script has a `podman:*` equivalent).
-
-### Environment variables
-
-```bash
-cp .env.example.dev .env
-```
-
-Set `SESSION_SECRET` to a random value. For the included development database, set:
-
-```dotenv
-DATABASE_URL=postgresql://dane_gg:daneGGPassword!@localhost:5432/dane.gg
-PUBLIC_ORIGIN=http://localhost:5173
-COOKIE_SECURE=false
-```
-
-Third-party integrations are optional. See the [integration guide](docs/third-party-integrations.md) for their credentials and settings.
-
-### Option A — Local dev (recommended day-to-day)
-
-Frontend and backend run natively with Bun (hot reload); only Postgres runs in Docker.
+Install [Bun](https://bun.sh) and Docker, then follow the
+[setup guide](docs/getting-started.md) to install dependencies and configure your database
+and environment. Once configured, start both applications from the repository root:
 
 ```bash
-bun install
-(cd frontend && bun install)
-(cd backend && bun install)
-bun run db:dev:up    # starts Postgres + Adminer (http://localhost:8080) via docker-compose.dev.yml
-bun run db:push      # push the Drizzle schema to the DB
-bun run db:seed      # seed default data (themes, tags, etc.)
-bun run create:admin your-username 'your-strong-password'
-bun run dev          # frontend (:5173) + backend (:3001) concurrently
+bun run dev
 ```
 
-Run `db:seed` only on a fresh development database: it clears existing seeded data.
-Open the frontend URL printed by Vite; its default port is 5173.
+The frontend runs at `http://localhost:5173` and the API at `http://localhost:3001`.
+For a container deployment, use the [Docker instructions](docs/getting-started.md#option-b--fully-dockerized-closer-to-production).
 
-Tear down the dev DB with `bun run db:dev:down` when you're done.
+## Repository guide
 
-### Option B — Fully Dockerized (closer to production)
-
-Frontend, backend, and Postgres all run in containers.
-
-```bash
-cp .env.example.prod .env
-# Configure database credentials, SESSION_SECRET, and PUBLIC_ORIGIN before starting.
-docker compose up -d --build # migrations run automatically
-bun run docker:logs         # tail logs
-bun run docker:down         # stop everything
-```
-
-For local HTTP testing, set `PUBLIC_ORIGIN=http://localhost:3000` and `COOKIE_SECURE=false`.
-For an HTTPS deployment, use your public URL and `COOKIE_SECURE=true`.
-Rebuild the containers after changing application code.
-
-### Useful commands
-
-| Command | What it does |
+| Directory | Contents |
 | --- | --- |
-| `bun run backend:typecheck` | Type-check the backend |
-| `bun run backend:lint` | Lint + format-check the backend |
-| `cd frontend && bun run check` | Type-check the frontend (svelte-check) |
-| `bun run test` | Run frontend + backend unit tests |
-| `bun run test:e2e` | Run Playwright end-to-end tests (`test:e2e:ui` for the UI runner) |
-| `bun run db:studio` | Open Drizzle Studio against your DB |
-| `bun run db:generate` | Generate a new Drizzle migration from schema changes |
-| `bun run db:migrate` | Apply database migrations |
-| `bun run db:adminer` | Print the Adminer URL (started as part of `db:dev:up`) |
-
-## Documentation
-
-- [Authentication and permissions](docs/auth-model.md)
-- [Theme configuration and customization](docs/theme-system.md)
-- [Discord integration protocol](docs/discord-integration.md)
-- [Third-party integrations](docs/third-party-integrations.md)
-- [Backend development](backend/README.md)
-- [Frontend development](frontend/README.md)
+| [apps/](apps/README.md) | Frontend, backend, and application development commands |
+| [packages/](packages/README.md) | Utilities shared by the applications |
+| [testing/](testing/README.md) | Playwright browser tests |
+| [docs/](docs/README.md) | Setup, authentication, themes, and integration guides |
