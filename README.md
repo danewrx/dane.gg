@@ -78,10 +78,6 @@ dane.gg/
 └── package.json             # Root commands
 ```
 
-See [apps](apps/README.md) for application commands, [packages](packages/README.md) for
-shared code, [testing](testing/README.md) for browser tests, and [docs](docs/README.md)
-for configuration guides.
-
 ## Development
 
 Install [Bun](https://bun.sh) and run commands from the repository root.
@@ -96,7 +92,8 @@ BACKEND_PORT=3001
 COOKIE_SECURE=false
 ```
 
-### Docker (recommended)
+<details>
+<summary><strong>Docker (recommended)</strong></summary>
 
 Requires Docker with Compose. Start PostgreSQL and Adminer in containers:
 
@@ -104,18 +101,8 @@ Requires Docker with Compose. Start PostgreSQL and Adminer in containers:
 docker compose -f docker-compose.dev.yml up -d
 ```
 
-Run the frontend and backend locally with Bun using the commands below. Both applications
-support hot reload. Adminer is available at `http://localhost:8080`.
-
-Stop the database containers with `docker compose -f docker-compose.dev.yml down`.
-
-### Local Development
-
-Use a running PostgreSQL instance, create a database and user for the app, and update
-`DATABASE_URL` in `.env` to match. Docker is not required for this option.
-
-For either option, install dependencies, initialize the schema, create an admin account,
-and start the applications:
+Install dependencies, initialize the schema, create an admin account, and run the
+frontend and backend locally with Bun and hot reload:
 
 ```bash
 bun install
@@ -126,9 +113,48 @@ bun run create:admin your-username 'your-strong-password'
 bun run dev
 ```
 
-Open `http://localhost:5173`; the API runs at `http://localhost:3001`.
+Adminer is available at `http://localhost:8080`.
+Stop the database containers with `docker compose -f docker-compose.dev.yml down`.
+
+</details>
+
+<details>
+<summary><strong>Local Development</strong></summary>
+
+Use a running PostgreSQL instance, create a database and user for the app, and update
+`DATABASE_URL` in `.env` to match. Docker is not required for this option.
+
+Install dependencies, initialize the schema, create an admin account, and start the applications:
+
+```bash
+bun install
+(cd apps/frontend && bun install)
+(cd apps/backend && bun install)
+bun run db:push
+bun run create:admin your-username 'your-strong-password'
+bun run dev
+```
+
+</details>
+
+For either option, open `http://localhost:5173`; the API runs at `http://localhost:3001`.
 To load optional demo data, run `bun run db:seed` before creating your admin account on a
 fresh development database. Seeding clears existing data.
+
+## Documentation
+
+| Guide | Contents |
+| --- | --- |
+| [Documentation index](docs/README.md) | Overview of the available guides |
+| [Applications](apps/README.md) | Frontend and backend structure, development commands, and checks |
+| [Packages](packages/README.md) | Shared package organization |
+| [Shared utilities](packages/shared/README.md) | Utilities used by both applications |
+| [Browser tests](testing/README.md) | Playwright setup, test coverage, and commands |
+| [Authentication and permissions](docs/auth-model.md) | Sessions, API keys, account roles, and route guards |
+| [Theme system](docs/theme-system.md) | Theme selection, visual settings, custom CSS, and fonts |
+| [Discord integration](docs/discord-integration.md) | Chat bridge protocol, presence webhooks, and emoji synchronization |
+| [Third-party integrations](docs/third-party-integrations.md) | Twitter/X, Last.fm, GitHub, Uptime Kuma, and ntfy configuration |
+| [Screenshots](docs/screenshots/README.md) | README images and capture guidelines |
 
 ## Technologies
 
