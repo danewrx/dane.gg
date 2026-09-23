@@ -24,6 +24,13 @@ A personal portfolio and blog with a content management dashboard.
 <summary><h5>Public Site</h5></summary>
 <br>
 
+- Blog posts with tags, an RSS feed, and individual post pages.
+- Project portfolio with categories, featured projects, and repository links.
+- About and contact pages with skills, certifications, and social links.
+- Visitor-selectable themes, fonts, weather effects, and a cursor-following cat.
+- Live chat with optional Discord integration and custom emojis.
+- Widgets for Discord presence, music, tweets, GitHub contributions, and service status.
+
 | | |
 | --- | --- |
 | ![Blog](docs/screenshots/public-blog.png) Blog | ![Blog post](docs/screenshots/public-blog-post.png) Blog post |
@@ -35,6 +42,13 @@ A personal portfolio and blog with a content management dashboard.
 <summary><h5>Admin Dashboard</h5></summary>
 <br>
 
+- Session-based login with optional two-factor authentication.
+- Blog and project editors with Markdown previews, image uploads, and publishing controls.
+- Theme and font management, including custom CSS, backgrounds, and visual effects.
+- Configuration for site content, banners, adverts, and integrations.
+- Visitor analytics with charts, page statistics, and traffic breakdowns.
+- Chat moderation, account settings, user management, and scoped API keys.
+
 | | |
 | --- | --- |
 | ![Login](docs/screenshots/admin-login.png) Login | ![Blog list](docs/screenshots/admin-blog-list.png) Blog list |
@@ -43,84 +57,85 @@ A personal portfolio and blog with a content management dashboard.
 
 </details>
 
-## Development
+## Directory structure
 
-Run the commands below from the repository root.
-
-Prerequisites: [Bun](https://bun.sh) (latest) and Docker (or Podman — every `docker:*`/`db:dev:*` script has a `podman:*` equivalent).
-
-### Environment variables
-
-```bash
-cp .env.example.dev .env
+```text
+dane.gg/
+├── apps/
+│   ├── frontend/            # SvelteKit public site and admin dashboard
+│   └── backend/             # Express API, database access, and WebSocket chat
+├── packages/
+│   └── shared/              # Utilities shared by both applications
+├── testing/                 # Playwright browser tests
+├── docs/                    # Guides and screenshots
+├── .env                     # Local configuration (not committed)
+├── .env.example.dev         # Development environment template
+├── .env.example.prod        # Production environment template
+├── docker-compose.dev.yml   # Development PostgreSQL and Adminer
+├── docker-compose.yml       # Full container stack
+├── playwright.config.ts     # Browser-test configuration
+├── server.ts                # Production frontend server
+└── package.json             # Root commands
 ```
 
-Set `SESSION_SECRET` to a random value. For the included development database, set:
+See [apps](apps/README.md) for application commands, [packages](packages/README.md) for
+shared code, [testing](testing/README.md) for browser tests, and [docs](docs/README.md)
+for configuration guides.
+
+## Development
+
+Install [Bun](https://bun.sh) and run commands from the repository root.
+
+Set the values in the `.env` file:
 
 ```dotenv
 DATABASE_URL=postgresql://dane_gg:daneGGPassword!@localhost:5432/dane.gg
+SESSION_SECRET=replace-with-a-long-random-secret
 PUBLIC_ORIGIN=http://localhost:5173
+BACKEND_PORT=3001
 COOKIE_SECURE=false
 ```
 
-Third-party integrations are optional. See the [integration guide](docs/third-party-integrations.md) for their credentials and settings.
+### Docker (recommended)
 
-### Option A — Local dev (recommended day-to-day)
+Requires Docker with Compose. Start PostgreSQL and Adminer in containers:
 
-Frontend and backend run natively with Bun (hot reload); only Postgres runs in Docker.
+```bash
+docker compose -f docker-compose.dev.yml up -d
+```
+
+Run the frontend and backend locally with Bun using the commands below. Both applications
+support hot reload. Adminer is available at `http://localhost:8080`.
+
+Stop the database containers with `docker compose -f docker-compose.dev.yml down`.
+
+### Local Development
+
+Use a running PostgreSQL instance, create a database and user for the app, and update
+`DATABASE_URL` in `.env` to match. Docker is not required for this option.
+
+For either option, install dependencies, initialize the schema, create an admin account,
+and start the applications:
 
 ```bash
 bun install
 (cd apps/frontend && bun install)
 (cd apps/backend && bun install)
-bun run db:dev:up    # starts Postgres + Adminer (http://localhost:8080) via docker-compose.dev.yml
-bun run db:push      # push the Drizzle schema to the DB
-bun run db:seed      # seed default data (themes, tags, etc.)
+bun run db:push
 bun run create:admin your-username 'your-strong-password'
-bun run dev          # frontend (:5173) + backend (:3001) concurrently
+bun run dev
 ```
 
-Run `db:seed` only on a fresh development database: it clears existing seeded data.
-Open the frontend URL printed by Vite; its default port is 5173.
-
-Tear down the dev DB with `bun run db:dev:down` when you're done.
-
-### Option B — Fully Dockerized (closer to production)
-
-Frontend, backend, and Postgres all run in containers.
-
-```bash
-cp .env.example.prod .env
-# Configure database credentials, SESSION_SECRET, and PUBLIC_ORIGIN before starting.
-docker compose up -d --build # migrations run automatically
-bun run docker:logs         # tail logs
-bun run docker:down         # stop everything
-```
-
-For local HTTP testing, set `PUBLIC_ORIGIN=http://localhost:3000` and `COOKIE_SECURE=false`.
-For an HTTPS deployment, use your public URL and `COOKIE_SECURE=true`.
-Rebuild the containers after changing application code.
-
-### Checks and maintenance
-
-See [apps](apps/README.md) for type checks, unit tests, and database commands, and
-[testing](testing/README.md) for browser tests.
-
-## Repository guide
-
-| Directory | Contents |
-| --- | --- |
-| [apps/](apps/README.md) | Frontend, backend, and application development commands |
-| [packages/](packages/README.md) | Utilities shared by the applications |
-| [testing/](testing/README.md) | Playwright browser tests |
-| [docs/](docs/README.md) | Authentication, themes, and integration guides |
+Open `http://localhost:5173`; the API runs at `http://localhost:3001`.
+To load optional demo data, run `bun run db:seed` before creating your admin account on a
+fresh development database. Seeding clears existing data.
 
 ## Technologies
 
 - **Frontend:** <img alt="SvelteKit" src="https://img.shields.io/badge/SvelteKit-FF3E00?style=flat&amp;labelColor=595959&amp;logo=svelte&amp;logoColor=white" height="18"> <img alt="Svelte 5" src="https://img.shields.io/badge/Svelte%205-FF3E00?style=flat&amp;labelColor=595959&amp;logo=svelte&amp;logoColor=white" height="18"> <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&amp;labelColor=595959&amp;logo=typescript&amp;logoColor=white" height="18"> <img alt="Vite" src="https://img.shields.io/badge/Vite-646CFF?style=flat&amp;labelColor=595959&amp;logo=vite&amp;logoColor=white" height="18">
 - **Backend:** <img alt="Bun" src="https://img.shields.io/badge/Bun-14151A?style=flat&amp;labelColor=595959&amp;logo=bun&amp;logoColor=white" height="18"> <img alt="Express" src="https://img.shields.io/badge/Express-000000?style=flat&amp;labelColor=595959&amp;logo=express&amp;logoColor=white" height="18"> <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&amp;labelColor=595959&amp;logo=typescript&amp;logoColor=white" height="18">
 - **Database:** <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat&amp;labelColor=595959&amp;logo=postgresql&amp;logoColor=white" height="18"> <img alt="Drizzle ORM" src="https://img.shields.io/badge/Drizzle%20ORM-455B20?style=flat&amp;labelColor=595959&amp;logo=drizzle&amp;logoColor=white" height="18">
-- **Real-time:** <img alt="WebSocket (ws)" src="https://img.shields.io/badge/WebSocket%20%28ws%29-E06800?style=flat&amp;labelColor=595959" height="18">
-- **Authentication:** <img alt="Sessions" src="https://img.shields.io/badge/Sessions-4051B5?style=flat&amp;labelColor=595959" height="18"> <img alt="API keys" src="https://img.shields.io/badge/API%20keys-555555?style=flat&amp;labelColor=595959" height="18"> <img alt="TOTP / 2FA" src="https://img.shields.io/badge/TOTP%20%2F%202FA-00875A?style=flat&amp;labelColor=595959" height="18">
-- **Testing:** <img alt="Playwright" src="https://img.shields.io/badge/Playwright-2EAD33?style=flat&amp;labelColor=595959" height="18"> <img alt="Vitest" src="https://img.shields.io/badge/Vitest-526B1E?style=flat&amp;labelColor=595959&amp;logo=vitest&amp;logoColor=white" height="18">
+- **Real-time:** <img alt="WebSocket (ws)" src="https://img.shields.io/badge/WebSocket%20%28ws%29-E06800?style=flat&amp;labelColor=595959&amp;logo=socket&amp;logoColor=white" height="18">
+- **Authentication:** <img alt="Sessions" src="https://img.shields.io/badge/Sessions-4051B5?style=flat&amp;labelColor=595959&amp;logo=jsonwebtokens&amp;logoColor=white" height="18"> <img alt="API keys" src="https://img.shields.io/badge/API%20keys-555555?style=flat&amp;labelColor=595959&amp;logo=keeweb&amp;logoColor=white" height="18"> <img alt="TOTP / 2FA" src="https://img.shields.io/badge/TOTP%20%2F%202FA-00875A?style=flat&amp;labelColor=595959&amp;logo=googleauthenticator&amp;logoColor=white" height="18">
+- **Testing:** <img alt="Playwright" src="https://img.shields.io/badge/Playwright-2EAD33?style=flat&amp;labelColor=595959&amp;logo=codesandbox&amp;logoColor=white" height="18"> <img alt="Vitest" src="https://img.shields.io/badge/Vitest-526B1E?style=flat&amp;labelColor=595959&amp;logo=vitest&amp;logoColor=white" height="18">
 - **Containers:** <img alt="Docker" src="https://img.shields.io/badge/Docker-2496ED?style=flat&amp;labelColor=595959&amp;logo=docker&amp;logoColor=white" height="18">
