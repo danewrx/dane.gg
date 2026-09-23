@@ -17,7 +17,7 @@ alongside source files in `apps/frontend/src/` and `apps/backend/src/`.
 
 ## Running tests
 
-Complete the [development setup](../docs/getting-started.md), including the database, first.
+Complete the [development setup](../README.md#development), including the database, first.
 Install Playwright browsers from the repository root with `bunx playwright install`.
 Run test commands from the repository root:
 

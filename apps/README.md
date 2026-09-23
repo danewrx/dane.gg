@@ -8,7 +8,7 @@ This directory contains the two applications that run the website.
 | [backend](#backend) | Express API, authentication, PostgreSQL access, WebSocket chat, and integrations |
 
 Each application has its own dependencies, scripts, and Dockerfile. Install dependencies
-in both application directories as described in the [setup guide](../docs/getting-started.md).
+in both application directories as described in the [setup guide](../README.md#development).
 
 From the repository root, `bun run dev` starts both applications. Use
 `bun run frontend:dev` or `bun run backend:dev` to run one application.
@@ -38,7 +38,7 @@ Paths below are relative to `apps/frontend/`.
 
 ### Development
 
-Follow the [root setup guide](../docs/getting-started.md) first. Run these commands from
+Follow the [root setup guide](../README.md#development) first. Run these commands from
 `apps/frontend/`:
 
 | Command | Purpose |
@@ -90,7 +90,7 @@ Paths below are relative to `apps/backend/`.
 
 ### Development
 
-Follow the [root setup guide](../docs/getting-started.md) to configure the environment and
+Follow the [root setup guide](../README.md#development) to configure the environment and
 database. Run these commands from `apps/backend/`:
 
 | Command | Purpose |
