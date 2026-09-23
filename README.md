@@ -20,8 +20,10 @@ Manage posts, projects, themes, and site settings through the admin dashboard.
   <sub>Public site (left) · Admin dashboard (right)</sub>
 </p>
 
+<h3 align="center">Public site screenshots</h3>
+
 <details>
-<summary align="center">Public site screenshots</summary>
+<summary>View screenshots</summary>
 <br>
 
 | | |
@@ -32,8 +34,10 @@ Manage posts, projects, themes, and site settings through the admin dashboard.
 
 </details>
 
+<h3 align="center">Admin dashboard screenshots</h3>
+
 <details>
-<summary align="center">Admin dashboard screenshots</summary>
+<summary>View screenshots</summary>
 <br>
 
 | | |
