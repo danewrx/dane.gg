@@ -2,7 +2,7 @@
 <img src="https://files.catbox.moe/ncbsm2.svg" alt="dane.gg" />
 </p>
 <p align="center">
-A personal portfolio and blog with a content management dashboard.
+♱⋆. My personal portfolio and blog site w/ content management dashboard .⋆♱
 </p>
 
 <p align="center">
@@ -10,7 +10,7 @@ A personal portfolio and blog with a content management dashboard.
 <a href="https://github.com/danewrx/dane.gg/blob/main/LICENSE"><img src="https://img.shields.io/github/license/danewrx/dane.gg.svg?cacheBust=2" alt="License" /></a>
 </p>
 
-## Overview
+## 📌 Overview
 
 <p align="center">
   <img src="docs/screenshots/public-home.png" alt="Public site homepage" width="49%" />
@@ -57,7 +57,7 @@ A personal portfolio and blog with a content management dashboard.
 
 </details>
 
-## Directory structure
+## 📂 Directory structure
 
 ```text
 dane.gg/
@@ -78,7 +78,7 @@ dane.gg/
 └── package.json             # Root commands
 ```
 
-## Development
+## 📦 Development
 
 Install [Bun](https://bun.sh) and run commands from the repository root.
 
@@ -141,7 +141,7 @@ For either option, open `http://localhost:5173`; the API runs at `http://localho
 To load optional demo data, run `bun run db:seed` before creating your admin account on a
 fresh development database. Seeding clears existing data.
 
-## Documentation
+## 📚 Documentation
 
 | Guide | Contents |
 | --- | --- |
@@ -156,7 +156,7 @@ fresh development database. Seeding clears existing data.
 | [Third-party integrations](docs/third-party-integrations.md) | Twitter/X, Last.fm, GitHub, Uptime Kuma, and ntfy configuration |
 | [Screenshots](docs/screenshots/README.md) | README images and capture guidelines |
 
-## Technologies
+## ⌨️ Technologies
 
 - **Frontend:** <img alt="SvelteKit" src="https://img.shields.io/badge/SvelteKit-FF3E00?style=flat&amp;labelColor=595959&amp;logo=svelte&amp;logoColor=white" height="18"> <img alt="Svelte 5" src="https://img.shields.io/badge/Svelte%205-FF3E00?style=flat&amp;labelColor=595959&amp;logo=svelte&amp;logoColor=white" height="18"> <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&amp;labelColor=595959&amp;logo=typescript&amp;logoColor=white" height="18"> <img alt="Vite" src="https://img.shields.io/badge/Vite-646CFF?style=flat&amp;labelColor=595959&amp;logo=vite&amp;logoColor=white" height="18">
 - **Backend:** <img alt="Bun" src="https://img.shields.io/badge/Bun-14151A?style=flat&amp;labelColor=595959&amp;logo=bun&amp;logoColor=white" height="18"> <img alt="Express" src="https://img.shields.io/badge/Express-000000?style=flat&amp;labelColor=595959&amp;logo=express&amp;logoColor=white" height="18"> <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&amp;labelColor=595959&amp;logo=typescript&amp;logoColor=white" height="18">
