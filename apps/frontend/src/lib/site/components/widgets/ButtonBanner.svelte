@@ -67,6 +67,13 @@
 			url: 'https://hrtowii.nekoweb.org/',
 			imageUrl: 'https://hrtowii.nekoweb.org/88x31-madoka.png',
 			alt: 'hrtowii'
+		},
+		{
+			id: '8',
+			title: 'h4rl',
+			url: 'https://h4rl.dev/',
+			imageUrl: 'https://h4rl.dev/badges/h4rl.png',
+			alt: 'h4rl'
 		}
 	]);
 
