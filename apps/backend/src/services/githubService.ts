@@ -1,4 +1,5 @@
 import { logger } from '../utils/logger';
+import { getOrSetCached } from '../utils/shortLivedCache';
 
 export interface GitHubContributionDay {
 	date: string;
@@ -206,4 +207,53 @@ export class GitHubService {
 			return null;
 		}
 	}
+}
+
+export interface RepoStats {
+	stars: number;
+	forks: number;
+	openIssues: number;
+	language: string | null;
+}
+
+/**
+ * Stars/forks/etc. for a github.com repo URL, cached for 1h to stay within rate limits.
+ * Returns null for non-GitHub URLs or on any API error.
+ */
+export async function getRepoStats(repoUrl: string | null): Promise<RepoStats | null> {
+	const match = repoUrl?.match(/^https?:\/\/(?:www\.)?github\.com\/([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?(?:[?#].*)?$/i);
+	if (!match) return null;
+	const [, owner, repo] = match;
+	return getOrSetCached(`github-repo:${owner}/${repo}`.toLowerCase(), 60 * 60 * 1000, async () => {
+		try {
+			const headers: Record<string, string> = {
+				Accept: 'application/vnd.github+json',
+				'User-Agent': 'dane.gg-site'
+			};
+			if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+			const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+				headers,
+				signal: AbortSignal.timeout(10_000)
+			});
+			if (!res.ok) {
+				logger.warn(`GitHub repo stats for ${owner}/${repo} failed: HTTP ${res.status}`);
+				return null;
+			}
+			const d = (await res.json()) as {
+				stargazers_count: number;
+				forks_count: number;
+				open_issues_count: number;
+				language: string | null;
+			};
+			return {
+				stars: d.stargazers_count,
+				forks: d.forks_count,
+				openIssues: d.open_issues_count,
+				language: d.language
+			};
+		} catch (error) {
+			logger.error('Error fetching GitHub repo stats:', error);
+			return null;
+		}
+	});
 }

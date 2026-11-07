@@ -40,6 +40,8 @@
 		logoUrl: string | null;
 		logoBgColor: string | null;
 		logoBorder: boolean;
+		showRepoStats: boolean;
+		repoStats: { stars: number; forks: number } | null;
 		displayOrder: number;
 		createdAt: string;
 		updatedAt: string;
@@ -199,12 +201,20 @@
 										<h3 class="project-title">
 											<RainbowText text={project.title} />
 										</h3>
-										<div class="project-status">
-											<span
-												class="status-indicator"
-												style="background-color: {getProjectStatusColor(project.active)};"
-											></span>
-											<span class="status-text">{project.active}</span>
+										<div class="project-meta">
+											{#if project.showRepoStats && project.repoStats}
+												<div class="repo-stats" title="GitHub stats">
+													<span><Icon icon="lucide:star" width="14" height="14" /> {project.repoStats.stars}</span>
+													<span><Icon icon="lucide:git-fork" width="14" height="14" /> {project.repoStats.forks}</span>
+												</div>
+											{/if}
+											<div class="project-status">
+												<span
+													class="status-indicator"
+													style="background-color: {getProjectStatusColor(project.active)};"
+												></span>
+												<span class="status-text">{project.active}</span>
+											</div>
 										</div>
 									</div>
 
@@ -455,12 +465,19 @@
 		box-sizing: border-box;
 	}
 
-	.project-status {
+	.project-meta {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
 		flex-shrink: 0;
 		margin-left: auto;
+	}
+
+	.project-status {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-shrink: 0;
 		padding: 0.25rem 0.75rem;
 		background: var(--theme-background, #0a0a0a);
 		border: 1px solid var(--theme-border, #ffffff);
@@ -616,6 +633,20 @@
 			align-items: center;
 			width: 100%;
 		}
+
+		/* Stats make the header too wide: give them their own row under the title */
+		.project-header:has(.repo-stats) {
+			flex-wrap: wrap;
+		}
+
+		.project-header:has(.repo-stats) .project-meta {
+			flex-basis: 100%;
+			margin-left: 0;
+		}
+
+		.project-header:has(.repo-stats) .project-status {
+			margin-left: auto;
+		}
 	}
 
 	@media (max-width: 480px) {
@@ -642,5 +673,23 @@
 		.projects-grid {
 			columns: 2;
 		}
+	}
+
+	.repo-stats {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.repo-stats span {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.25rem 0.75rem;
+		background: var(--theme-background, #0a0a0a);
+		border: 1px solid var(--theme-border, #ffffff);
+		color: var(--theme-text-secondary, #a1a1aa);
+		font-size: calc(0.75 * 16 * 1em / 14);
+		font-weight: 500;
+		white-space: nowrap;
 	}
 </style>

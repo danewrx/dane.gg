@@ -37,6 +37,7 @@ export interface Project {
 	logoUrl: string | null;
 	logoBgColor: string | null;
 	logoBorder: boolean;
+	showRepoStats: boolean;
 	displayOrder: number;
 	createdAt: string;
 	updatedAt: string;
@@ -60,6 +61,7 @@ export interface CreateProject {
 	logoUrl?: string | null;
 	logoBgColor?: string | null;
 	logoBorder?: boolean;
+	showRepoStats?: boolean;
 	displayOrder?: number;
 	featured?: boolean;
 	tagIds?: string[];
@@ -81,6 +83,7 @@ export interface UpdateProject {
 	logoUrl?: string | null;
 	logoBgColor?: string | null;
 	logoBorder?: boolean;
+	showRepoStats?: boolean;
 	displayOrder?: number;
 	featured?: boolean;
 	tagIds?: string[];

@@ -94,6 +94,7 @@ export const projects = websiteSchema.table('projects', {
 	logoUrl: varchar('logo_url', { length: 255 }),
 	logoBgColor: varchar('logo_bg_color', { length: 50 }),
 	logoBorder: boolean('logo_border').default(false),
+	showRepoStats: boolean('show_repo_stats').notNull().default(false),
 	displayOrder: integer('display_order').notNull().default(0),
 	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 	updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()

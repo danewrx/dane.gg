@@ -5,6 +5,7 @@ import { projects, projectCategories, tags, projectTags } from '../db/schema';
 import { eq, desc, and, sql, asc, inArray } from 'drizzle-orm';
 import { requireSession } from '../middleware/auth';
 import { generalLimiter } from '../middleware/rateLimiting';
+import { getRepoStats } from '../services/githubService';
 
 const router = Router();
 
@@ -42,6 +43,7 @@ router.get('/', generalLimiter, async (req, res) => {
 				logoUrl: projects.logoUrl,
 				logoBgColor: projects.logoBgColor,
 				logoBorder: projects.logoBorder,
+				showRepoStats: projects.showRepoStats,
 				displayOrder: projects.displayOrder,
 				createdAt: projects.createdAt,
 				updatedAt: projects.updatedAt,
@@ -84,6 +86,7 @@ router.get('/', generalLimiter, async (req, res) => {
 
 				return {
 					...project,
+					repoStats: project.showRepoStats ? await getRepoStats(project.repoUrl) : null,
 					tags: projectTagsList
 				};
 			})
@@ -115,6 +118,8 @@ router.get('/', generalLimiter, async (req, res) => {
 					logoUrl: project.logoUrl,
 					logoBgColor: project.logoBgColor,
 					logoBorder: project.logoBorder,
+					showRepoStats: project.showRepoStats,
+					repoStats: project.repoStats,
 					displayOrder: project.displayOrder,
 					createdAt: project.createdAt,
 					updatedAt: project.updatedAt,
@@ -175,6 +180,7 @@ router.get('/admin/all', requireSession, async (req, res) => {
 				logoUrl: projects.logoUrl,
 				logoBgColor: projects.logoBgColor,
 				logoBorder: projects.logoBorder,
+				showRepoStats: projects.showRepoStats,
 				displayOrder: projects.displayOrder,
 				createdAt: projects.createdAt,
 				updatedAt: projects.updatedAt,
@@ -212,6 +218,7 @@ router.get('/admin/all', requireSession, async (req, res) => {
 
 				return {
 					...project,
+					repoStats: project.showRepoStats ? await getRepoStats(project.repoUrl) : null,
 					tags: projectTagsList
 				};
 			})
@@ -256,6 +263,7 @@ router.get('/admin/:id', requireSession, async (req, res) => {
 				logoUrl: projects.logoUrl,
 				logoBgColor: projects.logoBgColor,
 				logoBorder: projects.logoBorder,
+				showRepoStats: projects.showRepoStats,
 				displayOrder: projects.displayOrder,
 				createdAt: projects.createdAt,
 				updatedAt: projects.updatedAt,
@@ -325,6 +333,7 @@ router.post('/admin', requireSession, async (req, res) => {
 			logoUrl,
 			logoBgColor,
 			logoBorder,
+			showRepoStats,
 			displayOrder,
 			featured,
 			tagIds
@@ -389,6 +398,7 @@ router.post('/admin', requireSession, async (req, res) => {
 					return logoBgColor && hexColorRegex.test(logoBgColor) ? logoBgColor : null;
 				})(),
 				logoBorder: logoBorder || false,
+				showRepoStats: showRepoStats || false,
 				displayOrder: displayOrder ?? 0,
 				featured: featured || false,
 				updatedAt: now
@@ -415,6 +425,7 @@ router.post('/admin', requireSession, async (req, res) => {
 				logoUrl: projects.logoUrl,
 				logoBgColor: projects.logoBgColor,
 				logoBorder: projects.logoBorder,
+				showRepoStats: projects.showRepoStats,
 				displayOrder: projects.displayOrder,
 				createdAt: projects.createdAt,
 				updatedAt: projects.updatedAt,
@@ -534,6 +545,7 @@ router.put('/admin/:id', requireSession, async (req, res) => {
 			logoUrl,
 			logoBgColor,
 			logoBorder,
+			showRepoStats,
 			displayOrder,
 			featured,
 			createdAt,
@@ -599,6 +611,7 @@ router.put('/admin/:id', requireSession, async (req, res) => {
 			updateData.logoBgColor = logoBgColor || null;
 		}
 		if (logoBorder !== undefined) updateData.logoBorder = logoBorder ?? false;
+		if (showRepoStats !== undefined) updateData.showRepoStats = Boolean(showRepoStats);
 		if (displayOrder !== undefined) updateData.displayOrder = displayOrder;
 		if (featured !== undefined) updateData.featured = featured;
 		if (createdAt !== undefined) updateData.createdAt = new Date(createdAt);
@@ -625,6 +638,7 @@ router.put('/admin/:id', requireSession, async (req, res) => {
 				logoUrl: projects.logoUrl,
 				logoBgColor: projects.logoBgColor,
 				logoBorder: projects.logoBorder,
+				showRepoStats: projects.showRepoStats,
 				displayOrder: projects.displayOrder,
 				createdAt: projects.createdAt,
 				updatedAt: projects.updatedAt,
@@ -758,6 +772,7 @@ router.get('/category/:categoryId', generalLimiter, async (req, res) => {
 				logoUrl: projects.logoUrl,
 				logoBgColor: projects.logoBgColor,
 				logoBorder: projects.logoBorder,
+				showRepoStats: projects.showRepoStats,
 				displayOrder: projects.displayOrder,
 				createdAt: projects.createdAt,
 				updatedAt: projects.updatedAt,
@@ -793,6 +808,7 @@ router.get('/category/:categoryId', generalLimiter, async (req, res) => {
 					.leftJoin(projectCategories, eq(tags.categoryId, projectCategories.id))
 					.where(eq(projectTags.projectId, project.id));
 
+				const repoStats = project.showRepoStats ? await getRepoStats(project.repoUrl) : null;
 				return {
 					id: project.id,
 					title: project.title,
@@ -809,6 +825,8 @@ router.get('/category/:categoryId', generalLimiter, async (req, res) => {
 					logoUrl: project.logoUrl,
 					logoBgColor: project.logoBgColor,
 					logoBorder: project.logoBorder,
+					showRepoStats: project.showRepoStats,
+					repoStats,
 					displayOrder: project.displayOrder,
 					createdAt: project.createdAt,
 					updatedAt: project.updatedAt,
