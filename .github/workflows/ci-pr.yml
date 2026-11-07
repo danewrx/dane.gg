@@ -54,7 +54,7 @@ jobs:
   # ─────────────────────────────────────────────
   e2e-smoke:
     name: E2E Smoke (chromium)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     env:
       PW_CI_WORKERS: 2
