@@ -1,0 +1,2 @@
+ALTER TABLE "website"."users" ADD COLUMN "admin_font" varchar(100) DEFAULT 'Ubuntu' NOT NULL;--> statement-breakpoint
+ALTER TABLE "website"."users" ADD COLUMN "admin_use_system_font" boolean DEFAULT false NOT NULL;

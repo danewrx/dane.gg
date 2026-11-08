@@ -12,6 +12,7 @@
 	import { Toaster } from 'svelte-sonner';
 	import { ModeWatcher, mode } from 'mode-watcher';
 	import '$lib/admin/theme/admin-accent.css';
+	import { initAdminFont } from '$lib/admin/services/adminFont';
 
 	let { children } = $props();
 	let sidebarCollapsed = $state(false);
@@ -55,6 +56,7 @@
 
 	// Add event listener for sidebar items
 	onMount(() => {
+		void initAdminFont();
 		window.addEventListener('updateSidebarItems', handleSidebarItemsUpdate);
 
 		// Request initial update from app bar
@@ -112,7 +114,7 @@
 		expand
 		visibleToasts={5}
 		toastOptions={{
-			style: 'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;',
+			style: 'font-family: var(--global-font-family);',
 			duration: 4000,
 			classes: {
 				success: 'sonner-success-accent',
@@ -135,7 +137,7 @@
 		flex-direction: column;
 		height: 100vh;
 		background: #1a1a1a;
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		font-family: var(--global-font-family);
 		color: #ffffff;
 		transition:
 			background-color 0.2s ease,

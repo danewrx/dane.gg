@@ -13,6 +13,13 @@ interface AccentColorResponse {
 	accentColor: string;
 }
 
+interface AdminFontResponse {
+	success: boolean;
+	message?: string;
+	adminFont: string;
+	useSystemFont: boolean;
+}
+
 interface AdminSettingsResponse {
 	success: boolean;
 	message: string;
@@ -103,6 +110,18 @@ class SettingsService {
 			logger.error('Set theme preference failed:', error);
 			throw error;
 		}
+	}
+
+	// Admin font methods
+	async getAdminFont(): Promise<AdminFontResponse> {
+		return this.makeRequest<AdminFontResponse>('/settings/admin-font', { method: 'GET' });
+	}
+
+	async setAdminFont(adminFont: string, useSystemFont: boolean): Promise<AdminFontResponse> {
+		return this.makeRequest<AdminFontResponse>('/settings/admin-font', {
+			method: 'POST',
+			body: JSON.stringify({ adminFont, useSystemFont })
+		});
 	}
 
 	// Accent color methods

@@ -29,6 +29,8 @@
 		disabled?: boolean;
 		/** Allow uploading custom fonts */
 		allowUpload?: boolean;
+		/** Only list Google fonts (hides uploaded custom fonts) */
+		googleOnly?: boolean;
 		/** Optional class on the wrapper */
 		class?: string;
 	}
@@ -40,6 +42,7 @@
 		id = 'font-picker',
 		disabled = false,
 		allowUpload = true,
+		googleOnly = false,
 		class: className = ''
 	}: Props = $props();
 
@@ -73,7 +76,7 @@
 	}
 
 	const googleFonts = $derived(fonts.filter((f) => f.type === 'google'));
-	const customFonts = $derived(fonts.filter((f) => f.type === 'custom'));
+	const customFonts = $derived(googleOnly ? [] : fonts.filter((f) => f.type === 'custom'));
 </script>
 
 <div class="font-picker" class:className>

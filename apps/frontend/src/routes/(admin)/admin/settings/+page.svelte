@@ -5,6 +5,12 @@
 	import { mode, setMode } from 'mode-watcher';
 	import Tabs from '$lib/admin/components/ui/Tabs.svelte';
 	import AccentColorPicker from '$lib/admin/components/ui/AccentColorPicker.svelte';
+	import FontPicker from '$lib/admin/components/ui/FontPicker.svelte';
+	import {
+		applyAdminFont,
+		DEFAULT_ADMIN_FONT,
+		saveAdminFont
+	} from '$lib/admin/services/adminFont';
 	import {
 		Monitor,
 		Sun,
@@ -41,6 +47,11 @@
 	}
 
 	// Theme tabs configuration
+	const fontTabs = [
+		{ id: 'system', label: 'System', value: 'system' },
+		{ id: 'site', label: 'Site font', value: 'site' }
+	];
+
 	const themeTabs = [
 		{ id: 'system', label: 'Auto', value: 'system' },
 		{ id: 'light', label: 'Light', value: 'light' },
@@ -50,6 +61,8 @@
 	// Get current theme preference - start with system as default
 	let currentTheme = $state('system');
 	let currentAccentColor = $state('#3b82f6');
+	let adminFont = $state(DEFAULT_ADMIN_FONT);
+	let useSystemFont = $state(false);
 	let isInitialized = $state(false);
 
 	// API Keys state
@@ -86,10 +99,13 @@
 	async function loadAppearanceSettings() {
 		if ($user) {
 			try {
-				const [dbTheme, dbAccentColor] = await Promise.all([
+				const [dbTheme, dbAccentColor, dbFont] = await Promise.all([
 					settingsService.getThemePreference(),
-					settingsService.getAccentColor()
+					settingsService.getAccentColor(),
+					settingsService.getAdminFont()
 				]);
+				adminFont = dbFont.adminFont;
+				useSystemFont = dbFont.useSystemFont;
 				currentTheme = dbTheme;
 				setMode(dbTheme as 'light' | 'dark' | 'system');
 				currentAccentColor = dbAccentColor;
@@ -406,6 +422,22 @@
 		}
 	}
 
+	async function handleAdminFontChange(font: string, system: boolean) {
+		const previous = { adminFont, useSystemFont };
+		adminFont = font;
+		useSystemFont = system;
+		try {
+			await saveAdminFont({ adminFont: font, useSystemFont: system });
+			toast.success(system ? 'Using system font' : `Font set to ${font}`);
+		} catch (error) {
+			logger.error('Failed to save admin font:', error);
+			adminFont = previous.adminFont;
+			useSystemFont = previous.useSystemFont;
+			applyAdminFont(previous);
+			toast.error('Failed to save font preference');
+		}
+	}
+
 	async function handleAccentColorChange(event: CustomEvent<{ color: string }>) {
 		const { color } = event.detail;
 		currentAccentColor = color;
@@ -516,6 +548,37 @@
 						disabled={!isInitialized}
 						on:colorChange={handleAccentColorChange}
 					/>
+				</div>
+			</div>
+
+			<!-- Font Section -->
+			<div class="setting-group">
+				<div class="setting-info">
+					<h3 class="setting-title">Font</h3>
+					<p class="setting-description">Font used across the admin dashboard</p>
+				</div>
+
+				<div class="setting-control font-control">
+					<Tabs
+						tabs={fontTabs}
+						activeTab={useSystemFont ? 'system' : 'site'}
+						onTabChange={(_id, value) => handleAdminFontChange(adminFont, value === 'system')}
+						variant="default"
+						size="md"
+						fullWidth={true}
+						disabled={!isInitialized}
+					/>
+					{#if !useSystemFont}
+						<FontPicker
+							id="admin-font"
+							label=""
+							value={adminFont}
+							googleOnly
+							allowUpload={false}
+							disabled={!isInitialized}
+							onChange={(font) => handleAdminFontChange(font, false)}
+						/>
+					{/if}
 				</div>
 			</div>
 
@@ -1127,6 +1190,14 @@
 
 	.accent-color-group {
 		margin-top: 32px;
+	}
+
+	.font-control {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		width: 280px;
+		max-width: 100%;
 	}
 
 	.accent-color-control {

@@ -34,14 +34,22 @@ if (browser) {
 	}
 }
 
-const ADMIN_UI_FONT_STACK =
+const SYSTEM_UI_FONT_STACK =
 	"-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif";
 
-/** Public site follows font mode; admin/login/logout always use a neutral system stack. */
+let adminFontStack = SYSTEM_UI_FONT_STACK;
+
+/** Set the admin UI font stack */
+export function setAdminFontStack(stack: string | null): void {
+	adminFontStack = stack ?? SYSTEM_UI_FONT_STACK;
+	reapplyFontForCurrentRealm();
+}
+
+/** Public site follows font mode, admin/login/logout use the admin font */
 export function reapplyFontForCurrentRealm(): void {
 	if (!browser) return;
 	if (document.documentElement.dataset.daneApp !== 'public') {
-		document.documentElement.style.setProperty('--global-font-family', ADMIN_UI_FONT_STACK);
+		document.documentElement.style.setProperty('--global-font-family', adminFontStack);
 		return;
 	}
 	updateGlobalFont(get(fontMode));

@@ -1,8 +1,8 @@
 import { logger } from '../utils/logger';
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
-import { users, siteConfig } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { users, siteConfig, fonts } from '../db/schema';
+import { and, eq } from 'drizzle-orm';
 import { requireSession } from '../middleware/auth';
 import { ConfigService } from '../services/config';
 
@@ -349,6 +349,62 @@ router.post('/admin-chat-color', requireSession, async (req: Request, res: Respo
 			error: 'Internal server error',
 			message: 'Failed to update admin chat color'
 		});
+	}
+});
+
+
+// Admin dashboard font (per user)
+router.get('/admin-font', requireSession, async (req: Request, res: Response) => {
+	try {
+		const [user] = await db
+			.select({ adminFont: users.adminFont, useSystemFont: users.adminUseSystemFont })
+			.from(users)
+			.where(eq(users.id, req.user!.id))
+			.limit(1);
+
+		if (!user) {
+			return res.status(404).json({ error: 'User not found', message: 'User does not exist' });
+		}
+
+		res.json({ success: true, ...user });
+	} catch (error) {
+		logger.error('Get admin font error:', error);
+		res.status(500).json({ error: 'Internal server error', message: 'Failed to get admin font' });
+	}
+});
+
+router.post('/admin-font', requireSession, async (req: Request, res: Response) => {
+	try {
+		const { adminFont, useSystemFont } = req.body;
+
+		if (typeof useSystemFont !== 'boolean' || typeof adminFont !== 'string') {
+			return res.status(400).json({
+				error: 'Validation failed',
+				message: 'adminFont (string) and useSystemFont (boolean) are required'
+			});
+		}
+
+		const [font] = await db
+			.select({ id: fonts.id })
+			.from(fonts)
+			.where(and(eq(fonts.name, adminFont), eq(fonts.type, 'google')))
+			.limit(1);
+		if (!font) {
+			return res.status(400).json({
+				error: 'Validation failed',
+				message: 'adminFont must be one of the available Google fonts'
+			});
+		}
+
+		await db
+			.update(users)
+			.set({ adminFont, adminUseSystemFont: useSystemFont })
+			.where(eq(users.id, req.user!.id));
+
+		res.json({ success: true, adminFont, useSystemFont, message: 'Admin font updated successfully' });
+	} catch (error) {
+		logger.error('Update admin font error:', error);
+		res.status(500).json({ error: 'Internal server error', message: 'Failed to update admin font' });
 	}
 });
 
