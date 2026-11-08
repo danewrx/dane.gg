@@ -1,0 +1,1 @@
+ALTER TABLE "website"."projects" ADD COLUMN "show_repo_stats" boolean DEFAULT false NOT NULL;

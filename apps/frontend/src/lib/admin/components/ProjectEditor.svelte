@@ -61,6 +61,32 @@
 	let projectIconOption = $state<IconOption | null>(null);
 	let projectIconPickerOpen = $state(false);
 	let repoUrl = $state('');
+	let showRepoStats = $state(false);
+	const githubRepoPath = $derived(
+		repoUrl.trim().match(/^https?:\/\/(?:www\.)?github\.com\/([\w.-]+\/[\w.-]+?)(?:\.git)?\/?(?:[?#].*)?$/i)?.[1] ?? null
+	);
+	// Only a definite 404 hides the toggle; rate limits or network errors fail open
+	let githubRepoExists = $state(false);
+	const isGithubRepo = $derived(githubRepoPath !== null && githubRepoExists);
+
+	$effect(() => {
+		const path = githubRepoPath;
+		githubRepoExists = false;
+		if (!path) return;
+		const ctrl = new AbortController();
+		const timer = setTimeout(async () => {
+			try {
+				const res = await fetch(`https://api.github.com/repos/${path}`, { signal: ctrl.signal });
+				githubRepoExists = res.status !== 404;
+			} catch (e) {
+				if (!ctrl.signal.aborted) githubRepoExists = true;
+			}
+		}, 500);
+		return () => {
+			clearTimeout(timer);
+			ctrl.abort();
+		};
+	});
 	let repoText = $state('View Repository');
 	let repoTextCustom = $state(false);
 	let repoTextDropdown = $state('View Repository');
@@ -180,6 +206,7 @@
 			projectTextDropdown = 'View Project';
 			projectIconOption = null;
 				repoUrl = '';
+				showRepoStats = false;
 				repoText = 'View Repository';
 				repoTextCustom = false;
 			repoTextDropdown = 'View Repository';
@@ -284,6 +311,7 @@
 			}
 		projectIconOption = await iconNameToOption(project.projectIcon || null);
 			repoUrl = project.repoUrl || '';
+			showRepoStats = project.showRepoStats || false;
 			const savedRepoText = project.repoText || 'View Repository';
 			if (repoButtonOptions.slice(0, -1).includes(savedRepoText)) {
 				repoText = savedRepoText;
@@ -471,6 +499,7 @@
 				repoUrl: repoUrl.trim() || undefined,
 				repoText: repoText.trim() || 'View Repository',
 				repoIcon: iconOptionToName(repoIconOption),
+				showRepoStats: showRepoStats,
 				logoUrl: logoUrl.trim() || null,
 				logoBgColor: logoBgColor.trim() || null,
 				logoBorder: logoBorder,
@@ -909,6 +938,16 @@
 					{/if}
 				</div>
 			</div>
+			{#if isGithubRepo}
+				<div class="form-group">
+					<Toggle bind:checked={showRepoStats} label="Show GitHub stats" />
+					<p class="help-text">
+						{showRepoStats
+							? 'Stars and forks shown next to the repository button'
+							: 'Stars and forks hidden'}
+					</p>
+				</div>
+			{/if}
 
 			<!-- Tags -->
 			<div class="form-group">
