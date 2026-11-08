@@ -23,7 +23,9 @@ export const users = websiteSchema.table('users', {
 	totpSecret: text('totp_secret'),
 	totpEnabled: boolean('totp_enabled').default(false),
 	themePreference: varchar('theme_preference', { length: 10 }).default('system'), // 'light', 'dark', 'system'
-	accentColor: varchar('accent_color', { length: 7 }).default('#000000') // Hex code
+	accentColor: varchar('accent_color', { length: 7 }).default('#000000'), // Hex code
+	adminFont: varchar('admin_font', { length: 100 }).notNull().default('Ubuntu'), // Google font name
+	adminUseSystemFont: boolean('admin_use_system_font').notNull().default(false)
 });
 
 // TOTP backup codes table
