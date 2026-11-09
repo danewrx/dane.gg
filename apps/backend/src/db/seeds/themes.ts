@@ -3747,7 +3747,7 @@ const CHRISTMAS_THEME_INSERT = {
 	backgroundAttachment: 'fixed',
 
 	fontFamily: 'Nunito',
-	headingFontFamily: 'Mountains of Christmas',
+	headingFontFamily: 'Berkshire Swash',
 	fontScale: '1',
 
 	borderRadius: '8px',
@@ -3829,6 +3829,7 @@ async function removeRetiredThemes(): Promise<void> {
 	}
 }
 
+async function applyBundledThemeToDb(theme: InferInsertModel<typeof themes>) {
 	const { isVisible: _isVisible, ...fields } = theme;
 	const rows = await db
 		.update(themes)
