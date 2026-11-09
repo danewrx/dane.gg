@@ -15,12 +15,37 @@ const LEGACY_BUILTIN_FONT_PATHS = [
 	'/fonts/w95a/w95fa.woff2'
 ] as const;
 
+/**
+ * Fonts shipped in `static/fonts/builtin/` and registered as custom fonts on boot, so they are
+ * served from this site (no Google Fonts request). Disk names follow the upload pattern with
+ * placeholder timestamp/random parts. `-VF-` in a name marks a variable font (see
+ * `customFontFaceWeight` in the frontend theme store).
+ */
+export const BUNDLED_SITE_FONTS = [
+	{ name: BUILTIN_SITE_FONT_NAME, diskFilename: BUILTIN_SITE_FONT_DISK_FILENAME },
+	{ name: 'Creepster', diskFilename: 'Creepster-8888888888881-888888881.woff2' },
+	{ name: 'Berkshire Swash', diskFilename: 'Berkshire-Swash-8888888888882-888888882.woff2' },
+	{ name: 'Nunito', diskFilename: 'Nunito-VF-8888888888883-888888883.woff2' },
+	{ name: 'Chewy', diskFilename: 'Chewy-8888888888884-888888884.woff2' },
+	{ name: 'Quicksand', diskFilename: 'Quicksand-VF-8888888888885-888888885.woff2' }
+] as const;
+
+export const bundledFontFilePath = (diskFilename: string) => `/uploads/fonts/${diskFilename}`;
+
+/** Names that uploads may not reuse. */
+export const isReservedFontName = (name: string) => BUNDLED_SITE_FONTS.some((f) => f.name === name);
+
 export function isBundledBuiltinSiteFont(font: {
 	type: string;
 	name: string;
 	filePath: string | null;
 }): boolean {
-	if (font.type !== 'custom' || font.name !== BUILTIN_SITE_FONT_NAME) return false;
-	if (font.filePath === BUILTIN_SITE_FONT_FILE_PATH) return true;
-	return LEGACY_BUILTIN_FONT_PATHS.includes(font.filePath as (typeof LEGACY_BUILTIN_FONT_PATHS)[number]);
+	if (font.type !== 'custom') return false;
+	const bundled = BUNDLED_SITE_FONTS.find((f) => f.name === font.name);
+	if (!bundled) return false;
+	if (font.filePath === bundledFontFilePath(bundled.diskFilename)) return true;
+	return (
+		font.name === BUILTIN_SITE_FONT_NAME &&
+		LEGACY_BUILTIN_FONT_PATHS.includes(font.filePath as (typeof LEGACY_BUILTIN_FONT_PATHS)[number])
+	);
 }

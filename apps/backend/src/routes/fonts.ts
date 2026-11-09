@@ -5,7 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import { db } from '../db';
 import { fonts } from '../db/schema';
-import { BUILTIN_SITE_FONT_NAME, isBundledBuiltinSiteFont } from '../db/builtinSiteFont';
+import { isBundledBuiltinSiteFont, isReservedFontName } from '../db/builtinSiteFont';
 import { ensureBuiltinSiteFont } from '../db/ensureBuiltinSiteFont';
 import { ensureGoogleFontsIfEmpty } from '../db/ensureGoogleFonts';
 import { eq, asc } from 'drizzle-orm';
@@ -86,10 +86,10 @@ router.post(
 			const name =
 				(req.body.name as string)?.trim() ||
 				path.basename(req.file.originalname, path.extname(req.file.originalname));
-			if (name === BUILTIN_SITE_FONT_NAME) {
+			if (isReservedFontName(name)) {
 				return res.status(400).json({
 					success: false,
-					error: `The name "${BUILTIN_SITE_FONT_NAME}" is reserved for the built-in site font`
+					error: `The name "${name}" is reserved for a built-in site font`
 				});
 			}
 			const filePath = `/uploads/fonts/${req.file.filename}`;

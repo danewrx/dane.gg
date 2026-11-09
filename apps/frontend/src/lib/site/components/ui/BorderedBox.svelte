@@ -156,7 +156,15 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 6px;
-		font-family: var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace);
+		font-family: var(
+			--global-heading-font-family,
+			var(--global-font-family, 'W95FA', 'JetBrains Mono', 'Courier New', monospace)
+		);
+	}
+
+	.header-left,
+	.header-subheading {
+		font-family: inherit;
 	}
 
 	.header-left {

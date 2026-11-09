@@ -76,6 +76,9 @@
 	}
 
 	const googleFonts = $derived(fonts.filter((f) => f.type === 'google'));
+	const unlistedValue = $derived(
+		!loading && value && !fonts.some((f) => f.name === value) ? value : ''
+	);
 	const customFonts = $derived(googleOnly ? [] : fonts.filter((f) => f.type === 'custom'));
 </script>
 
@@ -86,6 +89,9 @@
 	<select {id} class="font-picker-select" {disabled} {value} onchange={handleSelectChange}>
 		{#if loading}
 			<option value="">Loading fonts…</option>
+		{/if}
+		{#if unlistedValue}
+			<option value={unlistedValue}>{unlistedValue}</option>
 		{/if}
 		{#if !loading && googleFonts.length > 0}
 			<optgroup label="Google Fonts">

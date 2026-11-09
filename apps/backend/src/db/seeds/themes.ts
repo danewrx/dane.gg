@@ -3666,6 +3666,171 @@ const LETS_ALL_LOVE_LAIN_THEME_INSERT = {
 	displayOrder: 9
 } satisfies InferInsertModel<typeof themes>;
 
+const HALLOWEEN_THEME_INSERT = {
+	name: 'Halloween',
+	description: 'Bats circling a giant moon through bare branches — moonlit blue with pumpkin orange accents',
+	isDefault: false,
+	isVisible: false,
+
+	primaryColor: '#f2f6ff',
+	secondaryColor: '#a99cf0',
+	accentColor: '#ff8a3d',
+	backgroundColor: '#0e1630',
+	surfaceColor: 'rgba(12, 18, 40, 0.86)',
+	borderColor: '#5c7ec5',
+	textPrimary: '#eaf1ff',
+	textSecondary: '#a9bfe6',
+	textMuted: '#6f84ad',
+
+	backgroundImage: '/assets/themes/halloween/backgrounds/2.webp',
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(8, 12, 30, 0.3)',
+	overlayDarkenOpacity: '0.3',
+	backgroundBlur: 0,
+	backgroundPosition: 'center center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'Nunito',
+	headingFontFamily: 'Creepster',
+	fontScale: '1',
+
+	borderRadius: '8px',
+	widgetBorderRadius: '6px',
+	scanlinesOpacity: '0',
+	overlayVignetteOpacity: '0.25',
+	overlayGridOpacity: '0',
+	overlayGrainOpacity: '0',
+	overlayGlareOpacity: '0',
+	customCss: `
+html[data-theme="halloween"] {
+  --theme-shell-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+  --theme-content-max-width: 1000px;
+}
+
+html[data-theme="halloween"] .nav-link:hover,
+html[data-theme="halloween"] .nav-link.active {
+  color: #ff8a3d;
+}
+
+html[data-theme="halloween"] ::selection {
+  background: #ff8a3d;
+  color: #0e1630;
+}
+`,
+	displayOrder: 19
+} satisfies InferInsertModel<typeof themes>;
+
+const CHRISTMAS_THEME_INSERT = {
+	name: 'Christmas',
+	description: 'Cosy log cabin under the northern lights — window-glow amber and aurora teal on deep night blue',
+	isDefault: false,
+	isVisible: false,
+
+	primaryColor: '#ffffff',
+	secondaryColor: '#4fd6c4',
+	accentColor: '#ffb347',
+	backgroundColor: '#08162c',
+	surfaceColor: 'rgba(7, 20, 40, 0.86)',
+	borderColor: '#5fb8c8',
+	textPrimary: '#f1f7ff',
+	textSecondary: '#b5d2f7',
+	textMuted: '#7e9fcb',
+
+	backgroundImage: '/assets/themes/christmas/backgrounds/3.gif',
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(6, 14, 30, 0.2)',
+	overlayDarkenOpacity: '0.2',
+	backgroundBlur: 0,
+	backgroundPosition: 'center center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'Nunito',
+	headingFontFamily: 'Berkshire Swash',
+	fontScale: '1',
+
+	borderRadius: '8px',
+	widgetBorderRadius: '6px',
+	scanlinesOpacity: '0',
+	overlayVignetteOpacity: '0.2',
+	overlayGridOpacity: '0',
+	overlayGrainOpacity: '0',
+	overlayGlareOpacity: '0',
+	customCss: `
+html[data-theme="christmas"] {
+  --theme-shell-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --theme-content-max-width: 1000px;
+}
+
+html[data-theme="christmas"] .nav-link:hover,
+html[data-theme="christmas"] .nav-link.active {
+  color: #ffb347;
+}
+
+html[data-theme="christmas"] ::selection {
+  background: #ffb347;
+  color: #08162c;
+}
+`,
+	displayOrder: 20
+} satisfies InferInsertModel<typeof themes>;
+
+const CHRISTMAS_ELF_THEME_INSERT = {
+	name: 'Christmas Elf',
+	description: 'Snowy night alley with a festive elf — snow white and window gold on deep midnight navy, holly-red accents',
+	isDefault: false,
+	isVisible: false,
+
+	primaryColor: '#ffffff',
+	secondaryColor: '#f2d27a',
+	accentColor: '#e8505b',
+	backgroundColor: '#0b1122',
+	surfaceColor: 'rgba(16, 24, 40, 0.86)',
+	borderColor: '#7f8ca3',
+	textPrimary: '#f4f6f8',
+	textSecondary: '#bfc6d1',
+	textMuted: '#8590a3',
+
+	backgroundImage: '/assets/themes/christmas-elf/backgrounds/1.gif',
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(8, 12, 24, 0.25)',
+	overlayDarkenOpacity: '0.25',
+	backgroundBlur: 0,
+	backgroundPosition: 'center center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'Quicksand',
+	headingFontFamily: 'Chewy',
+	fontScale: '1',
+
+	borderRadius: '8px',
+	widgetBorderRadius: '6px',
+	scanlinesOpacity: '0',
+	overlayVignetteOpacity: '0.2',
+	overlayGridOpacity: '0',
+	overlayGrainOpacity: '0',
+	overlayGlareOpacity: '0',
+	customCss: `
+html[data-theme="christmas-elf"] {
+  --theme-shell-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --theme-content-max-width: 1000px;
+}
+
+html[data-theme="christmas-elf"] .nav-link:hover,
+html[data-theme="christmas-elf"] .nav-link.active {
+  color: #e8505b;
+}
+
+html[data-theme="christmas-elf"] ::selection {
+  background: #e8505b;
+  color: #0b1122;
+}
+`,
+	displayOrder: 21
+} satisfies InferInsertModel<typeof themes>;
+
 /** Bundled themes inserted by full seed (after clear) or partial seed when missing. */
 export const ALL_SEED_THEMES = [
 	BUILTIN_DEFAULT_THEME_INSERT,
@@ -3686,7 +3851,10 @@ export const ALL_SEED_THEMES = [
 	GRUVBOX_LIGHT_THEME_INSERT,
 	ROSE_PINE_DAWN_THEME_INSERT,
 	MATRIX_TERMINAL_THEME_INSERT,
-	LETS_ALL_LOVE_LAIN_THEME_INSERT
+	LETS_ALL_LOVE_LAIN_THEME_INSERT,
+	HALLOWEEN_THEME_INSERT,
+	CHRISTMAS_THEME_INSERT,
+	CHRISTMAS_ELF_THEME_INSERT
 ] as const satisfies readonly InferInsertModel<typeof themes>[];
 
 const RETIRED_THEME_NAMES = ['Kawaii Pink'] as const;
@@ -3718,9 +3886,10 @@ async function removeRetiredThemes(): Promise<void> {
 }
 
 async function applyBundledThemeToDb(theme: InferInsertModel<typeof themes>) {
+	const { isVisible: _isVisible, ...fields } = theme;
 	const rows = await db
 		.update(themes)
-		.set({ ...theme, updatedAt: new Date() })
+		.set({ ...fields, updatedAt: new Date() })
 		.where(eq(themes.name, theme.name))
 		.returning();
 

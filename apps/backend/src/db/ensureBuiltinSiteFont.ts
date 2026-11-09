@@ -1,91 +1,68 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { logger } from '../utils/logger';
-import {
-	BUILTIN_SITE_FONT_DISK_FILENAME,
-	BUILTIN_SITE_FONT_FILE_PATH,
-	BUILTIN_SITE_FONT_NAME,
-	isBundledBuiltinSiteFont
-} from './builtinSiteFont';
+import { BUNDLED_SITE_FONTS, bundledFontFilePath } from './builtinSiteFont';
 import { db } from './index';
 import { fonts } from './schema';
 
-const BUILTIN_FONT_SHIPPED_PATH = path.join(
-	process.cwd(),
-	'static',
-	'fonts',
-	'builtin',
-	BUILTIN_SITE_FONT_DISK_FILENAME
-);
-const BUILTIN_FONT_UPLOADS_PATH = path.join(
-	process.cwd(),
-	'static',
-	'uploads',
-	'fonts',
-	BUILTIN_SITE_FONT_DISK_FILENAME
-);
+const staticDir = (...parts: string[]) => path.join(process.cwd(), 'static', ...parts);
 
+/** Copy each bundled font into uploads/fonts (same layout as dashboard uploads). */
 export function ensureBuiltinSiteFontFileOnDisk(): void {
-	try {
-		if (fs.existsSync(BUILTIN_FONT_UPLOADS_PATH)) return;
-		if (!fs.existsSync(BUILTIN_FONT_SHIPPED_PATH)) {
-			logger.warn(
-				`Built-in W95FA font source missing at ${BUILTIN_FONT_SHIPPED_PATH} (skipping copy into uploads/fonts).`
-			);
-			return;
+	for (const { name, diskFilename } of BUNDLED_SITE_FONTS) {
+		try {
+			const target = staticDir('uploads', 'fonts', diskFilename);
+			if (fs.existsSync(target)) continue;
+			const source = staticDir('fonts', 'builtin', diskFilename);
+			if (!fs.existsSync(source)) {
+				logger.warn(`Built-in ${name} font source missing at ${source} (skipping copy).`);
+				continue;
+			}
+			fs.mkdirSync(path.dirname(target), { recursive: true });
+			fs.copyFileSync(source, target);
+			logger.info(`Installed built-in ${name} into uploads/fonts.`);
+		} catch (error) {
+			logger.error(`Failed to copy built-in ${name} font into uploads/fonts:`, error);
 		}
-		fs.mkdirSync(path.dirname(BUILTIN_FONT_UPLOADS_PATH), { recursive: true });
-		fs.copyFileSync(BUILTIN_FONT_SHIPPED_PATH, BUILTIN_FONT_UPLOADS_PATH);
-		logger.info('Installed built-in W95FA into uploads/fonts (same layout as dashboard uploads).');
-	} catch (error) {
-		logger.error('Failed to copy built-in W95FA font into uploads/fonts:', error);
 	}
 }
 
 /**
- * Ensures the bundled W95FA custom font row exists in the database.
- * Idempotent; corrects `file_path` if the row exists but pointed elsewhere.
+ * Ensures a custom font row exists for every bundled font. Idempotent. A row with the same name
+ * (e.g. an older Google Fonts entry) is converted to the bundled file instead of duplicated.
  */
 export async function ensureBuiltinSiteFont(): Promise<void> {
 	try {
 		ensureBuiltinSiteFontFileOnDisk();
-		const [existing] = await db
-			.select()
-			.from(fonts)
-			.where(and(eq(fonts.type, 'custom'), eq(fonts.name, BUILTIN_SITE_FONT_NAME)))
-			.limit(1);
 
-		if (existing) {
-			const needsPath =
-				!isBundledBuiltinSiteFont(existing) || existing.filePath !== BUILTIN_SITE_FONT_FILE_PATH;
-			if (needsPath) {
-				await db
-					.update(fonts)
-					.set({
-						type: 'custom',
-						googleFontFamily: null,
-						filePath: BUILTIN_SITE_FONT_FILE_PATH,
-						updatedAt: new Date()
-					})
-					.where(eq(fonts.id, existing.id));
-				logger.info(`Normalized built-in font row "${BUILTIN_SITE_FONT_NAME}" file path.`);
+		for (const { name, diskFilename } of BUNDLED_SITE_FONTS) {
+			const filePath = bundledFontFilePath(diskFilename);
+			const [existing] = await db.select().from(fonts).where(eq(fonts.name, name)).limit(1);
+
+			if (existing) {
+				if (existing.type !== 'custom' || existing.filePath !== filePath) {
+					await db
+						.update(fonts)
+						.set({ type: 'custom', googleFontFamily: null, filePath, updatedAt: new Date() })
+						.where(eq(fonts.id, existing.id));
+					logger.info(`Normalized built-in font row "${name}".`);
+				}
+				continue;
 			}
-			return;
+
+			const orderRows = await db.select({ displayOrder: fonts.displayOrder }).from(fonts);
+			const maxOrder = orderRows.reduce((m, r) => Math.max(m, r.displayOrder), -1);
+			await db.insert(fonts).values({
+				name,
+				type: 'custom',
+				googleFontFamily: null,
+				filePath,
+				displayOrder: maxOrder + 1
+			});
+			logger.info(`Registered built-in custom font "${name}".`);
 		}
-
-		const orderRows = await db.select({ displayOrder: fonts.displayOrder }).from(fonts);
-		const maxOrder = orderRows.reduce((m, r) => Math.max(m, r.displayOrder), -1);
-
-		await db.insert(fonts).values({
-			name: BUILTIN_SITE_FONT_NAME,
-			type: 'custom',
-			googleFontFamily: null,
-			filePath: BUILTIN_SITE_FONT_FILE_PATH,
-			displayOrder: maxOrder + 1
-		});
-		logger.info(`Registered built-in custom font "${BUILTIN_SITE_FONT_NAME}".`);
 	} catch (error) {
-		logger.error('Failed to ensure built-in site font:', error);
+		logger.error('Failed to ensure built-in site fonts:', error);
 	}
 }
