@@ -9,7 +9,8 @@ export const BUNDLED_THEME_CATEGORY_SEEDS = [
 	{ name: 'Editor (Dark)', displayOrder: 3 },
 	{ name: 'Editor (Light)', displayOrder: 4 },
 	{ name: 'Special', displayOrder: 5 },
-	{ name: 'Custom', displayOrder: 6 }
+	{ name: 'Seasonal', displayOrder: 6 },
+	{ name: 'Custom', displayOrder: 7 }
 ] as const;
 
 /** Bundled light editor themes (for legacy Editor → split migration). */
@@ -41,7 +42,9 @@ export const BUNDLED_THEME_CATEGORY_BY_NAME: Record<string, string> = {
 	'One Light': 'Editor (Light)',
 	'Gruvbox Light': 'Editor (Light)',
 	'Rose Pine Dawn': 'Editor (Light)',
-	'Lets All Love Lain': 'Special'
+	'Lets All Love Lain': 'Special',
+	Halloween: 'Seasonal',
+	Christmas: 'Seasonal'
 };
 
 export async function seedThemeCategories() {

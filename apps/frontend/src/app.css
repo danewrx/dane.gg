@@ -92,6 +92,14 @@ body {
 	font-family: var(--global-font-family);
 }
 
+html[data-dane-app='public'] :is(h1, h2, h3, h4, h5, h6) {
+	font-family: var(--global-heading-font-family, var(--global-font-family));
+}
+
+html[data-dane-app='public'] :is(h1, h2, h3, h4, h5, h6) * {
+	font-family: inherit;
+}
+
 /* Override for ASCII art - keep monospace, no markdown code-block chrome */
 .ascii-box pre,
 .header .ascii-box pre {

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import Logo from '$lib/admin/components/Logo.svelte';
+	import { isChristmasTheme, isHalloweenTheme } from '$lib/site/stores/theme';
 
 	const navigation = [
 		{ name: 'Home', path: '/' },
@@ -28,7 +29,7 @@
 			data-sveltekit-preload-data="hover"
 		>
 			<div class="ascii-box" aria-hidden="true">
-				<Logo animate={true} />
+				<Logo animate={true} hat={$isChristmasTheme ? 'santa' : $isHalloweenTheme ? 'witch' : null} />
 			</div>
 		</a>
 	</div>
@@ -100,6 +101,14 @@
 		transition:
 			color 0.3s ease,
 			text-shadow 0.3s ease;
+	}
+
+	.ascii-box :global(.ascii-art span) {
+		transition: color 0.3s ease;
+	}
+
+	.ascii-link:hover .ascii-box :global(.ascii-art span) {
+		color: inherit !important;
 	}
 
 	.ascii-box {

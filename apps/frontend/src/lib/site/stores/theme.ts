@@ -125,6 +125,20 @@ export function themeSlugFromName(name: string): string {
 		.replaceAll(/[^a-z0-9-]/g, '');
 }
 
+export const CHRISTMAS_THEME_SLUG = 'christmas';
+
+export const isChristmasTheme = derived(
+	siteTheme,
+	($theme) => themeSlugFromName($theme.name) === CHRISTMAS_THEME_SLUG
+);
+
+export const HALLOWEEN_THEME_SLUG = 'halloween';
+
+export const isHalloweenTheme = derived(
+	siteTheme,
+	($theme) => themeSlugFromName($theme.name) === HALLOWEEN_THEME_SLUG
+);
+
 export const isGeoCitiesTheme = derived(
 	siteTheme,
 	($theme) => themeSlugFromName($theme.name) === GEOCITIES_THEME_SLUG
@@ -436,9 +450,13 @@ export function loadGoogleFonts(fonts: string[]): void {
 		return !systemFonts.includes(cleanFont.toLowerCase()) && cleanFont.length > 0;
 	});
 
-	if (fontsToLoad.length === 0) return;
-
 	const existingLink = document.querySelector('link[data-google-fonts]');
+
+	if (fontsToLoad.length === 0) {
+		existingLink?.remove();
+		return;
+	}
+
 	const fontQuery = fontsToLoad
 		.map((font) => `family=${encodeURIComponent(font)}:wght@300;400;500;600;700`)
 		.join('&');
@@ -459,6 +477,16 @@ export function loadGoogleFonts(fonts: string[]): void {
 }
 
 /**
+ * shortcut: variable fonts are recognised by a `-VF-` marker in the file name and declared with a
+ * full weight range; other custom fonts keep the default weight. Upgrade to a per-font weight
+ * column if more variable fonts are bundled.
+ */
+function fontFaceRule(family: string, url: string): string {
+	const weight = /-VF-/.test(url) ? ' font-weight: 200 1000;' : '';
+	return `@font-face { font-family: '${family}'; src: url('${url}');${weight} }`;
+}
+
+/**
  * Inject @font-face for custom theme fonts
  * Uses single style tag so it can be replaced when theme changes
  */
@@ -471,7 +499,7 @@ function injectCustomFontFaces(theme: SiteTheme): void {
 	if (theme.bodyFontUrl && theme.fontFamily) {
 		const url = theme.bodyFontUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 		const family = theme.fontFamily.replace(/'/g, "\\'");
-		rules.push(`@font-face { font-family: '${family}'; src: url('${url}'); }`);
+		rules.push(fontFaceRule(family, url));
 	}
 	if (
 		theme.headingFontUrl &&
@@ -480,11 +508,11 @@ function injectCustomFontFaces(theme: SiteTheme): void {
 	) {
 		const url = theme.headingFontUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 		const family = theme.headingFontFamily.replace(/'/g, "\\'");
-		rules.push(`@font-face { font-family: '${family}'; src: url('${url}'); }`);
+		rules.push(fontFaceRule(family, url));
 	} else if (theme.headingFontUrl && theme.headingFontFamily) {
 		const url = theme.headingFontUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 		const family = theme.headingFontFamily.replace(/'/g, "\\'");
-		rules.push(`@font-face { font-family: '${family}'; src: url('${url}'); }`);
+		rules.push(fontFaceRule(family, url));
 	}
 
 	if (rules.length === 0) {

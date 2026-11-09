@@ -67,6 +67,10 @@ function updateGlobalFont(mode: FontMode) {
 	if (!browser) return;
 	const config = fontConfigs[mode];
 	document.documentElement.style.setProperty('--global-font-family', config.fontFamily);
+	document.documentElement.style.setProperty(
+		'--global-heading-font-family',
+		mode === 'theme' ? 'var(--theme-heading-font)' : config.fontFamily
+	);
 }
 
 // Set specific font mode

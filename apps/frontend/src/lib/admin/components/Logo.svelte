@@ -1,9 +1,66 @@
 <script lang="ts">
 	interface Props {
 		animate?: boolean;
+		hat?: 'santa' | 'witch' | null;
 	}
 
-	let { animate = false }: Props = $props();
+	let { animate = false, hat = null }: Props = $props();
+
+	const HATS = {
+		santa: {
+			rows: 6,
+			art: `⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀<span class="hat-red">⣠⣾⣿⣿⣿⣿⣦⣄</span>⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀<span class="hat-red">⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣷⡄</span>⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀<span class="hat-red">⢀⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠻⣿⣆</span>⠀⠀⠀⠀
+⠀⠀⠀⠀⠀<span class="hat-red">⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇</span>⠀⠀<span class="hat-red">⠈</span><span class="hat-white">⢹⣴⣦⡄</span>⠀
+⠀⠀⠀⠀<span class="hat-white">⣸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇</span>⠀⠀⠀<span class="hat-white">⢻⣿⣿⡟</span>⠀
+⠀⠀⣠<span class="hat-white">⡿⠛⢉⠁</span>⠀⢄⢻⣿⠀⠀<span class="hat-white">⠉⡙⣿</span>⢤⡀⠀⠀<span class="hat-white">⠈⠁</span>⠀⠀
+⠀⡜⢱⣇⠀⣧⢣⡀⠀⡀⢻⡇⠀⡄⢰⣿⣷⡌⣢⡀⠀⠀⠀⠀
+⠀⠇⡎⡿⣆⠹⣷⡹⣄⠙⣽⣿⢸⣧⣼⣿⣿⣿⣶⣼⣆⠀⠀⠀
+⣷⡇⣷⡇⢹⢳⡽⣿⡽⣷⡜⣿⣾⢸⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀
+⣿⡇⡿⣿⠀⠣⠹⣾⣿⣮⠿⣞⣿⢸⣿⣛⢿⣿⡟⠯⠉⠙⠛⠓
+⣿⣇⣷⠙⡇⠀⠁⠀⠉⣽⣷⣾⢿⢸⣿⠀⢸⣿⢿⠀⠀⠀⠀⠀
+⡟⢿⣿⣷⣾⣆⠀⠀⠘⠘⠿⠛⢸⣼⣿⢖⣼⣿⠘⡆⠀⠀⠀⠀
+⠃⢸⣿⣿⡘⠋⠀⠀⠀⠀⠀⠀⣸⣿⣿⣿⣿⣿⡆⠇⠀⠀⠀⠀
+⠀⢸⡿⣿⣇⠀⠈⠀⠤⠀⠀⢀⣿⣿⣿⣿⣿⣿⣧⢸⠀⠀⠀⠀
+⠀⠈⡇⣿⣿⣷⣤⣀⠀⣀⠔⠋⣿⣿⣿⣿⣿⡟⣿⡞⡄⠀⠀⠀
+⠀⠀⢿⢸⣿⣿⣿⣿⣿⡇⠀⢠⣿⡏⢿⣿⣿⡇⢸⣇⠇⠀⠀⠀
+⠀⠀⢸⡏⣿⣿⣿⠟⠋⣀⠠⣾⣿⠡⠀⢉⢟⠷⢼⣿⣿⠀⠀⠀
+⠀⠀⠈⣷⡏⡱⠁⠀⠊⠀⠀⣿⣏⣀⡠⢣⠃⠀⠀⢹⣿⡄⠀⠀
+⠀⠀⠘⢼⣿⠀⢠⣤⣀⠉⣹⡿⠀⠁⠀⡸⠀⠀⠀⠈⣿⡇⠀⠀`
+		},
+		witch: {
+			rows: 7,
+			art: `⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀<span class="hat-purple">⢀⣤⣶⣶⣤⣄</span>⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀<span class="hat-purple">⣴⣿⣿⣿⣿⠟⠛⠓</span>⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀<span class="hat-purple">⣼⣿⣿⣿⣿⠁</span>⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀<span class="hat-purple">⢰⣿⣿⣿⣿⡇</span>⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀<span class="hat-orange">⢠⣿⣿⣿⣿⣿⣇</span>⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀<span class="hat-orange">⣾⣿⣿⣿⣿⣿⣿</span>⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+<span class="hat-purple">⣤⣤⣶⣶⣶⣾⣿⣿⣿⣿⣿⣿⣿⣷⣶⣶⣶⣤⣤⡄</span>⠀⠀⠀⠀
+⠀⠀<span class="hat-purple">⣩⡛⠉⢉⠉⠉⢍⢻⣿⠉⠉⠉⡙⣿⢭</span>⡀⠀⠀⠀⠀⠀⠀
+⠀⡜⢱⣇⠀⣧⢣⡀⠀⡀⢻⡇⠀⡄⢰⣿⣷⡌⣢⡀⠀⠀⠀⠀
+⠀⠇⡎⡿⣆⠹⣷⡹⣄⠙⣽⣿⢸⣧⣼⣿⣿⣿⣶⣼⣆⠀⠀⠀
+⣷⡇⣷⡇⢹⢳⡽⣿⡽⣷⡜⣿⣾⢸⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀
+⣿⡇⡿⣿⠀⠣⠹⣾⣿⣮⠿⣞⣿⢸⣿⣛⢿⣿⡟⠯⠉⠙⠛⠓
+⣿⣇⣷⠙⡇⠀⠁⠀⠉⣽⣷⣾⢿⢸⣿⠀⢸⣿⢿⠀⠀⠀⠀⠀
+⡟⢿⣿⣷⣾⣆⠀⠀⠘⠘⠿⠛⢸⣼⣿⢖⣼⣿⠘⡆⠀⠀⠀⠀
+⠃⢸⣿⣿⡘⠋⠀⠀⠀⠀⠀⠀⣸⣿⣿⣿⣿⣿⡆⠇⠀⠀⠀⠀
+⠀⢸⡿⣿⣇⠀⠈⠀⠤⠀⠀⢀⣿⣿⣿⣿⣿⣿⣧⢸⠀⠀⠀⠀
+⠀⠈⡇⣿⣿⣷⣤⣀⠀⣀⠔⠋⣿⣿⣿⣿⣿⡟⣿⡞⡄⠀⠀⠀
+⠀⠀⢿⢸⣿⣿⣿⣿⣿⡇⠀⢠⣿⡏⢿⣿⣿⡇⢸⣇⠇⠀⠀⠀
+⠀⠀⢸⡏⣿⣿⣿⠟⠋⣀⠠⣾⣿⠡⠀⢉⢟⠷⢼⣿⣿⠀⠀⠀
+⠀⠀⠈⣷⡏⡱⠁⠀⠊⠀⠀⣿⣏⣀⡠⢣⠃⠀⠀⢹⣿⡄⠀⠀
+⠀⠀⠘⢼⣿⠀⢠⣤⣀⠉⣹⡿⠀⠁⠀⡸⠀⠀⠀⠈⣿⡇⠀⠀`
+		}
+	};
+
+	const hatInfo = $derived(hat ? HATS[hat] : null);
+	// Blank rows as tall as the hat, so the text stays level with the face
+	const hatSpacer = $derived(hatInfo ? Array(hatInfo.rows).fill('\u2800').join('\n') : '');
 
 	let logoElement: HTMLDivElement;
 </script>
@@ -11,6 +68,9 @@
 <div class="brand-logo" bind:this={logoElement} class:animated={animate}>
 	<div class="logo-container">
 		<div class="art-ascii">
+			{#if hatInfo}
+				<pre class="ascii-art">{@html hatInfo.art}</pre>
+			{:else}
 			<pre class="ascii-art">
 ⠀⠀⠀⠀⢀⡠⠤⠔⢲⢶⡖⠒⠤⢄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⣠⡚⠁⢀⠀⠀⢄⢻⣿⠀⠀⠀⡙⣷⢤⡀⠀⠀⠀⠀⠀⠀
@@ -28,12 +88,16 @@
 ⠀⠀⠈⣷⡏⡱⠁⠀⠊⠀⠀⣿⣏⣀⡠⢣⠃⠀⠀⢹⣿⡄⠀⠀
 ⠀⠀⠘⢼⣿⠀⢠⣤⣀⠉⣹⡿⠀⠁⠀⡸⠀⠀⠀⠈⣿⡇⠀⠀
       </pre>
+			{/if}
 		</div>
 		<div class="text-logo">
+			{#if hatInfo}
+				<pre class="ascii-art" aria-hidden="true">{hatSpacer}</pre>
+			{/if}
 			<pre class="ascii-text">
-     _                  
-    | |                 
-  __| | __ _ _ __   ___ 
+     _
+    | |
+  __| | __ _ _ __   ___
  / _` |/ _` | '_ \ / _ \
 | (_| | (_| | | | |  __/
  \__,_|\__,_|_| |_|\___|
@@ -80,6 +144,22 @@
 	.ascii-art {
 		font-size: 8px;
 		text-align: right;
+	}
+
+	.ascii-art :global(.hat-red) {
+		color: #e63946;
+	}
+
+	.ascii-art :global(.hat-white) {
+		color: #ffffff;
+	}
+
+	.ascii-art :global(.hat-purple) {
+		color: #9664dc;
+	}
+
+	.ascii-art :global(.hat-orange) {
+		color: #ff8a3d;
 	}
 
 	.ascii-text {
