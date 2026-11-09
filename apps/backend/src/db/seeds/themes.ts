@@ -3723,26 +3723,26 @@ html[data-theme="halloween"] ::selection {
 
 const CHRISTMAS_THEME_INSERT = {
 	name: 'Christmas',
-	description: 'Snowy mountain village at dusk — lantern amber and sunset pink over deep winter blue',
+	description: 'Cosy log cabin under the northern lights — window-glow amber and aurora teal on deep night blue',
 	isDefault: false,
 	isVisible: false,
 
 	primaryColor: '#ffffff',
-	secondaryColor: '#ff8fb8',
-	accentColor: '#ffb066',
-	backgroundColor: '#0a2a5e',
-	surfaceColor: 'rgba(8, 30, 72, 0.84)',
-	borderColor: '#8fc0ff',
+	secondaryColor: '#4fd6c4',
+	accentColor: '#ffb347',
+	backgroundColor: '#08162c',
+	surfaceColor: 'rgba(7, 20, 40, 0.86)',
+	borderColor: '#5fb8c8',
 	textPrimary: '#f1f7ff',
 	textSecondary: '#b5d2f7',
 	textMuted: '#7e9fcb',
 
-	backgroundImage: '/assets/themes/christmas/backgrounds/2.webp',
+	backgroundImage: '/assets/themes/christmas/backgrounds/3.gif',
 	backgroundImageExternal: false,
-	backgroundOverlay: 'rgba(8, 24, 60, 0.25)',
-	overlayDarkenOpacity: '0.25',
+	backgroundOverlay: 'rgba(6, 14, 30, 0.2)',
+	overlayDarkenOpacity: '0.2',
 	backgroundBlur: 0,
-	backgroundPosition: 'center bottom',
+	backgroundPosition: 'center center',
 	backgroundSize: 'cover',
 	backgroundAttachment: 'fixed',
 
@@ -3765,12 +3765,12 @@ html[data-theme="christmas"] {
 
 html[data-theme="christmas"] .nav-link:hover,
 html[data-theme="christmas"] .nav-link.active {
-  color: #ffb066;
+  color: #ffb347;
 }
 
 html[data-theme="christmas"] ::selection {
-  background: #ffb066;
-  color: #0a2a5e;
+  background: #ffb347;
+  color: #08162c;
 }
 `,
 	displayOrder: 20
