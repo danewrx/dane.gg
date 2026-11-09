@@ -129,7 +129,10 @@ export const CHRISTMAS_THEME_SLUG = 'christmas';
 
 export const isChristmasTheme = derived(
 	siteTheme,
-	($theme) => themeSlugFromName($theme.name) === CHRISTMAS_THEME_SLUG
+	($theme) => {
+		const slug = themeSlugFromName($theme.name);
+		return slug === CHRISTMAS_THEME_SLUG || slug.startsWith(`${CHRISTMAS_THEME_SLUG}-`);
+	}
 );
 
 export const HALLOWEEN_THEME_SLUG = 'halloween';

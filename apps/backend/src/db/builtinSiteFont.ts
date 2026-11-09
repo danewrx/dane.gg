@@ -25,7 +25,9 @@ export const BUNDLED_SITE_FONTS = [
 	{ name: BUILTIN_SITE_FONT_NAME, diskFilename: BUILTIN_SITE_FONT_DISK_FILENAME },
 	{ name: 'Creepster', diskFilename: 'Creepster-8888888888881-888888881.woff2' },
 	{ name: 'Berkshire Swash', diskFilename: 'Berkshire-Swash-8888888888882-888888882.woff2' },
-	{ name: 'Nunito', diskFilename: 'Nunito-VF-8888888888883-888888883.woff2' }
+	{ name: 'Nunito', diskFilename: 'Nunito-VF-8888888888883-888888883.woff2' },
+	{ name: 'Chewy', diskFilename: 'Chewy-8888888888884-888888884.woff2' },
+	{ name: 'Quicksand', diskFilename: 'Quicksand-VF-8888888888885-888888885.woff2' }
 ] as const;
 
 export const bundledFontFilePath = (diskFilename: string) => `/uploads/fonts/${diskFilename}`;

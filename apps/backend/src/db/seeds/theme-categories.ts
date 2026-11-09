@@ -44,7 +44,8 @@ export const BUNDLED_THEME_CATEGORY_BY_NAME: Record<string, string> = {
 	'Rose Pine Dawn': 'Editor (Light)',
 	'Lets All Love Lain': 'Special',
 	Halloween: 'Seasonal',
-	Christmas: 'Seasonal'
+	Christmas: 'Seasonal',
+	'Christmas Elf': 'Seasonal'
 };
 
 export async function seedThemeCategories() {

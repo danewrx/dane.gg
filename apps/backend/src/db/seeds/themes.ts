@@ -3776,6 +3776,61 @@ html[data-theme="christmas"] ::selection {
 	displayOrder: 20
 } satisfies InferInsertModel<typeof themes>;
 
+const CHRISTMAS_ELF_THEME_INSERT = {
+	name: 'Christmas Elf',
+	description: 'Snowy night alley with a festive elf — snow white and window gold on deep midnight navy, holly-red accents',
+	isDefault: false,
+	isVisible: false,
+
+	primaryColor: '#ffffff',
+	secondaryColor: '#f2d27a',
+	accentColor: '#e8505b',
+	backgroundColor: '#0b1122',
+	surfaceColor: 'rgba(16, 24, 40, 0.86)',
+	borderColor: '#7f8ca3',
+	textPrimary: '#f4f6f8',
+	textSecondary: '#bfc6d1',
+	textMuted: '#8590a3',
+
+	backgroundImage: '/assets/themes/christmas-elf/backgrounds/1.gif',
+	backgroundImageExternal: false,
+	backgroundOverlay: 'rgba(8, 12, 24, 0.25)',
+	overlayDarkenOpacity: '0.25',
+	backgroundBlur: 0,
+	backgroundPosition: 'center center',
+	backgroundSize: 'cover',
+	backgroundAttachment: 'fixed',
+
+	fontFamily: 'Quicksand',
+	headingFontFamily: 'Chewy',
+	fontScale: '1',
+
+	borderRadius: '8px',
+	widgetBorderRadius: '6px',
+	scanlinesOpacity: '0',
+	overlayVignetteOpacity: '0.2',
+	overlayGridOpacity: '0',
+	overlayGrainOpacity: '0',
+	overlayGlareOpacity: '0',
+	customCss: `
+html[data-theme="christmas-elf"] {
+  --theme-shell-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --theme-content-max-width: 1000px;
+}
+
+html[data-theme="christmas-elf"] .nav-link:hover,
+html[data-theme="christmas-elf"] .nav-link.active {
+  color: #e8505b;
+}
+
+html[data-theme="christmas-elf"] ::selection {
+  background: #e8505b;
+  color: #0b1122;
+}
+`,
+	displayOrder: 21
+} satisfies InferInsertModel<typeof themes>;
+
 /** Bundled themes inserted by full seed (after clear) or partial seed when missing. */
 export const ALL_SEED_THEMES = [
 	BUILTIN_DEFAULT_THEME_INSERT,
@@ -3798,7 +3853,8 @@ export const ALL_SEED_THEMES = [
 	MATRIX_TERMINAL_THEME_INSERT,
 	LETS_ALL_LOVE_LAIN_THEME_INSERT,
 	HALLOWEEN_THEME_INSERT,
-	CHRISTMAS_THEME_INSERT
+	CHRISTMAS_THEME_INSERT,
+	CHRISTMAS_ELF_THEME_INSERT
 ] as const satisfies readonly InferInsertModel<typeof themes>[];
 
 const RETIRED_THEME_NAMES = ['Kawaii Pink'] as const;
