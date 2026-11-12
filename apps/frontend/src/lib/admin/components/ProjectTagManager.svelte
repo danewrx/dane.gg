@@ -190,7 +190,10 @@
 		try {
 			const loadedCategories = await getAllProjectCategories();
 			// Sort categories by displayOrder to ensure consistent ordering
-			categories = loadedCategories.sort((a, b) => a.displayOrder - b.displayOrder);
+			// Tags belong to main categories only
+			categories = loadedCategories
+				.filter((c) => !c.parentId)
+				.sort((a, b) => a.displayOrder - b.displayOrder);
 		} catch (err) {
 			logger.error('Error loading categories:', err);
 		}

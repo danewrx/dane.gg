@@ -13,6 +13,7 @@
 	import { toast } from 'svelte-sonner';
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	import Toggle from './ui/Toggle.svelte';
+	import CategorySelect from './ui/CategorySelect.svelte';
 	import FileUpload, { type UploadedFile } from './ui/FileUpload.svelte';
 	import ProjectCategoryManager from './ProjectCategoryManager.svelte';
 	import ProjectTagManager from './ProjectTagManager.svelte';
@@ -629,12 +630,7 @@
 						Manage Categories
 					</button>
 				</div>
-				<select id="category" bind:value={categoryId} class="form-input">
-					<option value="">Select a category</option>
-					{#each categories as category}
-						<option value={category.id}>{category.name}</option>
-					{/each}
-				</select>
+				<CategorySelect id="category" {categories} bind:value={categoryId} />
 			</div>
 
 			<!-- Description -->

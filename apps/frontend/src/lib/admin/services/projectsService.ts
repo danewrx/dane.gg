@@ -15,6 +15,8 @@ export interface ProjectTag {
 export interface ProjectCategory {
 	id: string;
 	name: string;
+	/** Set for subcategories; absent or null for main categories. */
+	parentId?: string | null;
 	displayOrder: number;
 	createdAt: string;
 }
@@ -231,7 +233,10 @@ export async function getAllProjectCategories(): Promise<ProjectCategory[]> {
 /**
  * Create a new project category
  */
-export async function createProjectCategory(name: string): Promise<ProjectCategory> {
+export async function createProjectCategory(
+	name: string,
+	parentId?: string | null
+): Promise<ProjectCategory> {
 	try {
 		const response = await fetch(`${API_BASE}/admin/categories`, {
 			method: 'POST',
@@ -239,7 +244,7 @@ export async function createProjectCategory(name: string): Promise<ProjectCatego
 				'Content-Type': 'application/json'
 			},
 			credentials: 'include',
-			body: JSON.stringify({ name })
+			body: JSON.stringify({ name, parentId })
 		});
 
 		if (!response.ok) {
@@ -256,12 +261,14 @@ export async function createProjectCategory(name: string): Promise<ProjectCatego
 }
 
 /**
- * Update a project category
+ * Update a project category. `parentId`: a main category id moves it under that category,
+ * null makes it a main category, undefined leaves it where it is.
  */
 export async function updateProjectCategory(
 	id: string,
 	name: string,
-	displayOrder?: number
+	displayOrder?: number,
+	parentId?: string | null
 ): Promise<ProjectCategory> {
 	try {
 		const response = await fetch(`${API_BASE}/admin/categories/${id}`, {
@@ -270,7 +277,7 @@ export async function updateProjectCategory(
 				'Content-Type': 'application/json'
 			},
 			credentials: 'include',
-			body: JSON.stringify({ name, displayOrder })
+			body: JSON.stringify({ name, displayOrder, parentId })
 		});
 
 		if (!response.ok) {

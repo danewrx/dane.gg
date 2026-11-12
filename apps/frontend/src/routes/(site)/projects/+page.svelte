@@ -48,14 +48,18 @@
 		tags: ProjectTag[];
 	}
 
+	interface CategoryInfo {
+		id: string;
+		name: string;
+		displayOrder: number;
+		createdAt: string;
+	}
+
 	interface CategoryGroup {
-		category: {
-			id: string;
-			name: string;
-			displayOrder: number;
-			createdAt: string;
-		};
+		category: CategoryInfo;
+		/** Projects directly under this main category */
 		projects: Project[];
+		subcategories: { category: CategoryInfo; projects: Project[] }[];
 		allFeatured?: boolean;
 	}
 
@@ -83,36 +87,48 @@
 			// Filter projects: only show featured projects
 			const filteredCategories = allCategories
 				.map((categoryGroup) => {
-					const visibleProjects = categoryGroup.projects.filter((project) => {
-						return project.featured === true;
-					});
+					const subcategories = (categoryGroup.subcategories ?? [])
+						.map((sub) => ({ ...sub, projects: sub.projects.filter((p) => p.featured === true) }))
+						.filter((sub) => sub.projects.length > 0);
 
+					const everyProject = [
+						...categoryGroup.projects,
+						...(categoryGroup.subcategories ?? []).flatMap((sub) => sub.projects)
+					];
 					const allFeatured =
-						categoryGroup.projects.length > 0 &&
-						categoryGroup.projects.every((project) => project.featured === true);
+						everyProject.length > 0 && everyProject.every((project) => project.featured === true);
 
 					return {
 						...categoryGroup,
-						projects: visibleProjects,
+						projects: categoryGroup.projects.filter((project) => project.featured === true),
+						subcategories,
 						allFeatured: allFeatured
 					};
 				})
-				.filter((categoryGroup) => categoryGroup.projects.length > 0)
+				.filter(
+					(categoryGroup) => categoryGroup.projects.length > 0 || categoryGroup.subcategories.length > 0
+				)
 				// Sort by category displayOrder
 				.sort((a, b) => {
 					const orderDiff = (a.category.displayOrder || 0) - (b.category.displayOrder || 0);
 					if (orderDiff !== 0) return orderDiff;
-					return b.projects.length - a.projects.length;
+					return countProjects(b) - countProjects(a);
 				});
+
+			const withHtml = (list: Project[]) =>
+				Promise.all(
+					list.map(async (p) => ({
+						...p,
+						descriptionHtml: await renderMarkdown(p.description || '')
+					}))
+				);
 
 			categories = await Promise.all(
 				filteredCategories.map(async (cg) => ({
 					...cg,
-					projects: await Promise.all(
-						cg.projects.map(async (p) => ({
-							...p,
-							descriptionHtml: await renderMarkdown(p.description || '')
-						}))
+					projects: await withHtml(cg.projects),
+					subcategories: await Promise.all(
+						cg.subcategories.map(async (sub) => ({ ...sub, projects: await withHtml(sub.projects) }))
 					)
 				}))
 			);
@@ -122,6 +138,10 @@
 		} finally {
 			loading = false;
 		}
+	}
+
+	function countProjects(group: CategoryGroup): number {
+		return group.projects.length + group.subcategories.reduce((n, sub) => n + sub.projects.length, 0);
 	}
 
 	function getImageUrl(imageUrl: string | null): string {
@@ -145,6 +165,129 @@
 <svelte:head>
 	<title>{publicPageTitle('Projects')}</title>
 </svelte:head>
+
+{#snippet projectCard(project: Project)}
+	<article class="project-card">
+		{#if project.imageUrl}
+			<div class="project-image">
+				<img src={getImageUrl(project.imageUrl)} alt={project.title} loading="lazy" />
+			</div>
+		{/if}
+
+		<div class="project-content">
+			<div class="project-header">
+				{#if project.logoUrl}
+					<div
+						class="project-logo"
+						class:project-logo--border={project.logoBorder}
+						style={project.logoBgColor
+							? `background-color: ${project.logoBgColor};`
+							: ''}
+					>
+						<img
+							src={getImageUrl(project.logoUrl)}
+							alt="{project.title} logo"
+							loading="lazy"
+						/>
+					</div>
+				{/if}
+				<h3 class="project-title">
+					<RainbowText text={project.title} />
+				</h3>
+				<div class="project-meta">
+					{#if project.showRepoStats && project.repoStats}
+						<div class="repo-stats" title="GitHub stats">
+							<span><Icon icon="lucide:star" width="14" height="14" /> {project.repoStats.stars}</span>
+							<span><Icon icon="lucide:git-fork" width="14" height="14" /> {project.repoStats.forks}</span>
+						</div>
+					{/if}
+					<div class="project-status">
+						<span
+							class="status-indicator"
+							style="background-color: {getProjectStatusColor(project.active)};"
+						></span>
+						<span class="status-text">{project.active}</span>
+					</div>
+				</div>
+			</div>
+
+			{#if project.tags && project.tags.length > 0}
+				<div class="project-tags">
+					{#each project.tags as tag (tag.id)}
+						{@const tagColors = getReadableTagColors(
+							tag.color,
+							$siteTheme.surfaceColor
+						)}
+						<span
+							class="tag"
+							style="background-color: {tagColors.background}; color: {tagColors.text}; border-color: {tagColors.border};"
+						>
+							{tag.title}
+						</span>
+					{/each}
+				</div>
+			{/if}
+
+			<div class="project-description">{@html project.descriptionHtml}</div>
+
+			<div class="project-actions">
+				{#if project.projectUrl}
+					{@const projectIconInfo = getIconRenderInfo(project.projectIcon)}
+					<a
+						href={project.projectUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="action-button"
+					>
+						{#if projectIconInfo.type === 'component' && projectIconInfo.component}
+							{@const IconComponent = projectIconInfo.component}
+							<IconComponent size={16} />
+						{:else if projectIconInfo.type === 'iconify' && projectIconInfo.icon}
+							<Icon icon={projectIconInfo.icon} width="16" height="16" />
+						{:else if projectIconInfo.type === 'svg' && projectIconInfo.url}
+							<img src={projectIconInfo.url} alt="Icon" width="16" height="16" />
+						{:else if projectIconInfo.type === 'text' && projectIconInfo.text}
+							<span class="text-icon">{projectIconInfo.text}</span>
+						{:else if projectIconInfo.component}
+							{@const DefaultIcon = projectIconInfo.component}
+							<DefaultIcon size={16} />
+						{:else}
+							<Icon icon="lucide:external-link" width="16" height="16" />
+						{/if}
+						{project.projectText || 'Visit Website'}
+					</a>
+				{/if}
+
+				{#if project.repoUrl}
+					{@const repoIconInfo = getIconRenderInfo(project.repoIcon)}
+					<a
+						href={project.repoUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="action-button"
+					>
+						{#if repoIconInfo.type === 'component' && repoIconInfo.component}
+							{@const IconComponent = repoIconInfo.component}
+							<IconComponent size={16} />
+						{:else if repoIconInfo.type === 'iconify' && repoIconInfo.icon}
+							<Icon icon={repoIconInfo.icon} width="16" height="16" />
+						{:else if repoIconInfo.type === 'svg' && repoIconInfo.url}
+							<img src={repoIconInfo.url} alt="Icon" width="16" height="16" />
+						{:else if repoIconInfo.type === 'text' && repoIconInfo.text}
+							<span class="text-icon">{repoIconInfo.text}</span>
+						{:else if repoIconInfo.component}
+							{@const DefaultIcon = repoIconInfo.component}
+							<DefaultIcon size={16} />
+						{:else}
+							<Icon icon="lucide:external-link" width="16" height="16" />
+						{/if}
+						{project.repoText || 'View on GitHub'}
+					</a>
+				{/if}
+			</div>
+		</div>
+	</article>
+{/snippet}
 
 <TypingHeader text="Projects" />
 
@@ -171,132 +314,28 @@
 					{/if}
 				</div>
 
-				<div class="projects-grid-container">
-					<div class="projects-grid">
-						{#each categoryGroup.projects as project (project.id)}
-							<article class="project-card">
-								{#if project.imageUrl}
-									<div class="project-image">
-										<img src={getImageUrl(project.imageUrl)} alt={project.title} loading="lazy" />
-									</div>
-								{/if}
-
-								<div class="project-content">
-									<div class="project-header">
-										{#if project.logoUrl}
-											<div
-												class="project-logo"
-												class:project-logo--border={project.logoBorder}
-												style={project.logoBgColor
-													? `background-color: ${project.logoBgColor};`
-													: ''}
-											>
-												<img
-													src={getImageUrl(project.logoUrl)}
-													alt="{project.title} logo"
-													loading="lazy"
-												/>
-											</div>
-										{/if}
-										<h3 class="project-title">
-											<RainbowText text={project.title} />
-										</h3>
-										<div class="project-meta">
-											{#if project.showRepoStats && project.repoStats}
-												<div class="repo-stats" title="GitHub stats">
-													<span><Icon icon="lucide:star" width="14" height="14" /> {project.repoStats.stars}</span>
-													<span><Icon icon="lucide:git-fork" width="14" height="14" /> {project.repoStats.forks}</span>
-												</div>
-											{/if}
-											<div class="project-status">
-												<span
-													class="status-indicator"
-													style="background-color: {getProjectStatusColor(project.active)};"
-												></span>
-												<span class="status-text">{project.active}</span>
-											</div>
-										</div>
-									</div>
-
-									{#if project.tags && project.tags.length > 0}
-										<div class="project-tags">
-											{#each project.tags as tag (tag.id)}
-												{@const tagColors = getReadableTagColors(
-													tag.color,
-													$siteTheme.surfaceColor
-												)}
-												<span
-													class="tag"
-													style="background-color: {tagColors.background}; color: {tagColors.text}; border-color: {tagColors.border};"
-												>
-													{tag.title}
-												</span>
-											{/each}
-										</div>
-									{/if}
-
-									<div class="project-description">{@html project.descriptionHtml}</div>
-
-									<div class="project-actions">
-										{#if project.projectUrl}
-											{@const projectIconInfo = getIconRenderInfo(project.projectIcon)}
-											<a
-												href={project.projectUrl}
-												target="_blank"
-												rel="noopener noreferrer"
-												class="action-button"
-											>
-												{#if projectIconInfo.type === 'component' && projectIconInfo.component}
-													{@const IconComponent = projectIconInfo.component}
-													<IconComponent size={16} />
-												{:else if projectIconInfo.type === 'iconify' && projectIconInfo.icon}
-													<Icon icon={projectIconInfo.icon} width="16" height="16" />
-												{:else if projectIconInfo.type === 'svg' && projectIconInfo.url}
-													<img src={projectIconInfo.url} alt="Icon" width="16" height="16" />
-												{:else if projectIconInfo.type === 'text' && projectIconInfo.text}
-													<span class="text-icon">{projectIconInfo.text}</span>
-												{:else if projectIconInfo.component}
-													{@const DefaultIcon = projectIconInfo.component}
-													<DefaultIcon size={16} />
-												{:else}
-													<Icon icon="lucide:external-link" width="16" height="16" />
-												{/if}
-												{project.projectText || 'Visit Website'}
-											</a>
-										{/if}
-
-										{#if project.repoUrl}
-											{@const repoIconInfo = getIconRenderInfo(project.repoIcon)}
-											<a
-												href={project.repoUrl}
-												target="_blank"
-												rel="noopener noreferrer"
-												class="action-button"
-											>
-												{#if repoIconInfo.type === 'component' && repoIconInfo.component}
-													{@const IconComponent = repoIconInfo.component}
-													<IconComponent size={16} />
-												{:else if repoIconInfo.type === 'iconify' && repoIconInfo.icon}
-													<Icon icon={repoIconInfo.icon} width="16" height="16" />
-												{:else if repoIconInfo.type === 'svg' && repoIconInfo.url}
-													<img src={repoIconInfo.url} alt="Icon" width="16" height="16" />
-												{:else if repoIconInfo.type === 'text' && repoIconInfo.text}
-													<span class="text-icon">{repoIconInfo.text}</span>
-												{:else if repoIconInfo.component}
-													{@const DefaultIcon = repoIconInfo.component}
-													<DefaultIcon size={16} />
-												{:else}
-													<Icon icon="lucide:external-link" width="16" height="16" />
-												{/if}
-												{project.repoText || 'View on GitHub'}
-											</a>
-										{/if}
-									</div>
-								</div>
-							</article>
-						{/each}
+				{#if categoryGroup.projects.length > 0}
+					<div class="projects-grid-container">
+						<div class="projects-grid">
+							{#each categoryGroup.projects as project (project.id)}
+								{@render projectCard(project)}
+							{/each}
+						</div>
 					</div>
-				</div>
+				{/if}
+
+				{#each categoryGroup.subcategories as sub (sub.category.id)}
+					<div class="subcategory-section">
+						<h3 class="subcategory-title">{sub.category.name}</h3>
+						<div class="projects-grid-container">
+							<div class="projects-grid">
+								{#each sub.projects as project (project.id)}
+									{@render projectCard(project)}
+								{/each}
+							</div>
+						</div>
+					</div>
+				{/each}
 			</section>
 		{/each}
 	{/if}
@@ -327,6 +366,18 @@
 
 	.projects-grid-container {
 		padding-bottom: 2rem;
+	}
+
+	.projects-grid-container:has(+ .subcategory-section),
+	.subcategory-section:has(+ .subcategory-section) .projects-grid-container {
+		padding-bottom: 0;
+	}
+
+	.subcategory-title {
+		font-size: calc(1.125 * 16 * 1em / 14);
+		font-weight: 700;
+		color: var(--theme-text-primary, #ffffff);
+		margin: 0 0 1rem 0;
 	}
 
 	.category-header {

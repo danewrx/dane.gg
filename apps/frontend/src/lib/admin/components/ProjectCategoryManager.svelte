@@ -22,13 +22,30 @@
 	let loading = $state(true);
 	let isSaving = $state(false);
 	let showAddForm = $state(false);
-	let editingCategory: ProjectCategory | null = $state(null);
-	let draggedIndex = $state<number | null>(null);
-	let dragOverIndex = $state<number | null>(null);
+	let editingCategory = $state<ProjectCategory | null>(null);
+	let draggedCategory = $state<ProjectCategory | null>(null);
+	let dragOverId = $state<string | null>(null);
 
 	let formData = $state({
-		name: ''
+		name: '',
+		parentId: ''
 	});
+
+	let mainCategories = $derived(categories.filter((c) => !c.parentId));
+
+	function subcategoriesOf(parentId: string) {
+		return categories.filter((c) => c.parentId === parentId);
+	}
+
+	// A category that has subcategories can't become a subcategory
+	let editingHasSubcategories = $derived(
+		editingCategory ? subcategoriesOf(editingCategory.id).length > 0 : false
+	);
+
+	// Parents offered in the form: every main category except the one being edited
+	let parentOptions = $derived(mainCategories.filter((c) => c.id !== editingCategory?.id));
+
+	let formParentName = $derived(mainCategories.find((c) => c.id === formData.parentId)?.name ?? '');
 
 	onMount(async () => {
 		await loadCategories();
@@ -39,9 +56,10 @@
 			loading = true;
 			categories = await getAllProjectCategories();
 
-			const allHaveZeroOrder = categories.every((cat) => cat.displayOrder === 0);
-			if (allHaveZeroOrder && categories.length > 0) {
-				const categoryOrders = categories.map((cat, index) => ({
+			const mains = categories.filter((cat) => !cat.parentId);
+			const allHaveZeroOrder = mains.every((cat) => cat.displayOrder === 0);
+			if (allHaveZeroOrder && mains.length > 0) {
+				const categoryOrders = mains.map((cat, index) => ({
 					id: cat.id,
 					displayOrder: index + 1
 				}));
@@ -64,22 +82,22 @@
 		}
 	}
 
-	function startAdd() {
+	function startAdd(parentId = '') {
 		editingCategory = null;
-		formData = { name: '' };
+		formData = { name: '', parentId };
 		showAddForm = true;
 	}
 
 	function startEdit(category: ProjectCategory) {
 		editingCategory = category;
-		formData = { name: category.name };
+		formData = { name: category.name, parentId: category.parentId ?? '' };
 		showAddForm = true;
 	}
 
 	function cancelEdit() {
 		showAddForm = false;
 		editingCategory = null;
-		formData = { name: '' };
+		formData = { name: '', parentId: '' };
 	}
 
 	async function saveCategory() {
@@ -88,16 +106,26 @@
 			return;
 		}
 
+		const noun = formData.parentId ? 'Subcategory' : 'Category';
+		const parentId = formData.parentId || null;
+
 		try {
 			isSaving = true;
 			if (editingCategory) {
-				await updateProjectCategory(editingCategory.id, formData.name.trim());
-				toast.success('Category updated', {
+				// Only send the parent when it changed
+				const parentChanged = parentId !== (editingCategory.parentId ?? null);
+				await updateProjectCategory(
+					editingCategory.id,
+					formData.name.trim(),
+					undefined,
+					parentChanged ? parentId : undefined
+				);
+				toast.success(`${noun} updated`, {
 					description: `"${formData.name.trim()}" has been updated`
 				});
 			} else {
-				await createProjectCategory(formData.name.trim());
-				toast.success('Category created', {
+				await createProjectCategory(formData.name.trim(), parentId);
+				toast.success(`${noun} created`, {
 					description: `"${formData.name.trim()}" has been created`
 				});
 			}
@@ -131,76 +159,137 @@
 		}
 	}
 
-	// Drag and drop handlers
-	function handleDragStart(event: DragEvent, index: number) {
-		draggedIndex = index;
+	// Drag and drop: categories can only be reordered among siblings
+	function canDropOn(target: ProjectCategory) {
+		return (
+			draggedCategory !== null &&
+			draggedCategory.id !== target.id &&
+			(draggedCategory.parentId ?? null) === (target.parentId ?? null)
+		);
+	}
+
+	function handleDragStart(event: DragEvent, category: ProjectCategory) {
+		draggedCategory = category;
 		if (event.dataTransfer) {
 			event.dataTransfer.effectAllowed = 'move';
 			event.dataTransfer.setData('text/html', '');
 		}
 	}
 
-	function handleDragOver(event: DragEvent, index: number) {
+	function handleDragOver(event: DragEvent, target: ProjectCategory) {
+		if (!canDropOn(target)) return;
 		event.preventDefault();
 		if (event.dataTransfer) {
 			event.dataTransfer.dropEffect = 'move';
 		}
-		if (draggedIndex !== null && draggedIndex !== index) {
-			dragOverIndex = index;
-		}
+		dragOverId = target.id;
 	}
 
 	function handleDragLeave() {
-		dragOverIndex = null;
+		dragOverId = null;
 	}
 
-	async function handleDrop(event: DragEvent, dropIndex: number) {
+	async function handleDrop(event: DragEvent, target: ProjectCategory) {
 		event.preventDefault();
-		dragOverIndex = null;
+		dragOverId = null;
 
-		if (draggedIndex === null || draggedIndex === dropIndex) {
-			draggedIndex = null;
+		if (!draggedCategory || !canDropOn(target)) {
+			draggedCategory = null;
 			return;
 		}
 
-		// Reorder categories array
-		const newCategories = [...categories];
-		const [draggedItem] = newCategories.splice(draggedIndex, 1);
-		newCategories.splice(dropIndex, 0, draggedItem);
+		const dragged = draggedCategory;
+		const siblings = categories.filter((c) => (c.parentId ?? null) === (dragged.parentId ?? null));
+		const fromIndex = siblings.findIndex((c) => c.id === dragged.id);
+		const toIndex = siblings.findIndex((c) => c.id === target.id);
+		const [moved] = siblings.splice(fromIndex, 1);
+		siblings.splice(toIndex, 0, moved);
 
-		// Update displayOrder for all affected categories
-		const categoryOrders = newCategories.map((cat, index) => ({
+		const categoryOrders = siblings.map((cat, index) => ({
 			id: cat.id,
 			displayOrder: index + 1
 		}));
 
 		try {
 			await updateCategoryOrder(categoryOrders);
-			await loadCategories();
 			toast.success('Category order updated');
 		} catch (err: any) {
 			logger.error('Error updating category order:', err);
 			toast.error('Failed to update category order', {
 				description: err.message || 'Please try again'
 			});
-			// Reload
-			await loadCategories();
 		} finally {
-			draggedIndex = null;
+			draggedCategory = null;
+			await loadCategories();
 		}
 	}
 
 	function handleDragEnd() {
-		draggedIndex = null;
-		dragOverIndex = null;
+		draggedCategory = null;
+		dragOverId = null;
 	}
 </script>
+
+{#snippet categoryRow(category: ProjectCategory, isSub: boolean)}
+	<div
+		class="category-item"
+		class:subcategory={isSub}
+		role="listitem"
+		aria-label={`Reorder ${isSub ? 'subcategory' : 'category'}: ${category.name}`}
+		class:dragging={draggedCategory?.id === category.id}
+		class:drag-over={dragOverId === category.id}
+		draggable="true"
+		ondragstart={(e) => handleDragStart(e, category)}
+		ondragover={(e) => handleDragOver(e, category)}
+		ondragleave={handleDragLeave}
+		ondrop={(e) => handleDrop(e, category)}
+		ondragend={handleDragEnd}
+	>
+		<div class="drag-handle" title="Drag to reorder">
+			<GripVertical size={16} />
+		</div>
+		<div class="category-info">
+			<span class="category-name">{category.name}</span>
+			<span class="category-order">
+				{isSub ? 'Subcategory' : 'Main category'} · Order: {category.displayOrder}
+			</span>
+		</div>
+		<div class="category-actions">
+			{#if !isSub}
+				<button
+					type="button"
+					class="edit-button"
+					onclick={() => startAdd(category.id)}
+					title="Add subcategory"
+				>
+					<Plus size={16} />
+				</button>
+			{/if}
+			<button
+				type="button"
+				class="edit-button"
+				onclick={() => startEdit(category)}
+				title="Edit category"
+			>
+				<Edit size={16} />
+			</button>
+			<button
+				type="button"
+				class="delete-button"
+				onclick={() => handleDelete(category.id)}
+				title="Delete category"
+			>
+				<Trash2 size={16} />
+			</button>
+		</div>
+	</div>
+{/snippet}
 
 <div class="category-manager">
 	<div class="header">
 		<h2>Manage Categories</h2>
 		<div class="header-actions">
-			<button class="add-button" onclick={startAdd} type="button">
+			<button class="add-button" onclick={() => startAdd()} type="button">
 				<Plus size={18} />
 				Add Category
 			</button>
@@ -217,50 +306,15 @@
 	{:else if categories.length === 0}
 		<div class="empty-state">
 			<p>No categories yet</p>
-			<button onclick={startAdd} type="button">Create your first category</button>
+			<button onclick={() => startAdd()} type="button">Create your first category</button>
 		</div>
 	{:else}
 		<div class="categories-list" role="list">
-			{#each categories as category, index (category.id)}
-				<div
-					class="category-item"
-					role="listitem"
-					aria-label={`Reorder category: ${category.name}`}
-					class:dragging={draggedIndex === index}
-					class:drag-over={dragOverIndex === index}
-					draggable="true"
-					ondragstart={(e) => handleDragStart(e, index)}
-					ondragover={(e) => handleDragOver(e, index)}
-					ondragleave={handleDragLeave}
-					ondrop={(e) => handleDrop(e, index)}
-					ondragend={handleDragEnd}
-				>
-					<div class="drag-handle" title="Drag to reorder">
-						<GripVertical size={16} />
-					</div>
-					<div class="category-info">
-						<span class="category-name">{category.name}</span>
-						<span class="category-order">Order: {category.displayOrder}</span>
-					</div>
-					<div class="category-actions">
-						<button
-							type="button"
-							class="edit-button"
-							onclick={() => startEdit(category)}
-							title="Edit category"
-						>
-							<Edit size={16} />
-						</button>
-						<button
-							type="button"
-							class="delete-button"
-							onclick={() => handleDelete(category.id)}
-							title="Delete category"
-						>
-							<Trash2 size={16} />
-						</button>
-					</div>
-				</div>
+			{#each mainCategories as category (category.id)}
+				{@render categoryRow(category, false)}
+				{#each subcategoriesOf(category.id) as sub (sub.id)}
+					{@render categoryRow(sub, true)}
+				{/each}
 			{/each}
 		</div>
 	{/if}
@@ -287,7 +341,15 @@
 				onkeydown={(e) => e.stopPropagation()}
 			>
 				<div class="modal-header">
-					<h3>{editingCategory ? 'Edit Category' : 'Add Category'}</h3>
+					<h3>
+						{#if editingCategory}
+							Edit {editingCategory.parentId ? 'Subcategory' : 'Category'}
+						{:else if formData.parentId}
+							Add Subcategory{formParentName ? ` to ${formParentName}` : ''}
+						{:else}
+							Add Category
+						{/if}
+					</h3>
 					<button class="close-button" onclick={cancelEdit} type="button">
 						<X size={20} />
 					</button>
@@ -299,7 +361,9 @@
 							type="text"
 							id="category-name"
 							bind:value={formData.name}
-							placeholder="e.g., Development, Graphics, Videos"
+							placeholder={formData.parentId
+								? 'e.g., KDE Plugins, Discord Bots'
+								: 'e.g., Development, Graphics, Videos'}
 							required
 							class="form-input"
 							onkeydown={(e) => {
@@ -309,6 +373,25 @@
 								}
 							}}
 						/>
+					</div>
+					<div class="form-group">
+						<label for="category-parent">Parent Category</label>
+						<select
+							id="category-parent"
+							bind:value={formData.parentId}
+							class="form-input"
+							disabled={editingHasSubcategories}
+						>
+							<option value="">None (main category)</option>
+							{#each parentOptions as option (option.id)}
+								<option value={option.id}>{option.name}</option>
+							{/each}
+						</select>
+						{#if editingHasSubcategories}
+							<p class="form-hint">
+								Remove or move its subcategories before nesting this category.
+							</p>
+						{/if}
 					</div>
 				</div>
 				<div class="modal-actions">
@@ -432,6 +515,11 @@
 		border-radius: 6px;
 		cursor: move;
 		transition: all 0.2s ease;
+	}
+
+	.category-item.subcategory {
+		margin-left: 32px;
+		background: var(--bg-primary, #1a1a1a);
 	}
 
 	.category-item:hover {
@@ -604,6 +692,12 @@
 	.form-input:focus {
 		outline: none;
 		border-color: var(--accent-color, #6366f1);
+	}
+
+	.form-hint {
+		margin: 8px 0 0;
+		font-size: 12px;
+		color: var(--text-secondary, #a1a1aa);
 	}
 
 	.modal-actions {

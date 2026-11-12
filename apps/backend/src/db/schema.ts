@@ -6,9 +6,11 @@ import {
 	timestamp,
 	integer,
 	pgSchema,
-	primaryKey
+	primaryKey,
+	uniqueIndex,
+	type AnyPgColumn
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 
 // Create the website schema
 export const websiteSchema = pgSchema('website');
@@ -68,12 +70,25 @@ export const messages = websiteSchema.table('messages', {
 });
 
 // Project categories table
-export const projectCategories = websiteSchema.table('project_categories', {
-	id: uuid('id').primaryKey().defaultRandom(),
-	name: varchar('name', { length: 50 }).notNull().unique(),
-	displayOrder: integer('display_order').notNull().default(0),
-	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
-});
+export const projectCategories = websiteSchema.table(
+	'project_categories',
+	{
+		id: uuid('id').primaryKey().defaultRandom(),
+		name: varchar('name', { length: 50 }).notNull(),
+		parentId: uuid('parent_id').references((): AnyPgColumn => projectCategories.id, {
+			onDelete: 'restrict'
+		}),
+		displayOrder: integer('display_order').notNull().default(0),
+		createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
+	},
+	(t) => [
+		// Names are unique among siblings; the partial index covers top level (NULL parent_id).
+		uniqueIndex('project_categories_top_level_name_unique')
+			.on(t.name)
+			.where(sql`${t.parentId} is null`),
+		uniqueIndex('project_categories_parent_name_unique').on(t.parentId, t.name)
+	]
+);
 
 // Projects table
 export const projects = websiteSchema.table('projects', {
