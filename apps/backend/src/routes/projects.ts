@@ -6,8 +6,16 @@ import { eq, desc, and, sql, asc, inArray } from 'drizzle-orm';
 import { requireSession } from '../middleware/auth';
 import { generalLimiter } from '../middleware/rateLimiting';
 import { getRepoStats } from '../services/githubService';
+import { isUUID } from './tracking';
 
 const router = Router();
+
+const MAX_CATEGORY_NAME_LENGTH = 50;
+
+/** Postgres unique_violation, possibly wrapped by drizzle in `cause`. */
+function isUniqueViolation(error: any) {
+	return error?.code === '23505' || error?.cause?.code === '23505';
+}
 
 /**
  * Get all projects (public endpoint)
@@ -916,6 +924,13 @@ router.post('/admin/categories', requireSession, async (req, res) => {
 			});
 		}
 
+		if (name.trim().length > MAX_CATEGORY_NAME_LENGTH) {
+			return res.status(400).json({
+				success: false,
+				error: `Category name must be ${MAX_CATEGORY_NAME_LENGTH} characters or fewer`
+			});
+		}
+
 		const [existingCategory] = await db
 			.select()
 			.from(projectCategories)
@@ -948,6 +963,12 @@ router.post('/admin/categories', requireSession, async (req, res) => {
 			data: newCategory
 		});
 	} catch (error) {
+		if (isUniqueViolation(error)) {
+			return res.status(400).json({
+				success: false,
+				error: 'A category with this name already exists'
+			});
+		}
 		logger.error('Error creating project category:', error);
 		res.status(500).json({
 			success: false,
@@ -964,21 +985,26 @@ router.put('/admin/categories/order', requireSession, async (req, res) => {
 	try {
 		const { categoryOrders } = req.body;
 
-		if (!Array.isArray(categoryOrders)) {
+		if (
+			!Array.isArray(categoryOrders) ||
+			!categoryOrders.every(
+				(o) => o && isUUID(o.id) && Number.isInteger(o.displayOrder) && o.displayOrder >= 0
+			)
+		) {
 			return res.status(400).json({
 				success: false,
-				error: 'categoryOrders must be an array'
+				error: 'categoryOrders must be an array of { id, displayOrder } with valid values'
 			});
 		}
 
-		await Promise.all(
-			categoryOrders.map(({ id, displayOrder }: { id: string; displayOrder: number }) =>
-				db
+		await db.transaction(async (tx) => {
+			for (const { id, displayOrder } of categoryOrders) {
+				await tx
 					.update(projectCategories)
-					.set({ displayOrder: parseInt(displayOrder.toString(), 10) })
-					.where(eq(projectCategories.id, id))
-			)
-		);
+					.set({ displayOrder })
+					.where(eq(projectCategories.id, id));
+			}
+		});
 
 		res.json({
 			success: true,
@@ -1005,6 +1031,13 @@ router.put('/admin/categories/:id', requireSession, async (req, res) => {
 			return res.status(400).json({
 				success: false,
 				error: 'Category name is required'
+			});
+		}
+
+		if (name.trim().length > MAX_CATEGORY_NAME_LENGTH) {
+			return res.status(400).json({
+				success: false,
+				error: `Category name must be ${MAX_CATEGORY_NAME_LENGTH} characters or fewer`
 			});
 		}
 
@@ -1038,7 +1071,13 @@ router.put('/admin/categories/:id', requireSession, async (req, res) => {
 		const updateData: any = { name: name.trim() };
 
 		if (displayOrder !== undefined) {
-			updateData.displayOrder = parseInt(displayOrder, 10);
+			if (!Number.isInteger(displayOrder) || displayOrder < 0) {
+				return res.status(400).json({
+					success: false,
+					error: 'displayOrder must be a non-negative integer'
+				});
+			}
+			updateData.displayOrder = displayOrder;
 		}
 
 		const [updatedCategory] = await db
@@ -1052,6 +1091,12 @@ router.put('/admin/categories/:id', requireSession, async (req, res) => {
 			data: updatedCategory
 		});
 	} catch (error) {
+		if (isUniqueViolation(error)) {
+			return res.status(400).json({
+				success: false,
+				error: 'A category with this name already exists'
+			});
+		}
 		logger.error('Error updating project category:', error);
 		res.status(500).json({
 			success: false,

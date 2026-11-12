@@ -20,7 +20,6 @@
 		"db:seed:themes:all": "bun src/db/seeds/themes.ts --all",
 		"db:seed:themes:refresh": "bun src/db/seeds/themes.ts --refresh",
 		"db:reset": "bun run db:push && bun run db:seed",
-		"db:migrate:display-order": "bun src/scripts/addDisplayOrderToCategories.ts",
 		"create:admin": "bun src/scripts/createAdmin.ts",
 		"db:merge-export": "bun src/scripts/mergeProductionExportData.ts"
 	},
