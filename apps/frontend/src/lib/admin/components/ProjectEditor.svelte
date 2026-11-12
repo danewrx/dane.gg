@@ -631,8 +631,18 @@
 				</div>
 				<select id="category" bind:value={categoryId} class="form-input">
 					<option value="">Select a category</option>
-					{#each categories as category}
-						<option value={category.id}>{category.name}</option>
+					{#each categories.filter((c) => !c.parentId) as category (category.id)}
+						{@const subcategories = categories.filter((c) => c.parentId === category.id)}
+						{#if subcategories.length === 0}
+							<option value={category.id}>{category.name}</option>
+						{:else}
+							<optgroup label={category.name}>
+								<option value={category.id}>{category.name} (no subcategory)</option>
+								{#each subcategories as sub (sub.id)}
+									<option value={sub.id}>{sub.name}</option>
+								{/each}
+							</optgroup>
+						{/if}
 					{/each}
 				</select>
 			</div>
