@@ -52,9 +52,163 @@ async function nextCategoryOrder(parentId: string | null): Promise<number> {
 	return (row?.maxOrder || 0) + 1;
 }
 
+const isNonNegativeInteger = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= 0;
+
+/** Returns an error message when there isn't a usable category name. */
+function validateCategoryName(name: unknown): string | null {
+	if (typeof name !== 'string' || !name.trim()) return 'Category name is required';
+	if (name.trim().length > MAX_CATEGORY_NAME_LENGTH) {
+		return `Category name must be ${MAX_CATEGORY_NAME_LENGTH} characters or fewer`;
+	}
+	return null;
+}
+
+/** Works out the parent an update asks for, and whether that moves the category. */
+async function resolveCategoryParent(
+	existing: CategoryRow,
+	requested: unknown
+): Promise<{ error: string } | { parentId: string | null; moved: boolean }> {
+	const parentId =
+		requested === undefined ? existing.parentId : ((requested as string | null) ?? null);
+	const moved = parentId !== existing.parentId;
+	if (moved && parentId !== null) {
+		const error = await validateParentCategory(parentId, existing.id);
+		if (error) return { error };
+	}
+	return { parentId, moved };
+}
+
+/** Validates an update request and returns the fields to write, or an error message. */
+async function buildCategoryUpdate(
+	existing: CategoryRow,
+	body: { name?: unknown; displayOrder?: unknown; parentId?: unknown }
+): Promise<{ error: string } | { data: Partial<typeof projectCategories.$inferInsert> }> {
+	const nameError = validateCategoryName(body.name);
+	if (nameError) return { error: nameError };
+	const name = (body.name as string).trim();
+
+	const { displayOrder } = body;
+	if (displayOrder !== undefined && !isNonNegativeInteger(displayOrder)) {
+		return { error: 'displayOrder must be a non-negative integer' };
+	}
+
+	const parent = await resolveCategoryParent(existing, body.parentId);
+	if ('error' in parent) return { error: parent.error };
+
+	const [conflictingCategory] = await db
+		.select()
+		.from(projectCategories)
+		.where(
+			and(
+				eq(projectCategories.name, name),
+				siblingsOf(parent.parentId),
+				ne(projectCategories.id, existing.id)
+			)
+		)
+		.limit(1);
+	if (conflictingCategory) return { error: 'A category with this name already exists' };
+
+	const data: Partial<typeof projectCategories.$inferInsert> = { name };
+	if (displayOrder !== undefined) data.displayOrder = displayOrder as number;
+	if (parent.moved) {
+		data.parentId = parent.parentId;
+		if (displayOrder === undefined) data.displayOrder = await nextCategoryOrder(parent.parentId);
+	}
+	return { data };
+}
+
 /** Postgres unique_violation, possibly wrapped by drizzle in `cause`. */
 function isUniqueViolation(error: any) {
 	return error?.code === '23505' || error?.cause?.code === '23505';
+}
+
+type CategoryRow = typeof projectCategories.$inferSelect;
+type CategoryGroup = { category: CategoryRow; projects: any[] };
+type MainCategoryGroup = CategoryGroup & { subcategories: Map<string, CategoryGroup> };
+
+const byDisplayOrder = (a: { displayOrder: number | null }, b: { displayOrder: number | null }) =>
+	(a.displayOrder || 0) - (b.displayOrder || 0);
+
+function getOrCreate<K, V>(map: Map<K, V>, key: K, create: () => V): V {
+	let value = map.get(key);
+	if (!value) {
+		value = create();
+		map.set(key, value);
+	}
+	return value;
+}
+
+/** The fields of a project the public API exposes. */
+function toPublicProject(project: any) {
+	return {
+		id: project.id,
+		title: project.title,
+		description: project.description,
+		featured: project.featured,
+		imageUrl: project.imageUrl,
+		active: project.active,
+		projectUrl: project.projectUrl,
+		projectText: project.projectText,
+		projectIcon: project.projectIcon,
+		repoUrl: project.repoUrl,
+		repoText: project.repoText,
+		repoIcon: project.repoIcon,
+		logoUrl: project.logoUrl,
+		logoBgColor: project.logoBgColor,
+		logoBorder: project.logoBorder,
+		showRepoStats: project.showRepoStats,
+		repoStats: project.repoStats,
+		displayOrder: project.displayOrder,
+		createdAt: project.createdAt,
+		updatedAt: project.updatedAt,
+		tags: project.tags
+	};
+}
+
+/**
+ * Groups projects under their main category
+ */
+function groupByMainCategory(projectsWithTags: any[], categoryRows: CategoryRow[]) {
+	const categoryById = new Map(categoryRows.map((c) => [c.id, c]));
+	const groups = new Map<string, MainCategoryGroup>();
+
+	for (const project of projectsWithTags) {
+		const category = categoryById.get(project.categoryId);
+		const main = category?.parentId ? categoryById.get(category.parentId) : category;
+		if (!category || !main) continue;
+
+		const group = getOrCreate(groups, main.id, () => ({
+			category: main,
+			projects: [],
+			subcategories: new Map<string, CategoryGroup>()
+		}));
+		const target = category.parentId
+			? getOrCreate(group.subcategories, category.id, () => ({ category, projects: [] }))
+			: group;
+		target.projects.push(toPublicProject(project));
+	}
+
+	return groups;
+}
+
+const sortProjects = (list: any[]) =>
+	list.sort(
+		(a, b) =>
+			a.displayOrder - b.displayOrder ||
+			new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+	);
+
+/** Orders categories, subcategories and their projects for the public response. */
+function sortCategoryGroups(groups: Map<string, MainCategoryGroup>) {
+	return [...groups.values()]
+		.sort((a, b) => byDisplayOrder(a.category, b.category))
+		.map((group) => ({
+			category: group.category,
+			projects: sortProjects(group.projects),
+			subcategories: [...group.subcategories.values()]
+				.sort((a, b) => byDisplayOrder(a.category, b.category))
+				.map((sub) => ({ category: sub.category, projects: sortProjects(sub.projects) }))
+		}));
 }
 
 /**
@@ -140,85 +294,12 @@ router.get('/', generalLimiter, async (req, res) => {
 			})
 		);
 
-		// Group projects under their top-level category
 		const categoryRows = await db.select().from(projectCategories);
-		const categoryById = new Map(categoryRows.map((c) => [c.id, c]));
-		const byOrder = (a: { displayOrder: number | null }, b: { displayOrder: number | null }) =>
-			(a.displayOrder || 0) - (b.displayOrder || 0);
-
-		type CategoryRow = typeof projectCategories.$inferSelect;
-		type PublicGroup = { category: CategoryRow; projects: any[] };
-		const groups = new Map<string, PublicGroup & { subcategories: Map<string, PublicGroup> }>();
-
-		for (const project of projectsWithTags) {
-			const category = categoryById.get(project.categoryId);
-			if (!category) continue;
-			const top = category.parentId ? categoryById.get(category.parentId) : category;
-			if (!top) continue;
-
-			let group = groups.get(top.id);
-			if (!group) {
-				group = { category: top, projects: [], subcategories: new Map() };
-				groups.set(top.id, group);
-			}
-
-			const publicProject = {
-				id: project.id,
-				title: project.title,
-				description: project.description,
-				featured: project.featured,
-				imageUrl: project.imageUrl,
-				active: project.active,
-				projectUrl: project.projectUrl,
-				projectText: project.projectText,
-				projectIcon: project.projectIcon,
-				repoUrl: project.repoUrl,
-				repoText: project.repoText,
-				repoIcon: project.repoIcon,
-				logoUrl: project.logoUrl,
-				logoBgColor: project.logoBgColor,
-				logoBorder: project.logoBorder,
-				showRepoStats: project.showRepoStats,
-				repoStats: project.repoStats,
-				displayOrder: project.displayOrder,
-				createdAt: project.createdAt,
-				updatedAt: project.updatedAt,
-				tags: project.tags
-			};
-
-			if (category.parentId) {
-				let sub = group.subcategories.get(category.id);
-				if (!sub) {
-					sub = { category, projects: [] };
-					group.subcategories.set(category.id, sub);
-				}
-				sub.projects.push(publicProject);
-			} else {
-				group.projects.push(publicProject);
-			}
-		}
-
-		const sortProjects = (list: any[]) =>
-			list.sort((a, b) => {
-				if (a.displayOrder !== b.displayOrder) {
-					return a.displayOrder - b.displayOrder;
-				}
-				return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-			});
-
-		const sortedCategories = [...groups.values()]
-			.sort((a, b) => byOrder(a.category, b.category))
-			.map((group) => ({
-				category: group.category,
-				projects: sortProjects(group.projects),
-				subcategories: [...group.subcategories.values()]
-					.sort((a, b) => byOrder(a.category, b.category))
-					.map((sub) => ({ category: sub.category, projects: sortProjects(sub.projects) }))
-			}));
+		const data = sortCategoryGroups(groupByMainCategory(projectsWithTags, categoryRows));
 
 		res.json({
 			success: true,
-			data: sortedCategories
+			data
 		});
 	} catch (error) {
 		logger.error('Error fetching projects:', error);
@@ -1010,18 +1091,9 @@ router.post('/admin/categories', requireSession, async (req, res) => {
 	try {
 		const { name, parentId } = req.body;
 
-		if (!name || !name.trim()) {
-			return res.status(400).json({
-				success: false,
-				error: 'Category name is required'
-			});
-		}
-
-		if (name.trim().length > MAX_CATEGORY_NAME_LENGTH) {
-			return res.status(400).json({
-				success: false,
-				error: `Category name must be ${MAX_CATEGORY_NAME_LENGTH} characters or fewer`
-			});
+		const nameError = validateCategoryName(name);
+		if (nameError) {
+			return res.status(400).json({ success: false, error: nameError });
 		}
 
 		const parent: string | null = parentId ?? null;
@@ -1139,21 +1211,6 @@ router.put('/admin/categories/order', requireSession, async (req, res) => {
 router.put('/admin/categories/:id', requireSession, async (req, res) => {
 	try {
 		const { id } = req.params;
-		const { name } = req.body;
-
-		if (!name || !name.trim()) {
-			return res.status(400).json({
-				success: false,
-				error: 'Category name is required'
-			});
-		}
-
-		if (name.trim().length > MAX_CATEGORY_NAME_LENGTH) {
-			return res.status(400).json({
-				success: false,
-				error: `Category name must be ${MAX_CATEGORY_NAME_LENGTH} characters or fewer`
-			});
-		}
 
 		const [existingCategory] = await db
 			.select()
@@ -1168,59 +1225,14 @@ router.put('/admin/categories/:id', requireSession, async (req, res) => {
 			});
 		}
 
-		const targetParent: string | null =
-			req.body.parentId === undefined ? existingCategory.parentId : (req.body.parentId ?? null);
-		const moved = targetParent !== existingCategory.parentId;
-
-		if (moved && targetParent !== null) {
-			const parentError = await validateParentCategory(targetParent, id);
-			if (parentError) {
-				return res.status(400).json({ success: false, error: parentError });
-			}
-		}
-
-		const [conflictingCategory] = await db
-			.select()
-			.from(projectCategories)
-			.where(
-				and(
-					eq(projectCategories.name, name.trim()),
-					siblingsOf(targetParent),
-					ne(projectCategories.id, id)
-				)
-			)
-			.limit(1);
-
-		if (conflictingCategory) {
-			return res.status(400).json({
-				success: false,
-				error: 'A category with this name already exists'
-			});
-		}
-
-		const { displayOrder } = req.body;
-		const updateData: Partial<typeof projectCategories.$inferInsert> = { name: name.trim() };
-
-		if (displayOrder !== undefined) {
-			if (!Number.isInteger(displayOrder) || displayOrder < 0) {
-				return res.status(400).json({
-					success: false,
-					error: 'displayOrder must be a non-negative integer'
-				});
-			}
-			updateData.displayOrder = displayOrder;
-		}
-
-		if (moved) {
-			updateData.parentId = targetParent;
-			if (displayOrder === undefined) {
-				updateData.displayOrder = await nextCategoryOrder(targetParent);
-			}
+		const update = await buildCategoryUpdate(existingCategory, req.body);
+		if ('error' in update) {
+			return res.status(400).json({ success: false, error: update.error });
 		}
 
 		const [updatedCategory] = await db
 			.update(projectCategories)
-			.set(updateData)
+			.set(update.data)
 			.where(eq(projectCategories.id, id))
 			.returning();
 
