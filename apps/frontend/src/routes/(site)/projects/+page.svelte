@@ -368,8 +368,9 @@
 		padding-bottom: 2rem;
 	}
 
-	.subcategory-section {
-		margin-top: 0.5rem;
+	.projects-grid-container:has(+ .subcategory-section),
+	.subcategory-section:has(+ .subcategory-section) .projects-grid-container {
+		padding-bottom: 0;
 	}
 
 	.subcategory-title {
