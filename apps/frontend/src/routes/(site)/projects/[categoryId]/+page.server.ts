@@ -7,9 +7,12 @@ type CategoryProjectsPayload = {
 	category: {
 		id: string;
 		name: string;
+		parentId: string | null;
 		displayOrder: number;
 		createdAt: string;
 	};
+	parent: { id: string; name: string } | null;
+	subcategories: { id: string; name: string; displayOrder: number }[];
 	projects: unknown[];
 };
 

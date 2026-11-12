@@ -29,6 +29,7 @@
 		id: string;
 		title: string;
 		description: string;
+		categoryId: string;
 		descriptionHtml?: string;
 		featured: boolean;
 		imageUrl: string | null;
@@ -54,15 +55,37 @@
 		category: {
 			id: string;
 			name: string;
+			parentId: string | null;
 			displayOrder: number;
 			createdAt: string;
 		};
+		/** Set when this category is a subcategory */
+		parent: { id: string; name: string } | null;
+		subcategories: { id: string; name: string; displayOrder: number }[];
 		projects: Project[];
 	}
 
 	let { data }: { data: PageData } = $props();
 
 	let categoryData = $derived(data.categoryData as CategoryData | null);
+
+	// Projects directly in this category, then one group per subcategory
+	let directProjects = $derived(
+		categoryData ? categoryData.projects.filter((p) => p.categoryId === categoryData.category.id) : []
+	);
+	let subGroups = $derived(
+		(categoryData?.subcategories ?? [])
+			.map((sub) => ({
+				...sub,
+				projects: categoryData?.projects.filter((p) => p.categoryId === sub.id) ?? []
+			}))
+			.filter((sub) => sub.projects.length > 0)
+	);
+
+	let backHref = $derived(categoryData?.parent ? `/projects/${categoryData.parent.id}` : '/projects');
+	let backLabel = $derived(
+		categoryData?.parent ? `Back to ${categoryData.parent.name}` : 'Back to Projects'
+	);
 
 	const errorMessage = $derived(
 		data.loadError === 'not_found'
@@ -104,9 +127,131 @@
 	/>
 {/if}
 
+{#snippet projectCard(project: Project)}
+	<article class="project-card">
+		{#if project.imageUrl}
+			<div class="project-image">
+				<img src={getImageUrl(project.imageUrl)} alt={project.title} loading="lazy" />
+			</div>
+		{/if}
+
+		<div class="project-content">
+			<div class="project-header">
+				{#if project.logoUrl}
+					<div
+						class="project-logo"
+						class:project-logo--border={project.logoBorder}
+						style={project.logoBgColor
+							? `background-color: ${project.logoBgColor};`
+							: ''}
+					>
+						<img
+							src={getImageUrl(project.logoUrl)}
+							alt="{project.title} logo"
+							loading="lazy"
+						/>
+					</div>
+				{/if}
+				<h3 class="project-title">
+					<RainbowText text={project.title} />
+				</h3>
+				<div class="project-meta">
+					{#if project.showRepoStats && project.repoStats}
+						<div class="repo-stats" title="GitHub stats">
+							<span><Icon icon="lucide:star" width="14" height="14" /> {project.repoStats.stars}</span>
+							<span><Icon icon="lucide:git-fork" width="14" height="14" /> {project.repoStats.forks}</span>
+						</div>
+					{/if}
+					<div class="project-status">
+						<span
+							class="status-indicator"
+							style="background-color: {getProjectStatusColor(project.active)};"
+						></span>
+						<span class="status-text">{project.active}</span>
+					</div>
+				</div>
+			</div>
+
+			{#if project.tags && project.tags.length > 0}
+				<div class="project-tags">
+					{#each project.tags as tag (tag.id)}
+						{@const tagColors = getReadableTagColors(tag.color, $siteTheme.surfaceColor)}
+						<span
+							class="tag"
+							style="background-color: {tagColors.background}; color: {tagColors.text}; border-color: {tagColors.border};"
+						>
+							{tag.title}
+						</span>
+					{/each}
+				</div>
+			{/if}
+
+			<div class="project-description">
+				{@html project.descriptionHtml ?? ''}
+			</div>
+
+			<div class="project-actions">
+				{#if project.projectUrl}
+					{@const projectIconInfo = getIconRenderInfo(project.projectIcon)}
+					<a
+						href={project.projectUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="action-button"
+					>
+						{#if projectIconInfo.type === 'component' && projectIconInfo.component}
+							{@const IconComponent = projectIconInfo.component}
+							<IconComponent size={16} />
+						{:else if projectIconInfo.type === 'iconify' && projectIconInfo.icon}
+							<Icon icon={projectIconInfo.icon} width="16" height="16" />
+						{:else if projectIconInfo.type === 'svg' && projectIconInfo.url}
+							<img src={projectIconInfo.url} alt="Icon" width="16" height="16" />
+						{:else if projectIconInfo.type === 'text' && projectIconInfo.text}
+							<span class="text-icon">{projectIconInfo.text}</span>
+						{:else if projectIconInfo.component}
+							{@const DefaultIcon = projectIconInfo.component}
+							<DefaultIcon size={16} />
+						{:else}
+							<Icon icon="lucide:external-link" width="16" height="16" />
+						{/if}
+						{project.projectText || 'Visit Website'}
+					</a>
+				{/if}
+
+				{#if project.repoUrl}
+					{@const repoIconInfo = getIconRenderInfo(project.repoIcon)}
+					<a
+						href={project.repoUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="action-button"
+					>
+						{#if repoIconInfo.type === 'component' && repoIconInfo.component}
+							{@const IconComponent = repoIconInfo.component}
+							<IconComponent size={16} />
+						{:else if repoIconInfo.type === 'iconify' && repoIconInfo.icon}
+							<Icon icon={repoIconInfo.icon} width="16" height="16" />
+						{:else if repoIconInfo.type === 'svg' && repoIconInfo.url}
+							<img src={repoIconInfo.url} alt="Icon" width="16" height="16" />
+						{:else if repoIconInfo.type === 'text' && repoIconInfo.text}
+							<span class="text-icon">{repoIconInfo.text}</span>
+						{:else if repoIconInfo.component}
+							{@const DefaultIcon = repoIconInfo.component}
+							<DefaultIcon size={16} />
+						{:else}
+							<Icon icon="lucide:external-link" width="16" height="16" />
+						{/if}
+						{project.repoText || 'View on GitHub'}
+					</a>
+				{/if}
+			</div>
+		</div>
+	</article>
+{/snippet}
+
 <div class="category-hero">
 	<div class="category-hero__toolbar">
-		<SiteBackNav embedded href="/projects" label="Back to Projects" />
+		<SiteBackNav embedded href={backHref} label={backLabel} />
 	</div>
 	<TypingHeader text={categoryData?.category.name || 'Projects'} />
 </div>
@@ -124,132 +269,27 @@
 	{:else if !categoryData || categoryData.projects.length === 0}
 		<div class="empty">
 			<p>No projects available in this category.</p>
-			<SiteBackNav href="/projects" label="Back to Projects" />
+			<SiteBackNav href={backHref} label={backLabel} />
 		</div>
 	{:else}
-		<div class="projects-grid">
-			{#each categoryData.projects as project (project.id)}
-				<article class="project-card">
-					{#if project.imageUrl}
-						<div class="project-image">
-							<img src={getImageUrl(project.imageUrl)} alt={project.title} loading="lazy" />
-						</div>
-					{/if}
+		{#if directProjects.length > 0}
+			<div class="projects-grid">
+				{#each directProjects as project (project.id)}
+					{@render projectCard(project)}
+				{/each}
+			</div>
+		{/if}
 
-					<div class="project-content">
-						<div class="project-header">
-							{#if project.logoUrl}
-								<div
-									class="project-logo"
-									class:project-logo--border={project.logoBorder}
-									style={project.logoBgColor
-										? `background-color: ${project.logoBgColor};`
-										: ''}
-								>
-									<img
-										src={getImageUrl(project.logoUrl)}
-										alt="{project.title} logo"
-										loading="lazy"
-									/>
-								</div>
-							{/if}
-							<h3 class="project-title">
-								<RainbowText text={project.title} />
-							</h3>
-							<div class="project-meta">
-								{#if project.showRepoStats && project.repoStats}
-									<div class="repo-stats" title="GitHub stats">
-										<span><Icon icon="lucide:star" width="14" height="14" /> {project.repoStats.stars}</span>
-										<span><Icon icon="lucide:git-fork" width="14" height="14" /> {project.repoStats.forks}</span>
-									</div>
-								{/if}
-								<div class="project-status">
-									<span
-										class="status-indicator"
-										style="background-color: {getProjectStatusColor(project.active)};"
-									></span>
-									<span class="status-text">{project.active}</span>
-								</div>
-							</div>
-						</div>
-
-						{#if project.tags && project.tags.length > 0}
-							<div class="project-tags">
-								{#each project.tags as tag (tag.id)}
-									{@const tagColors = getReadableTagColors(tag.color, $siteTheme.surfaceColor)}
-									<span
-										class="tag"
-										style="background-color: {tagColors.background}; color: {tagColors.text}; border-color: {tagColors.border};"
-									>
-										{tag.title}
-									</span>
-								{/each}
-							</div>
-						{/if}
-
-						<div class="project-description">
-							{@html project.descriptionHtml ?? ''}
-						</div>
-
-						<div class="project-actions">
-							{#if project.projectUrl}
-								{@const projectIconInfo = getIconRenderInfo(project.projectIcon)}
-								<a
-									href={project.projectUrl}
-									target="_blank"
-									rel="noopener noreferrer"
-									class="action-button"
-								>
-									{#if projectIconInfo.type === 'component' && projectIconInfo.component}
-										{@const IconComponent = projectIconInfo.component}
-										<IconComponent size={16} />
-									{:else if projectIconInfo.type === 'iconify' && projectIconInfo.icon}
-										<Icon icon={projectIconInfo.icon} width="16" height="16" />
-									{:else if projectIconInfo.type === 'svg' && projectIconInfo.url}
-										<img src={projectIconInfo.url} alt="Icon" width="16" height="16" />
-									{:else if projectIconInfo.type === 'text' && projectIconInfo.text}
-										<span class="text-icon">{projectIconInfo.text}</span>
-									{:else if projectIconInfo.component}
-										{@const DefaultIcon = projectIconInfo.component}
-										<DefaultIcon size={16} />
-									{:else}
-										<Icon icon="lucide:external-link" width="16" height="16" />
-									{/if}
-									{project.projectText || 'Visit Website'}
-								</a>
-							{/if}
-
-							{#if project.repoUrl}
-								{@const repoIconInfo = getIconRenderInfo(project.repoIcon)}
-								<a
-									href={project.repoUrl}
-									target="_blank"
-									rel="noopener noreferrer"
-									class="action-button"
-								>
-									{#if repoIconInfo.type === 'component' && repoIconInfo.component}
-										{@const IconComponent = repoIconInfo.component}
-										<IconComponent size={16} />
-									{:else if repoIconInfo.type === 'iconify' && repoIconInfo.icon}
-										<Icon icon={repoIconInfo.icon} width="16" height="16" />
-									{:else if repoIconInfo.type === 'svg' && repoIconInfo.url}
-										<img src={repoIconInfo.url} alt="Icon" width="16" height="16" />
-									{:else if repoIconInfo.type === 'text' && repoIconInfo.text}
-										<span class="text-icon">{repoIconInfo.text}</span>
-									{:else if repoIconInfo.component}
-										{@const DefaultIcon = repoIconInfo.component}
-										<DefaultIcon size={16} />
-									{:else}
-										<Icon icon="lucide:external-link" width="16" height="16" />
-									{/if}
-									{project.repoText || 'View on GitHub'}
-								</a>
-							{/if}
-						</div>
-					</div>
-				</article>
-			{/each}
-		</div>
+		{#each subGroups as sub (sub.id)}
+			<section class="subcategory-section">
+				<h2 class="subcategory-title">{sub.name}</h2>
+				<div class="projects-grid">
+					{#each sub.projects as project (project.id)}
+						{@render projectCard(project)}
+					{/each}
+				</div>
+			</section>
+		{/each}
 	{/if}
 </div>
 
@@ -292,6 +332,17 @@
 		border: none;
 		border-radius: 0;
 		margin-bottom: 0;
+	}
+
+	.subcategory-section {
+		margin-top: 2rem;
+	}
+
+	.subcategory-title {
+		font-size: calc(1.25 * 16 * 1em / 14);
+		font-weight: 700;
+		color: var(--theme-text-primary, #ffffff);
+		margin: 0 0 1rem 0;
 	}
 
 	.projects-grid {
