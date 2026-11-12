@@ -2,7 +2,7 @@ import { logger } from '../utils/logger';
 import { Router } from 'express';
 import { db } from '../db';
 import { projects, projectCategories, tags, projectTags } from '../db/schema';
-import { eq, desc, and, sql, asc, inArray } from 'drizzle-orm';
+import { eq, desc, and, sql, asc, inArray, isNull, ne } from 'drizzle-orm';
 import { requireSession } from '../middleware/auth';
 import { generalLimiter } from '../middleware/rateLimiting';
 import { getRepoStats } from '../services/githubService';
@@ -11,6 +11,46 @@ import { isUUID } from './tracking';
 const router = Router();
 
 const MAX_CATEGORY_NAME_LENGTH = 50;
+
+/** Matches categories that share the given parent (null = top level). */
+const siblingsOf = (parentId: string | null) =>
+	parentId ? eq(projectCategories.parentId, parentId) : isNull(projectCategories.parentId);
+
+/**
+ * Checks that `parentId` can be a parent. Pass `selfId` when moving an existing category.
+ * Returns an error message, or null when valid. Nesting is limited to one level.
+ */
+async function validateParentCategory(parentId: unknown, selfId?: string): Promise<string | null> {
+	if (!isUUID(parentId)) return 'parentId must be a valid category id';
+	if (parentId === selfId) return 'A category cannot be its own parent';
+
+	const [parent] = await db
+		.select()
+		.from(projectCategories)
+		.where(eq(projectCategories.id, parentId))
+		.limit(1);
+	if (!parent) return 'Parent category not found';
+	if (parent.parentId) return 'Subcategories cannot have their own subcategories';
+
+	if (selfId) {
+		const [child] = await db
+			.select({ id: projectCategories.id })
+			.from(projectCategories)
+			.where(eq(projectCategories.parentId, selfId))
+			.limit(1);
+		if (child) return 'A category with subcategories cannot become a subcategory';
+	}
+	return null;
+}
+
+/** Next displayOrder among the siblings of `parentId`. */
+async function nextCategoryOrder(parentId: string | null): Promise<number> {
+	const [row] = await db
+		.select({ maxOrder: sql<number>`COALESCE(MAX(${projectCategories.displayOrder}), 0)` })
+		.from(projectCategories)
+		.where(siblingsOf(parentId));
+	return (row?.maxOrder || 0) + 1;
+}
 
 /** Postgres unique_violation, possibly wrapped by drizzle in `cause`. */
 function isUniqueViolation(error: any) {
@@ -100,56 +140,81 @@ router.get('/', generalLimiter, async (req, res) => {
 			})
 		);
 
-		// Group projects by category
-		const projectsByCategory = projectsWithTags.reduce(
-			(acc, project) => {
-				const categoryName = project.category.name;
-				if (!acc[categoryName]) {
-					acc[categoryName] = {
-						category: project.category,
-						projects: []
-					};
-				}
-				acc[categoryName].projects.push({
-					id: project.id,
-					title: project.title,
-					description: project.description,
-					featured: project.featured,
-					imageUrl: project.imageUrl,
-					active: project.active,
-					projectUrl: project.projectUrl,
-					projectText: project.projectText,
-					projectIcon: project.projectIcon,
-					repoUrl: project.repoUrl,
-					repoText: project.repoText,
-					repoIcon: project.repoIcon,
-					logoUrl: project.logoUrl,
-					logoBgColor: project.logoBgColor,
-					logoBorder: project.logoBorder,
-					showRepoStats: project.showRepoStats,
-					repoStats: project.repoStats,
-					displayOrder: project.displayOrder,
-					createdAt: project.createdAt,
-					updatedAt: project.updatedAt,
-					tags: project.tags
-				});
-				return acc;
-			},
-			{} as Record<string, { category: typeof projectCategories.$inferSelect; projects: any[] }>
-		);
+		// Group projects under their top-level category
+		const categoryRows = await db.select().from(projectCategories);
+		const categoryById = new Map(categoryRows.map((c) => [c.id, c]));
+		const byOrder = (a: { displayOrder: number | null }, b: { displayOrder: number | null }) =>
+			(a.displayOrder || 0) - (b.displayOrder || 0);
 
-		Object.values(projectsByCategory).forEach((categoryGroup) => {
-			categoryGroup.projects.sort((a, b) => {
+		type CategoryRow = typeof projectCategories.$inferSelect;
+		type PublicGroup = { category: CategoryRow; projects: any[] };
+		const groups = new Map<string, PublicGroup & { subcategories: Map<string, PublicGroup> }>();
+
+		for (const project of projectsWithTags) {
+			const category = categoryById.get(project.categoryId);
+			if (!category) continue;
+			const top = category.parentId ? categoryById.get(category.parentId) : category;
+			if (!top) continue;
+
+			let group = groups.get(top.id);
+			if (!group) {
+				group = { category: top, projects: [], subcategories: new Map() };
+				groups.set(top.id, group);
+			}
+
+			const publicProject = {
+				id: project.id,
+				title: project.title,
+				description: project.description,
+				featured: project.featured,
+				imageUrl: project.imageUrl,
+				active: project.active,
+				projectUrl: project.projectUrl,
+				projectText: project.projectText,
+				projectIcon: project.projectIcon,
+				repoUrl: project.repoUrl,
+				repoText: project.repoText,
+				repoIcon: project.repoIcon,
+				logoUrl: project.logoUrl,
+				logoBgColor: project.logoBgColor,
+				logoBorder: project.logoBorder,
+				showRepoStats: project.showRepoStats,
+				repoStats: project.repoStats,
+				displayOrder: project.displayOrder,
+				createdAt: project.createdAt,
+				updatedAt: project.updatedAt,
+				tags: project.tags
+			};
+
+			if (category.parentId) {
+				let sub = group.subcategories.get(category.id);
+				if (!sub) {
+					sub = { category, projects: [] };
+					group.subcategories.set(category.id, sub);
+				}
+				sub.projects.push(publicProject);
+			} else {
+				group.projects.push(publicProject);
+			}
+		}
+
+		const sortProjects = (list: any[]) =>
+			list.sort((a, b) => {
 				if (a.displayOrder !== b.displayOrder) {
 					return a.displayOrder - b.displayOrder;
 				}
 				return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
 			});
-		});
 
-		const sortedCategories = Object.values(projectsByCategory).sort((a, b) => {
-			return (a.category.displayOrder || 0) - (b.category.displayOrder || 0);
-		});
+		const sortedCategories = [...groups.values()]
+			.sort((a, b) => byOrder(a.category, b.category))
+			.map((group) => ({
+				category: group.category,
+				projects: sortProjects(group.projects),
+				subcategories: [...group.subcategories.values()]
+					.sort((a, b) => byOrder(a.category, b.category))
+					.map((sub) => ({ category: sub.category, projects: sortProjects(sub.projects) }))
+			}));
 
 		res.json({
 			success: true,
@@ -762,6 +827,25 @@ router.get('/category/:categoryId', generalLimiter, async (req, res) => {
 			});
 		}
 
+		// A main category page also lists its subcategories' projects.
+		const subcategories = category.parentId
+			? []
+			: await db
+					.select()
+					.from(projectCategories)
+					.where(eq(projectCategories.parentId, category.id))
+					.orderBy(asc(projectCategories.displayOrder), asc(projectCategories.name));
+		const parent = category.parentId
+			? (
+					await db
+						.select({ id: projectCategories.id, name: projectCategories.name })
+						.from(projectCategories)
+						.where(eq(projectCategories.id, category.parentId))
+						.limit(1)
+				)[0] || null
+			: null;
+		const categoryIds = [category.id, ...subcategories.map((c) => c.id)];
+
 		const allProjects = await db
 			.select({
 				id: projects.id,
@@ -793,7 +877,7 @@ router.get('/category/:categoryId', generalLimiter, async (req, res) => {
 			})
 			.from(projects)
 			.innerJoin(projectCategories, eq(projects.categoryId, projectCategories.id))
-			.where(and(eq(projects.published, true), eq(projects.categoryId, categoryId)))
+			.where(and(eq(projects.published, true), inArray(projects.categoryId, categoryIds)))
 			.orderBy(asc(projects.displayOrder), desc(projects.updatedAt));
 
 		const projectsWithTags = await Promise.all(
@@ -821,6 +905,7 @@ router.get('/category/:categoryId', generalLimiter, async (req, res) => {
 					id: project.id,
 					title: project.title,
 					description: project.description,
+					categoryId: project.categoryId,
 					featured: project.featured,
 					imageUrl: project.imageUrl,
 					active: project.active,
@@ -849,9 +934,16 @@ router.get('/category/:categoryId', generalLimiter, async (req, res) => {
 				category: {
 					id: category.id,
 					name: category.name,
+					parentId: category.parentId,
 					displayOrder: category.displayOrder,
 					createdAt: category.createdAt
 				},
+				parent,
+				subcategories: subcategories.map((c) => ({
+					id: c.id,
+					name: c.name,
+					displayOrder: c.displayOrder
+				})),
 				projects: projectsWithTags
 			}
 		});
@@ -911,11 +1003,12 @@ router.get('/admin/categories/all', requireSession, async (req, res) => {
 });
 
 /**
- * Create a new project category (authenticated users only)
+ * Create a new project category or subcategory (authenticated users only)
+ * Body: { name, parentId? } - parentId makes it a subcategory of that main category.
  */
 router.post('/admin/categories', requireSession, async (req, res) => {
 	try {
-		const { name } = req.body;
+		const { name, parentId } = req.body;
 
 		if (!name || !name.trim()) {
 			return res.status(400).json({
@@ -931,10 +1024,18 @@ router.post('/admin/categories', requireSession, async (req, res) => {
 			});
 		}
 
+		const parent: string | null = parentId ?? null;
+		if (parent !== null) {
+			const parentError = await validateParentCategory(parent);
+			if (parentError) {
+				return res.status(400).json({ success: false, error: parentError });
+			}
+		}
+
 		const [existingCategory] = await db
 			.select()
 			.from(projectCategories)
-			.where(eq(projectCategories.name, name.trim()))
+			.where(and(eq(projectCategories.name, name.trim()), siblingsOf(parent)))
 			.limit(1);
 
 		if (existingCategory) {
@@ -944,17 +1045,12 @@ router.post('/admin/categories', requireSession, async (req, res) => {
 			});
 		}
 
-		const [maxOrderResult] = await db
-			.select({ maxOrder: sql<number>`COALESCE(MAX(${projectCategories.displayOrder}), 0)` })
-			.from(projectCategories);
-
-		const newDisplayOrder = (maxOrderResult?.maxOrder || 0) + 1;
-
 		const [newCategory] = await db
 			.insert(projectCategories)
 			.values({
 				name: name.trim(),
-				displayOrder: newDisplayOrder
+				parentId: parent,
+				displayOrder: await nextCategoryOrder(parent)
 			})
 			.returning();
 
@@ -979,6 +1075,7 @@ router.post('/admin/categories', requireSession, async (req, res) => {
 
 /**
  * Update category display order (authenticated users only)
+ * All categories in one request must share the same parent (reorder within one list).
  * NOTE: This must be defined BEFORE /admin/categories/:id to avoid route conflicts
  */
 router.put('/admin/categories/order', requireSession, async (req, res) => {
@@ -997,14 +1094,29 @@ router.put('/admin/categories/order', requireSession, async (req, res) => {
 			});
 		}
 
-		await db.transaction(async (tx) => {
-			for (const { id, displayOrder } of categoryOrders) {
-				await tx
-					.update(projectCategories)
-					.set({ displayOrder })
-					.where(eq(projectCategories.id, id));
+		if (categoryOrders.length > 0) {
+			const ids: string[] = categoryOrders.map((o) => o.id);
+			const rows = await db
+				.select({ id: projectCategories.id, parentId: projectCategories.parentId })
+				.from(projectCategories)
+				.where(inArray(projectCategories.id, ids));
+
+			if (rows.length !== new Set(ids).size || new Set(rows.map((r) => r.parentId)).size > 1) {
+				return res.status(400).json({
+					success: false,
+					error: 'Categories must all exist and share the same parent'
+				});
 			}
-		});
+
+			await db.transaction(async (tx) => {
+				for (const { id, displayOrder } of categoryOrders) {
+					await tx
+						.update(projectCategories)
+						.set({ displayOrder })
+						.where(eq(projectCategories.id, id));
+				}
+			});
+		}
 
 		res.json({
 			success: true,
@@ -1021,6 +1133,8 @@ router.put('/admin/categories/order', requireSession, async (req, res) => {
 
 /**
  * Update a project category (authenticated users only)
+ * Body: { name, displayOrder?, parentId? } - parentId (a main category id, or null) moves it;
+ * omit it to leave the parent unchanged.
  */
 router.put('/admin/categories/:id', requireSession, async (req, res) => {
 	try {
@@ -1054,10 +1168,27 @@ router.put('/admin/categories/:id', requireSession, async (req, res) => {
 			});
 		}
 
+		const targetParent: string | null =
+			req.body.parentId === undefined ? existingCategory.parentId : (req.body.parentId ?? null);
+		const moved = targetParent !== existingCategory.parentId;
+
+		if (moved && targetParent !== null) {
+			const parentError = await validateParentCategory(targetParent, id);
+			if (parentError) {
+				return res.status(400).json({ success: false, error: parentError });
+			}
+		}
+
 		const [conflictingCategory] = await db
 			.select()
 			.from(projectCategories)
-			.where(and(eq(projectCategories.name, name.trim()), sql`${projectCategories.id} != ${id}`))
+			.where(
+				and(
+					eq(projectCategories.name, name.trim()),
+					siblingsOf(targetParent),
+					ne(projectCategories.id, id)
+				)
+			)
 			.limit(1);
 
 		if (conflictingCategory) {
@@ -1068,7 +1199,7 @@ router.put('/admin/categories/:id', requireSession, async (req, res) => {
 		}
 
 		const { displayOrder } = req.body;
-		const updateData: any = { name: name.trim() };
+		const updateData: Partial<typeof projectCategories.$inferInsert> = { name: name.trim() };
 
 		if (displayOrder !== undefined) {
 			if (!Number.isInteger(displayOrder) || displayOrder < 0) {
@@ -1078,6 +1209,13 @@ router.put('/admin/categories/:id', requireSession, async (req, res) => {
 				});
 			}
 			updateData.displayOrder = displayOrder;
+		}
+
+		if (moved) {
+			updateData.parentId = targetParent;
+			if (displayOrder === undefined) {
+				updateData.displayOrder = await nextCategoryOrder(targetParent);
+			}
 		}
 
 		const [updatedCategory] = await db
@@ -1111,6 +1249,19 @@ router.put('/admin/categories/:id', requireSession, async (req, res) => {
 router.delete('/admin/categories/:id', requireSession, async (req, res) => {
 	try {
 		const { id } = req.params;
+
+		const [subcategory] = await db
+			.select({ id: projectCategories.id })
+			.from(projectCategories)
+			.where(eq(projectCategories.parentId, id))
+			.limit(1);
+
+		if (subcategory) {
+			return res.status(400).json({
+				success: false,
+				error: 'Cannot delete a category that has subcategories'
+			});
+		}
 
 		// Check if category is used by any projects
 		const [projectUsingCategory] = await db
@@ -1210,7 +1361,13 @@ router.get('/admin/tags/all', requireSession, async (req, res) => {
 				},
 				{} as Record<
 					string,
-					{ category: typeof projectCategories.$inferSelect | null; tags: any[] }
+					{
+						category: Pick<
+							typeof projectCategories.$inferSelect,
+							'id' | 'name' | 'displayOrder' | 'createdAt'
+						> | null;
+						tags: any[];
+					}
 				>
 			);
 
@@ -1281,6 +1438,13 @@ router.post('/admin/tags', requireSession, async (req, res) => {
 				return res.status(400).json({
 					success: false,
 					error: 'Category not found'
+				});
+			}
+
+			if (category.parentId) {
+				return res.status(400).json({
+					success: false,
+					error: 'Tags can only belong to main categories'
 				});
 			}
 		}
@@ -1395,6 +1559,13 @@ router.put('/admin/tags/:id', requireSession, async (req, res) => {
 					return res.status(400).json({
 						success: false,
 						error: 'Category not found'
+					});
+				}
+
+				if (category.parentId) {
+					return res.status(400).json({
+						success: false,
+						error: 'Tags can only belong to main categories'
 					});
 				}
 
