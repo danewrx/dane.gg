@@ -3,13 +3,25 @@
 	import { adminPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
-	import { Plus, Edit, Trash2, Eye, EyeOff, FolderKanban, FolderTree, Tag } from 'lucide-svelte';
+	import {
+		Plus,
+		Edit,
+		Trash2,
+		Eye,
+		EyeOff,
+		FolderKanban,
+		FolderTree,
+		Tag,
+		CornerDownRight
+	} from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import {
 		getAllProjects,
+		getAllProjectCategories,
 		deleteProject,
 		updateProjectOrder,
-		type Project
+		type Project,
+		type ProjectCategory
 	} from '$lib/admin/services/projectsService';
 	import SlideInPanel from '$lib/admin/components/ui/SlideInPanel.svelte';
 	import ProjectEditor from '$lib/admin/components/ProjectEditor.svelte';
@@ -18,6 +30,7 @@
 	import ConfirmDialog from '$lib/admin/components/ui/ConfirmDialog.svelte';
 
 	let projects = $state<Project[]>([]);
+	let categories = $state<ProjectCategory[]>([]);
 	let loading = $state(true);
 	let showDeleteProjectDialog = $state(false);
 	let projectIdPendingDelete = $state<string | null>(null);
@@ -26,42 +39,58 @@
 	let showCategoryManager = $state(false);
 	let showTagManager = $state(false);
 
+	type ProjectGroup = { category: ProjectCategory; projects: Project[] };
+	type MainGroup = ProjectGroup & { subgroups: ProjectGroup[] };
+
 	let projectsByCategory = $derived.by(() => {
-		const grouped: Record<
-			string,
-			{ category: { id: string; name: string; displayOrder: number }; projects: Project[] }
-		> = {};
+		const categoryById = new Map(categories.map((c) => [c.id, c]));
+		const mains = new Map<string, MainGroup>();
 
-		projects.forEach((project) => {
-			const categoryId = project.category.id;
-			if (!grouped[categoryId]) {
-				grouped[categoryId] = {
-					category: {
-						id: project.category.id,
-						name: project.category.name,
-						displayOrder: project.category.displayOrder
-					},
-					projects: []
-				};
-			}
-			grouped[categoryId].projects.push(project);
-		});
-
-		Object.values(grouped).forEach((group) => {
-			group.projects.sort((a, b) => {
+		const byOrder = (a: ProjectCategory, b: ProjectCategory) => a.displayOrder - b.displayOrder;
+		const sortProjects = (list: Project[]) =>
+			list.sort((a, b) => {
 				if (a.displayOrder !== b.displayOrder) {
 					return a.displayOrder - b.displayOrder;
 				}
-				const dateA = new Date(a.updatedAt);
-				const dateB = new Date(b.updatedAt);
-				return dateB.getTime() - dateA.getTime();
+				return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
 			});
-		});
 
-		return Object.values(grouped).sort((a, b) => {
-			return a.category.displayOrder - b.category.displayOrder;
-		});
+		for (const project of projects) {
+			const category = categoryById.get(project.category.id) ?? project.category;
+			const main = (category.parentId && categoryById.get(category.parentId)) || category;
+
+			let group = mains.get(main.id);
+			if (!group) {
+				group = { category: main, projects: [], subgroups: [] };
+				mains.set(main.id, group);
+			}
+
+			if (main.id === category.id) {
+				group.projects.push(project);
+			} else {
+				let sub = group.subgroups.find((g) => g.category.id === category.id);
+				if (!sub) {
+					sub = { category, projects: [] };
+					group.subgroups.push(sub);
+				}
+				sub.projects.push(project);
+			}
+		}
+
+		return [...mains.values()].sort((a, b) => byOrder(a.category, b.category)).map((group) => ({
+			...group,
+			projects: sortProjects(group.projects),
+			subgroups: group.subgroups
+				.sort((a, b) => byOrder(a.category, b.category))
+				.map((sub) => ({ ...sub, projects: sortProjects(sub.projects) }))
+		}));
 	});
+
+	let groupsByCategoryId = $derived(
+		new Map<string, ProjectGroup>(
+			projectsByCategory.flatMap((g) => [g, ...g.subgroups]).map((g) => [g.category.id, g])
+		)
+	);
 
 	let draggedProjectId = $state<string | null>(null);
 	let draggedOverProjectId = $state<string | null>(null);
@@ -73,7 +102,7 @@
 	async function loadProjects() {
 		try {
 			loading = true;
-			projects = await getAllProjects();
+			[projects, categories] = await Promise.all([getAllProjects(), getAllProjectCategories()]);
 		} catch (err) {
 			logger.error('Error loading projects:', err);
 			toast.error('Failed to load projects', {
@@ -188,7 +217,7 @@
 		return;
 	}
 
-	const categoryGroup = projectsByCategory.find((g) => g.category.id === categoryId);
+	const categoryGroup = groupsByCategoryId.get(categoryId);
 	if (!categoryGroup) {
 		draggedProjectId = null;
 		draggedOverProjectId = null;
@@ -258,6 +287,101 @@ function handleDragEnd() {
 	onCancel={cancelDeleteProject}
 />
 
+{#snippet projectTable(group: ProjectGroup)}
+	<div class="table-container">
+		<table class="projects-table">
+			<thead>
+				<tr>
+					<th>Title</th>
+					<th>Updated</th>
+					<th>Featured</th>
+					<th>Status</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each group.projects as project (project.id)}
+					<tr
+						class="project-row"
+						class:dragging={draggedProjectId === project.id}
+						class:drag-over={draggedOverProjectId === project.id}
+						draggable="true"
+						ondragstart={(e) => handleDragStart(e, project.id)}
+						ondragover={(e) => handleDragOver(e, project.id)}
+						ondragleave={handleDragLeave}
+						ondrop={(e) => handleDrop(e, project.id, group.category.id)}
+						ondragend={handleDragEnd}
+					>
+						<td class="title-cell">
+							<div class="title-content">
+								<span class="drag-handle" title="Drag to reorder">
+									<svg
+										width="12"
+										height="12"
+										viewBox="0 0 12 12"
+										fill="none"
+										xmlns="http://www.w3.org/2000/svg"
+									>
+										<circle cx="2" cy="2" r="1.5" fill="currentColor" />
+										<circle cx="2" cy="6" r="1.5" fill="currentColor" />
+										<circle cx="2" cy="10" r="1.5" fill="currentColor" />
+										<circle cx="6" cy="2" r="1.5" fill="currentColor" />
+										<circle cx="6" cy="6" r="1.5" fill="currentColor" />
+										<circle cx="6" cy="10" r="1.5" fill="currentColor" />
+									</svg>
+								</span>
+								<span class="title-text">{project.title}</span>
+							</div>
+						</td>
+						<td class="timestamp-cell">
+							{formatDateTime(project.updatedAt)}
+						</td>
+						<td class="featured-cell">
+							{#if project.featured}
+								<span class="featured-badge" title="Featured on frontpage"> Yes </span>
+							{:else}
+								<span class="not-featured" title="Not featured">No</span>
+							{/if}
+						</td>
+						<td class="status-cell">
+							<div class="status-badges">
+								{#if project.published}
+									<span class="status-badge published" title="Published">
+										<Eye size={14} />
+									</span>
+								{:else}
+									<span class="status-badge draft" title="Draft">
+										<EyeOff size={14} />
+									</span>
+								{/if}
+								<span class="status-badge active" title="Status: {project.active}">
+									{project.active}
+								</span>
+							</div>
+						</td>
+						<td class="actions-cell">
+							<button
+								class="action-icon edit"
+								onclick={() => editProject(project.id)}
+								title="Edit project"
+							>
+								<Edit size={18} />
+							</button>
+							<button
+								class="action-icon delete"
+								onclick={() => requestDeleteProject(project.id)}
+								title="Delete project"
+							>
+								<Trash2 size={18} />
+							</button>
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+{/snippet}
+
 <div class="projects-list">
 	<div class="header">
 		<div>
@@ -307,98 +431,19 @@ function handleDragEnd() {
 			{#each projectsByCategory as categoryGroup (categoryGroup.category.id)}
 				<div class="category-section">
 					<h2 class="category-header">{categoryGroup.category.name}</h2>
-					<div class="table-container">
-						<table class="projects-table">
-							<thead>
-								<tr>
-									<th>Title</th>
-									<th>Updated</th>
-									<th>Featured</th>
-									<th>Status</th>
-									<th>Actions</th>
-								</tr>
-							</thead>
-							<tbody>
-								{#each categoryGroup.projects as project (project.id)}
-									<tr
-										class="project-row"
-										class:dragging={draggedProjectId === project.id}
-										class:drag-over={draggedOverProjectId === project.id}
-										draggable="true"
-										ondragstart={(e) => handleDragStart(e, project.id)}
-										ondragover={(e) => handleDragOver(e, project.id)}
-										ondragleave={handleDragLeave}
-										ondrop={(e) => handleDrop(e, project.id, categoryGroup.category.id)}
-										ondragend={handleDragEnd}
-									>
-										<td class="title-cell">
-											<div class="title-content">
-												<span class="drag-handle" title="Drag to reorder">
-													<svg
-														width="12"
-														height="12"
-														viewBox="0 0 12 12"
-														fill="none"
-														xmlns="http://www.w3.org/2000/svg"
-													>
-														<circle cx="2" cy="2" r="1.5" fill="currentColor" />
-														<circle cx="2" cy="6" r="1.5" fill="currentColor" />
-														<circle cx="2" cy="10" r="1.5" fill="currentColor" />
-														<circle cx="6" cy="2" r="1.5" fill="currentColor" />
-														<circle cx="6" cy="6" r="1.5" fill="currentColor" />
-														<circle cx="6" cy="10" r="1.5" fill="currentColor" />
-													</svg>
-												</span>
-												<span class="title-text">{project.title}</span>
-											</div>
-										</td>
-										<td class="timestamp-cell">
-											{formatDateTime(project.updatedAt)}
-										</td>
-										<td class="featured-cell">
-											{#if project.featured}
-												<span class="featured-badge" title="Featured on frontpage"> Yes </span>
-											{:else}
-												<span class="not-featured" title="Not featured">No</span>
-											{/if}
-										</td>
-										<td class="status-cell">
-											<div class="status-badges">
-												{#if project.published}
-													<span class="status-badge published" title="Published">
-														<Eye size={14} />
-													</span>
-												{:else}
-													<span class="status-badge draft" title="Draft">
-														<EyeOff size={14} />
-													</span>
-												{/if}
-												<span class="status-badge active" title="Status: {project.active}">
-													{project.active}
-												</span>
-											</div>
-										</td>
-										<td class="actions-cell">
-											<button
-												class="action-icon edit"
-												onclick={() => editProject(project.id)}
-												title="Edit project"
-											>
-												<Edit size={18} />
-											</button>
-											<button
-												class="action-icon delete"
-												onclick={() => requestDeleteProject(project.id)}
-												title="Delete project"
-											>
-												<Trash2 size={18} />
-											</button>
-										</td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
+					{#if categoryGroup.projects.length > 0}
+						{@render projectTable(categoryGroup)}
+					{/if}
+					{#each categoryGroup.subgroups as sub (sub.category.id)}
+						<div class="subcategory-section">
+							<h3 class="subcategory-header">
+								<CornerDownRight size={16} aria-hidden="true" />
+								<span class="subcategory-parent">{categoryGroup.category.name} ›</span>
+								{sub.category.name}
+							</h3>
+							{@render projectTable(sub)}
+						</div>
+					{/each}
 				</div>
 			{/each}
 		</div>
@@ -679,6 +724,35 @@ function handleDragEnd() {
 		margin: 0;
 		padding-bottom: 0.75rem;
 		border-bottom: 2px solid var(--border-color, #3a3a3a);
+	}
+
+	.subcategory-section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		margin-left: 0.75rem;
+		padding-left: 1.25rem;
+		border-left: 2px solid var(--border-color, #3a3a3a);
+	}
+
+	.subcategory-header {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin: 0;
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: var(--text-primary, #ffffff);
+	}
+
+	.subcategory-header :global(svg) {
+		color: var(--text-secondary, #a1a1aa);
+		flex-shrink: 0;
+	}
+
+	.subcategory-parent {
+		font-weight: 400;
+		color: var(--text-secondary, #a1a1aa);
 	}
 
 	.table-container {
