@@ -40,13 +40,19 @@ jobs:
           sed -i 's|^SF:src/|SF:apps/backend/src/|g' apps/backend/coverage/lcov.info
           sed -i 's|^SF:src/|SF:apps/frontend/src/|g' apps/frontend/coverage/lcov.info
 
+      - name: Stage LCOV files for upload
+        # Upload from a folder so the artifact keeps the apps/<app>/coverage/ layout that
+        # sonar-project.properties expects (uploading two paths roots it at their common parent).
+        run: |
+          mkdir -p coverage-reports/apps/backend/coverage coverage-reports/apps/frontend/coverage
+          cp apps/backend/coverage/lcov.info coverage-reports/apps/backend/coverage/
+          cp apps/frontend/coverage/lcov.info coverage-reports/apps/frontend/coverage/
+
       - name: Upload LCOV for SonarQube
         uses: actions/upload-artifact@v4
         with:
           name: coverage-lcov
-          path: |
-            apps/frontend/coverage/lcov.info
-            apps/backend/coverage/lcov.info
+          path: coverage-reports
           if-no-files-found: error
 
   # ─────────────────────────────────────────────
