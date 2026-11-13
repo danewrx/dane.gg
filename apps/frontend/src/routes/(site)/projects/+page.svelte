@@ -167,126 +167,128 @@
 </svelte:head>
 
 {#snippet projectCard(project: Project)}
-	<article class="project-card">
-		{#if project.imageUrl}
-			<div class="project-image">
-				<img src={getImageUrl(project.imageUrl)} alt={project.title} loading="lazy" />
-			</div>
-		{/if}
-
-		<div class="project-content">
-			<div class="project-header">
-				{#if project.logoUrl}
-					<div
-						class="project-logo"
-						class:project-logo--border={project.logoBorder}
-						style={project.logoBgColor
-							? `background-color: ${project.logoBgColor};`
-							: ''}
-					>
-						<img
-							src={getImageUrl(project.logoUrl)}
-							alt="{project.title} logo"
-							loading="lazy"
-						/>
-					</div>
-				{/if}
-				<h3 class="project-title">
-					<RainbowText text={project.title} />
-				</h3>
-				<div class="project-meta">
-					{#if project.showRepoStats && project.repoStats}
-						<div class="repo-stats" title="GitHub stats">
-							<span><Icon icon="lucide:star" width="14" height="14" /> {project.repoStats.stars}</span>
-							<span><Icon icon="lucide:git-fork" width="14" height="14" /> {project.repoStats.forks}</span>
-						</div>
-					{/if}
-					<div class="project-status">
-						<span
-							class="status-indicator"
-							style="background-color: {getProjectStatusColor(project.active)};"
-						></span>
-						<span class="status-text">{project.active}</span>
-					</div>
-				</div>
-			</div>
-
-			{#if project.tags && project.tags.length > 0}
-				<div class="project-tags">
-					{#each project.tags as tag (tag.id)}
-						{@const tagColors = getReadableTagColors(
-							tag.color,
-							$siteTheme.surfaceColor
-						)}
-						<span
-							class="tag"
-							style="background-color: {tagColors.background}; color: {tagColors.text}; border-color: {tagColors.border};"
-						>
-							{tag.title}
-						</span>
-					{/each}
+	<div class="project-card-slot">
+		<article class="project-card">
+			{#if project.imageUrl}
+				<div class="project-image">
+					<img src={getImageUrl(project.imageUrl)} alt={project.title} loading="lazy" />
 				</div>
 			{/if}
 
-			<div class="project-description">{@html project.descriptionHtml}</div>
-
-			<div class="project-actions">
-				{#if project.projectUrl}
-					{@const projectIconInfo = getIconRenderInfo(project.projectIcon)}
-					<a
-						href={project.projectUrl}
-						target="_blank"
-						rel="noopener noreferrer"
-						class="action-button"
-					>
-						{#if projectIconInfo.type === 'component' && projectIconInfo.component}
-							{@const IconComponent = projectIconInfo.component}
-							<IconComponent size={16} />
-						{:else if projectIconInfo.type === 'iconify' && projectIconInfo.icon}
-							<Icon icon={projectIconInfo.icon} width="16" height="16" />
-						{:else if projectIconInfo.type === 'svg' && projectIconInfo.url}
-							<img src={projectIconInfo.url} alt="Icon" width="16" height="16" />
-						{:else if projectIconInfo.type === 'text' && projectIconInfo.text}
-							<span class="text-icon">{projectIconInfo.text}</span>
-						{:else if projectIconInfo.component}
-							{@const DefaultIcon = projectIconInfo.component}
-							<DefaultIcon size={16} />
-						{:else}
-							<Icon icon="lucide:external-link" width="16" height="16" />
+			<div class="project-content">
+				<div class="project-header">
+					{#if project.logoUrl}
+						<div
+							class="project-logo"
+							class:project-logo--border={project.logoBorder}
+							style={project.logoBgColor
+								? `background-color: ${project.logoBgColor};`
+								: ''}
+						>
+							<img
+								src={getImageUrl(project.logoUrl)}
+								alt="{project.title} logo"
+								loading="lazy"
+							/>
+						</div>
+					{/if}
+					<h3 class="project-title">
+						<RainbowText text={project.title} />
+					</h3>
+					<div class="project-meta">
+						{#if project.showRepoStats && project.repoStats}
+							<div class="repo-stats" title="GitHub stats">
+								<span><Icon icon="lucide:star" width="14" height="14" /> {project.repoStats.stars}</span>
+								<span><Icon icon="lucide:git-fork" width="14" height="14" /> {project.repoStats.forks}</span>
+							</div>
 						{/if}
-						{project.projectText || 'Visit Website'}
-					</a>
+						<div class="project-status">
+							<span
+								class="status-indicator"
+								style="background-color: {getProjectStatusColor(project.active)};"
+							></span>
+							<span class="status-text">{project.active}</span>
+						</div>
+					</div>
+				</div>
+
+				{#if project.tags && project.tags.length > 0}
+					<div class="project-tags">
+						{#each project.tags as tag (tag.id)}
+							{@const tagColors = getReadableTagColors(
+								tag.color,
+								$siteTheme.surfaceColor
+							)}
+							<span
+								class="tag"
+								style="background-color: {tagColors.background}; color: {tagColors.text}; border-color: {tagColors.border};"
+							>
+								{tag.title}
+							</span>
+						{/each}
+					</div>
 				{/if}
 
-				{#if project.repoUrl}
-					{@const repoIconInfo = getIconRenderInfo(project.repoIcon)}
-					<a
-						href={project.repoUrl}
-						target="_blank"
-						rel="noopener noreferrer"
-						class="action-button"
-					>
-						{#if repoIconInfo.type === 'component' && repoIconInfo.component}
-							{@const IconComponent = repoIconInfo.component}
-							<IconComponent size={16} />
-						{:else if repoIconInfo.type === 'iconify' && repoIconInfo.icon}
-							<Icon icon={repoIconInfo.icon} width="16" height="16" />
-						{:else if repoIconInfo.type === 'svg' && repoIconInfo.url}
-							<img src={repoIconInfo.url} alt="Icon" width="16" height="16" />
-						{:else if repoIconInfo.type === 'text' && repoIconInfo.text}
-							<span class="text-icon">{repoIconInfo.text}</span>
-						{:else if repoIconInfo.component}
-							{@const DefaultIcon = repoIconInfo.component}
-							<DefaultIcon size={16} />
-						{:else}
-							<Icon icon="lucide:external-link" width="16" height="16" />
-						{/if}
-						{project.repoText || 'View on GitHub'}
-					</a>
-				{/if}
+				<div class="project-description">{@html project.descriptionHtml}</div>
+
+				<div class="project-actions">
+					{#if project.projectUrl}
+						{@const projectIconInfo = getIconRenderInfo(project.projectIcon)}
+						<a
+							href={project.projectUrl}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="action-button"
+						>
+							{#if projectIconInfo.type === 'component' && projectIconInfo.component}
+								{@const IconComponent = projectIconInfo.component}
+								<IconComponent size={16} />
+							{:else if projectIconInfo.type === 'iconify' && projectIconInfo.icon}
+								<Icon icon={projectIconInfo.icon} width="16" height="16" />
+							{:else if projectIconInfo.type === 'svg' && projectIconInfo.url}
+								<img src={projectIconInfo.url} alt="Icon" width="16" height="16" />
+							{:else if projectIconInfo.type === 'text' && projectIconInfo.text}
+								<span class="text-icon">{projectIconInfo.text}</span>
+							{:else if projectIconInfo.component}
+								{@const DefaultIcon = projectIconInfo.component}
+								<DefaultIcon size={16} />
+							{:else}
+								<Icon icon="lucide:external-link" width="16" height="16" />
+							{/if}
+							{project.projectText || 'Visit Website'}
+						</a>
+					{/if}
+
+					{#if project.repoUrl}
+						{@const repoIconInfo = getIconRenderInfo(project.repoIcon)}
+						<a
+							href={project.repoUrl}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="action-button"
+						>
+							{#if repoIconInfo.type === 'component' && repoIconInfo.component}
+								{@const IconComponent = repoIconInfo.component}
+								<IconComponent size={16} />
+							{:else if repoIconInfo.type === 'iconify' && repoIconInfo.icon}
+								<Icon icon={repoIconInfo.icon} width="16" height="16" />
+							{:else if repoIconInfo.type === 'svg' && repoIconInfo.url}
+								<img src={repoIconInfo.url} alt="Icon" width="16" height="16" />
+							{:else if repoIconInfo.type === 'text' && repoIconInfo.text}
+								<span class="text-icon">{repoIconInfo.text}</span>
+							{:else if repoIconInfo.component}
+								{@const DefaultIcon = repoIconInfo.component}
+								<DefaultIcon size={16} />
+							{:else}
+								<Icon icon="lucide:external-link" width="16" height="16" />
+							{/if}
+							{project.repoText || 'View on GitHub'}
+						</a>
+					{/if}
+				</div>
 			</div>
-		</div>
-	</article>
+		</article>
+	</div>
 {/snippet}
 
 <TypingHeader text="Projects" />
@@ -414,6 +416,14 @@
 		column-fill: balance;
 	}
 
+	/* Spacing lives in padding, not the card's margin: browsers differ on whether a column's
+	   trailing margin counts, which collapsed the gap above a subcategory heading. */
+	.project-card-slot {
+		padding-bottom: 2rem;
+		break-inside: avoid;
+		page-break-inside: avoid;
+	}
+
 	.project-card {
 		background: var(--theme-surface, #1a1a1a);
 		border: 1px solid var(--theme-border, #ffffff);
@@ -422,9 +432,6 @@
 		transition: all 0.2s ease;
 		display: flex;
 		flex-direction: column;
-		margin-bottom: 2rem;
-		break-inside: avoid;
-		page-break-inside: avoid;
 		width: 100%;
 		max-width: 100%;
 		box-sizing: border-box;
