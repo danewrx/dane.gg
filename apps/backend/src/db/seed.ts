@@ -18,6 +18,7 @@ import { seedContactPageSettings } from './seeds/contact-page-settings';
 import { seedThemeCategories } from './seeds/theme-categories';
 import { seedThemes } from './seeds/themes';
 import { seedVisitorStats } from './seeds/visitor-stats';
+import { seedButtonLinks } from './seeds/button-links';
 
 export async function seed() {
 	logger.info('Starting database seed...');
@@ -42,6 +43,7 @@ export async function seed() {
 		const themeCategorySeeds = await seedThemeCategories();
 		const themeSeeds = await seedThemes();
 		const visitorCount = await seedVisitorStats();
+		const buttonSeeds = await seedButtonLinks();
 
 		logger.info('Database seeded successfully!');
 		logger.info(`Seeded data:`);
@@ -58,6 +60,7 @@ export async function seed() {
 		logger.info(`   - ${themeCategorySeeds.length} theme categories`);
 		logger.info(`   - ${themeSeeds.length} themes`);
 		logger.info(`   - ${visitorCount} visitor statistics records`);
+		logger.info(`   - ${buttonSeeds.length} 88x31 buttons`);
 	} catch (error) {
 		logger.error('Error seeding database:', error);
 		throw error;

@@ -15,7 +15,8 @@ import {
 	contactPageSettings,
 	themes,
 	themeCategories,
-	fonts
+	fonts,
+	buttonLinks
 } from '../schema';
 
 /** Deletes rows in FK-safe order before re-seeding */
@@ -36,4 +37,5 @@ export async function clearAllSeedData() {
 	await db.delete(themes);
 	await db.delete(themeCategories);
 	await db.delete(fonts);
+	await db.delete(buttonLinks);
 }
