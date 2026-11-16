@@ -21,7 +21,8 @@
 		Palette,
 		Bell,
 		Megaphone,
-		Github
+		Github,
+		RectangleHorizontal
 	} from 'lucide-svelte';
 
 	let { children } = $props();
@@ -133,6 +134,18 @@
 			borderColor: 'rgba(245, 158, 11, 0.2)',
 			iconBgColor: '#f59e0b', // Amber
 			path: '/admin/configuration/advertisement',
+			section: 'home'
+		},
+		{
+			id: 'buttons',
+			title: '88x31 Buttons',
+			description: 'Manage the 88x31 buttons in the homepage button banner',
+			icon: RectangleHorizontal,
+			color: 'from-teal-500 to-cyan-500',
+			bgColor: 'rgba(20, 184, 166, 0.1)',
+			borderColor: 'rgba(20, 184, 166, 0.2)',
+			iconBgColor: '#14b8a6', // Teal
+			path: '/admin/configuration/buttons',
 			section: 'home'
 		},
 		{

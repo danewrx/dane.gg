@@ -363,6 +363,18 @@ export const adverts = websiteSchema.table('adverts', {
 	updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
 });
 
+// 88x31 buttons linking to other sites (top row of the homepage button banner)
+export const buttonLinks = websiteSchema.table('button_links', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	title: varchar('title', { length: 100 }).notNull().default(''),
+	linkUrl: varchar('link_url', { length: 500 }).notNull(),
+	imageUrl: varchar('image_url', { length: 500 }).notNull(),
+	isActive: boolean('is_active').notNull().default(true),
+	displayOrder: integer('display_order').notNull().default(0),
+	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+	updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
+});
+
 // Contact emails table
 export const contactEmails = websiteSchema.table('contact_emails', {
 	id: uuid('id').primaryKey().defaultRandom(),

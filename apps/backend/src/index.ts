@@ -112,6 +112,7 @@ import chatNotificationSoundsRoutes from './routes/chatNotificationSounds';
 import skillsRoutes from './routes/skills';
 import certificationsRoutes from './routes/certifications';
 import advertsRoutes from './routes/adverts';
+import buttonsRoutes from './routes/buttons';
 import githubRoutes from './routes/github';
 import contactRoutes from './routes/contact';
 import themesRoutes from './routes/themes';
@@ -213,6 +214,9 @@ app.use('/api/certifications', certificationsRoutes);
 
 // Advertisement routes
 app.use('/api/adverts', advertsRoutes);
+
+// 88x31 button routes
+app.use('/api/buttons', buttonsRoutes);
 
 // GitHub integration (admin status)
 app.use('/api/github', githubRoutes);

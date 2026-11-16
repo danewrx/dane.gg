@@ -174,7 +174,7 @@ export async function cropAdvertImage(
 
 // Load an advert image source as a buffer: either a local /uploads/ path or
 // an external URL (fetched server-side with basic SSRF guards).
-async function loadImageSource(source: string): Promise<Buffer> {
+export async function loadImageSource(source: string): Promise<Buffer> {
 	if (source.startsWith('/uploads/')) {
 		const filePath = resolveUploadSourcePath(source);
 		if (!fs.existsSync(filePath)) {

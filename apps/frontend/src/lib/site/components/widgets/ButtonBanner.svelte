@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
 	import { browser } from '$app/environment';
+	import { logger } from '$lib/logger';
 	import { bannerLabelPosition } from '$lib/site/stores/bannerLabelPosition';
+	import { SITE_CONFIG_UPDATED_EVENT } from '$lib/site/stores/siteConfig';
 
 	interface ButtonLink {
 		id: string;
@@ -17,72 +19,29 @@
 		alt: string;
 	}
 
-	// Real button links for top row
-	let buttonLinks: ButtonLink[] = $state([
-		{
-			id: '1',
-			title: 'Dimden',
-			url: 'https://dimden.dev/',
-			imageUrl: 'https://dimden.dev/services/images/88x31.gif',
-			alt: 'Dimden'
-		},
-		{
-			id: '2',
-			title: 'Melankorin',
-			url: 'https://melankorin.net/',
-			imageUrl: 'https://melankorin.net/assets/img/buttons/button-1.gif',
-			alt: 'Melankorin'
-		},
-		{
-			id: '3',
-			title: 'Jesx',
-			url: 'https://anemoia.moe',
-			imageUrl: 'https://anemoia.moe/images/buttons/footer/jesx.gif',
-			alt: 'Jesx'
-		},
-		{
-			id: '4',
-			title: 'Docodemo',
-			url: 'https://dokode.moe',
-			imageUrl: 'https://dokode.moe/media/88x31sites/dokodemobutton3.gif',
-			alt: 'Docodemo'
-		},
-		{
-			id: '5',
-			title: 'Nichind',
-			url: 'https://nichind.dev',
-			imageUrl: 'https://nichind.dev/88x31.gif',
-			alt: 'Nichind'
-		},
-		{
-			id: '6',
-			title: 'NekoWeb',
-			url: 'https://nekoweb.org/',
-			imageUrl: 'https://nekoweb.org/assets/buttons/button6.gif',
-			alt: 'NekoWeb'
-		},
-		{
-			id: '7',
-			title: 'hrtowii',
-			url: 'https://hrtowii.nekoweb.org/',
-			imageUrl: 'https://hrtowii.nekoweb.org/88x31-madoka.png',
-			alt: 'hrtowii'
-		},
-		{
-			id: '8',
-			title: 'h4rl',
-			url: 'https://h4rl.dev/',
-			imageUrl: '/assets/img/buttons/sites/h4rl.png',
-			alt: 'h4rl'
-		},
-		{
-			id: '9',
-			title: 'Luniiya',
-			url: 'https://luniiya.me/',
-			imageUrl: 'https://luniiya.me/button.gif',
-			alt: 'Luniiya'
+
+	let buttonLinks: ButtonLink[] = $state([]);
+
+	async function loadButtonLinks() {
+		if (!browser) return;
+		try {
+			const response = await fetch('/api/buttons');
+			if (!response.ok) throw new Error(`Failed to fetch buttons: ${response.statusText}`);
+			const result = await response.json();
+			const rows: { id: string; title: string; linkUrl: string; imageUrl: string }[] =
+				result.success && Array.isArray(result.data) ? result.data : [];
+			buttonLinks = rows.map((row) => ({
+				id: row.id,
+				title: row.title,
+				url: row.linkUrl,
+				imageUrl: row.imageUrl,
+				alt: row.title
+			}));
+		} catch (error) {
+			logger.error('Error loading buttons:', error);
+			buttonLinks = [];
 		}
-	]);
+	}
 
 	let buttonImages: ButtonImage[] = $state([
 		{
@@ -171,9 +130,13 @@
 
 	onMount(() => {
 		startAnimations();
+		void loadButtonLinks();
+		const refresh = () => void loadButtonLinks();
+		window.addEventListener(SITE_CONFIG_UPDATED_EVENT, refresh);
 		if (browser) {
 			positionLoop();
 		}
+		return () => window.removeEventListener(SITE_CONFIG_UPDATED_EVENT, refresh);
 	});
 
 	onDestroy(() => {
@@ -185,12 +148,14 @@
 		}
 	});
 
-	function startAnimations() {
-		if (!topRowRef || !bottomRowRef) return;
+	// (Re)start the top row scroll; runs whenever the buttons change since the row's width does.
+	async function restartTopAnimation() {
+		topRowAnimation?.cancel();
+		topRowAnimation = null;
+		await tick();
+		if (!topRowRef || buttonLinks.length === 0) return;
 
 		const topRowWidth = topRowRef.scrollWidth / 6;
-		const bottomRowWidth = bottomRowRef.scrollWidth / 6;
-
 		topRowAnimation = topRowRef.animate(
 			[{ transform: 'translateX(0)' }, { transform: `translateX(-${topRowWidth}px)` }],
 			{
@@ -199,6 +164,18 @@
 				easing: 'linear'
 			}
 		);
+		if (isTopRowHovered) topRowAnimation.pause();
+	}
+
+	$effect(() => {
+		void buttonLinks;
+		void restartTopAnimation();
+	});
+
+	function startAnimations() {
+		if (!bottomRowRef) return;
+
+		const bottomRowWidth = bottomRowRef.scrollWidth / 6;
 
 		bottomRowAnimation = bottomRowRef.animate(
 			[{ transform: 'translateX(0)' }, { transform: `translateX(-${bottomRowWidth}px)` }],
