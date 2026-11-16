@@ -72,8 +72,15 @@
 			id: '8',
 			title: 'h4rl',
 			url: 'https://h4rl.dev/',
-			imageUrl: 'https://h4rl.dev/badges/h4rl.png',
+			imageUrl: '/assets/img/buttons/sites/h4rl.png',
 			alt: 'h4rl'
+		},
+		{
+			id: '9',
+			title: 'Luniiya',
+			url: 'https://luniiya.me/',
+			imageUrl: 'https://luniiya.me/button.gif',
+			alt: 'Luniiya'
 		}
 	]);
 
