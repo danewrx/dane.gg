@@ -295,7 +295,7 @@
 </script>
 
 <svelte:head>
-	<title>{adminPageTitle('Social preview')}</title>
+	<title>{adminPageTitle('SEO & Social Preview')}</title>
 </svelte:head>
 
 <div class="social-preview">

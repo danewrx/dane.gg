@@ -91,8 +91,8 @@
 		},
 		{
 			id: 'social-preview',
-			title: 'Social Preview',
-			description: 'Set the text, colours, fonts, background and logo used on social preview images',
+			title: 'SEO & Social Preview',
+			description: 'Page titles, descriptions and the link preview cards',
 			icon: ImageIcon,
 			color: 'from-fuchsia-500 to-purple-500',
 			bgColor: 'rgba(217, 70, 239, 0.1)',
