@@ -5,15 +5,13 @@
 	import { toast } from 'svelte-sonner';
 	import { Loader2 } from 'lucide-svelte';
 
-	const PAGES = [
-		{ path: '/', label: 'Home' },
-		{ path: '/about', label: 'About' },
-		{ path: '/contact', label: 'Contact' },
-		{ path: '/projects', label: 'Projects' },
-		{ path: '/blog', label: 'Blog' }
-	];
-
 	let pageSeo = $state<Record<string, { name: string; description: string }>>({});
+	const pages = $derived(
+		Object.keys(pageSeo).map((path) => ({
+			path,
+			label: path === '/' ? 'Home' : path.slice(1).replace(/^./, (c) => c.toUpperCase())
+		}))
+	);
 	let isLoading = $state(true);
 	let saving = $state(false);
 
@@ -66,7 +64,7 @@
 	{#if isLoading}
 		<div class="loading"><Loader2 size={24} class="spin" /> Loading...</div>
 	{:else}
-		{#each PAGES as page (page.path)}
+		{#each pages as page (page.path)}
 			{#if pageSeo[page.path]}
 				<section class="card">
 					<h3 class="card-title">{page.label}</h3>

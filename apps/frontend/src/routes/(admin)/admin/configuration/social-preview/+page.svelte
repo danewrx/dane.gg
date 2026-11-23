@@ -45,15 +45,11 @@
 		{ id: 'page', label: 'Page card', value: 'page' },
 		{ id: 'blog', label: 'Blog post card', value: 'blog' }
 	];
-	const PAGES = [
-		{ path: '/about', label: 'About' },
-		{ path: '/contact', label: 'Contact' },
-		{ path: '/projects', label: 'Projects' },
-		{ path: '/blog', label: 'Blog' }
-	];
 	let pageSeo = $state<Record<string, { name: string; description: string }>>({});
 	let previewTab = $state('default');
-	let selectedPage = $state('/about');
+	let selectedPage = $state('');
+	// Every page except the home page, straight from the backend's list
+	const pagePaths = $derived(Object.keys(pageSeo).filter((path) => path !== '/'));
 	let blogPosts = $state<{ slug: string; title: string; updatedAt: string }[]>([]);
 	let selectedSlug = $state('');
 	let selectedPost = $derived(blogPosts.find((post) => post.slug === selectedSlug));
@@ -175,7 +171,10 @@
 				}),
 				(async () => {
 					const response = await fetch('/api/config/page-seo');
-					if (response.ok) pageSeo = (await response.json()).data ?? {};
+					if (response.ok) {
+						pageSeo = (await response.json()).data ?? {};
+						selectedPage = Object.keys(pageSeo).find((path) => path !== '/') ?? '';
+					}
 				})(),
 				...TEXT_FIELDS.map(async (field, i) => {
 					const response = await fetch(`/api/config/${field.key}`, { credentials: 'include' });
@@ -299,8 +298,8 @@
 			<img class="card-preview" src={previewSrc} alt="Preview of the home page social card" />
 		{:else if previewTab === 'page'}
 			<select class="text-input" bind:value={selectedPage} aria-label="Page to preview">
-				{#each PAGES as page (page.path)}
-					<option value={page.path}>{pageSeo[page.path]?.name || page.label}</option>
+				{#each pagePaths as path (path)}
+					<option value={path}>{pageSeo[path].name}</option>
 				{/each}
 			</select>
 			<img
