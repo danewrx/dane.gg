@@ -3,7 +3,8 @@ import { publicPageTitle } from '$lib/site/pageTitle';
 export const DEFAULT_SITE_DESCRIPTION =
 	"Hi, I'm Dane! I'm a software engineer & freelance designer from Preston, UK.";
 
-export const DEFAULT_OG_IMAGE_PATH = '/assets/favicon/web-app-manifest-512x512.png';
+// 1200x630 card; regenerate with `bun run og:default` in apps/backend
+export const DEFAULT_OG_IMAGE_PATH = '/assets/og-default.png';
 
 export type StaticRouteSeo = { title: string; description: string };
 

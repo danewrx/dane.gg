@@ -15,6 +15,7 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio",
+		"og:default": "bun src/scripts/generateDefaultOgImage.ts",
 		"db:seed": "bun src/db/seed.ts",
 		"db:seed:themes": "bun src/db/seeds/themes.ts",
 		"db:seed:themes:all": "bun src/db/seeds/themes.ts --all",
@@ -24,6 +25,7 @@
 		"db:merge-export": "bun src/scripts/mergeProductionExportData.ts"
 	},
 	"dependencies": {
+		"@resvg/resvg-wasm": "^2.6.2",
 		"@types/bcryptjs": "^2.4.6",
 		"@types/cookie-parser": "^1.4.9",
 		"@types/express-session": "^1.18.2",
@@ -47,6 +49,7 @@
 		"pg": "^8.22.0",
 		"postgres": "^3.4.7",
 		"qrcode": "^1.5.4",
+		"satori": "^0.63.2",
 		"sharp": "^0.35.3",
 		"twitter-openapi-typescript": "^0.0.55",
 		"uuid": "^13.0.0",

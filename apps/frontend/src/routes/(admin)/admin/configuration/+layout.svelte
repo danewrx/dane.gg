@@ -22,7 +22,8 @@
 		Bell,
 		Megaphone,
 		Github,
-		RectangleHorizontal
+		RectangleHorizontal,
+		Image as ImageIcon
 	} from 'lucide-svelte';
 
 	let { children } = $props();
@@ -86,6 +87,18 @@
 			borderColor: 'rgba(20, 184, 166, 0.2)',
 			iconBgColor: '#14b8a6',
 			path: '/admin/configuration/notifications',
+			section: 'general'
+		},
+		{
+			id: 'social-preview',
+			title: 'Social Preview',
+			description: 'Set the default background and logo for blog preview images',
+			icon: ImageIcon,
+			color: 'from-fuchsia-500 to-purple-500',
+			bgColor: 'rgba(217, 70, 239, 0.1)',
+			borderColor: 'rgba(217, 70, 239, 0.2)',
+			iconBgColor: '#d946ef', // Fuchsia
+			path: '/admin/configuration/social-preview',
 			section: 'general'
 		},
 		{

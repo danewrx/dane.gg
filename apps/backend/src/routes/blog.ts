@@ -4,6 +4,8 @@ import { db } from '../db';
 import { posts, blogTags, postTags } from '../db/schema';
 import { eq, desc, and, sql, gt, lt, asc } from 'drizzle-orm';
 import { requireSession } from '../middleware/auth';
+import path from 'node:path';
+import { getBlogOgImage, OG_DEFAULT_ASSETS } from '../services/ogImage';
 
 const router = Router();
 
@@ -648,6 +650,51 @@ router.get('/:slug/navigation', async (req, res) => {
 			success: false,
 			error: 'Failed to fetch navigation posts'
 		});
+	}
+});
+
+/**
+ * The built-in preview background and logo, so the admin can show what is used by default
+ */
+router.get('/og-default/:name', (req, res) => {
+	const file = OG_DEFAULT_ASSETS[req.params.name];
+	if (!file) return res.status(404).json({ success: false, error: 'Not found' });
+	res.sendFile(path.join(process.cwd(), 'static', 'og', file));
+});
+
+/**
+ * Social preview image for a published post (public endpoint)
+ */
+router.get('/:slug/og.png', async (req, res) => {
+	try {
+		const [post] = await db
+			.select()
+			.from(posts)
+			.where(and(eq(posts.slug, req.params.slug), eq(posts.published, true)))
+			.limit(1);
+
+		if (!post) {
+			return res.status(404).json({ success: false, error: 'Blog post not found' });
+		}
+
+		const tagRows = await db
+			.select({ name: blogTags.name })
+			.from(postTags)
+			.innerJoin(blogTags, eq(postTags.tagId, blogTags.id))
+			.where(eq(postTags.postId, post.id));
+
+		const png = await getBlogOgImage(
+			post,
+			tagRows.map((tag) => tag.name)
+		);
+		res.set({
+			'Content-Type': 'image/png',
+			'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400'
+		});
+		res.send(png);
+	} catch (error) {
+		logger.error('Error generating blog OG image:', error);
+		res.redirect(302, '/assets/og-default.png');
 	}
 });
 
