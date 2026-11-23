@@ -5,7 +5,13 @@ import { posts, blogTags, postTags } from '../db/schema';
 import { eq, desc, and, sql, gt, lt, asc } from 'drizzle-orm';
 import { requireSession } from '../middleware/auth';
 import path from 'node:path';
-import { getBlogOgImage, OG_DEFAULT_ASSETS } from '../services/ogImage';
+import {
+	getBlogOgImage,
+	getDefaultOgImage,
+	getPageOgImage,
+	OG_DEFAULT_ASSETS,
+	type OgOverrides
+} from '../services/ogImage';
 
 const router = Router();
 
@@ -660,6 +666,91 @@ router.get('/og-default/:name', (req, res) => {
 	const file = OG_DEFAULT_ASSETS[req.params.name];
 	if (!file) return res.status(404).json({ success: false, error: 'Not found' });
 	res.sendFile(path.join(process.cwd(), 'static', 'og', file));
+});
+
+/**
+ * Social preview image used by every page that isn't a blog post (public endpoint)
+ */
+router.get('/og-default.png', async (req, res) => {
+	try {
+		const png = await getDefaultOgImage();
+		res.set({
+			'Content-Type': 'image/png',
+			'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400'
+		});
+		res.send(png);
+	} catch (error) {
+		logger.error('Default OG image error:', error);
+		res.redirect(302, '/assets/og-default.png');
+	}
+});
+
+/**
+ * Admin-only: renders a card with unsaved style/text values so the admin can preview edits live
+ */
+router.post('/og-preview.png', requireSession, async (req, res) => {
+	try {
+		const {
+			kind,
+			path: pagePath,
+			slug,
+			overrides
+		} = req.body as {
+			kind: 'default' | 'page' | 'blog';
+			path?: string;
+			slug?: string;
+			overrides?: OgOverrides;
+		};
+		const safe: OgOverrides = overrides ?? {};
+		let png: Buffer | null = null;
+		if (kind === 'page') {
+			png = await getPageOgImage(String(pagePath ?? ''), safe);
+		} else if (kind === 'blog') {
+			const [post] = await db
+				.select()
+				.from(posts)
+				.where(and(eq(posts.slug, String(slug ?? '')), eq(posts.published, true)))
+				.limit(1);
+			if (post) {
+				const tagRows = await db
+					.select({ name: blogTags.name })
+					.from(postTags)
+					.innerJoin(blogTags, eq(postTags.tagId, blogTags.id))
+					.where(eq(postTags.postId, post.id));
+				png = await getBlogOgImage(
+					post,
+					tagRows.map((tag) => tag.name),
+					safe
+				);
+			}
+		} else {
+			png = await getDefaultOgImage(safe);
+		}
+		if (!png) return res.status(404).json({ success: false, error: 'Nothing to preview' });
+		res.set({ 'Content-Type': 'image/png', 'Cache-Control': 'no-store' });
+		res.send(png);
+	} catch (error) {
+		logger.error('OG preview error:', error);
+		res.status(500).json({ success: false, error: 'Failed to render preview' });
+	}
+});
+
+/**
+ * Social preview image for a subpage such as /about (public endpoint)
+ */
+router.get('/og-page.png', async (req, res) => {
+	try {
+		const png = await getPageOgImage(String(req.query.path ?? ''));
+		if (!png) return res.status(404).json({ success: false, error: 'No card for that page' });
+		res.set({
+			'Content-Type': 'image/png',
+			'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400'
+		});
+		res.send(png);
+	} catch (error) {
+		logger.error('Page OG image error:', error);
+		res.redirect(302, '/api/blog/og-default.png');
+	}
 });
 
 /**

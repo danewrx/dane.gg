@@ -92,7 +92,7 @@
 		{
 			id: 'social-preview',
 			title: 'Social Preview',
-			description: 'Set the default background and logo for blog preview images',
+			description: 'Set the text, colours, fonts, background and logo used on social preview images',
 			icon: ImageIcon,
 			color: 'from-fuchsia-500 to-purple-500',
 			bgColor: 'rgba(217, 70, 239, 0.1)',

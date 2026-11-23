@@ -55,7 +55,13 @@
 	{/if}
 </svelte:head>
 {#if staticRouteSeo}
-	<OpenGraphTags title={staticRouteSeo.title} description={staticRouteSeo.description} />
+	<OpenGraphTags
+		title={staticRouteSeo.title}
+		description={staticRouteSeo.description}
+		imagePathOrUrl={$page.url.pathname === '/'
+			? null
+			: `/api/blog/og-page.png?path=${$page.url.pathname}`}
+	/>
 {/if}
 
 <!-- Public website layout -->

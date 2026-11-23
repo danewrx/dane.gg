@@ -15,7 +15,6 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio",
-		"og:default": "bun src/scripts/generateDefaultOgImage.ts",
 		"db:seed": "bun src/db/seed.ts",
 		"db:seed:themes": "bun src/db/seeds/themes.ts",
 		"db:seed:themes:all": "bun src/db/seeds/themes.ts --all",
@@ -53,6 +52,7 @@
 		"sharp": "^0.35.3",
 		"twitter-openapi-typescript": "^0.0.55",
 		"uuid": "^13.0.0",
+		"wawoff2": "^2.0.1",
 		"ws": "^8.18.3"
 	},
 	"devDependencies": {
