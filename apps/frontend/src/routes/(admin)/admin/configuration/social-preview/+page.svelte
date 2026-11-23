@@ -3,7 +3,7 @@
 	import { adminPageTitle } from '$lib/site/pageTitle';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { Loader2, X, Type, FileText, Image as ImageIcon, Layers, Palette } from 'lucide-svelte';
+	import { Loader2, X, Type, Image as ImageIcon, Layers, Palette } from 'lucide-svelte';
 	import FontPicker from '$lib/admin/components/ui/FontPicker.svelte';
 	import Tabs from '$lib/admin/components/ui/Tabs.svelte';
 	import FileUpload, { type UploadedFile } from '$lib/admin/components/ui/FileUpload.svelte';
@@ -45,15 +45,13 @@
 		{ id: 'page', label: 'Page card', value: 'page' },
 		{ id: 'blog', label: 'Blog post card', value: 'blog' }
 	];
-	const PAGE_FIELDS = [
-		{ path: '/', label: 'Home' },
+	const PAGES = [
 		{ path: '/about', label: 'About' },
 		{ path: '/contact', label: 'Contact' },
 		{ path: '/projects', label: 'Projects' },
 		{ path: '/blog', label: 'Blog' }
 	];
 	let pageSeo = $state<Record<string, { name: string; description: string }>>({});
-	let savingPages = $state(false);
 	let previewTab = $state('default');
 	let selectedPage = $state('/about');
 	let blogPosts = $state<{ slug: string; title: string; updatedAt: string }[]>([]);
@@ -213,25 +211,6 @@
 		}
 	}
 
-	async function savePages() {
-		try {
-			savingPages = true;
-			const response = await fetch('/api/config/page_seo', {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				credentials: 'include',
-				body: JSON.stringify({ value: pageSeo, dataType: 'json' })
-			});
-			if (!response.ok) throw new Error('Request failed');
-			toast.success('Saved');
-		} catch (error) {
-			logger.error('Error saving page text:', error);
-			toast.error('Failed to save');
-		} finally {
-			savingPages = false;
-		}
-	}
-
 	async function saveTexts() {
 		try {
 			savingText = true;
@@ -295,7 +274,7 @@
 </script>
 
 <svelte:head>
-	<title>{adminPageTitle('SEO & Social Preview')}</title>
+	<title>{adminPageTitle('Social Preview')}</title>
 </svelte:head>
 
 <div class="social-preview">
@@ -303,6 +282,7 @@
 		<p>
 			Controls the preview card shown when your links are shared (Twitter, Discord, etc.). Blog
 			posts with a cover image use the cover; every other card uses the background and logo below.
+			Each page's name and description come from the SEO page.
 		</p>
 	</div>
 
@@ -319,7 +299,7 @@
 			<img class="card-preview" src={previewSrc} alt="Preview of the home page social card" />
 		{:else if previewTab === 'page'}
 			<select class="text-input" bind:value={selectedPage} aria-label="Page to preview">
-				{#each PAGE_FIELDS.slice(1) as page (page.path)}
+				{#each PAGES as page (page.path)}
 					<option value={page.path}>{pageSeo[page.path]?.name || page.label}</option>
 				{/each}
 			</select>
@@ -377,44 +357,6 @@
 				<button type="button" class="save-button" onclick={saveTexts} disabled={savingText}>
 					{#if savingText}<Loader2 size={16} class="spin" />{/if}
 					{savingText ? 'Saving...' : 'Save text'}
-				</button>
-			</div>
-		</section>
-
-		<section class="card">
-			<h3 class="card-title"><FileText size={18} /> Page text</h3>
-			<p class="help-text">
-				The name and description of each page. They set the browser tab title, the meta description,
-				link previews and the Page card above. A page's name is also its card title. Clearing a box
-				restores the built-in text.
-			</p>
-			{#each PAGE_FIELDS as page (page.path)}
-				{#if pageSeo[page.path]}
-					<div class="form-group">
-						<span class="field-label">{page.label}</span>
-						{#if page.path !== '/'}
-							<input
-								class="text-input"
-								type="text"
-								bind:value={pageSeo[page.path].name}
-								maxlength="60"
-								aria-label="{page.label} name"
-							/>
-						{/if}
-						<textarea
-							class="text-input"
-							rows="2"
-							bind:value={pageSeo[page.path].description}
-							maxlength="300"
-							aria-label="{page.label} description"
-						></textarea>
-					</div>
-				{/if}
-			{/each}
-			<div class="form-actions">
-				<button type="button" class="save-button" onclick={savePages} disabled={savingPages}>
-					{#if savingPages}<Loader2 size={16} class="spin" />{/if}
-					{savingPages ? 'Saving...' : 'Save page text'}
 				</button>
 			</div>
 		</section>
