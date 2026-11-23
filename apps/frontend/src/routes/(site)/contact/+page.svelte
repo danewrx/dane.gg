@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
-	import { publicPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount, onDestroy } from 'svelte';
 	import { Mail } from 'lucide-svelte';
@@ -188,10 +187,6 @@
 		}
 	}
 </script>
-
-<svelte:head>
-	<title>{publicPageTitle('Contact')}</title>
-</svelte:head>
 
 <div class="page-content">
 	<TypingHeader text="Contact" />

@@ -48,10 +48,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>dane.gg (丹恩)</title>
-</svelte:head>
-
 <div class="home-content">
 	<!-- Two Column Layout -->
 	<div class="two-column-layout">

@@ -105,6 +105,7 @@ export class ConfigService {
 						'ntfy_settings',
 						'og_background_image',
 						'og_logo_image',
+						'page_seo',
 						'og_default_title',
 						'og_default_subtitle',
 						'og_default_pill',

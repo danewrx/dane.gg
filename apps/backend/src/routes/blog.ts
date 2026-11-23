@@ -5,6 +5,7 @@ import { posts, blogTags, postTags } from '../db/schema';
 import { eq, desc, and, sql, gt, lt, asc } from 'drizzle-orm';
 import { requireSession } from '../middleware/auth';
 import path from 'node:path';
+import { getPageSeo } from '../services/pageSeo';
 import {
 	getBlogOgImage,
 	getDefaultOgImage,
@@ -693,18 +694,29 @@ router.post('/og-preview.png', requireSession, async (req, res) => {
 		const {
 			kind,
 			path: pagePath,
+			name,
+			description,
 			slug,
 			overrides
 		} = req.body as {
 			kind: 'default' | 'page' | 'blog';
 			path?: string;
+			name?: string;
+			description?: string;
 			slug?: string;
 			overrides?: OgOverrides;
 		};
 		const safe: OgOverrides = overrides ?? {};
 		let png: Buffer | null = null;
 		if (kind === 'page') {
-			png = await getPageOgImage(String(pagePath ?? ''), safe);
+			png = await getPageOgImage(
+				String(pagePath ?? ''),
+				{
+					name: String(name ?? '').slice(0, 60),
+					description: String(description ?? '').slice(0, 300)
+				},
+				safe
+			);
 		} else if (kind === 'blog') {
 			const [post] = await db
 				.select()
@@ -740,8 +752,11 @@ router.post('/og-preview.png', requireSession, async (req, res) => {
  */
 router.get('/og-page.png', async (req, res) => {
 	try {
-		const png = await getPageOgImage(String(req.query.path ?? ''));
-		if (!png) return res.status(404).json({ success: false, error: 'No card for that page' });
+		const pagePath = String(req.query.path ?? '');
+		const page = pagePath === '/' ? undefined : (await getPageSeo())[pagePath];
+		// The home page and unknown paths use the home card.
+		if (!page) return res.redirect(302, '/api/blog/og-default.png');
+		const png = await getPageOgImage(pagePath, page);
 		res.set({
 			'Content-Type': 'image/png',
 			'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400'

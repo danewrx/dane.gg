@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { publicPageTitle } from '$lib/site/pageTitle';
-
 	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { Calendar } from 'lucide-svelte';
@@ -106,10 +104,6 @@
 		return path;
 	}
 </script>
-
-<svelte:head>
-	<title>{publicPageTitle('Blog')}</title>
-</svelte:head>
 
 <div class="blog-page">
 	<TypingHeader text="Blog" />

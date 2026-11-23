@@ -75,6 +75,7 @@ export interface OgCardInput {
 	eyebrow?: string;
 	title: string;
 	meta?: string;
+	metaLines?: number;
 	pill?: string;
 	coverDataUri?: string | null;
 	logoDataUri?: string | null;
@@ -481,35 +482,21 @@ export async function getDefaultOgImage(overrides?: OgOverrides): Promise<Buffer
 	);
 }
 
-const OG_PAGES: Record<string, { name: string; description: string }> = {
-	'/about': {
-		name: 'About',
-		description: "Hi, I'm Dane! I'm a software engineer & freelance designer from Preston, UK."
-	},
-	'/contact': {
-		name: 'Contact',
-		description: 'Get in touch with me for collaboration or inquiries.'
-	},
-	'/projects': {
-		name: 'Projects',
-		description: 'Explore my portfolio of software, design, and other random projects.'
-	},
-	'/blog': {
-		name: 'Blog',
-		description:
-			'Read my latest blog posts about software, design, and other random stuff I feel like writing about.'
-	}
-};
-
 export async function getPageOgImage(
 	pagePath: string,
+	page: { name: string; description: string },
 	overrides?: OgOverrides
-): Promise<Buffer | null> {
-	const page = OG_PAGES[pagePath];
-	if (!page) return null;
-
+): Promise<Buffer> {
 	const [branding, text] = await Promise.all([getOgBranding(overrides), getDefaultText(overrides)]);
-	const key = ['page', pagePath, branding.version, text.title, text.pill].join('|');
+	const key = [
+		'page',
+		pagePath,
+		page.name,
+		page.description,
+		branding.version,
+		text.title,
+		text.pill
+	].join('|');
 	return cached(key, !overrides, () =>
 		renderOgPng({
 			eyebrow: text.title,
