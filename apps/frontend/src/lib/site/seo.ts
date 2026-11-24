@@ -35,3 +35,24 @@ export function plainTextExcerpt(markdown: string, maxLength: number): string {
 		.trim();
 	return s.length <= maxLength ? s : `${s.slice(0, maxLength - 1).trim()}…`;
 }
+
+/**
+ * The description and image for a blog post's search and social previews: the author's own
+ * overrides when set, otherwise the start of the post and its generated card.
+ */
+export function blogPostSeo(post: {
+	slug: string;
+	content: string;
+	updatedAt: string;
+	seoDescription?: string | null;
+	ogImage?: string | null;
+}): { description: string; imagePath: string; imageIsGenerated: boolean } {
+	const customImage = post.ogImage?.trim();
+	return {
+		description: post.seoDescription?.trim() || plainTextExcerpt(post.content, 160),
+		imagePath: customImage
+			? customImage.replace(/^\/uploads\//, '/api/upload/file/')
+			: `/api/blog/${post.slug}/og.png?v=${new Date(post.updatedAt).getTime()}`,
+		imageIsGenerated: !customImage
+	};
+}

@@ -38,6 +38,8 @@
 	let thumbnail = $state('');
 	let thumbnailIsExternal = $state(false);
 	let thumbnailFilename = $state<string | null>(null);
+	let seoDescription = $state('');
+	let ogImage = $state('');
 	let published = $state(false);
 	let tags = $state<string[]>([]);
 	let availableTags = $state<BlogTag[]>([]);
@@ -108,6 +110,8 @@
 			thumbnail = '';
 			thumbnailIsExternal = false;
 			thumbnailFilename = null;
+			seoDescription = '';
+			ogImage = '';
 			published = false;
 			tags = [];
 			autoSlug = true;
@@ -295,6 +299,8 @@
 					thumbnailIsExternal = false;
 					thumbnailFilename = null;
 				}
+				seoDescription = post.seoDescription || '';
+				ogImage = post.ogImage || '';
 				published = post.published;
 				tags = post.tags.map((t) => t.name);
 				createdAt = post.createdAt;
@@ -604,6 +610,8 @@
 				slug: slug.trim(),
 				content: content.trim(),
 				thumbnail: thumbnail.trim() || undefined,
+				seoDescription: seoDescription.trim(),
+				ogImage: ogImage.trim(),
 				published,
 				tags
 			};
@@ -691,6 +699,11 @@
 				thumbnailFilename = null;
 			}
 		}
+	}
+
+	function handleOgImageUpload(file: UploadedFile | UploadedFile[]) {
+		const uploadedFile = Array.isArray(file) ? file[0] : file;
+		if (uploadedFile) ogImage = uploadedFile.path;
 	}
 
 	async function handleRemoveThumbnail() {
@@ -919,6 +932,58 @@
 				</div>
 			</div>
 
+			<!-- SEO -->
+			<div class="form-group">
+				<label for="seo-description">
+					Search &amp; social description
+					<span class="field-hint">(optional)</span>
+				</label>
+				<textarea
+					id="seo-description"
+					class="form-input"
+					rows="2"
+					maxlength="300"
+					placeholder="Leave empty to use the start of the post"
+					bind:value={seoDescription}
+				></textarea>
+				<span class="field-hint">{seoDescription.length}/300</span>
+			</div>
+
+			<div class="form-group">
+				<label for="og-image">
+					Social preview image
+					<span class="field-hint">(optional)</span>
+				</label>
+				{#if ogImage}
+					<div class="thumbnail-preview-container">
+						<div class="thumbnail-preview">
+							<img src={getThumbnailUrl(ogImage)} alt="Social preview" />
+							<button
+								type="button"
+								class="remove-thumbnail"
+								onclick={() => (ogImage = '')}
+								aria-label="Remove social preview image"
+							>
+								<X size={16} />
+							</button>
+						</div>
+					</div>
+				{:else}
+					<FileUpload
+						acceptedTypes={['image']}
+						maxSize={10 * 1024 * 1024}
+						multiple={false}
+						label="Upload Social Image"
+						showPreview={false}
+						onUpload={handleOgImageUpload}
+					/>
+					<span class="field-hint">
+						Leave empty to use the generated card (title, date and tags over the cover image).
+						Best at 1200×630.
+					</span>
+				{/if}
+			</div>
+
 			<!-- Content -->
 			<div class="form-group">
 				<label for="content">Content (Markdown)</label>
@@ -1112,6 +1177,12 @@
 		display: flex;
 		flex-direction: column;
 		gap: 24px;
+	}
+
+	.field-hint {
+		font-size: 12px;
+		font-weight: 400;
+		color: var(--text-secondary, #a1a1aa);
 	}
 
 	.form-group {

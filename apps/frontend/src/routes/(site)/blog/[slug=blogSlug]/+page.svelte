@@ -4,7 +4,7 @@
 	import OpenGraphTags from '$lib/site/components/seo/OpenGraphTags.svelte';
 	import JsonLd from '$lib/site/components/seo/JsonLd.svelte';
 	import { blogPostingSchema, breadcrumbSchema } from '$lib/site/jsonLd';
-	import { plainTextExcerpt } from '$lib/site/seo';
+	import { blogPostSeo } from '$lib/site/seo';
 	import { publicPageTitle } from '$lib/site/pageTitle';
 
 	import { navigating } from '$app/stores';
@@ -19,6 +19,7 @@
 
 	let post = $derived(data.post);
 	let navigation = $derived(data.navigation);
+	let seo = $derived(post ? blogPostSeo(post) : null);
 
 	const errorMessage = $derived(
 		data.loadError === 'not_found'
@@ -86,10 +87,10 @@
 			blogPostingSchema($page.url.origin, {
 				slug: post.slug,
 				title: post.title,
-				description: plainTextExcerpt(post.content, 160),
+				description: seo!.description,
 				publishedAt: post.publishedAt,
 				updatedAt: post.updatedAt,
-				imagePath: `/api/blog/${post.slug}/og.png?v=${new Date(post.updatedAt).getTime()}`
+				imagePath: seo!.imagePath
 			}),
 			breadcrumbSchema($page.url.origin, [
 				{ name: 'Home', path: '/' },
@@ -100,8 +101,9 @@
 	/>
 	<OpenGraphTags
 		title={publicPageTitle(post.title)}
-		description={plainTextExcerpt(post.content, 160)}
-		imagePathOrUrl={`/api/blog/${post.slug}/og.png?v=${new Date(post.updatedAt).getTime()}`}
+		description={seo!.description}
+		imagePathOrUrl={seo!.imagePath}
+		imageIsGenerated={seo!.imageIsGenerated}
 		imageAlt={post.title}
 		ogType="article"
 		publishedTime={new Date(post.publishedAt).toISOString()}

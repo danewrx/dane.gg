@@ -43,6 +43,22 @@ test.describe('structured data', () => {
 	});
 });
 
+test.describe('blog post previews', () => {
+	test('use the generated card and a description from the post by default', async ({ request }) => {
+		const list = await (await request.get('/api/blog?list=1')).json();
+		const slug = list.data?.[0]?.slug;
+		test.skip(!slug, 'no published blog posts to check');
+
+		const html = await (await request.get(`/blog/${slug}`)).text();
+		expect(html).toMatch(
+			new RegExp(`property="og:image" content="http://localhost:5173/api/blog/${slug}/og.png\\?v=\\d+"`)
+		);
+		expect(html).toContain('property="og:image:width" content="1200"');
+		const description = html.match(/property="og:description" content="([^"]*)"/)?.[1] ?? '';
+		expect(description.length).toBeGreaterThan(0);
+	});
+});
+
 test.describe('project category pages', () => {
 	test('have their own social card and a description that names their projects', async ({
 		request

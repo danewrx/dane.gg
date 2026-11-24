@@ -6,6 +6,7 @@ import { eq, desc, and, sql, gt, lt, asc } from 'drizzle-orm';
 import { requireSession } from '../middleware/auth';
 import path from 'node:path';
 import { getPageSeo } from '../services/pageSeo';
+import { parsePostSeoFields } from '../services/postSeo';
 import {
 	getBlogOgImage,
 	getDefaultOgImage,
@@ -107,6 +108,8 @@ router.get('/admin/all', requireSession, async (req, res) => {
 				slug: posts.slug,
 				content: posts.content,
 				thumbnail: posts.thumbnail,
+				seoDescription: posts.seoDescription,
+				ogImage: posts.ogImage,
 				published: posts.published,
 				publishedAt: posts.publishedAt,
 				createdAt: posts.createdAt,
@@ -161,6 +164,8 @@ router.get('/admin/:id', requireSession, async (req, res) => {
 				slug: posts.slug,
 				content: posts.content,
 				thumbnail: posts.thumbnail,
+				seoDescription: posts.seoDescription,
+				ogImage: posts.ogImage,
 				published: posts.published,
 				publishedAt: posts.publishedAt,
 				createdAt: posts.createdAt,
@@ -229,6 +234,11 @@ router.post('/admin', requireSession, async (req, res) => {
 			});
 		}
 
+		const seo = parsePostSeoFields(req.body);
+		if ('error' in seo) {
+			return res.status(400).json({ success: false, error: seo.error });
+		}
+
 		const finalTitle = title.trim();
 		const finalSlug = slug.trim();
 		const finalContent = content.trim();
@@ -251,6 +261,8 @@ router.post('/admin', requireSession, async (req, res) => {
 				slug: finalSlug,
 				content: finalContent,
 				thumbnail: thumbnail || null,
+				seoDescription: seo.fields.seoDescription ?? null,
+				ogImage: seo.fields.ogImage ?? null,
 				published: published || false,
 				publishedAt: published ? now : null,
 				updatedAt: now
@@ -327,8 +339,14 @@ router.put('/admin/:id', requireSession, async (req, res) => {
 			}
 		}
 
+		const seo = parsePostSeoFields(req.body);
+		if ('error' in seo) {
+			return res.status(400).json({ success: false, error: seo.error });
+		}
+
 		const updateData: any = {
-			updatedAt: new Date()
+			updatedAt: new Date(),
+			...seo.fields
 		};
 
 		if (title !== undefined) updateData.title = title;

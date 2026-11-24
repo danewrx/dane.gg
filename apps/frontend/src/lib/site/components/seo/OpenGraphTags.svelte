@@ -9,6 +9,7 @@
 		description,
 		imagePathOrUrl = null as string | null,
 		imageAlt = null as string | null,
+		imageIsGenerated = true,
 		ogType = 'website' as OgType,
 		publishedTime = null as string | null,
 		modifiedTime = null as string | null
@@ -17,6 +18,7 @@
 		description: string;
 		imagePathOrUrl?: string | null;
 		imageAlt?: string | null;
+		imageIsGenerated?: boolean;
 		ogType?: OgType;
 		publishedTime?: string | null;
 		modifiedTime?: string | null;
@@ -41,8 +43,10 @@
 	<meta property="og:title" content={title} />
 	<meta property="og:description" content={description} />
 	<meta property="og:image" content={ogImage} />
-	<meta property="og:image:width" content="1200" />
-	<meta property="og:image:height" content="630" />
+	{#if imageIsGenerated}
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+	{/if}
 	{#if imageAlt}
 		<meta property="og:image:alt" content={imageAlt} />
 		<meta name="twitter:image:alt" content={imageAlt} />
