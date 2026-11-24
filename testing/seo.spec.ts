@@ -43,6 +43,38 @@ test.describe('structured data', () => {
 	});
 });
 
+test.describe('project category pages', () => {
+	test('have their own social card and a description that names their projects', async ({
+		request
+	}) => {
+		const categories = (await (await request.get('/api/projects/categories')).json()).data;
+		test.skip(!categories?.length, 'no project categories to check');
+		const { id, name } = categories[0];
+
+		const html = await (await request.get(`/projects/${id}`)).text();
+		expect(html).toContain(
+			`property="og:image" content="http://localhost:5173/api/projects/category/${id}/og.png"`
+		);
+		const description = html.match(/property="og:description" content="([^"]*)"/)?.[1] ?? '';
+		expect(description).toContain(name.replace(/&/g, '&amp;'));
+		expect(description).not.toMatch(/^Explore /);
+
+		const card = await request.get(`/api/projects/category/${id}/og.png`);
+		expect(card.status()).toBe(200);
+		expect(card.headers()['content-type']).toBe('image/png');
+	});
+
+	test('unknown or invalid category ids fall back to the home card', async ({ request }) => {
+		for (const id of ['00000000-0000-4000-8000-000000000000', 'not-a-uuid']) {
+			const response = await request.get(`/api/projects/category/${id}/og.png`, {
+				maxRedirects: 0
+			});
+			expect(response.status()).toBe(302);
+			expect(response.headers()['location']).toContain('/api/blog/og-default.png');
+		}
+	});
+});
+
 test.describe('SEO basics', () => {
 	test('homepage has a title', async ({ page }) => {
 		await gotoReady(page, '/');

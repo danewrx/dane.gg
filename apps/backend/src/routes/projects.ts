@@ -6,6 +6,8 @@ import { eq, desc, and, sql, asc, inArray, isNull, ne } from 'drizzle-orm';
 import { requireSession } from '../middleware/auth';
 import { generalLimiter } from '../middleware/rateLimiting';
 import { getRepoStats } from '../services/githubService';
+import { buildCategoryDescription, getCategorySeo } from '../services/categorySeo';
+import { getPageOgImage } from '../services/ogImage';
 import { isUUID } from './tracking';
 
 const router = Router();
@@ -889,6 +891,28 @@ router.delete('/admin/:id', requireSession, async (req, res) => {
 });
 
 /**
+ * Social preview image for a category page (public endpoint)
+ */
+router.get('/category/:categoryId/og.png', generalLimiter, async (req, res) => {
+	try {
+		const { categoryId } = req.params;
+		const seo = isUUID(categoryId) ? await getCategorySeo(categoryId) : null;
+		// Unknown categories use the home card.
+		if (!seo) return res.redirect(302, '/api/blog/og-default.png');
+
+		const png = await getPageOgImage(`/projects/${categoryId}`, seo);
+		res.set({
+			'Content-Type': 'image/png',
+			'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400'
+		});
+		res.send(png);
+	} catch (error) {
+		logger.error('Category OG image error:', error);
+		res.redirect(302, '/api/blog/og-default.png');
+	}
+});
+
+/**
  * Get all published projects for a specific category (public endpoint)
  */
 router.get('/category/:categoryId', generalLimiter, async (req, res) => {
@@ -1025,6 +1049,10 @@ router.get('/category/:categoryId', generalLimiter, async (req, res) => {
 					name: c.name,
 					displayOrder: c.displayOrder
 				})),
+				description: buildCategoryDescription(
+					category.name,
+					projectsWithTags.map((project) => project.title)
+				),
 				projects: projectsWithTags
 			}
 		});

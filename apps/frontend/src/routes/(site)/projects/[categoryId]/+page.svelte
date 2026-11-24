@@ -64,6 +64,7 @@
 		/** Set when this category is a subcategory */
 		parent: { id: string; name: string } | null;
 		subcategories: { id: string; name: string; displayOrder: number }[];
+		description: string;
 		projects: Project[];
 	}
 
@@ -135,7 +136,9 @@
 	/>
 	<OpenGraphTags
 		title={publicPageTitle(categoryData.category.name)}
-		description={`Explore ${categoryData.category.name} projects from my portfolio.`}
+		description={categoryData.description}
+		imagePathOrUrl={`/api/projects/category/${categoryData.category.id}/og.png`}
+		imageAlt={categoryData.category.name}
 	/>
 {/if}
 
