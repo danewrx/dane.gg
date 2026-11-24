@@ -8,85 +8,61 @@ export type HomeRecentPost = {
 	publishedAt: string;
 };
 
-export const load = async ({ fetch }: { fetch: typeof globalThis.fetch }) => {
-	const musicUrl = apiFetchUrl('/api/widgets/nowplaying');
-	const tweetUrl = apiFetchUrl('/api/widgets/latest-tweet');
-	const aboutUrl = apiFetchUrl('/api/config/homepage_about_me');
-	const blogUrl = apiFetchUrl('/api/blog?list=1');
-	const socialUrl = apiFetchUrl('/api/social-links');
+type BlogListItem = { id: string; title: string; slug: string; publishedAt: string };
 
+async function jsonOf<T>(result: PromiseSettledResult<Response>): Promise<T | null> {
+	if (result.status !== 'fulfilled' || !result.value.ok) return null;
+	try {
+		return (await result.value.json()) as T;
+	} catch {
+		return null;
+	}
+}
+
+async function renderAbout(raw: unknown): Promise<string> {
+	if (!raw || typeof raw !== 'string') return '';
+	try {
+		return await marked.parse(raw);
+	} catch {
+		return '';
+	}
+}
+
+export const load = async ({ fetch }: { fetch: typeof globalThis.fetch }) => {
 	const [musicResult, tweetResult, aboutResult, blogResult, socialResult] =
 		await Promise.allSettled([
-			fetch(musicUrl),
-			fetch(tweetUrl),
-			fetch(aboutUrl),
-			fetch(blogUrl),
-			fetch(socialUrl)
+			fetch(apiFetchUrl('/api/widgets/nowplaying')),
+			fetch(apiFetchUrl('/api/widgets/latest-tweet')),
+			fetch(apiFetchUrl('/api/config/homepage_about_me')),
+			fetch(apiFetchUrl('/api/blog?list=1')),
+			fetch(apiFetchUrl('/api/social-links'))
 		]);
 
-	let musicData: unknown = null;
-	let tweetData: unknown = null;
+	const [musicData, tweetData, about, blog, social] = await Promise.all([
+		jsonOf<unknown>(musicResult),
+		jsonOf<unknown>(tweetResult),
+		jsonOf<{ data?: { value?: string } }>(aboutResult),
+		jsonOf<{ data?: BlogListItem[] }>(blogResult),
+		jsonOf<{ data?: Array<{ url: string; linkType: string }> }>(socialResult)
+	]);
 
-	if (musicResult.status === 'fulfilled' && musicResult.value.ok) {
-		musicData = await musicResult.value.json();
-	}
+	const recentPosts: HomeRecentPost[] = (blog?.data ?? []).slice(0, 4).map((post) => ({
+		id: post.id,
+		title: post.title,
+		slug: post.slug,
+		publishedAt: post.publishedAt
+	}));
 
-	if (tweetResult.status === 'fulfilled' && tweetResult.value.ok) {
-		tweetData = await tweetResult.value.json();
-	}
 
-	let aboutMeHtml = '';
-	if (aboutResult.status === 'fulfilled' && aboutResult.value.ok) {
-		try {
-			const aboutJson = (await aboutResult.value.json()) as {
-				data?: { value?: string };
-			};
-			const raw = aboutJson.data?.value;
-			if (raw && typeof raw === 'string') {
-				aboutMeHtml = await marked.parse(raw);
-			}
-		} catch {
-			aboutMeHtml = '';
-		}
-	}
-
-	let recentPosts: HomeRecentPost[] = [];
-	if (blogResult.status === 'fulfilled' && blogResult.value.ok) {
-		try {
-			const blogJson = (await blogResult.value.json()) as {
-				data?: Array<{ id: string; title: string; slug: string; publishedAt: string }>;
-			};
-			const posts = blogJson.data ?? [];
-			recentPosts = posts.slice(0, 4).map((p) => ({
-				id: p.id,
-				title: p.title,
-				slug: p.slug,
-				publishedAt: p.publishedAt
-			}));
-		} catch {
-			recentPosts = [];
-		}
-	}
-
-	let socialUrls: string[] = [];
-	if (socialResult.status === 'fulfilled' && socialResult.value.ok) {
-		try {
-			const socialJson = (await socialResult.value.json()) as {
-				data?: Array<{ url: string; linkType: string }>;
-			};
-			socialUrls = (socialJson.data ?? [])
-				.filter((link) => link.linkType === 'link')
-				.map((link) => link.url);
-		} catch {
-			socialUrls = [];
-		}
-	}
+	const socialUrls = (social?.data ?? [])
+		.filter((link) => link.linkType === 'link')
+		.map((link) => link.url);
 
 	return {
 		musicData,
 		socialUrls,
 		tweetData,
-		aboutMeHtml,
+		aboutMeHtml: await renderAbout(about?.data?.value),
 		recentPosts
 	};
 };
