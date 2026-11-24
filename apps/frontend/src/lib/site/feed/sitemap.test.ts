@@ -40,14 +40,12 @@ describe('buildSitemap', () => {
 });
 
 describe('sitemapPaths', () => {
-	it('uses every page the backend knows about, in order', () => {
-		expect(sitemapPaths({ '/': {}, '/about': {}, '/uses': {} })).toEqual(['/', '/about', '/uses']);
+	it('lists every static page route', () => {
+		expect(sitemapPaths(['/', '/about', '/uses'])).toEqual(['/', '/about', '/uses']);
 	});
 
-	it('falls back to the home page when the page data is missing or empty', () => {
-		for (const pageSeo of [null, undefined, {}]) {
-			expect(sitemapPaths(pageSeo)).toEqual(['/']);
-		}
+	it('falls back to the home page when no routes were found', () => {
+		expect(sitemapPaths([])).toEqual(['/']);
 	});
 });
 

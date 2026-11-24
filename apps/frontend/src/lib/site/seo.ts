@@ -1,4 +1,5 @@
 import { publicPageTitle } from '$lib/site/pageTitle';
+import { nameFromPath, STATIC_ROUTE_PATHS } from '$lib/site/routes';
 
 export const DEFAULT_OG_IMAGE_PATH = '/api/blog/og-default.png';
 
@@ -10,7 +11,12 @@ export function getStaticRouteSeo(
 	pathname: string,
 	pageSeo: PageSeoMap | null | undefined
 ): StaticRouteSeo | null {
-	const page = pageSeo?.[pathname];
+	if (!pageSeo) return null;
+	const page =
+		pageSeo[pathname] ??
+		(STATIC_ROUTE_PATHS.includes(pathname)
+			? { name: nameFromPath(pathname), description: pageSeo['/']?.description ?? '' }
+			: null);
 	if (!page) return null;
 	return {
 		name: page.name,

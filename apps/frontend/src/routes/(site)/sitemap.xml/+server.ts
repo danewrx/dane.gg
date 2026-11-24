@@ -8,6 +8,7 @@ import {
 	type SitemapBlogPost,
 	type SitemapProjectCategory
 } from '$lib/site/feed/sitemap';
+import { STATIC_ROUTE_PATHS } from '$lib/site/routes';
 import type { RequestHandler } from './$types';
 
 async function fetchData<T>(fetch: typeof globalThis.fetch, path: string, fallback: T): Promise<T> {
@@ -24,14 +25,13 @@ async function fetchData<T>(fetch: typeof globalThis.fetch, path: string, fallba
 export const GET: RequestHandler = async ({ fetch, url }) => {
 	const origin = url.origin;
 
-	const [pageSeo, blogPosts, categories] = await Promise.all([
-		fetchData<Record<string, unknown> | null>(fetch, '/api/config/page-seo', null),
+	const [blogPosts, categories] = await Promise.all([
 		fetchData<SitemapBlogPost[]>(fetch, '/api/blog?list=1', []),
 		fetchData<SitemapProjectCategory[]>(fetch, '/api/projects/categories', [])
 	]);
 
 	const xml = buildSitemap([
-		...buildStaticSitemapUrls(origin, sitemapPaths(pageSeo)),
+		...buildStaticSitemapUrls(origin, sitemapPaths(STATIC_ROUTE_PATHS)),
 		...buildProjectCategorySitemapUrls(origin, categories),
 		...buildBlogPostSitemapUrls(origin, blogPosts)
 	]);

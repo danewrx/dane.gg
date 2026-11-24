@@ -32,9 +32,8 @@ ${body}
 </urlset>`;
 }
 
-export function sitemapPaths(pageSeo: Record<string, unknown> | null | undefined): string[] {
-	const paths = Object.keys(pageSeo ?? {});
-	return paths.length > 0 ? paths : ['/'];
+export function sitemapPaths(routePaths: string[]): string[] {
+	return routePaths.length > 0 ? routePaths : ['/'];
 }
 
 export function buildStaticSitemapUrls(origin: string, paths: string[]): SitemapUrl[] {

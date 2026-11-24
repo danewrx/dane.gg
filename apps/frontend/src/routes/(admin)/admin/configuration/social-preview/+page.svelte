@@ -5,6 +5,7 @@
 	import { toast } from 'svelte-sonner';
 	import { Loader2, X, Type, Image as ImageIcon, Layers, Palette } from 'lucide-svelte';
 	import FontPicker from '$lib/admin/components/ui/FontPicker.svelte';
+	import { STATIC_ROUTE_PATHS } from '$lib/site/routes';
 	import Tabs from '$lib/admin/components/ui/Tabs.svelte';
 	import FileUpload, { type UploadedFile } from '$lib/admin/components/ui/FileUpload.svelte';
 
@@ -49,7 +50,9 @@
 	let previewTab = $state('default');
 	let selectedPage = $state('');
 	// Every page except the home page, straight from the backend's list
-	const pagePaths = $derived(Object.keys(pageSeo).filter((path) => path !== '/'));
+	const pagePaths = $derived(
+		Object.keys(pageSeo).filter((path) => path !== '/' && STATIC_ROUTE_PATHS.includes(path))
+	);
 	let blogPosts = $state<{ slug: string; title: string; updatedAt: string }[]>([]);
 	let selectedSlug = $state('');
 	let selectedPost = $derived(blogPosts.find((post) => post.slug === selectedSlug));
@@ -173,7 +176,10 @@
 					const response = await fetch('/api/config/page-seo');
 					if (response.ok) {
 						pageSeo = (await response.json()).data ?? {};
-						selectedPage = Object.keys(pageSeo).find((path) => path !== '/') ?? '';
+						selectedPage =
+							Object.keys(pageSeo).find(
+								(path) => path !== '/' && STATIC_ROUTE_PATHS.includes(path)
+							) ?? '';
 					}
 				})(),
 				...TEXT_FIELDS.map(async (field, i) => {
