@@ -1,24 +1,5 @@
 <script lang="ts">
-	import {
-		Palette,
-		CloudRain,
-		Cat,
-		Link,
-		MessageSquare,
-		Server,
-		Twitter,
-		ChevronRight,
-		Globe,
-		Home,
-		User,
-		FileText,
-		Zap,
-		Award,
-		Mail,
-		Bell,
-		Megaphone,
-		Github
-	} from 'lucide-svelte';
+	import { ChevronRight, Globe, Home, User, Mail } from 'lucide-svelte';
 	import type { ComponentType } from 'svelte';
 
 	export interface ConfigurationCategory {
@@ -75,23 +56,7 @@
 							class:active={selectedCategoryId === category.id}
 							style:color={selectedCategoryId === category.id ? null : category.iconBgColor}
 						>
-							{#if category.icon === Palette}
-								<Palette size={20} stroke-width={1.5} />
-							{:else if category.icon === CloudRain}
-								<CloudRain size={20} stroke-width={1.5} />
-							{:else if category.icon === Cat}
-								<Cat size={20} stroke-width={1.5} />
-							{:else if category.icon === Link}
-								<Link size={20} stroke-width={1.5} />
-							{:else if category.icon === MessageSquare}
-								<MessageSquare size={20} stroke-width={1.5} />
-							{:else if category.icon === Bell}
-								<Bell size={20} stroke-width={1.5} />
-							{:else if category.icon === Server}
-								<Server size={20} stroke-width={1.5} />
-							{:else if category.icon === Twitter}
-								<Twitter size={20} stroke-width={1.5} />
-							{/if}
+							<category.icon size={20} stroke-width={1.5} />
 						</div>
 						<span class="sidebar-title">{category.title}</span>
 						<div class="sidebar-chevron">
@@ -124,25 +89,7 @@
 							class:active={selectedCategoryId === category.id}
 							style:color={selectedCategoryId === category.id ? null : category.iconBgColor}
 						>
-							{#if category.icon === CloudRain}
-								<CloudRain size={20} stroke-width={1.5} />
-							{:else if category.icon === Link}
-								<Link size={20} stroke-width={1.5} />
-							{:else if category.icon === MessageSquare}
-								<MessageSquare size={20} stroke-width={1.5} />
-							{:else if category.icon === Server}
-								<Server size={20} stroke-width={1.5} />
-							{:else if category.icon === Twitter}
-								<Twitter size={20} stroke-width={1.5} />
-							{:else if category.icon === FileText}
-								<FileText size={20} stroke-width={1.5} />
-							{:else if category.icon === User}
-								<User size={20} stroke-width={1.5} />
-							{:else if category.icon === Megaphone}
-								<Megaphone size={20} stroke-width={1.5} />
-							{:else if category.icon === Github}
-								<Github size={20} stroke-width={1.5} />
-							{/if}
+							<category.icon size={20} stroke-width={1.5} />
 						</div>
 						<span class="sidebar-title">{category.title}</span>
 						<div class="sidebar-chevron">
@@ -175,15 +122,7 @@
 							class:active={selectedCategoryId === category.id}
 							style:color={selectedCategoryId === category.id ? null : category.iconBgColor}
 						>
-							{#if category.icon === FileText}
-								<FileText size={20} stroke-width={1.5} />
-							{:else if category.icon === Zap}
-								<Zap size={20} stroke-width={1.5} />
-							{:else if category.icon === Award}
-								<Award size={20} stroke-width={1.5} />
-							{:else if category.icon === Mail}
-								<Mail size={20} stroke-width={1.5} />
-							{/if}
+							<category.icon size={20} stroke-width={1.5} />
 						</div>
 						<span class="sidebar-title">{category.title}</span>
 						<div class="sidebar-chevron">
@@ -216,11 +155,7 @@
 							class:active={selectedCategoryId === category.id}
 							style:color={selectedCategoryId === category.id ? null : category.iconBgColor}
 						>
-							{#if category.icon === Mail}
-								<Mail size={20} stroke-width={1.5} />
-							{:else if category.icon === Link}
-								<Link size={20} stroke-width={1.5} />
-							{/if}
+							<category.icon size={20} stroke-width={1.5} />
 						</div>
 						<span class="sidebar-title">{category.title}</span>
 						<div class="sidebar-chevron">

@@ -22,7 +22,9 @@
 		Bell,
 		Megaphone,
 		Github,
-		RectangleHorizontal
+		RectangleHorizontal,
+		Image as ImageIcon,
+		Search
 	} from 'lucide-svelte';
 
 	let { children } = $props();
@@ -86,6 +88,31 @@
 			borderColor: 'rgba(20, 184, 166, 0.2)',
 			iconBgColor: '#14b8a6',
 			path: '/admin/configuration/notifications',
+			section: 'general'
+		},
+		{
+			id: 'seo',
+			title: 'SEO',
+			description:
+				'Page titles and descriptions for the tab title, search results and link previews',
+			icon: Search,
+			color: 'from-sky-500 to-blue-500',
+			bgColor: 'rgba(14, 165, 233, 0.1)',
+			borderColor: 'rgba(14, 165, 233, 0.2)',
+			iconBgColor: '#0ea5e9', // Sky
+			path: '/admin/configuration/seo',
+			section: 'general'
+		},
+		{
+			id: 'social-preview',
+			title: 'Social Preview',
+			description: 'Set the text, colours, fonts, background and logo of link preview cards',
+			icon: ImageIcon,
+			color: 'from-fuchsia-500 to-purple-500',
+			bgColor: 'rgba(217, 70, 239, 0.1)',
+			borderColor: 'rgba(217, 70, 239, 0.2)',
+			iconBgColor: '#d946ef', // Fuchsia
+			path: '/admin/configuration/social-preview',
 			section: 'general'
 		},
 		{

@@ -81,7 +81,8 @@
 	<OpenGraphTags
 		title={publicPageTitle(post.title)}
 		description={plainTextExcerpt(post.content, 160)}
-		imagePathOrUrl={post.thumbnail ? getThumbnailUrl(post.thumbnail) : null}
+		imagePathOrUrl={`/api/blog/${post.slug}/og.png?v=${new Date(post.updatedAt).getTime()}`}
+		imageAlt={post.title}
 		ogType="article"
 		publishedTime={new Date(post.publishedAt).toISOString()}
 		modifiedTime={new Date(post.updatedAt).toISOString()}

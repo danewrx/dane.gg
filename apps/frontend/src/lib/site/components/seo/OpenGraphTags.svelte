@@ -8,6 +8,7 @@
 		title,
 		description,
 		imagePathOrUrl = null as string | null,
+		imageAlt = null as string | null,
 		ogType = 'website' as OgType,
 		publishedTime = null as string | null,
 		modifiedTime = null as string | null
@@ -15,6 +16,7 @@
 		title: string;
 		description: string;
 		imagePathOrUrl?: string | null;
+		imageAlt?: string | null;
 		ogType?: OgType;
 		publishedTime?: string | null;
 		modifiedTime?: string | null;
@@ -39,6 +41,12 @@
 	<meta property="og:title" content={title} />
 	<meta property="og:description" content={description} />
 	<meta property="og:image" content={ogImage} />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	{#if imageAlt}
+		<meta property="og:image:alt" content={imageAlt} />
+		<meta name="twitter:image:alt" content={imageAlt} />
+	{/if}
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content={title} />
 	<meta name="twitter:description" content={description} />

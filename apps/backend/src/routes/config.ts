@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { ConfigService } from '../services/config';
 import { requireSession } from '../middleware/auth';
 import { chatService } from '../services/chatService';
+import { getPageSeo } from '../services/pageSeo';
 
 const LIVE_BROADCAST_KEYS = new Set([
 	'default_weather_type',
@@ -42,6 +43,16 @@ router.get('/', async (req, res) => {
 			success: false,
 			error: 'Failed to fetch site configuration'
 		});
+	}
+});
+
+// The name and description of each fixed page (public; used for meta tags and social cards)
+router.get('/page-seo', async (_req, res) => {
+	try {
+		res.json({ success: true, data: await getPageSeo() });
+	} catch (error) {
+		logger.error('Config API Error:', error);
+		res.status(500).json({ success: false, error: 'Failed to fetch page SEO' });
 	}
 });
 

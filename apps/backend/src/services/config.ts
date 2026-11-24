@@ -102,7 +102,23 @@ export class ConfigService {
 						'uptime_kuma_selected_monitors',
 						'discord_chat_integration_enabled',
 						'site_theme_enforcement',
-						'ntfy_settings'
+						'ntfy_settings',
+						'og_background_image',
+						'og_logo_image',
+						'page_seo',
+						'og_default_title',
+						'og_default_subtitle',
+						'og_default_pill',
+						'og_fade_color',
+						'og_title_color',
+						'og_text_color',
+						'og_pill_color',
+						'og_pill_text_color',
+						'og_font',
+						'og_title_scale',
+						'og_heading_size',
+						'og_text_size',
+						'og_pill_size'
 					];
 					if (!silentKeys.includes(key)) {
 						logger.warn(

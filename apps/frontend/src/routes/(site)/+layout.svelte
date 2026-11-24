@@ -34,7 +34,7 @@
 
 	const isThemePreviewEmbed = $derived($page.url.searchParams.has(THEME_PREVIEW_SEARCH_PARAM));
 
-	const staticRouteSeo = $derived(getStaticRouteSeo($page.url.pathname));
+	const staticRouteSeo = $derived(getStaticRouteSeo($page.url.pathname, data.pageSeo));
 	const isBlogSection = $derived(
 		$page.url.pathname === '/blog' || $page.url.pathname.startsWith('/blog/')
 	);
@@ -50,12 +50,21 @@
 
 <CanonicalLink />
 <svelte:head>
+	{#if staticRouteSeo}
+		<title>{staticRouteSeo.title}</title>
+	{/if}
 	{#if isBlogSection}
 		<link rel="alternate" type="application/rss+xml" title="dane.gg Blog" href="/blog/rss.xml" />
 	{/if}
 </svelte:head>
 {#if staticRouteSeo}
-	<OpenGraphTags title={staticRouteSeo.title} description={staticRouteSeo.description} />
+	<OpenGraphTags
+		title={staticRouteSeo.title}
+		description={staticRouteSeo.description}
+		imagePathOrUrl={$page.url.pathname === '/'
+			? null
+			: `/api/blog/og-page.png?path=${encodeURIComponent($page.url.pathname)}`}
+	/>
 {/if}
 
 <!-- Public website layout -->

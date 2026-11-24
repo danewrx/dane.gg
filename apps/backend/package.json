@@ -24,6 +24,7 @@
 		"db:merge-export": "bun src/scripts/mergeProductionExportData.ts"
 	},
 	"dependencies": {
+		"@resvg/resvg-wasm": "^2.6.2",
 		"@types/bcryptjs": "^2.4.6",
 		"@types/cookie-parser": "^1.4.9",
 		"@types/express-session": "^1.18.2",
@@ -47,9 +48,11 @@
 		"pg": "^8.22.0",
 		"postgres": "^3.4.7",
 		"qrcode": "^1.5.4",
+		"satori": "^0.63.2",
 		"sharp": "^0.35.3",
 		"twitter-openapi-typescript": "^0.0.55",
 		"uuid": "^13.0.0",
+		"wawoff2": "^2.0.1",
 		"ws": "^8.18.3"
 	},
 	"devDependencies": {

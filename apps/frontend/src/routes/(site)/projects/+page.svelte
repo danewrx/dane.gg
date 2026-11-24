@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
-	import { publicPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
@@ -162,9 +161,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>{publicPageTitle('Projects')}</title>
-</svelte:head>
 
 {#snippet projectCard(project: Project)}
 	<div class="project-card-slot">

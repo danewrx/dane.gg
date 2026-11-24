@@ -1,40 +1,22 @@
 import { publicPageTitle } from '$lib/site/pageTitle';
 
-export const DEFAULT_SITE_DESCRIPTION =
-	"Hi, I'm Dane! I'm a software engineer & freelance designer from Preston, UK.";
+export const DEFAULT_OG_IMAGE_PATH = '/api/blog/og-default.png';
 
-export const DEFAULT_OG_IMAGE_PATH = '/assets/favicon/web-app-manifest-512x512.png';
+export type PageSeoMap = Record<string, { name: string; description: string }>;
 
-export type StaticRouteSeo = { title: string; description: string };
+export type StaticRouteSeo = { title: string; description: string; name: string };
 
-export function getStaticRouteSeo(pathname: string): StaticRouteSeo | null {
-	switch (pathname) {
-		case '/':
-			return { title: 'dane.gg (丹恩)', description: DEFAULT_SITE_DESCRIPTION };
-		case '/about':
-			return {
-				title: publicPageTitle('About'),
-				description: "Hi, I'm Dane! I'm a software engineer & freelance designer from Preston, UK."
-			};
-		case '/contact':
-			return {
-				title: publicPageTitle('Contact'),
-				description: 'Get in touch with me for collaboration or inquiries.'
-			};
-		case '/projects':
-			return {
-				title: publicPageTitle('Projects'),
-				description: "Explore my portfolio of software, design, and other random projects."
-			};
-		case '/blog':
-			return {
-				title: publicPageTitle('Blog'),
-				description:
-					'Read my latest blog posts about software, design, and other random stuff I feel like writing about.'
-			};
-		default:
-			return null;
-	}
+export function getStaticRouteSeo(
+	pathname: string,
+	pageSeo: PageSeoMap | null | undefined
+): StaticRouteSeo | null {
+	const page = pageSeo?.[pathname];
+	if (!page) return null;
+	return {
+		name: page.name,
+		title: pathname === '/' ? page.name : publicPageTitle(page.name),
+		description: page.description
+	};
 }
 
 export function plainTextExcerpt(markdown: string, maxLength: number): string {

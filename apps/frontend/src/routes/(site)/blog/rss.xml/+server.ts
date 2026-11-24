@@ -1,6 +1,6 @@
 import { apiFetchUrl } from '$lib/server/apiFetchUrl';
 import { buildRssFeed, type RssBlogPost } from '$lib/site/feed/rss';
-import { getStaticRouteSeo } from '$lib/site/seo';
+import { getStaticRouteSeo, type PageSeoMap } from '$lib/site/seo';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ fetch, url }) => {
@@ -29,7 +29,15 @@ export const GET: RequestHandler = async ({ fetch, url }) => {
 		return new Response('Feed unavailable', { status: 502 });
 	}
 
-	const blogSeo = getStaticRouteSeo('/blog');
+	let pageSeo: PageSeoMap | null = null;
+	try {
+		const seoResponse = await fetch(apiFetchUrl('/api/config/page-seo'));
+		pageSeo = seoResponse.ok
+			? (((await seoResponse.json()) as { data?: PageSeoMap }).data ?? null)
+			: null;
+	} catch {
+	}
+	const blogSeo = getStaticRouteSeo('/blog', pageSeo);
 	const xml = await buildRssFeed(body.data, {
 		origin,
 		feedUrl,

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
-	import { publicPageTitle } from '$lib/site/pageTitle';
 
 	import { onMount } from 'svelte';
 	import TypingHeader from '$lib/shared/components/TypingHeader.svelte';
@@ -195,10 +194,6 @@
 		emblaApi?.scrollNext();
 	}
 </script>
-
-<svelte:head>
-	<title>{publicPageTitle('About')}</title>
-</svelte:head>
 
 <TypingHeader text="About" />
 
