@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blogPostSeo } from './seo';
+import { blogPostSeo, imageMimeType, twitterHandle } from './seo';
 
 const post = {
 	slug: 'hello',
@@ -37,5 +37,45 @@ describe('blogPostSeo', () => {
 		const seo = blogPostSeo({ ...post, ogImage: 'https://example.com/a.png' });
 		expect(seo.imagePath).toBe('https://example.com/a.png');
 		expect(seo.imageIsGenerated).toBe(false);
+	});
+});
+
+describe('twitterHandle', () => {
+	it('adds the @ and accepts it already being there', () => {
+		expect(twitterHandle('danewrx')).toBe('@danewrx');
+		expect(twitterHandle('@danewrx')).toBe('@danewrx');
+		expect(twitterHandle('  @Dane_1  ')).toBe('@Dane_1');
+	});
+
+	it('rejects anything that is not a valid handle', () => {
+		for (const raw of [
+			null,
+			undefined,
+			42,
+			'',
+			'@',
+			'has space',
+			'a-b',
+			'x'.repeat(16),
+			'<script>'
+		]) {
+			expect(twitterHandle(raw)).toBeNull();
+		}
+	});
+});
+
+describe('imageMimeType', () => {
+	it('maps known extensions, ignoring case and the query string', () => {
+		expect(imageMimeType('/api/blog/hello/og.png?v=123')).toBe('image/png');
+		expect(imageMimeType('https://example.com/a/photo.JPG')).toBe('image/jpeg');
+		expect(imageMimeType('/api/upload/file/x.jpeg#top')).toBe('image/jpeg');
+		expect(imageMimeType('/x.webp')).toBe('image/webp');
+		expect(imageMimeType('/x.gif')).toBe('image/gif');
+	});
+
+	it('returns null when the type is not known', () => {
+		for (const src of ['/api/image', 'https://example.com/photo', '/file.svg', '']) {
+			expect(imageMimeType(src)).toBeNull();
+		}
 	});
 });

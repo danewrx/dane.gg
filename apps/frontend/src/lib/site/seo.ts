@@ -56,3 +56,26 @@ export function blogPostSeo(post: {
 		imageIsGenerated: !customImage
 	};
 }
+
+/** `@handle` from a configured Twitter/X username (with or without the @), or null if it isn't valid. */
+export function twitterHandle(raw: unknown): string | null {
+	const name = typeof raw === 'string' ? raw.trim().replace(/^@/, '') : '';
+	return /^[A-Za-z0-9_]{1,15}$/.test(name) ? `@${name}` : null;
+}
+
+const IMAGE_TYPES: Record<string, string> = {
+	png: 'image/png',
+	jpg: 'image/jpeg',
+	jpeg: 'image/jpeg',
+	gif: 'image/gif',
+	webp: 'image/webp'
+};
+
+/** The image type implied by a path or URL's file extension, or null if it isn't a known one. */
+export function imageMimeType(src: string): string | null {
+	const extension = src
+		.split(/[?#]/)[0]
+		.match(/\.([a-z0-9]+)$/i)?.[1]
+		.toLowerCase();
+	return (extension && IMAGE_TYPES[extension]) || null;
+}

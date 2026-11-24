@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { DEFAULT_OG_IMAGE_PATH } from '$lib/site/seo';
+	import { DEFAULT_OG_IMAGE_PATH, imageMimeType } from '$lib/site/seo';
 
 	type OgType = 'website' | 'article';
 
@@ -26,6 +26,8 @@
 
 	const pageUrl = $derived(`${$page.url.origin}${$page.url.pathname}`);
 
+	const twitterSite = $derived($page.data.twitterHandle as string | null | undefined);
+
 	const ogImage = $derived.by(() => {
 		const raw = imagePathOrUrl?.trim();
 		if (!raw) return new URL(DEFAULT_OG_IMAGE_PATH, $page.url.origin).href;
@@ -43,6 +45,9 @@
 	<meta property="og:title" content={title} />
 	<meta property="og:description" content={description} />
 	<meta property="og:image" content={ogImage} />
+	{#if imageMimeType(ogImage)}
+		<meta property="og:image:type" content={imageMimeType(ogImage)} />
+	{/if}
 	{#if imageIsGenerated}
 		<meta property="og:image:width" content="1200" />
 		<meta property="og:image:height" content="630" />
@@ -52,6 +57,9 @@
 		<meta name="twitter:image:alt" content={imageAlt} />
 	{/if}
 	<meta name="twitter:card" content="summary_large_image" />
+	{#if twitterSite}
+		<meta name="twitter:site" content={twitterSite} />
+	{/if}
 	<meta name="twitter:title" content={title} />
 	<meta name="twitter:description" content={description} />
 	<meta name="twitter:image" content={ogImage} />

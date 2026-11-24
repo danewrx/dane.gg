@@ -106,6 +106,7 @@ export class ConfigService {
 						'og_background_image',
 						'og_logo_image',
 						'page_seo',
+						'twitter_username',
 						'og_default_title',
 						'og_default_subtitle',
 						'og_default_pill',

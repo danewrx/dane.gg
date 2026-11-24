@@ -43,6 +43,36 @@ test.describe('structured data', () => {
 	});
 });
 
+test.describe('canonical and card tags', () => {
+	test('canonical links ignore the query string', async ({ request }) => {
+		const html = await (await request.get('/about?utm_source=newsletter&x=1')).text();
+		expect(html).toContain('<link rel="canonical" href="http://localhost:5173/about"');
+	});
+
+	test('a trailing slash redirects to the canonical URL', async ({ request }) => {
+		const response = await request.get('/about/', { maxRedirects: 0 });
+		expect([301, 308]).toContain(response.status());
+		expect(response.headers()['location']).toMatch(/\/about$/);
+	});
+
+	test('the card image declares its type', async ({ request }) => {
+		const html = await (await request.get('/about')).text();
+		expect(html).toContain('property="og:image:type" content="image/png"');
+	});
+
+	test('twitter:site matches the configured Twitter username', async ({ request }) => {
+		const config = await request.get('/api/config/twitter_username');
+		const value = config.ok() ? (await config.json()).data?.value : null;
+		const html = await (await request.get('/about')).text();
+		const handle = typeof value === 'string' ? value.trim().replace(/^@/, '') : '';
+		if (/^[A-Za-z0-9_]{1,15}$/.test(handle)) {
+			expect(html).toContain(`name="twitter:site" content="@${handle}"`);
+		} else {
+			expect(html).not.toContain('name="twitter:site"');
+		}
+	});
+});
+
 test.describe('blog post previews', () => {
 	test('use the generated card and a description from the post by default', async ({ request }) => {
 		const list = await (await request.get('/api/blog?list=1')).json();
