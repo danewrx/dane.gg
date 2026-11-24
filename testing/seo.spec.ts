@@ -43,6 +43,33 @@ test.describe('structured data', () => {
 	});
 });
 
+test.describe('social card caching', () => {
+	test('every kind of card has an ETag and answers a repeat request with 304', async ({
+		request
+	}) => {
+		const categories = (await (await request.get('/api/projects/categories')).json()).data ?? [];
+		const posts = (await (await request.get('/api/blog?list=1')).json()).data ?? [];
+		const urls = [
+			'/api/blog/og-default.png',
+			'/api/blog/og-page.png?path=%2Fabout',
+			...posts.slice(0, 1).map((p: { slug: string }) => `/api/blog/${p.slug}/og.png`),
+			...categories.slice(0, 1).map((c: { id: string }) => `/api/projects/category/${c.id}/og.png`)
+		];
+
+		for (const url of urls) {
+			const first = await request.get(url);
+			const etag = first.headers()['etag'];
+			expect(first.status(), url).toBe(200);
+			expect(first.headers()['cache-control'], url).toContain('max-age=3600');
+			expect(etag, `${url} has no ETag`).toBeTruthy();
+
+			const repeat = await request.get(url, { headers: { 'If-None-Match': etag } });
+			expect(repeat.status(), `${url} should be 304 for a matching ETag`).toBe(304);
+			expect((await repeat.body()).length).toBe(0);
+		}
+	});
+});
+
 test.describe('image alt text', () => {
 	test('every image on the public pages has an alt attribute, and none says just "Icon"', async ({
 		request
