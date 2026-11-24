@@ -2,7 +2,9 @@
 	import OpenGraphTags from '$lib/site/components/seo/OpenGraphTags.svelte';
 	import { publicPageTitle } from '$lib/site/pageTitle';
 
-	import { navigating } from '$app/stores';
+	import { navigating, page } from '$app/stores';
+	import JsonLd from '$lib/site/components/seo/JsonLd.svelte';
+	import { breadcrumbSchema } from '$lib/site/jsonLd';
 	import Icon from '@iconify/svelte';
 	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
 	import { getProjectStatusColor } from '$lib/shared/constants/projectConstants';
@@ -62,6 +64,7 @@
 		/** Set when this category is a subcategory */
 		parent: { id: string; name: string } | null;
 		subcategories: { id: string; name: string; displayOrder: number }[];
+		description: string;
 		projects: Project[];
 	}
 
@@ -121,9 +124,21 @@
 	<title>{publicPageTitle(categoryData?.category.name || 'Projects')}</title>
 </svelte:head>
 {#if categoryData?.category}
+	<JsonLd
+		data={breadcrumbSchema($page.url.origin, [
+			{ name: 'Home', path: '/' },
+			{ name: 'Projects', path: '/projects' },
+			...(categoryData.parent
+				? [{ name: categoryData.parent.name, path: `/projects/${categoryData.parent.id}` }]
+				: []),
+			{ name: categoryData.category.name, path: `/projects/${categoryData.category.id}` }
+		])}
+	/>
 	<OpenGraphTags
 		title={publicPageTitle(categoryData.category.name)}
-		description={`Explore ${categoryData.category.name} projects from my portfolio.`}
+		description={categoryData.description}
+		imagePathOrUrl={`/api/projects/category/${categoryData.category.id}/og.png`}
+		imageAlt={categoryData.category.name}
 	/>
 {/if}
 
@@ -205,7 +220,7 @@
 						{:else if projectIconInfo.type === 'iconify' && projectIconInfo.icon}
 							<Icon icon={projectIconInfo.icon} width="16" height="16" />
 						{:else if projectIconInfo.type === 'svg' && projectIconInfo.url}
-							<img src={projectIconInfo.url} alt="Icon" width="16" height="16" />
+							<img src={projectIconInfo.url} alt="" width="16" height="16" />
 						{:else if projectIconInfo.type === 'text' && projectIconInfo.text}
 							<span class="text-icon">{projectIconInfo.text}</span>
 						{:else if projectIconInfo.component}
@@ -232,7 +247,7 @@
 						{:else if repoIconInfo.type === 'iconify' && repoIconInfo.icon}
 							<Icon icon={repoIconInfo.icon} width="16" height="16" />
 						{:else if repoIconInfo.type === 'svg' && repoIconInfo.url}
-							<img src={repoIconInfo.url} alt="Icon" width="16" height="16" />
+							<img src={repoIconInfo.url} alt="" width="16" height="16" />
 						{:else if repoIconInfo.type === 'text' && repoIconInfo.text}
 							<span class="text-icon">{repoIconInfo.text}</span>
 						{:else if repoIconInfo.component}

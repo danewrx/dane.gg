@@ -2,6 +2,7 @@ import { redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
 import { logger } from '$lib/logger';
 import { normalizeDefaultWebNekoTypeForServer } from '$lib/site/oneko/variants';
+import { isNoIndexPath } from '$lib/site/feed/robots';
 
 const API_BASE_URL = process.env.VITE_API_URL || '/api';
 
@@ -90,14 +91,20 @@ async function verifyAuth(cookies: any, fetch: typeof globalThis.fetch): Promise
 	}
 }
 
-export const handle: Handle = async ({ event, resolve }) => {
+export const handle: Handle = async (input) => {
+	const response = await handleRequest(input);
+	// Keep the admin and login pages out of search results even if a crawler ignores robots.txt.
+	if (isNoIndexPath(input.event.url.pathname)) {
+		response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+	}
+	return response;
+};
+
+const handleRequest: Handle = async ({ event, resolve }) => {
 	const { url, cookies } = event;
 	const pathname = url.pathname;
 
-	const isAdminRoute =
-		pathname.startsWith('/admin') ||
-		pathname.startsWith('/login') ||
-		pathname.startsWith('/logout');
+	const isAdminRoute = isNoIndexPath(pathname);
 	const daneAppRealm = isAdminRoute ? 'admin' : 'public';
 
 	// Skip auth check for system routes (assets, API, etc.)

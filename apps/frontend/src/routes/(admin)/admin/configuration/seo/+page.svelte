@@ -4,14 +4,17 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { Loader2 } from 'lucide-svelte';
+	import { nameFromPath, STATIC_ROUTE_PATHS } from '$lib/site/routes';
 
 	let pageSeo = $state<Record<string, { name: string; description: string }>>({});
+
 	const pages = $derived(
-		Object.keys(pageSeo).map((path) => ({
+		STATIC_ROUTE_PATHS.filter((path) => pageSeo[path]).map((path) => ({
 			path,
-			label: path === '/' ? 'Home' : path.slice(1).replace(/^./, (c) => c.toUpperCase())
+			label: path === '/' ? 'Home' : nameFromPath(path)
 		}))
 	);
+	let unsaved = $state<string[]>([]);
 	let isLoading = $state(true);
 	let saving = $state(false);
 
@@ -19,6 +22,14 @@
 		try {
 			const response = await fetch('/api/config/page-seo');
 			if (response.ok) pageSeo = (await response.json()).data ?? {};
+			for (const path of STATIC_ROUTE_PATHS) {
+				if (pageSeo[path]) continue;
+				pageSeo[path] = {
+					name: nameFromPath(path),
+					description: pageSeo['/']?.description ?? ''
+				};
+				unsaved.push(path);
+			}
 		} catch (error) {
 			logger.error('Error loading page SEO:', error);
 			toast.error('Failed to load settings');
@@ -34,9 +45,13 @@
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
-				body: JSON.stringify({ value: pageSeo, dataType: 'json' })
+				body: JSON.stringify({
+					value: Object.fromEntries(pages.map((page) => [page.path, pageSeo[page.path]])),
+					dataType: 'json'
+				})
 			});
 			if (!response.ok) throw new Error('Request failed');
+			unsaved = [];
 			toast.success('Saved');
 		} catch (error) {
 			logger.error('Error saving page SEO:', error);
@@ -67,7 +82,12 @@
 		{#each pages as page (page.path)}
 			{#if pageSeo[page.path]}
 				<section class="card">
-					<h3 class="card-title">{page.label}</h3>
+					<h3 class="card-title">
+						{page.label}
+						{#if unsaved.includes(page.path)}
+							<span class="new-tag">New page: using generated text until you save</span>
+						{/if}
+					</h3>
 					{#if page.path !== '/'}
 						<div class="form-group">
 							<label class="field-label" for="name-{page.path}">Name</label>
@@ -138,6 +158,13 @@
 		font-size: 16px;
 		font-weight: 600;
 		color: var(--text-primary, #ffffff);
+	}
+
+	.new-tag {
+		margin-left: 8px;
+		font-size: 12px;
+		font-weight: 400;
+		color: var(--text-secondary, #a1a1aa);
 	}
 
 	.form-group {

@@ -34,12 +34,15 @@ export const DEFAULT_PAGE_SEO: Record<string, PageSeo> = {
 const text = (value: unknown, max: number) =>
 	typeof value === 'string' ? value.trim().slice(0, max) : '';
 
+const EXTRA_PATH = /^\/[a-z0-9_-]+(\/[a-z0-9_-]+)*$/i;
+const MAX_EXTRA_PAGES = 50;
+
 export function mergePageSeo(stored: unknown): Record<string, PageSeo> {
 	const saved = (stored && typeof stored === 'object' ? stored : {}) as Record<
 		string,
 		Partial<PageSeo> | undefined
 	>;
-	return Object.fromEntries(
+	const merged: Record<string, PageSeo> = Object.fromEntries(
 		Object.entries(DEFAULT_PAGE_SEO).map(([path, defaults]) => [
 			path,
 			{
@@ -48,6 +51,16 @@ export function mergePageSeo(stored: unknown): Record<string, PageSeo> {
 			}
 		])
 	);
+
+	let extras = 0;
+	for (const [path, value] of Object.entries(saved)) {
+		if (path in merged || !EXTRA_PATH.test(path) || extras >= MAX_EXTRA_PAGES) continue;
+		const name = text(value?.name, 60);
+		if (!name) continue;
+		merged[path] = { name, description: text(value?.description, 300) || merged['/'].description };
+		extras++;
+	}
+	return merged;
 }
 
 export async function getPageSeo(): Promise<Record<string, PageSeo>> {

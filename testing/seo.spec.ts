@@ -1,6 +1,179 @@
 import { test, expect } from '@playwright/test';
 import { gotoReady } from './helpers';
 
+/** Every JSON-LD block in a page's HTML, parsed and flattened. */
+function jsonLdBlocks(html: string): Array<Record<string, unknown>> {
+	const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+	return blocks.flatMap((match) => [JSON.parse(match[1])].flat());
+}
+
+test.describe('structured data', () => {
+	test('home page describes the website and the person', async ({ request }) => {
+		await expect
+			.poll(
+				async () =>
+					jsonLdBlocks(await (await request.get('/')).text())
+						.map((b) => b['@type'])
+						.sort(),
+				{ timeout: 30_000 }
+			)
+			.toEqual(['Person', 'WebSite']);
+	});
+
+	test('static pages have a Home > page breadcrumb', async ({ request }) => {
+		const blocks = jsonLdBlocks(await (await request.get('/about')).text());
+		const crumbs = blocks.find((b) => b['@type'] === 'BreadcrumbList') as {
+			itemListElement: Array<{ position: number; item: string }>;
+		};
+		expect(crumbs.itemListElement.map((c) => c.position)).toEqual([1, 2]);
+		expect(crumbs.itemListElement[1].item).toMatch(/\/about$/);
+	});
+
+	test('a blog post has BlogPosting data and a breadcrumb', async ({ request }) => {
+		const list = await (await request.get('/api/blog?list=1')).json();
+		const slug = list.data?.[0]?.slug;
+		test.skip(!slug, 'no published blog posts to check');
+
+		const blocks = jsonLdBlocks(await (await request.get(`/blog/${slug}`)).text());
+		const posting = blocks.find((b) => b['@type'] === 'BlogPosting');
+		expect(posting).toMatchObject({ url: expect.stringContaining(`/blog/${slug}`) });
+		expect(posting?.headline).toBeTruthy();
+		expect(Number.isNaN(Date.parse(String(posting?.datePublished)))).toBe(false);
+		expect(blocks.some((b) => b['@type'] === 'BreadcrumbList')).toBe(true);
+	});
+});
+
+test.describe('social card caching', () => {
+	test('every kind of card has an ETag and answers a repeat request with 304', async ({
+		request
+	}) => {
+		const categories = (await (await request.get('/api/projects/categories')).json()).data ?? [];
+		const posts = (await (await request.get('/api/blog?list=1')).json()).data ?? [];
+		const urls = [
+			'/api/blog/og-default.png',
+			'/api/blog/og-page.png?path=%2Fabout',
+			...posts.slice(0, 1).map((p: { slug: string }) => `/api/blog/${p.slug}/og.png`),
+			...categories.slice(0, 1).map((c: { id: string }) => `/api/projects/category/${c.id}/og.png`)
+		];
+
+		for (const url of urls) {
+			const first = await request.get(url);
+			const etag = first.headers()['etag'];
+			expect(first.status(), url).toBe(200);
+			expect(first.headers()['cache-control'], url).toContain('max-age=3600');
+			expect(etag, `${url} has no ETag`).toBeTruthy();
+
+			const repeat = await request.get(url, { headers: { 'If-None-Match': etag } });
+			expect(repeat.status(), `${url} should be 304 for a matching ETag`).toBe(304);
+			expect((await repeat.body()).length).toBe(0);
+		}
+	});
+});
+
+test.describe('image alt text', () => {
+	test('every image on the public pages has an alt attribute, and none says just "Icon"', async ({
+		request
+	}) => {
+		const categories = (await (await request.get('/api/projects/categories')).json()).data ?? [];
+		const posts = (await (await request.get('/api/blog?list=1')).json()).data ?? [];
+		const paths = [
+			'/',
+			'/about',
+			'/contact',
+			'/projects',
+			'/blog',
+			...categories.slice(0, 2).map((c: { id: string }) => `/projects/${c.id}`),
+			...posts.slice(0, 2).map((p: { slug: string }) => `/blog/${p.slug}`)
+		];
+
+		for (const path of paths) {
+			const html = await (await request.get(path)).text();
+			for (const [tag] of html.matchAll(/<img\b[^>]*>/g)) {
+				expect(tag, `${path} has an image without alt: ${tag}`).toMatch(/\balt=/);
+				expect(tag, `${path} has a generic alt: ${tag}`).not.toMatch(/\balt="(Icon|Image)"/i);
+			}
+		}
+	});
+});
+
+test.describe('canonical and card tags', () => {
+	test('canonical links ignore the query string', async ({ request }) => {
+		const html = await (await request.get('/about?utm_source=newsletter&x=1')).text();
+		expect(html).toContain('<link rel="canonical" href="http://localhost:5173/about"');
+	});
+
+	test('a trailing slash redirects to the canonical URL', async ({ request }) => {
+		const response = await request.get('/about/', { maxRedirects: 0 });
+		expect([301, 308]).toContain(response.status());
+		expect(response.headers()['location']).toMatch(/\/about$/);
+	});
+
+	test('the card image declares its type', async ({ request }) => {
+		const html = await (await request.get('/about')).text();
+		expect(html).toContain('property="og:image:type" content="image/png"');
+	});
+
+	test('twitter:site matches the configured Twitter username', async ({ request }) => {
+		const config = await request.get('/api/config/twitter_username');
+		const value = config.ok() ? (await config.json()).data?.value : null;
+		const html = await (await request.get('/about')).text();
+		const handle = typeof value === 'string' ? value.trim().replace(/^@/, '') : '';
+		if (/^[A-Za-z0-9_]{1,15}$/.test(handle)) {
+			expect(html).toContain(`name="twitter:site" content="@${handle}"`);
+		} else {
+			expect(html).not.toContain('name="twitter:site"');
+		}
+	});
+});
+
+test.describe('blog post previews', () => {
+	test('use the generated card and a description from the post by default', async ({ request }) => {
+		const list = await (await request.get('/api/blog?list=1')).json();
+		const slug = list.data?.[0]?.slug;
+		test.skip(!slug, 'no published blog posts to check');
+
+		const html = await (await request.get(`/blog/${slug}`)).text();
+		expect(html).toMatch(
+			new RegExp(`property="og:image" content="http://localhost:5173/api/blog/${slug}/og.png\\?v=\\d+"`)
+		);
+		expect(html).toContain('property="og:image:width" content="1200"');
+		const description = html.match(/property="og:description" content="([^"]*)"/)?.[1] ?? '';
+		expect(description.length).toBeGreaterThan(0);
+	});
+});
+
+test.describe('project category pages', () => {
+	test('have their own social card and a description that names their projects', async ({
+		request
+	}) => {
+		const categories = (await (await request.get('/api/projects/categories')).json()).data;
+		test.skip(!categories?.length, 'no project categories to check');
+		const { id, name } = categories[0];
+
+		const html = await (await request.get(`/projects/${id}`)).text();
+		expect(html).toContain(
+			`property="og:image" content="http://localhost:5173/api/projects/category/${id}/og.png"`
+		);
+		const description = html.match(/property="og:description" content="([^"]*)"/)?.[1] ?? '';
+		expect(description).toContain(name.replace(/&/g, '&amp;'));
+		expect(description).not.toMatch(/^Explore /);
+
+		const card = await request.get(`/api/projects/category/${id}/og.png`);
+		expect(card.status()).toBe(200);
+		expect(card.headers()['content-type']).toBe('image/png');
+	});
+
+	test('unknown or invalid category ids fall back to the home card', async ({ request }) => {
+		for (const id of ['00000000-0000-4000-8000-000000000000', 'not-a-uuid']) {
+			const response = await request.get(`/api/projects/category/${id}/og.png`, {
+				maxRedirects: 0
+			});
+			expect(response.status()).toBe(302);
+			expect(response.headers()['location']).toContain('/api/blog/og-default.png');
+		}
+	});
+});
+
 test.describe('SEO basics', () => {
 	test('homepage has a title', async ({ page }) => {
 		await gotoReady(page, '/');
@@ -41,11 +214,51 @@ test.describe('SEO basics', () => {
 		expect(body).toContain('<loc>http://localhost:5173/blog</loc>');
 	});
 
+	test('sitemap lists every page the backend knows about', async ({ request }) => {
+		const pageSeo = (await (await request.get('/api/config/page-seo')).json()).data;
+		const body = await (await request.get('/sitemap.xml')).text();
+		for (const path of Object.keys(pageSeo)) {
+			const loc = path === '/' ? 'http://localhost:5173/' : `http://localhost:5173${path}`;
+			expect(body).toContain(`<loc>${loc}</loc>`);
+		}
+	});
+
+	test('sitemap lists project category pages', async ({ request }) => {
+		const categories = (await (await request.get('/api/projects/categories')).json()).data;
+		test.skip(!categories?.length, 'no project categories to check');
+		const body = await (await request.get('/sitemap.xml')).text();
+		for (const category of categories) {
+			expect(body).toContain(`<loc>http://localhost:5173/projects/${category.id}</loc>`);
+		}
+	});
+
 	test('robots.txt references sitemap', async ({ request }) => {
 		const response = await request.get('/robots.txt');
 		expect(response.ok()).toBeTruthy();
 		const body = await response.text();
 		expect(body).toContain('Sitemap: http://localhost:5173/sitemap.xml');
+	});
+
+	test('robots.txt keeps the admin and login pages out of crawlers', async ({ request }) => {
+		const body = await (await request.get('/robots.txt')).text();
+		for (const path of ['/admin', '/login', '/logout']) {
+			expect(body).toContain(`Disallow: ${path}`);
+		}
+	});
+
+	test('login and admin responses are marked noindex', async ({ request }) => {
+		const login = await request.get('/login');
+		expect(login.headers()['x-robots-tag']).toBe('noindex, nofollow');
+		// An unauthenticated admin request lands on the login page, which is noindex too.
+		const admin = await request.get('/admin');
+		expect(admin.headers()['x-robots-tag']).toBe('noindex, nofollow');
+	});
+
+	test('public pages are not marked noindex', async ({ request }) => {
+		for (const path of ['/', '/about', '/blog']) {
+			const response = await request.get(path);
+			expect(response.headers()['x-robots-tag']).toBeUndefined();
+		}
 	});
 
 	test('feed.xml redirects to blog rss', async ({ request }) => {

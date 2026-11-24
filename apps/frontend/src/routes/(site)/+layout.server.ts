@@ -1,5 +1,5 @@
 import { apiFetchUrl } from '$lib/server/apiFetchUrl';
-import type { PageSeoMap } from '$lib/site/seo';
+import { twitterHandle, type PageSeoMap } from '$lib/site/seo';
 import type { SiteTheme } from '$lib/site/stores/theme';
 import type { LayoutServerLoad } from './$types';
 
@@ -13,9 +13,14 @@ async function fetchJson<T>(fetch: typeof globalThis.fetch, path: string): Promi
 }
 
 export const load: LayoutServerLoad = async ({ fetch }) => {
-	const [themeActive, pageSeo] = await Promise.all([
+	const [themeActive, pageSeo, twitterUsername] = await Promise.all([
 		fetchJson<SiteTheme>(fetch, '/api/themes/active'),
-		fetchJson<{ data?: PageSeoMap }>(fetch, '/api/config/page-seo')
+		fetchJson<{ data?: PageSeoMap }>(fetch, '/api/config/page-seo'),
+		fetchJson<{ data?: { value?: unknown } }>(fetch, '/api/config/twitter_username')
 	]);
-	return { themeActive, pageSeo: pageSeo?.data ?? null };
+	return {
+		themeActive,
+		pageSeo: pageSeo?.data ?? null,
+		twitterHandle: twitterHandle(twitterUsername?.data?.value)
+	};
 };

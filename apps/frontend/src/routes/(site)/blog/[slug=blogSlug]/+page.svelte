@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
+	import { page } from '$app/stores';
 	import OpenGraphTags from '$lib/site/components/seo/OpenGraphTags.svelte';
-	import { plainTextExcerpt } from '$lib/site/seo';
+	import JsonLd from '$lib/site/components/seo/JsonLd.svelte';
+	import { blogPostingSchema, breadcrumbSchema } from '$lib/site/jsonLd';
+	import { blogPostSeo } from '$lib/site/seo';
 	import { publicPageTitle } from '$lib/site/pageTitle';
 
 	import { navigating } from '$app/stores';
@@ -16,6 +19,7 @@
 
 	let post = $derived(data.post);
 	let navigation = $derived(data.navigation);
+	let seo = $derived(post ? blogPostSeo(post) : null);
 
 	const errorMessage = $derived(
 		data.loadError === 'not_found'
@@ -78,10 +82,28 @@
 	{/if}
 </svelte:head>
 {#if post}
+	<JsonLd
+		data={[
+			blogPostingSchema($page.url.origin, {
+				slug: post.slug,
+				title: post.title,
+				description: seo!.description,
+				publishedAt: post.publishedAt,
+				updatedAt: post.updatedAt,
+				imagePath: seo!.imagePath
+			}),
+			breadcrumbSchema($page.url.origin, [
+				{ name: 'Home', path: '/' },
+				{ name: 'Blog', path: '/blog' },
+				{ name: post.title, path: `/blog/${post.slug}` }
+			])
+		]}
+	/>
 	<OpenGraphTags
 		title={publicPageTitle(post.title)}
-		description={plainTextExcerpt(post.content, 160)}
-		imagePathOrUrl={`/api/blog/${post.slug}/og.png?v=${new Date(post.updatedAt).getTime()}`}
+		description={seo!.description}
+		imagePathOrUrl={seo!.imagePath}
+		imageIsGenerated={seo!.imageIsGenerated}
 		imageAlt={post.title}
 		ogType="article"
 		publishedTime={new Date(post.publishedAt).toISOString()}
@@ -110,7 +132,7 @@
 		<article class="blog-post">
 			{#if post.thumbnail}
 				<div class="post-cover-image">
-					<img src={getThumbnailUrl(post.thumbnail)} alt={post.title} />
+					<img src={getThumbnailUrl(post.thumbnail)} alt={post.thumbnailAlt ?? ''} />
 				</div>
 			{/if}
 			<h1 class="post-title">

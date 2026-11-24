@@ -8,6 +8,9 @@ type BlogPostSeo = {
 	slug: string;
 	content: string;
 	thumbnail: string | null;
+	thumbnailAlt?: string | null;
+	seoDescription?: string | null;
+	ogImage?: string | null;
 	publishedAt: string;
 	createdAt: string;
 	updatedAt: string;

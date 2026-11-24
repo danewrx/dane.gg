@@ -5,6 +5,9 @@ export interface BlogPost {
 	slug: string;
 	content: string;
 	thumbnail: string | null;
+	thumbnailAlt?: string | null;
+	seoDescription?: string | null;
+	ogImage?: string | null;
 	published: boolean;
 	publishedAt: string | null;
 	createdAt: string;
@@ -22,6 +25,9 @@ export interface CreateBlogPost {
 	slug: string;
 	content: string;
 	thumbnail?: string;
+	thumbnailAlt?: string;
+	seoDescription?: string;
+	ogImage?: string;
 	published: boolean;
 	tags: string[];
 }
@@ -31,6 +37,9 @@ export interface UpdateBlogPost {
 	slug?: string;
 	content?: string;
 	thumbnail?: string;
+	thumbnailAlt?: string;
+	seoDescription?: string;
+	ogImage?: string;
 	published?: boolean;
 	tags?: string[];
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "website"."posts" ADD COLUMN "thumbnail_alt" varchar(200);
