@@ -2,7 +2,9 @@
 	import OpenGraphTags from '$lib/site/components/seo/OpenGraphTags.svelte';
 	import { publicPageTitle } from '$lib/site/pageTitle';
 
-	import { navigating } from '$app/stores';
+	import { navigating, page } from '$app/stores';
+	import JsonLd from '$lib/site/components/seo/JsonLd.svelte';
+	import { breadcrumbSchema } from '$lib/site/jsonLd';
 	import Icon from '@iconify/svelte';
 	import { getIconRenderInfo } from '$lib/site/utils/iconHelper';
 	import { getProjectStatusColor } from '$lib/shared/constants/projectConstants';
@@ -121,6 +123,16 @@
 	<title>{publicPageTitle(categoryData?.category.name || 'Projects')}</title>
 </svelte:head>
 {#if categoryData?.category}
+	<JsonLd
+		data={breadcrumbSchema($page.url.origin, [
+			{ name: 'Home', path: '/' },
+			{ name: 'Projects', path: '/projects' },
+			...(categoryData.parent
+				? [{ name: categoryData.parent.name, path: `/projects/${categoryData.parent.id}` }]
+				: []),
+			{ name: categoryData.category.name, path: `/projects/${categoryData.category.id}` }
+		])}
+	/>
 	<OpenGraphTags
 		title={publicPageTitle(categoryData.category.name)}
 		description={`Explore ${categoryData.category.name} projects from my portfolio.`}

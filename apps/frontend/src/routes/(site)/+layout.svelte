@@ -14,6 +14,8 @@
 	import { hydratePublicThemeFromSsr } from '$lib/site/stores/theme';
 	import CanonicalLink from '$lib/site/components/seo/CanonicalLink.svelte';
 	import OpenGraphTags from '$lib/site/components/seo/OpenGraphTags.svelte';
+	import JsonLd from '$lib/site/components/seo/JsonLd.svelte';
+	import { breadcrumbSchema } from '$lib/site/jsonLd';
 	import { getStaticRouteSeo } from '$lib/site/seo';
 	import type { LayoutProps } from './$types';
 
@@ -58,6 +60,14 @@
 	{/if}
 </svelte:head>
 {#if staticRouteSeo}
+	{#if $page.url.pathname !== '/'}
+		<JsonLd
+			data={breadcrumbSchema($page.url.origin, [
+				{ name: 'Home', path: '/' },
+				{ name: staticRouteSeo.name, path: $page.url.pathname }
+			])}
+		/>
+	{/if}
 	<OpenGraphTags
 		title={staticRouteSeo.title}
 		description={staticRouteSeo.description}

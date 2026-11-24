@@ -18,6 +18,9 @@
 	import ChatUserCount from '$lib/site/components/ChatUserCount.svelte';
 	import LazyWhenVisible from '$lib/site/components/LazyWhenVisible.svelte';
 	import { Radio } from 'lucide-svelte';
+	import { page } from '$app/stores';
+	import JsonLd from '$lib/site/components/seo/JsonLd.svelte';
+	import { personSchema, websiteSchema } from '$lib/site/jsonLd';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -47,6 +50,13 @@
 		goto(`/blog/${slug}`);
 	}
 </script>
+
+<JsonLd
+	data={[
+		websiteSchema($page.url.origin, $page.data.pageSeo?.['/']?.description ?? ''),
+		personSchema($page.url.origin, data.socialUrls)
+	]}
+/>
 
 <div class="home-content">
 	<!-- Two Column Layout -->

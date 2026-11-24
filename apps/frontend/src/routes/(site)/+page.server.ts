@@ -13,13 +13,16 @@ export const load = async ({ fetch }: { fetch: typeof globalThis.fetch }) => {
 	const tweetUrl = apiFetchUrl('/api/widgets/latest-tweet');
 	const aboutUrl = apiFetchUrl('/api/config/homepage_about_me');
 	const blogUrl = apiFetchUrl('/api/blog?list=1');
+	const socialUrl = apiFetchUrl('/api/social-links');
 
-	const [musicResult, tweetResult, aboutResult, blogResult] = await Promise.allSettled([
-		fetch(musicUrl),
-		fetch(tweetUrl),
-		fetch(aboutUrl),
-		fetch(blogUrl)
-	]);
+	const [musicResult, tweetResult, aboutResult, blogResult, socialResult] =
+		await Promise.allSettled([
+			fetch(musicUrl),
+			fetch(tweetUrl),
+			fetch(aboutUrl),
+			fetch(blogUrl),
+			fetch(socialUrl)
+		]);
 
 	let musicData: unknown = null;
 	let tweetData: unknown = null;
@@ -65,8 +68,23 @@ export const load = async ({ fetch }: { fetch: typeof globalThis.fetch }) => {
 		}
 	}
 
+	let socialUrls: string[] = [];
+	if (socialResult.status === 'fulfilled' && socialResult.value.ok) {
+		try {
+			const socialJson = (await socialResult.value.json()) as {
+				data?: Array<{ url: string; linkType: string }>;
+			};
+			socialUrls = (socialJson.data ?? [])
+				.filter((link) => link.linkType === 'link')
+				.map((link) => link.url);
+		} catch {
+			socialUrls = [];
+		}
+	}
+
 	return {
 		musicData,
+		socialUrls,
 		tweetData,
 		aboutMeHtml,
 		recentPosts

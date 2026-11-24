@@ -1,6 +1,48 @@
 import { test, expect } from '@playwright/test';
 import { gotoReady } from './helpers';
 
+/** Every JSON-LD block in a page's HTML, parsed and flattened. */
+function jsonLdBlocks(html: string): Array<Record<string, unknown>> {
+	const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+	return blocks.flatMap((match) => [JSON.parse(match[1])].flat());
+}
+
+test.describe('structured data', () => {
+	test('home page describes the website and the person', async ({ request }) => {
+		await expect
+			.poll(
+				async () =>
+					jsonLdBlocks(await (await request.get('/')).text())
+						.map((b) => b['@type'])
+						.sort(),
+				{ timeout: 30_000 }
+			)
+			.toEqual(['Person', 'WebSite']);
+	});
+
+	test('static pages have a Home > page breadcrumb', async ({ request }) => {
+		const blocks = jsonLdBlocks(await (await request.get('/about')).text());
+		const crumbs = blocks.find((b) => b['@type'] === 'BreadcrumbList') as {
+			itemListElement: Array<{ position: number; item: string }>;
+		};
+		expect(crumbs.itemListElement.map((c) => c.position)).toEqual([1, 2]);
+		expect(crumbs.itemListElement[1].item).toMatch(/\/about$/);
+	});
+
+	test('a blog post has BlogPosting data and a breadcrumb', async ({ request }) => {
+		const list = await (await request.get('/api/blog?list=1')).json();
+		const slug = list.data?.[0]?.slug;
+		test.skip(!slug, 'no published blog posts to check');
+
+		const blocks = jsonLdBlocks(await (await request.get(`/blog/${slug}`)).text());
+		const posting = blocks.find((b) => b['@type'] === 'BlogPosting');
+		expect(posting).toMatchObject({ url: expect.stringContaining(`/blog/${slug}`) });
+		expect(posting?.headline).toBeTruthy();
+		expect(Number.isNaN(Date.parse(String(posting?.datePublished)))).toBe(false);
+		expect(blocks.some((b) => b['@type'] === 'BreadcrumbList')).toBe(true);
+	});
+});
+
 test.describe('SEO basics', () => {
 	test('homepage has a title', async ({ page }) => {
 		await gotoReady(page, '/');
