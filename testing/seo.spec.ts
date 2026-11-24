@@ -83,6 +83,24 @@ test.describe('SEO basics', () => {
 		expect(body).toContain('<loc>http://localhost:5173/blog</loc>');
 	});
 
+	test('sitemap lists every page the backend knows about', async ({ request }) => {
+		const pageSeo = (await (await request.get('/api/config/page-seo')).json()).data;
+		const body = await (await request.get('/sitemap.xml')).text();
+		for (const path of Object.keys(pageSeo)) {
+			const loc = path === '/' ? 'http://localhost:5173/' : `http://localhost:5173${path}`;
+			expect(body).toContain(`<loc>${loc}</loc>`);
+		}
+	});
+
+	test('sitemap lists project category pages', async ({ request }) => {
+		const categories = (await (await request.get('/api/projects/categories')).json()).data;
+		test.skip(!categories?.length, 'no project categories to check');
+		const body = await (await request.get('/sitemap.xml')).text();
+		for (const category of categories) {
+			expect(body).toContain(`<loc>http://localhost:5173/projects/${category.id}</loc>`);
+		}
+	});
+
 	test('robots.txt references sitemap', async ({ request }) => {
 		const response = await request.get('/robots.txt');
 		expect(response.ok()).toBeTruthy();

@@ -1,32 +1,40 @@
 import { apiFetchUrl } from '$lib/server/apiFetchUrl';
 import {
 	buildBlogPostSitemapUrls,
+	buildProjectCategorySitemapUrls,
 	buildSitemap,
-	buildStaticSitemapUrls
+	buildStaticSitemapUrls,
+	sitemapPaths,
+	type SitemapBlogPost,
+	type SitemapProjectCategory
 } from '$lib/site/feed/sitemap';
 import type { RequestHandler } from './$types';
 
-type BlogListPost = {
-	slug: string;
-	updatedAt: string;
-};
+async function fetchData<T>(fetch: typeof globalThis.fetch, path: string, fallback: T): Promise<T> {
+	try {
+		const response = await fetch(apiFetchUrl(path));
+		if (response.ok) {
+			const body = (await response.json()) as { success?: boolean; data?: T };
+			if (body.success && body.data) return body.data;
+		}
+	} catch {}
+	return fallback;
+}
 
 export const GET: RequestHandler = async ({ fetch, url }) => {
 	const origin = url.origin;
-	const staticUrls = buildStaticSitemapUrls(origin);
 
-	let blogPosts: BlogListPost[] = [];
-	try {
-		const response = await fetch(apiFetchUrl('/api/blog?list=1'));
-		if (response.ok) {
-			const body = (await response.json()) as { success?: boolean; data?: BlogListPost[] };
-			if (body.success && body.data) {
-				blogPosts = body.data;
-			}
-		}
-	} catch {}
+	const [pageSeo, blogPosts, categories] = await Promise.all([
+		fetchData<Record<string, unknown> | null>(fetch, '/api/config/page-seo', null),
+		fetchData<SitemapBlogPost[]>(fetch, '/api/blog?list=1', []),
+		fetchData<SitemapProjectCategory[]>(fetch, '/api/projects/categories', [])
+	]);
 
-	const xml = buildSitemap([...staticUrls, ...buildBlogPostSitemapUrls(origin, blogPosts)]);
+	const xml = buildSitemap([
+		...buildStaticSitemapUrls(origin, sitemapPaths(pageSeo)),
+		...buildProjectCategorySitemapUrls(origin, categories),
+		...buildBlogPostSitemapUrls(origin, blogPosts)
+	]);
 
 	return new Response(xml, {
 		headers: {
