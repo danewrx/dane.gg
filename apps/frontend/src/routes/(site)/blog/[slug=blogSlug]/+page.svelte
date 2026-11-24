@@ -132,7 +132,7 @@
 		<article class="blog-post">
 			{#if post.thumbnail}
 				<div class="post-cover-image">
-					<img src={getThumbnailUrl(post.thumbnail)} alt={post.title} />
+					<img src={getThumbnailUrl(post.thumbnail)} alt={post.thumbnailAlt ?? ''} />
 				</div>
 			{/if}
 			<h1 class="post-title">

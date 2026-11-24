@@ -120,6 +120,13 @@
       "when": 1795561046406,
       "tag": "0017_post_seo_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1795562131066,
+      "tag": "0018_post_thumbnail_alt",
+      "breakpoints": true
     }
   ]
 }

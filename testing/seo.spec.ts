@@ -43,6 +43,32 @@ test.describe('structured data', () => {
 	});
 });
 
+test.describe('image alt text', () => {
+	test('every image on the public pages has an alt attribute, and none says just "Icon"', async ({
+		request
+	}) => {
+		const categories = (await (await request.get('/api/projects/categories')).json()).data ?? [];
+		const posts = (await (await request.get('/api/blog?list=1')).json()).data ?? [];
+		const paths = [
+			'/',
+			'/about',
+			'/contact',
+			'/projects',
+			'/blog',
+			...categories.slice(0, 2).map((c: { id: string }) => `/projects/${c.id}`),
+			...posts.slice(0, 2).map((p: { slug: string }) => `/blog/${p.slug}`)
+		];
+
+		for (const path of paths) {
+			const html = await (await request.get(path)).text();
+			for (const [tag] of html.matchAll(/<img\b[^>]*>/g)) {
+				expect(tag, `${path} has an image without alt: ${tag}`).toMatch(/\balt=/);
+				expect(tag, `${path} has a generic alt: ${tag}`).not.toMatch(/\balt="(Icon|Image)"/i);
+			}
+		}
+	});
+});
+
 test.describe('canonical and card tags', () => {
 	test('canonical links ignore the query string', async ({ request }) => {
 		const html = await (await request.get('/about?utm_source=newsletter&x=1')).text();

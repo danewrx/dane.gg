@@ -43,6 +43,16 @@ describe('parsePostSeoFields', () => {
 		);
 	});
 
+	test('trims, clears and limits the cover image alt text', () => {
+		expect(parsePostSeoFields({ thumbnailAlt: '  A cat  ' })).toEqual({
+			fields: { thumbnailAlt: 'A cat' }
+		});
+		expect(parsePostSeoFields({ thumbnailAlt: '' })).toEqual({ fields: { thumbnailAlt: null } });
+		expect('error' in parsePostSeoFields({ thumbnailAlt: 7 })).toBe(true);
+		expect('error' in parsePostSeoFields({ thumbnailAlt: 'x'.repeat(201) })).toBe(true);
+		expect('error' in parsePostSeoFields({ thumbnailAlt: 'x'.repeat(200) })).toBe(false);
+	});
+
 	test('rejects a description that is not text or is too long', () => {
 		expect('error' in parsePostSeoFields({ seoDescription: 5 })).toBe(true);
 		expect('error' in parsePostSeoFields({ seoDescription: 'x'.repeat(301) })).toBe(true);

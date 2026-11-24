@@ -220,7 +220,7 @@
 						{:else if projectIconInfo.type === 'iconify' && projectIconInfo.icon}
 							<Icon icon={projectIconInfo.icon} width="16" height="16" />
 						{:else if projectIconInfo.type === 'svg' && projectIconInfo.url}
-							<img src={projectIconInfo.url} alt="Icon" width="16" height="16" />
+							<img src={projectIconInfo.url} alt="" width="16" height="16" />
 						{:else if projectIconInfo.type === 'text' && projectIconInfo.text}
 							<span class="text-icon">{projectIconInfo.text}</span>
 						{:else if projectIconInfo.component}
@@ -247,7 +247,7 @@
 						{:else if repoIconInfo.type === 'iconify' && repoIconInfo.icon}
 							<Icon icon={repoIconInfo.icon} width="16" height="16" />
 						{:else if repoIconInfo.type === 'svg' && repoIconInfo.url}
-							<img src={repoIconInfo.url} alt="Icon" width="16" height="16" />
+							<img src={repoIconInfo.url} alt="" width="16" height="16" />
 						{:else if repoIconInfo.type === 'text' && repoIconInfo.text}
 							<span class="text-icon">{repoIconInfo.text}</span>
 						{:else if repoIconInfo.component}

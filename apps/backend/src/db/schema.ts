@@ -49,6 +49,7 @@ export const posts = websiteSchema.table('posts', {
 	slug: varchar('slug', { length: 280 }).notNull().unique(),
 	content: text('content').notNull(),
 	thumbnail: varchar('thumbnail', { length: 255 }),
+	thumbnailAlt: varchar('thumbnail_alt', { length: 200 }),
 	seoDescription: varchar('seo_description', { length: 300 }),
 	ogImage: varchar('og_image', { length: 500 }),
 	published: boolean('published').default(false),

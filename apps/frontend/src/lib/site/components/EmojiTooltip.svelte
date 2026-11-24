@@ -91,7 +91,7 @@
 		const tooltipName = tooltipElement.querySelector('.tooltip-name') as HTMLElement;
 
 		if (emojiContent.tagName === 'IMG') {
-			tooltipEmoji.innerHTML = `<img src="${(emojiContent as HTMLImageElement).src}" style="width: 36px; height: 36px; object-fit: contain; image-rendering: -webkit-optimize-contrast;">`;
+			tooltipEmoji.innerHTML = `<img src="${(emojiContent as HTMLImageElement).src}" alt="" style="width: 36px; height: 36px; object-fit: contain; image-rendering: -webkit-optimize-contrast;">`;
 		} else {
 			tooltipEmoji.textContent = emojiContent.textContent;
 			tooltipEmoji.style.cssText =

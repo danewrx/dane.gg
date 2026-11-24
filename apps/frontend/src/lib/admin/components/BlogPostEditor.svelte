@@ -38,6 +38,7 @@
 	let thumbnail = $state('');
 	let thumbnailIsExternal = $state(false);
 	let thumbnailFilename = $state<string | null>(null);
+	let thumbnailAlt = $state('');
 	let seoDescription = $state('');
 	let ogImage = $state('');
 	let published = $state(false);
@@ -110,6 +111,7 @@
 			thumbnail = '';
 			thumbnailIsExternal = false;
 			thumbnailFilename = null;
+			thumbnailAlt = '';
 			seoDescription = '';
 			ogImage = '';
 			published = false;
@@ -299,6 +301,7 @@
 					thumbnailIsExternal = false;
 					thumbnailFilename = null;
 				}
+				thumbnailAlt = post.thumbnailAlt || '';
 				seoDescription = post.seoDescription || '';
 				ogImage = post.ogImage || '';
 				published = post.published;
@@ -610,6 +613,7 @@
 				slug: slug.trim(),
 				content: content.trim(),
 				thumbnail: thumbnail.trim() || undefined,
+				thumbnailAlt: thumbnailAlt.trim(),
 				seoDescription: seoDescription.trim(),
 				ogImage: ogImage.trim(),
 				published,
@@ -933,6 +937,23 @@
 			</div>
 
 			<!-- SEO -->
+			{#if thumbnail}
+				<div class="form-group">
+					<label for="thumbnail-alt">
+						Cover image alt text
+						<span class="field-hint">(optional)</span>
+					</label>
+					<input
+						id="thumbnail-alt"
+						class="form-input"
+						type="text"
+						maxlength="200"
+						placeholder="Describe the image for screen readers and search; empty marks it decorative"
+						bind:value={thumbnailAlt}
+					/>
+				</div>
+			{/if}
+
 			<div class="form-group">
 				<label for="seo-description">
 					Search &amp; social description

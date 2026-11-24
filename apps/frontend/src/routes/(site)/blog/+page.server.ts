@@ -8,6 +8,7 @@ export type BlogListPost = {
 	slug: string;
 	content: string;
 	thumbnail: string | null;
+	thumbnailAlt?: string | null;
 	publishedAt: string;
 	tags: { id: string; name: string }[];
 };

@@ -1,9 +1,11 @@
 export const MAX_SEO_DESCRIPTION = 300;
+export const MAX_THUMBNAIL_ALT = 200;
 const MAX_OG_IMAGE = 500;
 
 export interface PostSeoFields {
 	seoDescription?: string | null;
 	ogImage?: string | null;
+	thumbnailAlt?: string | null;
 }
 
 function isImageSource(value: string): boolean {
@@ -18,6 +20,7 @@ function isImageSource(value: string): boolean {
 export function parsePostSeoFields(body: {
 	seoDescription?: unknown;
 	ogImage?: unknown;
+	thumbnailAlt?: unknown;
 }): { fields: PostSeoFields } | { error: string } {
 	const fields: PostSeoFields = {};
 
@@ -41,6 +44,17 @@ export function parsePostSeoFields(body: {
 			return { error: 'Social image must be an uploaded file or an http(s) URL' };
 		}
 		fields.ogImage = value || null;
+	}
+
+	if (body.thumbnailAlt !== undefined) {
+		if (body.thumbnailAlt !== null && typeof body.thumbnailAlt !== 'string') {
+			return { error: 'Cover image alt text must be text' };
+		}
+		const text = (body.thumbnailAlt ?? '').trim();
+		if (text.length > MAX_THUMBNAIL_ALT) {
+			return { error: `Cover image alt text must be ${MAX_THUMBNAIL_ALT} characters or fewer` };
+		}
+		fields.thumbnailAlt = text || null;
 	}
 
 	return { fields };

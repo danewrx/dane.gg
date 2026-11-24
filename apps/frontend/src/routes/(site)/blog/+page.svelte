@@ -127,7 +127,7 @@
 				<article class="post-card">
 					{#if post.thumbnail}
 						<div class="post-thumbnail">
-							<img src={getThumbnailUrl(post.thumbnail)} alt={post.title} />
+							<img src={getThumbnailUrl(post.thumbnail)} alt={post.thumbnailAlt ?? ''} />
 						</div>
 					{/if}
 					<div class="post-content">
