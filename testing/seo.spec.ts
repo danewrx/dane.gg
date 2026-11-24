@@ -48,6 +48,28 @@ test.describe('SEO basics', () => {
 		expect(body).toContain('Sitemap: http://localhost:5173/sitemap.xml');
 	});
 
+	test('robots.txt keeps the admin and login pages out of crawlers', async ({ request }) => {
+		const body = await (await request.get('/robots.txt')).text();
+		for (const path of ['/admin', '/login', '/logout']) {
+			expect(body).toContain(`Disallow: ${path}`);
+		}
+	});
+
+	test('login and admin responses are marked noindex', async ({ request }) => {
+		const login = await request.get('/login');
+		expect(login.headers()['x-robots-tag']).toBe('noindex, nofollow');
+		// An unauthenticated admin request lands on the login page, which is noindex too.
+		const admin = await request.get('/admin');
+		expect(admin.headers()['x-robots-tag']).toBe('noindex, nofollow');
+	});
+
+	test('public pages are not marked noindex', async ({ request }) => {
+		for (const path of ['/', '/about', '/blog']) {
+			const response = await request.get(path);
+			expect(response.headers()['x-robots-tag']).toBeUndefined();
+		}
+	});
+
 	test('feed.xml redirects to blog rss', async ({ request }) => {
 		const response = await request.get('/feed.xml', { maxRedirects: 0 });
 		expect(response.status()).toBe(301);
